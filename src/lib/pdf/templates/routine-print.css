@@ -1,0 +1,367 @@
+/*
+ * FORJA — Rutina imprimible: estilos para PDF generado con Puppeteer
+ * Owner: document-automation-architect.
+ *
+ * Modo: LIGHT solamente — los PDFs siempre se generan en fondo blanco para
+ *       legibilidad en impresoras láser/inkjet de gimnasio.
+ *
+ * Paleta (tokens de BRAND.md, modo light):
+ *   --bg-canvas        : #FFFFFF
+ *   --bg-surface       : #FAFAFA  (filas alternadas)
+ *   --border-default   : #E4E4E7  (neutral-200)
+ *   --text-primary     : #09090B  (neutral-950)
+ *   --text-secondary   : #52525B  (neutral-600)
+ *   --accent           : #FF6A1A  (Forja Orange — brand-primary)
+ *   --accent-subtle    : #FFF3ED  (tint para celdas de superserie)
+ *
+ * Fuente: Inter (Google Fonts CDN).
+ * NOTA PARA MANTENIMIENTO: en un ambiente donde el servidor no tiene acceso a
+ * internet (CI privado, air-gapped), reemplazá el @import por Inter embebido en
+ * base64 como data URI woff2.  Ver la variable --font-face-base64 en el
+ * comentario al final de este archivo para la referencia de cómo hacerlo.
+ * En MVP usamos CDN porque es suficiente — Puppeteer puede resolver fonts
+ * externas gracias a waitUntil: 'networkidle0' en render.ts.
+ */
+
+/* ── Webfont — Inter via Google Fonts CDN ── */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+/* ── @page — dimensiones A4 con márgenes ── */
+@page {
+  size: A4 portrait;
+  /*
+   * Los márgenes aquí son informativos; los márgenes reales los setea
+   * Puppeteer en PDFOptions.margin de render.ts (20mm top/bottom, 15mm lr).
+   * Si usás WeasyPrint en lugar de Puppeteer (alternativa futura), estas
+   * declaraciones toman efecto directamente.
+   */
+  margin: 20mm 15mm 20mm 15mm;
+}
+
+/* ── Reset mínimo ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Base ── */
+html,
+body {
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #09090b;
+  background-color: #ffffff;
+
+  /* Garantiza que el naranja de marca se imprima en impresoras de color.
+     Sin estas propiedades los backgrounds son eliminados por el browser. */
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+
+  /* Activar tabular nums para que las columnas de sets/reps queden alineadas */
+  font-feature-settings: "tnum" 1, "cv11" 1;
+}
+
+/* ── Encabezado del documento ── */
+.doc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 3px solid #ff6a1a;
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trainer-logo {
+  object-fit: contain;
+  max-height: 40px;
+}
+
+/* Fallback wordmark cuando no hay logo */
+.forja-wordmark {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ff6a1a;
+  letter-spacing: -0.02em;
+}
+
+.header-trainer {
+  text-align: right;
+}
+
+.trainer-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #09090b;
+}
+
+.trainer-label {
+  font-size: 11px;
+  color: #52525b;
+}
+
+/* ── Meta de la rutina ── */
+.routine-meta {
+  margin-bottom: 24px;
+}
+
+.routine-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #09090b;
+  line-height: 1.2;
+  margin-bottom: 12px;
+  letter-spacing: -0.01em;
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px 16px;
+  background-color: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.meta-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: #52525b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.meta-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: #09090b;
+}
+
+/* ── Secciones por día ── */
+.day-section {
+  margin-bottom: 24px;
+}
+
+/* Page break antes de cada día salvo el primero.
+   La clase .page-break se aplica desde routine-print.tsx (idx > 0). */
+.page-break {
+  page-break-before: always;
+  padding-top: 4mm;
+}
+
+/* Repite el encabezado del documento en cada página cuando Puppeteer imprime.
+   Nota: Puppeteer no soporta CSS position:running() (es un borrador del W3C
+   que solo WeasyPrint implementa). Para encabezados por página en Puppeteer usá
+   displayHeaderFooter: true con headerTemplate HTML en htmlToPdf(). */
+
+.day-heading {
+  font-size: 16px;
+  font-weight: 700;
+  color: #09090b;
+  border-left: 4px solid #ff6a1a;
+  padding-left: 10px;
+  margin-bottom: 10px;
+  line-height: 1.3;
+}
+
+.day-number {
+  color: #ff6a1a;
+}
+
+.day-separator {
+  color: #a1a1aa;
+}
+
+.day-name {
+  color: #09090b;
+}
+
+.day-description {
+  font-size: 11px;
+  color: #52525b;
+  margin-bottom: 8px;
+  font-style: italic;
+}
+
+/* ── Tabla de ejercicios ── */
+.exercise-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  table-layout: fixed;
+}
+
+/* Proporciones de columnas para A4 */
+.exercise-table col,
+.exercise-table .col-order   { width: 4%; }
+.exercise-table .col-exercise { width: 30%; }
+.exercise-table .col-num     { width: 7%; }
+.exercise-table .col-rest    { width: 10%; }
+.exercise-table .col-tempo   { width: 10%; }
+.exercise-table .col-notes   { width: 25%; }
+
+.exercise-table th,
+.exercise-table td {
+  padding: 7px 10px;
+  text-align: left;
+  border-bottom: 1px solid #e4e4e7;
+  vertical-align: top;
+  word-break: break-word;
+}
+
+.exercise-table th {
+  background-color: #ff6a1a;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: none;
+}
+
+/* Primera columna de encabezado con radio top-left */
+.exercise-table thead tr th:first-child {
+  border-radius: 4px 0 0 0;
+}
+.exercise-table thead tr th:last-child {
+  border-radius: 0 4px 0 0;
+}
+
+/* Filas alternadas — #FAFAFA para pares */
+.exercise-table tbody tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+/* Filas de superserie con marcador lateral */
+.exercise-table tbody tr.row-superset {
+  border-left: 3px solid #ff6a1a;
+}
+
+/* Columnas numéricas centradas */
+.col-num {
+  text-align: center;
+}
+
+.col-order {
+  color: #52525b;
+  font-size: 10px;
+  text-align: center;
+}
+
+/* Badge de superserie */
+.superset-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  color: #ff6a1a;
+  border: 1px solid #ff6a1a;
+  border-radius: 3px;
+  padding: 0 3px;
+  margin-right: 4px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* ── Footer ── */
+/*
+ * Para footer repetido por página en Puppeteer:
+ *   1. Pasá displayHeaderFooter: true en HtmlToPdfOptions.
+ *   2. Pasá footerTemplate con HTML que use las clases de Puppeteer:
+ *      <pageNumber>, <totalPages>, etc.
+ *   3. Desactivá este .doc-footer o ajustá su visibilidad.
+ *
+ * En MVP el footer estático al final del documento es suficiente.
+ * CSS position:running() (W3C GCPM) NO está soportado por Puppeteer.
+ */
+.doc-footer {
+  margin-top: 32px;
+  padding-top: 10px;
+  border-top: 1px solid #e4e4e7;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.footer-tagline {
+  font-size: 11px;
+  font-style: italic;
+  color: #52525b;
+}
+
+.footer-url {
+  font-size: 10px;
+  color: #a1a1aa;
+}
+
+.footer-pages {
+  font-size: 10px;
+  color: #a1a1aa;
+}
+
+/* ── Utilidades de impresión ── */
+@media print {
+  body {
+    background-color: #ffffff;
+  }
+
+  /* Evita que encabezados de día queden solos al final de una página */
+  .day-heading {
+    break-after: avoid;
+  }
+
+  /* La tabla no se corta a mitad de fila si es posible */
+  .exercise-table tr {
+    page-break-inside: avoid;
+  }
+}
+
+/*
+ * PARA MEJOR CALIDAD SIN CDN (air-gapped, CI privado):
+ * Reemplazá el @import de Google Fonts por font-face con Inter en base64 woff2.
+ * Ejemplo de estructura (el base64 se genera con: base64 -i Inter-Regular.woff2):
+ *
+ * @font-face {
+ *   font-family: "Inter";
+ *   font-style: normal;
+ *   font-weight: 400;
+ *   src: url("data:font/woff2;charset=utf-8;base64,<BASE64_AQUI>") format("woff2");
+ * }
+ * @font-face {
+ *   font-family: "Inter";
+ *   font-weight: 500;
+ *   src: url("data:font/woff2;charset=utf-8;base64,<BASE64_500>") format("woff2");
+ * }
+ * @font-face {
+ *   font-family: "Inter";
+ *   font-weight: 600;
+ *   src: url("data:font/woff2;charset=utf-8;base64,<BASE64_600>") format("woff2");
+ * }
+ * @font-face {
+ *   font-family: "Inter";
+ *   font-weight: 700;
+ *   src: url("data:font/woff2;charset=utf-8;base64,<BASE64_700>") format("woff2");
+ * }
+ *
+ * Los archivos woff2 de Inter se descargan desde:
+ * https://fonts.google.com/download?family=Inter
+ * o desde el paquete npm @fontsource/inter.
+ * Tamaño típico de los 4 pesos: ~400 KB total.
+ */

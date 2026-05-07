@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Forja logo vertical">
+  <title>Forja</title>
+  <!-- Isotipo centrado: escala 1.5x (96x96), offset para centrar en 200px ancho -->
+  <!-- translate(52, 20) centra un bloque de 96px en viewBox de 200px: (200-96)/2=52 -->
+  <g transform="translate(52, 16) scale(1.5)">
+    <!-- Base trapezoidal inferior -->
+    <rect x="7" y="46" width="50" height="14" rx="4" fill="#1E2A38"/>
+    <!-- Cuerpo central -->
+    <polygon points="14,46 50,46 47,32 17,32" fill="#1E2A38"/>
+    <!-- Cara superior con chaflan -->
+    <polygon points="4,20 50,20 60,32 4,32" fill="#FF6A1A"/>
+    <!-- Chispa brasa -->
+    <polygon points="52,20 60,20 60,28" fill="#F5C542" opacity="0.92"/>
+  </g>
+  <!-- Wordmark centrado debajo del isotipo -->
+  <!-- Isotipo ocupa aprox hasta y=136 (16 + 96*1.25), wordmark en y=158 -->
+  <text
+    x="100"
+    y="168"
+    text-anchor="middle"
+    font-family="Inter, system-ui, -apple-system, sans-serif"
+    font-weight="700"
+    font-size="48"
+    letter-spacing="-0.02em"
+    fill="#FAFAFA"
+  >forja</text>
+</svg>

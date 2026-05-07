@@ -1,0 +1,570 @@
+[
+  {
+    "id": "barbell-back-squat",
+    "name": "Barbell Back Squat",
+    "force": "push",
+    "level": "intermediate",
+    "mechanic": "compound",
+    "equipment": "barbell",
+    "primaryMuscles": ["quadriceps"],
+    "secondaryMuscles": ["glutes", "hamstrings", "calves", "lower back"],
+    "instructions": [
+      "Position the barbell on a squat rack at chest height. Step under the bar and rest it on your upper trapeziuses, not on your neck.",
+      "Grip the bar slightly wider than shoulder-width. Unrack by extending your legs and step back two paces.",
+      "Stand with feet shoulder-width apart, toes pointed slightly outward (15-30 degrees).",
+      "Brace your core, take a deep breath, and descend by pushing your hips back and bending your knees simultaneously.",
+      "Lower until your thighs are parallel to the floor or slightly below, keeping your chest up and knees tracking over your toes.",
+      "Drive through your heels to return to the starting position. Do not lock out your knees at the top."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/barbell-back-squat/0.gif"]
+  },
+  {
+    "id": "front-squat",
+    "name": "Front Squat",
+    "force": "push",
+    "level": "intermediate",
+    "mechanic": "compound",
+    "equipment": "barbell",
+    "primaryMuscles": ["quadriceps"],
+    "secondaryMuscles": ["glutes", "upper back", "core"],
+    "instructions": [
+      "Set the barbell on a rack at shoulder height. Cross your arms and place the bar on your front deltoids, or use a clean grip with fingers under the bar and elbows high.",
+      "Step back and position your feet slightly wider than hip-width, toes slightly out.",
+      "Keep your elbows high throughout the movement to prevent the bar from rolling forward.",
+      "Descend by pushing your knees out and dropping your hips straight down, keeping your torso as upright as possible.",
+      "Go to at least parallel, then drive through the floor to stand back up."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/front-squat/0.gif"]
+  },
+  {
+    "id": "conventional-deadlift",
+    "name": "Conventional Deadlift",
+    "force": "pull",
+    "level": "intermediate",
+    "mechanic": "compound",
+    "equipment": "barbell",
+    "primaryMuscles": ["lower back"],
+    "secondaryMuscles": ["hamstrings", "glutes", "quadriceps", "traps", "forearms"],
+    "instructions": [
+      "Stand with feet hip-width apart, bar over mid-foot. Grip the bar just outside your legs with a double-overhand or mixed grip.",
+      "Hinge at the hips to lower yourself to the bar. Your shins should be nearly vertical and close to the bar.",
+      "Take a deep breath, brace your core hard, and pull your chest up to create a neutral spine.",
+      "Push the floor away from you rather than thinking about pulling the bar up. Keep the bar close to your body throughout.",
+      "Lock out hips and knees simultaneously at the top. Do not hyperextend your lower back.",
+      "Lower the bar in a controlled manner by pushing your hips back first, then bending the knees once the bar passes them."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/deadlift/0.gif"]
+  },
+  {
+    "id": "romanian-deadlift",
+    "name": "Romanian Deadlift",
+    "force": "pull",
+    "level": "intermediate",
+    "mechanic": "compound",
+    "equipment": "barbell",
+    "primaryMuscles": ["hamstrings"],
+    "secondaryMuscles": ["glutes", "lower back", "forearms"],
+    "instructions": [
+      "Stand holding a barbell at hip level with an overhand grip, feet hip-width apart.",
+      "Keep a slight bend in your knees throughout — this is not a squat, it is a hip hinge.",
+      "Push your hips back and lower the bar along your legs, keeping it close to your body.",
+      "Lower until you feel a deep stretch in your hamstrings, typically when the bar reaches mid-shin. Keep your spine neutral.",
+      "Drive your hips forward to return to the starting position, squeezing your glutes at the top."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/romanian-deadlift/0.gif"]
+  },
+  {
+    "id": "barbell-lunge",
+    "name": "Barbell Lunge",
+    "force": "push",
+    "level": "intermediate",
+    "mechanic": "compound",
+    "equipment": "barbell",
+    "primaryMuscles": ["quadriceps"],
+    "secondaryMuscles": ["glutes", "hamstrings", "calves"],
+    "instructions": [
+      "Place a barbell across your upper back as you would for a squat. Stand with feet hip-width apart.",
+      "Take a large step forward with one leg. Lower your back knee toward the floor while keeping your torso upright.",
+      "Your front knee should stay over your front foot, not caving inward.",
+      "Drive through your front heel to return to the starting position, then alternate legs.",
+      "Keep your core braced throughout to protect your lower back."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/barbell-lunge/0.gif"]
+  },
+  {
+    "id": "leg-press",
+    "name": "Leg Press",
+    "force": "push",
+    "level": "beginner",
+    "mechanic": "compound",
+    "equipment": "machine",
+    "primaryMuscles": ["quadriceps"],
+    "secondaryMuscles": ["glutes", "hamstrings", "calves"],
+    "instructions": [
+      "Sit in the leg press machine with your back flat against the pad. Place your feet shoulder-width apart on the platform.",
+      "Release the safety handles. Lower the platform toward your chest by bending your knees to approximately 90 degrees.",
+      "Do not let your lower back round off the seat as you lower the weight.",
+      "Press the platform away from you by extending your legs, stopping just short of locking out your knees.",
+      "Return the platform under control. Re-engage the safety handles when finished."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/leg-press/0.gif"]
+  },
+  {
+    "id": "lying-leg-curl",
+    "name": "Lying Leg Curl",
+    "force": "pull",
+    "level": "beginner",
+    "mechanic": "isolation",
+    "equipment": "machine",
+    "primaryMuscles": ["hamstrings"],
+    "secondaryMuscles": ["calves"],
+    "instructions": [
+      "Lie face down on the leg curl machine with the pad resting just above your heels.",
+      "Grip the handles for stability. Your hips should remain flat on the bench throughout.",
+      "Curl your heels toward your glutes as far as possible without lifting your hips.",
+      "Hold the contraction for one second at the top, then lower slowly back to the starting position.",
+      "Do not swing or use momentum — control the weight on both the concentric and eccentric phases."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/lying-leg-curl/0.gif"]
+  },
+  {
+    "id": "leg-extension",
+    "name": "Leg Extension",
+    "force": "push",
+    "level": "beginner",
+    "mechanic": "isolation",
+    "equipment": "machine",
+    "primaryMuscles": ["quadriceps"],
+    "secondaryMuscles": [],
+    "instructions": [
+      "Sit in the leg extension machine with the pad resting on the top of your ankles. Adjust the seat so your knees align with the machine's pivot point.",
+      "Grip the handles for stability and keep your back against the pad.",
+      "Extend your legs until they are fully straight, squeezing your quads hard at the top.",
+      "Lower the weight slowly back to the starting position without letting the weight stack touch down."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/leg-extension/0.gif"]
+  },
+  {
+    "id": "barbell-bench-press",
+    "name": "Barbell Bench Press",
+    "force": "push",
+    "level": "intermediate",
+    "mechanic": "compound",
+    "equipment": "barbell",
+    "primaryMuscles": ["chest"],
+    "secondaryMuscles": ["shoulders", "triceps"],
+    "instructions": [
+      "Lie on a flat bench with your eyes under the bar. Plant your feet flat on the floor.",
+      "Grip the bar slightly wider than shoulder-width. Unrack the bar and position it over your upper chest.",
+      "Retract your shoulder blades and maintain a slight arch in your lower back for stability.",
+      "Lower the bar in a controlled arc to your mid-chest, keeping your elbows at about a 45-degree angle from your torso.",
+      "Press the bar back up explosively to the starting position. Do not bounce the bar off your chest.",
+      "Re-rack the bar under control when your set is complete."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/barbell-bench-press/0.gif"]
+  },
+  {
+    "id": "incline-barbell-bench-press",
+    "name": "Incline Barbell Bench Press",
+    "force": "push",
+    "level": "intermediate",
+    "mechanic": "compound",
+    "equipment": "barbell",
+    "primaryMuscles": ["chest"],
+    "secondaryMuscles": ["shoulders", "triceps"],
+    "instructions": [
+      "Set an adjustable bench to a 30-45 degree incline. Lie back with your eyes under the bar.",
+      "Grip slightly wider than shoulder-width. Unrack and position the bar over your upper chest.",
+      "Lower the bar to your upper chest, just below your collar bones, in a controlled arc.",
+      "Press back up explosively, keeping your shoulder blades retracted throughout.",
+      "The incline angle shifts emphasis to the upper portion of the pectoralis major and anterior deltoid."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/incline-bench-press/0.gif"]
+  },
+  {
+    "id": "overhead-press",
+    "name": "Overhead Press",
+    "force": "push",
+    "level": "intermediate",
+    "mechanic": "compound",
+    "equipment": "barbell",
+    "primaryMuscles": ["shoulders"],
+    "secondaryMuscles": ["triceps", "traps", "upper back"],
+    "instructions": [
+      "Set the bar at clavicle height in a rack. Grip the bar just outside shoulder-width with a full grip (thumbs around the bar).",
+      "Take the bar out of the rack and step back. Stand with feet hip-width apart, glutes and core tight.",
+      "Press the bar directly overhead, moving your head slightly back to allow the bar to pass, then forward once it clears your face.",
+      "Finish with the bar over the center of your feet, arms fully extended and ears between your biceps.",
+      "Lower the bar back to the front of your shoulders under control."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/overhead-press/0.gif"]
+  },
+  {
+    "id": "push-up",
+    "name": "Push-Up",
+    "force": "push",
+    "level": "beginner",
+    "mechanic": "compound",
+    "equipment": "body only",
+    "primaryMuscles": ["chest"],
+    "secondaryMuscles": ["shoulders", "triceps", "core"],
+    "instructions": [
+      "Start in a high plank position with hands slightly wider than shoulder-width, arms fully extended.",
+      "Keep your body in a straight line from head to heels. Do not let your hips sag or pike up.",
+      "Lower your chest toward the floor by bending your elbows, keeping them at about a 45-degree angle from your torso.",
+      "When your chest nearly touches the floor, press yourself back up to the starting position.",
+      "Exhale as you push up, inhale as you lower down."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/push-up/0.gif"]
+  },
+  {
+    "id": "dips",
+    "name": "Dips",
+    "force": "push",
+    "level": "intermediate",
+    "mechanic": "compound",
+    "equipment": "body only",
+    "primaryMuscles": ["triceps"],
+    "secondaryMuscles": ["chest", "shoulders"],
+    "instructions": [
+      "Grip the parallel bars with arms fully extended, body hanging vertically.",
+      "Lean slightly forward to engage the chest more, or stay upright to emphasize the triceps.",
+      "Lower your body by bending your elbows until your upper arms are parallel to the floor.",
+      "Press yourself back up to the starting position without locking out your elbows aggressively.",
+      "Avoid swinging or using momentum. Add weight with a dipping belt as you get stronger."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/dips/0.gif"]
+  },
+  {
+    "id": "dumbbell-bench-press",
+    "name": "Dumbbell Bench Press",
+    "force": "push",
+    "level": "beginner",
+    "mechanic": "compound",
+    "equipment": "dumbbell",
+    "primaryMuscles": ["chest"],
+    "secondaryMuscles": ["shoulders", "triceps"],
+    "instructions": [
+      "Lie on a flat bench holding a dumbbell in each hand at chest level, palms facing forward.",
+      "Press both dumbbells upward simultaneously until your arms are nearly fully extended.",
+      "Lower them slowly in a controlled arc back to the starting position, feeling a stretch in your chest.",
+      "Dumbbells allow a greater range of motion than a barbell and help correct strength imbalances between sides."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/dumbbell-bench-press/0.gif"]
+  },
+  {
+    "id": "pull-up",
+    "name": "Pull-Up",
+    "force": "pull",
+    "level": "intermediate",
+    "mechanic": "compound",
+    "equipment": "body only",
+    "primaryMuscles": ["lats"],
+    "secondaryMuscles": ["biceps", "rear deltoids", "upper back"],
+    "instructions": [
+      "Hang from a pull-up bar with an overhand grip slightly wider than shoulder-width, arms fully extended.",
+      "Depress your shoulder blades (pull them down and together) before pulling.",
+      "Pull your chest toward the bar by driving your elbows down and back.",
+      "Aim to get your chin over the bar at the top.",
+      "Lower yourself under full control until your arms are straight again. Avoid swinging."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/pull-up/0.gif"]
+  },
+  {
+    "id": "close-grip-pull-up",
+    "name": "Close-Grip Pull-Up",
+    "force": "pull",
+    "level": "intermediate",
+    "mechanic": "compound",
+    "equipment": "body only",
+    "primaryMuscles": ["lats"],
+    "secondaryMuscles": ["biceps", "upper back"],
+    "instructions": [
+      "Hang from a bar with a supinated (underhand) grip, hands about shoulder-width apart.",
+      "Keep your core tight and body straight. Initiate the movement by depressing your shoulder blades.",
+      "Pull your chest toward the bar, driving your elbows down close to your sides.",
+      "The supinated grip places more emphasis on the biceps compared to a standard pull-up.",
+      "Lower yourself slowly to a full hang before the next repetition."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/close-grip-pull-up/0.gif"]
+  },
+  {
+    "id": "barbell-bent-over-row",
+    "name": "Barbell Bent-Over Row",
+    "force": "pull",
+    "level": "intermediate",
+    "mechanic": "compound",
+    "equipment": "barbell",
+    "primaryMuscles": ["lats"],
+    "secondaryMuscles": ["upper back", "biceps", "rear deltoids", "lower back"],
+    "instructions": [
+      "Stand with feet hip-width apart, holding a barbell with an overhand grip slightly wider than shoulder-width.",
+      "Hinge at the hips until your torso is roughly parallel to the floor. Maintain a neutral spine.",
+      "Let the bar hang at arm's length, then pull it toward your lower abdomen by driving your elbows up and back.",
+      "Squeeze your shoulder blades together at the top of the movement.",
+      "Lower the bar under control to the starting position. Avoid rounding your lower back."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/barbell-bent-over-row/0.gif"]
+  },
+  {
+    "id": "dumbbell-single-arm-row",
+    "name": "Single-Arm Dumbbell Row",
+    "force": "pull",
+    "level": "beginner",
+    "mechanic": "compound",
+    "equipment": "dumbbell",
+    "primaryMuscles": ["lats"],
+    "secondaryMuscles": ["biceps", "rear deltoids", "upper back"],
+    "instructions": [
+      "Place your right knee and right hand on a flat bench for support. Hold a dumbbell in your left hand.",
+      "Keep your back flat and parallel to the floor. Let the dumbbell hang at arm's length.",
+      "Pull the dumbbell toward your hip, driving your elbow up toward the ceiling.",
+      "Squeeze your lat at the top, then lower the dumbbell slowly back to the starting position.",
+      "Complete all reps on one side before switching."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/one-arm-dumbbell-row/0.gif"]
+  },
+  {
+    "id": "cable-lat-pulldown",
+    "name": "Cable Lat Pulldown",
+    "force": "pull",
+    "level": "beginner",
+    "mechanic": "compound",
+    "equipment": "cable",
+    "primaryMuscles": ["lats"],
+    "secondaryMuscles": ["biceps", "rear deltoids"],
+    "instructions": [
+      "Sit at the lat pulldown machine and secure your knees under the pad. Grip the bar wider than shoulder-width with an overhand grip.",
+      "Lean back slightly (about 10-15 degrees) and depress your shoulder blades.",
+      "Pull the bar down to your upper chest by driving your elbows toward your hips.",
+      "Hold the contraction briefly, then let the bar rise slowly under control to full arm extension.",
+      "Avoid pulling the bar behind your neck — this can strain the cervical spine."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/lat-pulldown/0.gif"]
+  },
+  {
+    "id": "seated-cable-row",
+    "name": "Seated Cable Row",
+    "force": "pull",
+    "level": "beginner",
+    "mechanic": "compound",
+    "equipment": "cable",
+    "primaryMuscles": ["lats"],
+    "secondaryMuscles": ["upper back", "biceps", "rear deltoids"],
+    "instructions": [
+      "Sit at the cable row station with your feet on the platform. Grip a close-grip handle with both hands.",
+      "Keep your back straight and torso upright — do not lean back excessively.",
+      "Pull the handle toward your lower abdomen by driving your elbows back and squeezing your shoulder blades together.",
+      "Pause briefly at full contraction, then extend your arms slowly to return the weight.",
+      "Maintain tension in your core throughout to protect your lower back."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/seated-cable-row/0.gif"]
+  },
+  {
+    "id": "barbell-curl",
+    "name": "Barbell Curl",
+    "force": "pull",
+    "level": "beginner",
+    "mechanic": "isolation",
+    "equipment": "barbell",
+    "primaryMuscles": ["biceps"],
+    "secondaryMuscles": ["forearms"],
+    "instructions": [
+      "Stand holding a barbell with an underhand grip, hands shoulder-width apart, arms fully extended at your sides.",
+      "Keep your elbows close to your torso and fixed throughout the movement — they should not drift forward.",
+      "Curl the barbell upward by contracting your biceps until the bar reaches shoulder level.",
+      "Squeeze your biceps hard at the top, then lower the bar slowly back to the starting position.",
+      "Do not use your back or momentum to complete the lift — control the weight on both phases."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/barbell-curl/0.gif"]
+  },
+  {
+    "id": "hammer-curl",
+    "name": "Hammer Curl",
+    "force": "pull",
+    "level": "beginner",
+    "mechanic": "isolation",
+    "equipment": "dumbbell",
+    "primaryMuscles": ["biceps"],
+    "secondaryMuscles": ["forearms", "brachialis"],
+    "instructions": [
+      "Stand holding a dumbbell in each hand with a neutral grip (palms facing each other), arms at your sides.",
+      "Keep your elbows fixed at your sides. Curl one or both dumbbells upward without rotating your wrist.",
+      "The neutral grip targets the brachialis and brachioradialis more than a standard curl.",
+      "Lower the weight slowly and under control. Alternate arms or perform both simultaneously."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/hammer-curl/0.gif"]
+  },
+  {
+    "id": "cable-tricep-pushdown",
+    "name": "Cable Tricep Pushdown",
+    "force": "push",
+    "level": "beginner",
+    "mechanic": "isolation",
+    "equipment": "cable",
+    "primaryMuscles": ["triceps"],
+    "secondaryMuscles": [],
+    "instructions": [
+      "Attach a straight bar or rope to the high cable pulley. Stand facing the machine and grip the attachment with an overhand grip.",
+      "Keep your elbows close to your sides and fixed — they should not flare out or move forward.",
+      "Push the bar down until your arms are fully extended. Squeeze your triceps hard at the bottom.",
+      "Return the bar slowly to the starting position, allowing your forearms to rise to about parallel with the floor.",
+      "Use the rope attachment to increase range of motion and independent arm movement."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/cable-pushdown/0.gif"]
+  },
+  {
+    "id": "ez-bar-skull-crusher",
+    "name": "EZ-Bar Skull Crusher",
+    "force": "push",
+    "level": "intermediate",
+    "mechanic": "isolation",
+    "equipment": "barbell",
+    "primaryMuscles": ["triceps"],
+    "secondaryMuscles": [],
+    "instructions": [
+      "Lie on a flat bench and hold an EZ-bar with a close, slightly angled grip, arms extended over your chest.",
+      "Lower the bar toward your forehead by bending only at your elbows. Keep your upper arms perpendicular to the floor.",
+      "When the bar is near your forehead, press it back to the starting position by extending your elbows.",
+      "Do not let your elbows flare out to the sides — keep them pointing toward the ceiling throughout.",
+      "A spotter is recommended when using heavy loads."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/ez-bar-skullcrusher/0.gif"]
+  },
+  {
+    "id": "dumbbell-lateral-raise",
+    "name": "Dumbbell Lateral Raise",
+    "force": "push",
+    "level": "beginner",
+    "mechanic": "isolation",
+    "equipment": "dumbbell",
+    "primaryMuscles": ["shoulders"],
+    "secondaryMuscles": ["traps"],
+    "instructions": [
+      "Stand holding a dumbbell in each hand at your sides, palms facing inward.",
+      "Keeping a slight bend in your elbows, raise both dumbbells out to the sides until they reach shoulder height.",
+      "Lead with your elbows, not your wrists. Tilt the front of the dumbbell slightly down (like pouring water) to maximize medial deltoid activation.",
+      "Lower the dumbbells under control to the starting position. Do not use momentum or shrug your traps."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/dumbbell-lateral-raise/0.gif"]
+  },
+  {
+    "id": "dumbbell-front-raise",
+    "name": "Dumbbell Front Raise",
+    "force": "push",
+    "level": "beginner",
+    "mechanic": "isolation",
+    "equipment": "dumbbell",
+    "primaryMuscles": ["shoulders"],
+    "secondaryMuscles": ["chest"],
+    "instructions": [
+      "Stand holding a dumbbell in each hand in front of your thighs, palms facing your thighs.",
+      "Raise one or both dumbbells directly in front of you to shoulder height, keeping your elbows slightly bent.",
+      "Pause briefly at shoulder height, then lower the weight slowly to the starting position.",
+      "Avoid swinging your torso or using momentum. Alternate arms to increase time under tension."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/dumbbell-front-raise/0.gif"]
+  },
+  {
+    "id": "cable-rear-delt-fly",
+    "name": "Cable Rear Delt Fly",
+    "force": "pull",
+    "level": "beginner",
+    "mechanic": "isolation",
+    "equipment": "cable",
+    "primaryMuscles": ["shoulders"],
+    "secondaryMuscles": ["upper back", "rear deltoids"],
+    "instructions": [
+      "Set both cables to the highest position on a cable crossover machine. Stand in the center and grab the left cable with your right hand and the right cable with your left hand (cross them).",
+      "Stand with feet shoulder-width apart, slight bend in elbows.",
+      "Pull both cables outward and back in a wide arc, squeezing your rear deltoids and upper back.",
+      "Return to the starting position under control.",
+      "Alternatively, perform this exercise bent over at 90 degrees with cables set at floor level."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/cable-rear-delt-fly/0.gif"]
+  },
+  {
+    "id": "plank",
+    "name": "Plank",
+    "force": "static",
+    "level": "beginner",
+    "mechanic": "compound",
+    "equipment": "body only",
+    "primaryMuscles": ["core"],
+    "secondaryMuscles": ["shoulders", "glutes", "lower back"],
+    "instructions": [
+      "Place your forearms on the floor with elbows directly below your shoulders. Extend your legs behind you, resting on your toes.",
+      "Keep your body in a perfectly straight line from head to heels. Do not let your hips sag or rise.",
+      "Brace your core as if you were about to take a punch. Squeeze your glutes and quads.",
+      "Breathe steadily throughout. Hold the position for the prescribed time.",
+      "If your form breaks, stop the set — a short plank with good form is better than a long one with poor form."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/plank/0.gif"]
+  },
+  {
+    "id": "ab-wheel-rollout",
+    "name": "Ab Wheel Rollout",
+    "force": "push",
+    "level": "intermediate",
+    "mechanic": "compound",
+    "equipment": "other",
+    "primaryMuscles": ["core"],
+    "secondaryMuscles": ["lower back", "shoulders", "lats"],
+    "instructions": [
+      "Kneel on the floor and grip the ab wheel with both hands, arms extended directly below your shoulders.",
+      "Brace your core hard and slowly roll the wheel forward, extending your body toward the floor.",
+      "Go as far as you can maintain a neutral spine — beginners should stop when parallel to the floor.",
+      "Use your core to pull yourself back to the starting position. Do not rely on your hips to drive the movement.",
+      "This is a demanding exercise — start with partial range of motion and progress gradually."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/ab-rollout/0.gif"]
+  },
+  {
+    "id": "hanging-leg-raise",
+    "name": "Hanging Leg Raise",
+    "force": "pull",
+    "level": "intermediate",
+    "mechanic": "isolation",
+    "equipment": "body only",
+    "primaryMuscles": ["core"],
+    "secondaryMuscles": ["hip flexors", "forearms"],
+    "instructions": [
+      "Hang from a pull-up bar with an overhand grip, arms fully extended, body straight.",
+      "Brace your core and avoid swinging. Raise your legs by flexing at the hips and, if possible, the knees.",
+      "For beginners: raise knees to hip level. For advanced: raise legs until parallel to the floor or higher.",
+      "Lower your legs slowly under control — do not let gravity drop them.",
+      "If you cannot avoid swinging, use ab straps or a captain's chair as an alternative."
+    ],
+    "category": "strength",
+    "images": ["https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db/exercises/hanging-leg-raise/0.gif"]
+  }
+]

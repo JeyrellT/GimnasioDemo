@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="Forja — Cada repeticion te forja">
+  <title>Forja — Plataforma de entrenamiento personal hecha en Costa Rica</title>
+  <defs>
+    <!-- Gradiente diagonal de fondo: neutral-950 a brand-secondary -->
+    <linearGradient id="og-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#09090B"/>
+      <stop offset="100%" stop-color="#1E2A38"/>
+    </linearGradient>
+    <!-- Gradiente del isotipo en el OG -->
+    <linearGradient id="og-brand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FF6A1A"/>
+      <stop offset="100%" stop-color="#F5C542"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Fondo: gradiente diagonal -->
+  <rect x="0" y="0" width="1200" height="630" fill="url(#og-bg)"/>
+
+  <!-- Logo horizontal centrado: isotipo + wordmark, escala 1.5x -->
+  <!-- Isotipo base 64x64 escalado a 96x96 -->
+  <!-- Wordmark base aprox 216x64 escalado a 324x96 (font-size 48 * 1.5 = 72) -->
+  <!-- Total ancho aprox: 96 + 24 (espacio) + 324 = 444px -->
+  <!-- Centro x: 1200/2=600. Offset izquierda: 600 - 444/2 = 600 - 222 = 378 -->
+  <!-- Centro y: 180. Isotipo centrado verticalmente: 180 - 48 = 132 (top del isotipo) -->
+
+  <!-- Isotipo: translate a x=378, y centrado en 180 (altura 96, top=132) -->
+  <g transform="translate(378, 132) scale(1.5)">
+    <rect x="7" y="46" width="50" height="14" rx="4" fill="url(#og-brand)"/>
+    <polygon points="14,46 50,46 47,32 17,32" fill="url(#og-brand)"/>
+    <polygon points="4,20 50,20 60,32 4,32" fill="url(#og-brand)"/>
+    <polygon points="52,20 60,20 60,28" fill="#FFFFFF" opacity="0.3"/>
+  </g>
+
+  <!-- Wordmark: x = 378 + 96 + 24 = 498. y baseline ~220 (132 + 96/2 + ajuste tipografico) -->
+  <!-- font-size 72 (48 * 1.5), baseline aproximada: top_isotipo + 96*0.75 = 132 + 72 = 204 -->
+  <text
+    x="498"
+    y="214"
+    font-family="Inter, system-ui, -apple-system, sans-serif"
+    font-weight="700"
+    font-size="72"
+    letter-spacing="-0.02em"
+    fill="#FAFAFA"
+  >forja</text>
+
+  <!-- Tagline principal: "Cada repeticion te forja." -->
+  <!-- neutral-50, Inter Medium 48px, centrado, y=380 -->
+  <text
+    x="600"
+    y="380"
+    text-anchor="middle"
+    font-family="Inter, system-ui, -apple-system, sans-serif"
+    font-weight="500"
+    font-size="48"
+    fill="#FAFAFA"
+  >Cada repetici&#xF3;n te forja.</text>
+
+  <!-- Subtitulo: Inter Regular 24px, neutral-400, y=440 -->
+  <text
+    x="600"
+    y="440"
+    text-anchor="middle"
+    font-family="Inter, system-ui, -apple-system, sans-serif"
+    font-weight="400"
+    font-size="24"
+    fill="#A1A1AA"
+  >Entrenamiento personal hecho en Costa Rica</text>
+
+  <!-- Linea accent brand-primary: 80px ancho, 4px alto, centrada, y=510 -->
+  <rect x="560" y="510" width="80" height="4" rx="2" fill="#FF6A1A"/>
+
+  <!-- Tag esquina inferior derecha: "forja.app" en font-mono, neutral-500, 16px -->
+  <text
+    x="1172"
+    y="614"
+    text-anchor="end"
+    font-family="ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace"
+    font-weight="400"
+    font-size="16"
+    fill="#71717A"
+  >forja.app</text>
+</svg>

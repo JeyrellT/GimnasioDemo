@@ -1,0 +1,1139 @@
+// =============================================================================
+// FORJA — Prisma schema
+// PWA gym management for Costa Rica.
+// Owner: database-architect.
+// All comments in English (per AGENT_BRIEF). All UI copy lives in es-CR voseo.
+// =============================================================================
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// =============================================================================
+// ENUMS
+// =============================================================================
+
+enum UserRole {
+  TRAINER
+  CLIENT
+  ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_SAY
+}
+
+enum TrainerClientStatus {
+  PENDING
+  ACTIVE
+  PAUSED
+  ENDED
+}
+
+enum ParqStatus {
+  NOT_COMPLETED
+  GREEN
+  REVIEW
+  RED
+}
+
+enum Goal {
+  FAT_LOSS
+  MUSCLE_GAIN
+  MAINTENANCE
+  PERFORMANCE
+  GENERAL_HEALTH
+}
+
+enum ConsentType {
+  TERMS_AND_PRIVACY
+  HEALTH_DATA
+  AI_PROCESSING
+  MARKETING
+}
+
+enum BodyMetricSource {
+  MANUAL
+  OCR_SCALE
+  CONNECTED_DEVICE
+}
+
+enum ProgressPhotoView {
+  FRONT
+  SIDE_LEFT
+  SIDE_RIGHT
+  BACK
+}
+
+enum ExerciseDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum ExerciseEquipment {
+  BODYWEIGHT
+  BARBELL
+  DUMBBELL
+  KETTLEBELL
+  MACHINE
+  CABLE
+  BAND
+  OTHER
+}
+
+enum MuscleGroup {
+  CHEST
+  BACK
+  SHOULDERS
+  BICEPS
+  TRICEPS
+  FOREARMS
+  ABS
+  OBLIQUES
+  GLUTES
+  QUADS
+  HAMSTRINGS
+  CALVES
+  NECK
+  FULL_BODY
+}
+
+enum RoutineGoal {
+  HYPERTROPHY
+  STRENGTH
+  ENDURANCE
+  FAT_LOSS
+  GENERAL
+}
+
+enum AssignedRoutineStatus {
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+  CANCELLED
+}
+
+enum WorkoutSessionStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABORTED
+}
+
+enum SubscriptionTier {
+  SOLO
+  PRO
+  STUDIO
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  READ_ONLY
+}
+
+enum ChargeStatus {
+  PENDING
+  PAID
+  OVERDUE
+  WAIVED
+  CANCELLED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SIGNED
+  ACCEPTED
+  REJECTED
+  FAILED
+}
+
+enum PaymentEventType {
+  TILOPAY
+  RESEND
+  OTHER
+}
+
+enum LpdpRequestType {
+  EXPORT
+  DELETE
+}
+
+enum LpdpRequestStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  ACCESS
+  EXPORT
+  CONSENT_GRANT
+  CONSENT_REVOKE
+  LOGIN
+  LOGOUT
+}
+
+// --- Finance: locations / expenses / one-off sales ---------------------------
+
+enum LocationKind {
+  HOME // trainer trains at own home
+  GYM // commercial gym
+  STUDIO // independent studio owned/rented by trainer
+  CLIENT_HOME // travels to client's home
+  OUTDOOR // park, street, beach
+  OTHER
+}
+
+enum LocationCostModel {
+  FLAT // fixed cost per visit
+  PER_KM // cost = kmTraveled * costPerKmCRC
+  HYBRID // base + per-km (deferred post-MVP; reserved here for forward-compat)
+}
+
+enum ExpenseCategory {
+  TRANSPORTE
+  ALQUILER_ESPACIO
+  EQUIPO
+  MARKETING
+  EDUCACION
+  SOFTWARE
+  COMIDAS
+  IMPUESTOS
+  SERVICIOS_PROFESIONALES
+  OTROS
+}
+
+enum ExpenseSource {
+  MANUAL
+  LOCATION_VISIT
+  RECURRING_RENT
+}
+
+enum IncomeCategory {
+  SESION_PT
+  EVALUACION_INICIAL
+  PLAN_NUTRICIONAL
+  CLASE_GRUPAL
+  ASESORIA_ONLINE
+  PRODUCTO
+  OTROS
+}
+
+enum OneOffPaidStatus {
+  PAID
+  PENDING
+  CANCELLED
+}
+
+// --- Onboarding wizard -------------------------------------------------------
+
+enum OnboardingMode {
+  TRAINER_SIDE // trainer fills everything during a face-to-face intake
+  INVITE // client completes the wizard via invitation link
+}
+
+// =============================================================================
+// IDENTITY CORE
+// =============================================================================
+
+/// Core user. Identity row for trainers, clients and admins.
+/// Soft-deletable. All sensitive PII lives in ClientProfile / TrainerProfile.
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  // Optional scrypt password hash for Credentials provider sign-in.
+  // Format: scrypt|N|r|p|saltHex|hashHex. NULL = magic-link only.
+  passwordHash  String?
+  name          String
+  dateOfBirth   DateTime?
+  gender        Gender?
+  role          UserRole  @default(CLIENT)
+  locale        String    @default("es-CR")
+  theme         String    @default("dark")
+  pushOptIn     Boolean   @default(false)
+  avatarUrl     String?
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  // 1-1 profiles
+  trainerProfile TrainerProfile?
+  clientProfile  ClientProfile?
+
+  // Auth.js relations
+  accounts Account[]
+  sessions Session[]
+
+  // Privacy / consent
+  consents     Consent[]
+  lpdpRequests LpdpRequest[]
+
+  // Audit
+  auditLogs AuditLog[] @relation("AuditActor")
+
+  // Relations through TrainerClient (named to disambiguate)
+  asTrainer TrainerClient[] @relation("TrainerOnLink")
+  asClient  TrainerClient[] @relation("ClientOnLink")
+
+  // Trainer-only authoring
+  invitations         Invitation[]         @relation("TrainerInvitations")
+  routinesCreated     RoutineTemplate[]    @relation("RoutineAuthor")
+  exercisesCreated    Exercise[]           @relation("ExerciseAuthor")
+  trainerSubscription TrainerSubscription? @relation("TrainerSub")
+  chargesIssued       ClientCharge[]       @relation("TrainerCharges")
+
+  // Client-only authoring
+  assessments      InitialAssessment[]
+  bodyMetrics      BodyMetric[]
+  progressPhotos   ProgressPhoto[]
+  workoutSessions  WorkoutSession[]
+  assignedRoutines AssignedRoutine[]
+  chargesReceived  ClientCharge[]      @relation("ClientCharges")
+
+  // Comments authored on assigned routines (trainer or client)
+  routineComments RoutineComment[]
+
+  // Notifications received
+  notifications Notification[]
+
+  // Trainer-only finance authoring
+  trainerLocations        TrainerLocation[] @relation("TrainerLocations")
+  trainerLocationVisits   LocationVisit[]   @relation("TrainerLocationVisits")
+  trainerExpenses         TrainerExpense[]  @relation("TrainerExpenses")
+  trainerOneOffSales      OneOffSale[]      @relation("TrainerOneOffSales")
+  // Client-side reverse pointer for one-off sales (when client is registered)
+  clientOneOffSales       OneOffSale[]      @relation("ClientOneOffSales")
+  // Trainer-only onboarding drafts
+  trainerOnboardingDrafts OnboardingDraft[] @relation("TrainerOnboardingDrafts")
+
+  @@index([role])
+  @@index([deletedAt])
+}
+
+/// Auth.js account row (OAuth providers, future use).
+model Account {
+  id                String   @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?  @db.Text
+  access_token      String?  @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?  @db.Text
+  session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+/// Auth.js database session. Used when session strategy = "database".
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expires])
+}
+
+/// Auth.js verification token (magic links).
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@index([expires])
+}
+
+/// LPDP-grade granular consents. Versioned, with revocation timestamp.
+model Consent {
+  id        String      @id @default(cuid())
+  userId    String
+  type      ConsentType
+  granted   Boolean
+  version   String
+  ipAddress String?
+  userAgent String?
+  grantedAt DateTime?
+  revokedAt DateTime?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  deletedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, type])
+}
+
+// =============================================================================
+// PROFILES
+// =============================================================================
+
+/// Trainer professional profile (1-1 with User where role = TRAINER).
+model TrainerProfile {
+  id                     String    @id @default(cuid())
+  userId                 String    @unique
+  tradeName              String
+  specialty              String
+  bio                    String    @db.Text
+  certificationUrl       String?
+  fiscalIdType           String?
+  fiscalIdNumber         String?
+  fiscalAddress          String?
+  haciendaUsername       String?
+  defaultMonthlyPriceCRC Decimal?  @db.Decimal(12, 2)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  deletedAt              DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([deletedAt])
+}
+
+/// Client profile (1-1 with User where role = CLIENT).
+/// `encryptedCedula` is AES-GCM ciphertext (handled in src/lib/crypto/aes-gcm.ts).
+model ClientProfile {
+  id               String     @id @default(cuid())
+  userId           String     @unique
+  encryptedCedula  String?
+  parqStatus       ParqStatus @default(NOT_COMPLETED)
+  goal             Goal?
+  goalNotes        String?    @db.Text
+  locationCity     String?
+  weightKg         Decimal?   @db.Decimal(6, 2)
+  heightCm         Decimal?   @db.Decimal(5, 1)
+  restingHrBpm     Int?
+  lastWeightUpdate DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  deletedAt        DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([parqStatus])
+  @@index([deletedAt])
+}
+
+// =============================================================================
+// LINKING — trainer <-> client
+// =============================================================================
+
+/// Active or historical link between a trainer and a client.
+/// `notesPrivate` is trainer-only (never shown to client; enforced by API guards).
+model TrainerClient {
+  id              String              @id @default(cuid())
+  trainerId       String
+  clientId        String
+  status          TrainerClientStatus @default(PENDING)
+  startedAt       DateTime            @default(now())
+  endedAt         DateTime?
+  monthlyPriceCRC Decimal?            @db.Decimal(12, 2)
+  notesPrivate    String?             @db.Text
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  deletedAt       DateTime?
+
+  trainer User @relation("TrainerOnLink", fields: [trainerId], references: [id], onDelete: Restrict)
+  client  User @relation("ClientOnLink", fields: [clientId], references: [id], onDelete: Restrict)
+
+  @@unique([trainerId, clientId])
+  @@index([trainerId, status])
+  @@index([clientId, status])
+}
+
+/// Single-use invitation token. 7-day TTL enforced in app code (see PRODUCT_DECISIONS).
+model Invitation {
+  id        String    @id @default(cuid())
+  trainerId String
+  email     String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  clientId  String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  trainer         User             @relation("TrainerInvitations", fields: [trainerId], references: [id], onDelete: Restrict)
+  onboardingDraft OnboardingDraft?
+
+  @@index([trainerId])
+  @@index([email])
+  @@index([expiresAt])
+}
+
+// =============================================================================
+// ASSESSMENT — PARQ + initial anthropometry
+// =============================================================================
+
+/// One-shot baseline assessment captured during client onboarding.
+/// Linked to client User via `clientUserId` (1-1 effective via @unique).
+model InitialAssessment {
+  id           String    @id @default(cuid())
+  clientUserId String    @unique
+  heightCm     Decimal   @db.Decimal(5, 1)
+  weightKg     Decimal   @db.Decimal(6, 2)
+  bodyFatPct   Decimal?  @db.Decimal(4, 1)
+  restingHrBpm Int?
+  systolicBp   Int?
+  diastolicBp  Int?
+  neckCm       Decimal?  @db.Decimal(4, 1)
+  waistCm      Decimal?  @db.Decimal(4, 1)
+  hipCm        Decimal?  @db.Decimal(4, 1)
+  chestCm      Decimal?  @db.Decimal(4, 1)
+  armCm        Decimal?  @db.Decimal(4, 1)
+  thighCm      Decimal?  @db.Decimal(4, 1)
+  notes        String?   @db.Text
+  performedAt  DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  clientUser  User         @relation(fields: [clientUserId], references: [id], onDelete: Restrict)
+  parqAnswers ParqAnswer[]
+
+  @@index([performedAt])
+}
+
+/// One row per PAR-Q+ 2024 question (P1..P10 + follow-ups).
+/// Cascade-deleted with parent assessment for hygiene.
+model ParqAnswer {
+  id            String    @id @default(cuid())
+  assessmentId  String
+  questionCode  String
+  question      String    @db.Text
+  answer        Boolean
+  followUpNotes String?   @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  assessment InitialAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@index([assessmentId])
+  @@index([questionCode])
+}
+
+// =============================================================================
+// BODY METRICS — recurring weight / circumferences / photos
+// =============================================================================
+
+/// Time-series of body measurements. Source can be manual, OCR scale or device.
+model BodyMetric {
+  id            String           @id @default(cuid())
+  clientUserId  String
+  recordedAt    DateTime         @default(now())
+  weightKg      Decimal?         @db.Decimal(6, 2)
+  bodyFatPct    Decimal?         @db.Decimal(4, 1)
+  muscleMassKg  Decimal?         @db.Decimal(5, 2)
+  waistCm       Decimal?         @db.Decimal(4, 1)
+  hipCm         Decimal?         @db.Decimal(4, 1)
+  neckCm        Decimal?         @db.Decimal(4, 1)
+  chestCm       Decimal?         @db.Decimal(4, 1)
+  armCm         Decimal?         @db.Decimal(4, 1)
+  thighCm       Decimal?         @db.Decimal(4, 1)
+  source        BodyMetricSource @default(MANUAL)
+  notes         String?          @db.Text
+  scaleImageKey String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  deletedAt     DateTime?
+
+  clientUser User @relation(fields: [clientUserId], references: [id], onDelete: Restrict)
+
+  // Photos optionally linked to this weigh-in (so we can pair before/after with weight)
+  progressPhotos ProgressPhoto[]
+
+  @@index([clientUserId, recordedAt(sort: Desc)])
+}
+
+/// Progress photo metadata. The bytes live in R2/MinIO under `storageKey`.
+/// Forbidden to send to Gemini — see PRODUCT_DECISIONS section 5.
+model ProgressPhoto {
+  id             String            @id @default(cuid())
+  clientUserId   String
+  takenAt        DateTime          @default(now())
+  view           ProgressPhotoView
+  storageKey     String
+  thumbnailKey   String?
+  encryptedNotes String?
+  bodyMetricId   String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  deletedAt      DateTime?
+
+  clientUser User        @relation(fields: [clientUserId], references: [id], onDelete: Restrict)
+  bodyMetric BodyMetric? @relation(fields: [bodyMetricId], references: [id], onDelete: SetNull)
+
+  @@index([clientUserId, takenAt(sort: Desc)])
+  @@index([bodyMetricId])
+}
+
+// =============================================================================
+// EXERCISE LIBRARY
+// =============================================================================
+
+/// Exercise master catalog.
+/// `searchVector` is maintained by a trigger declared in the init migration.
+/// The Unsupported() type tells Prisma "the column exists but Prisma doesn't
+/// type it" — we never write to it from JS; the trigger keeps it in sync.
+model Exercise {
+  id               String                   @id @default(cuid())
+  slug             String                   @unique
+  nameEs           String
+  nameEn           String
+  instructionsEs   String                   @db.Text
+  instructionsEn   String?                  @db.Text
+  primaryMuscle    MuscleGroup
+  secondaryMuscles MuscleGroup[]
+  equipment        ExerciseEquipment
+  difficulty       ExerciseDifficulty
+  mediaUrl         String?
+  gifUrl           String?
+  thumbnailUrl     String?
+  isPublic         Boolean                  @default(true)
+  createdById      String?
+  searchVector     Unsupported("tsvector")?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  deletedAt        DateTime?
+
+  createdBy        User?             @relation("ExerciseAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  routineExercises RoutineExercise[]
+  performedSets    PerformedSet[]
+
+  @@index([primaryMuscle])
+  @@index([equipment])
+  @@index([isPublic])
+  @@index([createdById])
+}
+
+// =============================================================================
+// ROUTINES — templates owned by trainers, days, exercises
+// =============================================================================
+
+/// A trainer's reusable routine template.
+model RoutineTemplate {
+  id            String      @id @default(cuid())
+  trainerId     String
+  name          String
+  description   String?     @db.Text
+  goal          RoutineGoal
+  splitDays     Int
+  durationWeeks Int         @default(8)
+  isArchived    Boolean     @default(false)
+  isPublic      Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
+
+  trainer  User              @relation("RoutineAuthor", fields: [trainerId], references: [id], onDelete: Restrict)
+  days     RoutineDay[]
+  assigned AssignedRoutine[]
+
+  @@index([trainerId, isArchived])
+  @@index([goal])
+}
+
+/// One day inside a RoutineTemplate (e.g. "Empuje", "Tirón", "Pierna").
+model RoutineDay {
+  id          String    @id @default(cuid())
+  routineId   String
+  dayIndex    Int
+  name        String
+  description String?   @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  routine   RoutineTemplate   @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  exercises RoutineExercise[]
+
+  @@unique([routineId, dayIndex])
+}
+
+/// Ordered list of exercises within a RoutineDay with prescription parameters.
+/// `supersetGroup` ties 2-3 exercises together (null if standalone).
+model RoutineExercise {
+  id            String    @id @default(cuid())
+  routineDayId  String
+  exerciseId    String
+  order         Int
+  targetSets    Int
+  targetRepsMin Int
+  targetRepsMax Int
+  targetRpe     Decimal?  @db.Decimal(3, 1)
+  restSeconds   Int       @default(90)
+  tempo         String?
+  supersetGroup Int?
+  notes         String?   @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  routineDay RoutineDay @relation(fields: [routineDayId], references: [id], onDelete: Cascade)
+  exercise   Exercise   @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+
+  @@unique([routineDayId, order])
+  @@index([exerciseId])
+}
+
+/// A snapshot of a RoutineTemplate assigned to a client.
+/// `snapshotJson` freezes the prescription so trainer edits to the template
+/// do not retroactively change what the client sees mid-mesocycle.
+model AssignedRoutine {
+  id                String                @id @default(cuid())
+  clientUserId      String
+  routineTemplateId String
+  snapshotJson      Json
+  assignedAt        DateTime              @default(now())
+  startsOn          DateTime
+  endsOn            DateTime?
+  status            AssignedRoutineStatus @default(ACTIVE)
+  trainerNotes      String?               @db.Text
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  deletedAt         DateTime?
+
+  clientUser      User             @relation(fields: [clientUserId], references: [id], onDelete: Restrict)
+  routineTemplate RoutineTemplate  @relation(fields: [routineTemplateId], references: [id], onDelete: Restrict)
+  workoutSessions WorkoutSession[]
+  comments        RoutineComment[]
+
+  @@index([clientUserId, status])
+  @@index([routineTemplateId])
+}
+
+// =============================================================================
+// EXECUTION — sessions performed in the gym
+// =============================================================================
+
+/// A single workout session (in progress, completed or aborted).
+/// Can be linked to an AssignedRoutine, or marked `isFreeWorkout` when the
+/// client trains without prescription.
+model WorkoutSession {
+  id                String               @id @default(cuid())
+  clientUserId      String
+  assignedRoutineId String?
+  dayIndex          Int?
+  status            WorkoutSessionStatus @default(IN_PROGRESS)
+  startedAt         DateTime             @default(now())
+  completedAt       DateTime?
+  totalDurationSec  Int?
+  bodyweightKg      Decimal?             @db.Decimal(6, 2)
+  subjectiveFatigue Int?
+  notes             String?              @db.Text
+  isFreeWorkout     Boolean              @default(false)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  deletedAt         DateTime?
+
+  clientUser      User             @relation(fields: [clientUserId], references: [id], onDelete: Restrict)
+  assignedRoutine AssignedRoutine? @relation(fields: [assignedRoutineId], references: [id], onDelete: SetNull)
+  performedSets   PerformedSet[]
+
+  @@index([clientUserId, startedAt(sort: Desc)])
+  @@index([assignedRoutineId])
+  @@index([status])
+}
+
+/// One executed set inside a WorkoutSession.
+/// `isPr` is computed by app logic on insert (compare against history).
+model PerformedSet {
+  id           String    @id @default(cuid())
+  sessionId    String
+  exerciseId   String
+  setNumber    Int
+  weightKg     Decimal?  @db.Decimal(6, 2)
+  reps         Int?
+  rpe          Decimal?  @db.Decimal(3, 1)
+  restTakenSec Int?
+  isWarmup     Boolean   @default(false)
+  isPr         Boolean   @default(false)
+  failed       Boolean   @default(false)
+  notes        String?   @db.Text
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  session  WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exercise Exercise       @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+
+  @@index([sessionId, setNumber])
+  @@index([exerciseId, weightKg])
+}
+
+// =============================================================================
+// COMMUNICATION
+// =============================================================================
+
+/// Async comment thread attached to an AssignedRoutine.
+/// Authored by trainer or client (role checked at API boundary).
+model RoutineComment {
+  id                String    @id @default(cuid())
+  assignedRoutineId String
+  authorUserId      String
+  body              String    @db.Text
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+
+  assignedRoutine AssignedRoutine @relation(fields: [assignedRoutineId], references: [id], onDelete: Cascade)
+  author          User            @relation(fields: [authorUserId], references: [id], onDelete: Restrict)
+
+  @@index([assignedRoutineId])
+  @@index([authorUserId])
+}
+
+// =============================================================================
+// BILLING — subscriptions, charges, Hacienda invoices
+// =============================================================================
+
+/// Static catalog of subscription tiers (seeded). One row per tier.
+model SubscriptionPlan {
+  id         String           @id @default(cuid())
+  tier       SubscriptionTier @unique
+  name       String
+  priceCRC   Decimal          @db.Decimal(12, 2)
+  maxClients Int
+  features   String[]
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  deletedAt  DateTime?
+}
+
+/// Trainer's Forja subscription. One per trainer.
+model TrainerSubscription {
+  id                 String             @id @default(cuid())
+  trainerUserId      String             @unique
+  planTier           SubscriptionTier
+  status             SubscriptionStatus @default(TRIAL)
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  trialEndsAt        DateTime?
+  paymentMethodToken String?
+  cancelledAt        DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  deletedAt          DateTime?
+
+  trainer User @relation("TrainerSub", fields: [trainerUserId], references: [id], onDelete: Restrict)
+
+  @@index([status, currentPeriodEnd])
+}
+
+/// Trainer-issued monthly charge to a client. Drives invoice generation.
+model ClientCharge {
+  id                String       @id @default(cuid())
+  trainerUserId     String
+  clientUserId      String
+  periodStart       DateTime
+  periodEnd         DateTime
+  amountCRC         Decimal      @db.Decimal(12, 2)
+  status            ChargeStatus @default(PENDING)
+  paidAt            DateTime?
+  paymentMethodInfo String?
+  notes             String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  deletedAt         DateTime?
+
+  trainer User     @relation("TrainerCharges", fields: [trainerUserId], references: [id], onDelete: Restrict)
+  client  User     @relation("ClientCharges", fields: [clientUserId], references: [id], onDelete: Restrict)
+  invoice Invoice?
+
+  @@unique([trainerUserId, clientUserId, periodStart])
+  @@index([clientUserId, status])
+  @@index([trainerUserId, status])
+}
+
+/// Hacienda 4.4 electronic invoice tied to a ClientCharge.
+/// `claveNumerica` is the 50-char Hacienda key; `consecutivo` is sequential.
+model Invoice {
+  id                  String        @id @default(cuid())
+  chargeId            String        @unique
+  claveNumerica       String        @unique
+  consecutivo         String
+  status              InvoiceStatus @default(DRAFT)
+  xmlStorageKey       String?
+  signedXmlStorageKey String?
+  pdfStorageKey       String?
+  issuedAt            DateTime?
+  sentToHaciendaAt    DateTime?
+  haciendaResponseRaw Json?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  deletedAt           DateTime?
+
+  charge ClientCharge @relation(fields: [chargeId], references: [id], onDelete: Restrict)
+
+  @@index([status])
+  @@index([consecutivo])
+}
+
+/// Raw inbound webhook events (Tilopay, Resend bounces, etc.).
+/// Not soft-deletable: append-only audit-style table.
+model PaymentEvent {
+  id          String           @id @default(cuid())
+  type        PaymentEventType
+  externalId  String?
+  payloadRaw  Json
+  processed   Boolean          @default(false)
+  processedAt DateTime?
+  error       String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([type, processed])
+  @@index([externalId])
+}
+
+// =============================================================================
+// AUDIT / LPDP / NOTIFICATIONS
+// =============================================================================
+
+/// Append-only audit trail. Required by Ley 8968 for sensitive data access.
+/// No soft delete: this table is immutable by design.
+model AuditLog {
+  id          String      @id @default(cuid())
+  actorUserId String?
+  action      AuditAction
+  entityType  String
+  entityId    String?
+  ipAddress   String?
+  userAgent   String?
+  metadata    Json?
+  createdAt   DateTime    @default(now())
+
+  actor User? @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId, createdAt(sort: Desc)])
+  @@index([entityType, entityId])
+  @@index([action, createdAt(sort: Desc)])
+}
+
+/// LPDP requests (data export, account deletion).
+model LpdpRequest {
+  id                String            @id @default(cuid())
+  userId            String
+  type              LpdpRequestType
+  status            LpdpRequestStatus @default(PENDING)
+  notes             String?
+  downloadKey       String?
+  downloadExpiresAt DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  deletedAt         DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, status])
+  @@index([status, createdAt])
+}
+
+/// In-app / push notifications.
+/// `sentVia` accumulates channels actually used (e.g. ["push","email"]).
+model Notification {
+  id         String    @id @default(cuid())
+  userUserId String
+  type       String
+  title      String
+  body       String    @db.Text
+  data       Json?
+  readAt     DateTime?
+  sentVia    String[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  user User @relation(fields: [userUserId], references: [id], onDelete: Cascade)
+
+  @@index([userUserId, readAt])
+  @@index([type, createdAt])
+}
+
+// =============================================================================
+// FINANCE — locations, visits, expenses, one-off sales
+// All amounts in CRC (no multi-currency in MVP).
+// All FKs to User use onDelete: Restrict to protect financial history.
+// =============================================================================
+
+/// A place where the trainer delivers sessions (own home, a gym, a studio,
+/// or a client's home). Drives auto-cost generation per visit + monthly rent.
+/// `costPerVisitCRC` is used when costModel=FLAT.
+/// `costPerKmCRC` + `defaultKm` are used when costModel=PER_KM.
+model TrainerLocation {
+  id              String            @id @default(cuid())
+  trainerUserId   String
+  name            String
+  address         String?
+  kind            LocationKind
+  costModel       LocationCostModel @default(FLAT)
+  costPerVisitCRC Decimal?          @db.Decimal(10, 2)
+  costPerKmCRC    Decimal?          @db.Decimal(10, 2)
+  defaultKm       Decimal?          @db.Decimal(6, 2)
+  monthlyRentCRC  Decimal?          @db.Decimal(10, 2)
+  notes           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  deletedAt       DateTime?
+
+  trainer  User             @relation("TrainerLocations", fields: [trainerUserId], references: [id], onDelete: Restrict)
+  visits   LocationVisit[]
+  expenses TrainerExpense[]
+
+  @@index([trainerUserId, deletedAt])
+}
+
+/// A trainer's visit to a TrainerLocation. `computedCostCRC` is materialized
+/// at insert time so historical costs are stable even if the location's cost
+/// model changes later.
+model LocationVisit {
+  id              String    @id @default(cuid())
+  trainerUserId   String
+  locationId      String
+  visitedAt       DateTime
+  kmTraveled      Decimal?  @db.Decimal(6, 2)
+  computedCostCRC Decimal   @db.Decimal(10, 2)
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  trainer  User            @relation("TrainerLocationVisits", fields: [trainerUserId], references: [id], onDelete: Restrict)
+  location TrainerLocation @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  expense  TrainerExpense? @relation("ExpenseFromVisit")
+
+  @@index([trainerUserId, visitedAt(sort: Desc)])
+  @@index([locationId, visitedAt(sort: Desc)])
+}
+
+/// Trainer expense ledger. Rows can be authored manually, auto-generated from
+/// a LocationVisit (source=LOCATION_VISIT, links via `visitId`), or auto-rolled
+/// from a recurring location rent (source=RECURRING_RENT).
+model TrainerExpense {
+  id            String          @id @default(cuid())
+  trainerUserId String
+  occurredAt    DateTime
+  amountCRC     Decimal         @db.Decimal(10, 2)
+  category      ExpenseCategory
+  locationId    String?
+  description   String?
+  receiptKey    String?
+  source        ExpenseSource   @default(MANUAL)
+  visitId       String?         @unique
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  deletedAt     DateTime?
+
+  trainer  User             @relation("TrainerExpenses", fields: [trainerUserId], references: [id], onDelete: Restrict)
+  location TrainerLocation? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  visit    LocationVisit?   @relation("ExpenseFromVisit", fields: [visitId], references: [id], onDelete: SetNull)
+
+  @@index([trainerUserId, occurredAt(sort: Desc)])
+  @@index([trainerUserId, category, occurredAt])
+}
+
+/// Ad-hoc income outside the recurring monthly subscription (drop-in session,
+/// nutrition plan, group class, product). `clientUserId` is optional because
+/// the buyer may not be a registered Forja user.
+model OneOffSale {
+  id            String           @id @default(cuid())
+  trainerUserId String
+  clientUserId  String?
+  occurredAt    DateTime
+  amountCRC     Decimal          @db.Decimal(10, 2)
+  category      IncomeCategory
+  description   String?
+  paymentMethod String?
+  paidStatus    OneOffPaidStatus @default(PAID)
+  paidAt        DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  deletedAt     DateTime?
+
+  trainer User  @relation("TrainerOneOffSales", fields: [trainerUserId], references: [id], onDelete: Restrict)
+  client  User? @relation("ClientOneOffSales", fields: [clientUserId], references: [id], onDelete: SetNull)
+
+  @@index([trainerUserId, occurredAt(sort: Desc)])
+  @@index([trainerUserId, category, occurredAt])
+}
+
+// =============================================================================
+// ONBOARDING — multi-step AI wizard with draft persistence
+// =============================================================================
+
+/// Server-side draft for the 9-step onboarding wizard.
+/// Two flows:
+///   - TRAINER_SIDE: trainer fills the wizard during intake; clientUserId may
+///     be filled mid-flow when the User row gets created.
+///   - INVITE: client completes the wizard themselves via the invitation link;
+///     `invitationId` ties the draft to a specific Invitation token.
+/// `dataJson` holds the full form state (validated by Zod at the API layer).
+/// Both `invitationId` and `clientUserId` are @unique to enforce one-draft-per-flow.
+/// Consent and AI usage caps are tracked here so they survive a User-not-yet-existing
+/// state (LPDP compliance: AI consent must be explicit before any inference).
+model OnboardingDraft {
+  id           String         @id @default(cuid())
+  trainerId    String
+  mode         OnboardingMode
+  invitationId String?        @unique
+  clientUserId String?        @unique
+  currentStep  Int            @default(0)
+  dataJson     Json
+
+  // AI consent tracking (LPDP) — required before any Gemini call
+  aiConsentGranted   Boolean   @default(false)
+  aiConsentGrantedAt DateTime?
+
+  // AI usage caps (per-draft to prevent runaway spend)
+  cedulaExtractionCount       Int @default(0)
+  workoutPhotoExtractionCount Int @default(0)
+
+  // Lifecycle
+  completedAt DateTime?
+  abandonedAt DateTime?
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  trainer    User        @relation("TrainerOnboardingDrafts", fields: [trainerId], references: [id], onDelete: Cascade)
+  invitation Invitation? @relation(fields: [invitationId], references: [id], onDelete: SetNull)
+
+  @@index([trainerId, completedAt])
+  @@index([expiresAt])
+}

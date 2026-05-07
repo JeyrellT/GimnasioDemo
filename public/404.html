@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="es-CR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Forja Demo</title>
+  <script>
+    // GitHub Pages SPA redirect — preserves the full URL path
+    // and routes via query string so the SPA can re-route on load.
+    var path = window.location.pathname + window.location.search;
+    var basePath = ""; // TODO: set to "/forja-demo" if using basePath
+    if (basePath && path.startsWith(basePath)) {
+      path = path.slice(basePath.length);
+    }
+    window.location.replace(basePath + "/?redirect=" + encodeURIComponent(path));
+  </script>
+</head>
+<body></body>
+</html>

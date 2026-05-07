@@ -1,0 +1,330 @@
+[
+  {
+    "id": "barbell-back-squat",
+    "nameEs": "Sentadilla con barra",
+    "instructionsEs": [
+      "Colocá la barra en el rack a la altura del pecho. Pasá debajo y apoyala sobre los trapecios superiores, nunca sobre el cuello.",
+      "Agarra la barra un poco más ancha que el ancho de hombros. Desrackeá extendiendo las piernas y retrocedé dos pasos.",
+      "Parate con los pies al ancho de los hombros y los dedos apuntando ligeramente hacia afuera (15-30 grados).",
+      "Contraé el core, tomá aire profundo y descendé empujando las caderas hacia atrás mientras doblás las rodillas al mismo tiempo.",
+      "Bajá hasta que los muslos queden paralelos al piso o un poco más abajo si la movilidad lo permite. Mantené el pecho arriba y las rodillas alineadas con los pies.",
+      "Empujá el piso para volver a la posición inicial. No trabes las rodillas al llegar arriba."
+    ]
+  },
+  {
+    "id": "front-squat",
+    "nameEs": "Sentadilla frontal",
+    "instructionsEs": [
+      "Ajustá la barra en el rack a la altura de los hombros. Cruzá los brazos y apoyá la barra en los deltoides anteriores, o usá un agarre limpio con los dedos bajo la barra y los codos bien arriba.",
+      "Retrocedé y colocá los pies un poco más ancho que el ancho de caderas, dedos ligeramente hacia afuera.",
+      "Mantené los codos altos durante todo el movimiento para que la barra no ruede hacia adelante.",
+      "Descendé empujando las rodillas hacia afuera y bajando las caderas en línea recta, manteniendo el torso lo más vertical posible.",
+      "Llegá al menos a paralelo y luego empujá el piso para volver a pararte."
+    ]
+  },
+  {
+    "id": "conventional-deadlift",
+    "nameEs": "Peso muerto convencional",
+    "instructionsEs": [
+      "Parate con los pies al ancho de caderas, con la barra sobre la mitad del pie. Agaychate y agarrá la barra justo fuera de las piernas con agarre doble supinado o mixto.",
+      "Hacé una bisagra de cadera para acercarte a la barra. Las espinillas deben quedar casi verticales y pegadas a la barra.",
+      "Tomá aire profundo, apretá fuerte el core y llevá el pecho hacia arriba para crear una columna neutra.",
+      "Empujá el piso alejándolo de vos en lugar de pensar en jalar la barra. Mantené la barra pegada al cuerpo durante todo el movimiento.",
+      "Bloqueá caderas y rodillas al mismo tiempo al llegar arriba. No hiperextendás la zona lumbar.",
+      "Bajá la barra de forma controlada empujando primero las caderas hacia atrás y luego doblando las rodillas una vez que la barra las pase."
+    ]
+  },
+  {
+    "id": "romanian-deadlift",
+    "nameEs": "Peso muerto rumano",
+    "instructionsEs": [
+      "Parate sosteniendo una barra a la altura de las caderas con agarre prono, pies al ancho de caderas.",
+      "Mantené una leve flexión en las rodillas durante todo el ejercicio — esto no es una sentadilla, es una bisagra de cadera.",
+      "Empujá las caderas hacia atrás y descendé la barra deslizándola por las piernas, manteniéndola cerca del cuerpo.",
+      "Bajá hasta sentir un estiramiento profundo en los femorales, generalmente cuando la barra llega a la mitad de la tibia. Mantené la columna neutra.",
+      "Empujá las caderas hacia adelante para volver a la posición inicial, apretando los glúteos al llegar arriba."
+    ]
+  },
+  {
+    "id": "barbell-lunge",
+    "nameEs": "Estocada con barra",
+    "instructionsEs": [
+      "Colocá la barra en la espalda superior como en una sentadilla. Parate con los pies al ancho de caderas.",
+      "Dá un paso largo hacia adelante con una pierna. Bajá la rodilla trasera hacia el piso manteniendo el torso erguido.",
+      "La rodilla delantera debe permanecer alineada sobre el pie delantero, sin hundirse hacia adentro.",
+      "Empujá con el talón delantero para volver a la posición inicial y luego alternás pierna.",
+      "Mantené el core contraído durante todo el movimiento para proteger la zona lumbar."
+    ]
+  },
+  {
+    "id": "leg-press",
+    "nameEs": "Prensa de piernas",
+    "instructionsEs": [
+      "Sentate en la máquina de prensa con la espalda plana contra el respaldo. Colocá los pies al ancho de hombros sobre la plataforma.",
+      "Soltá las trabas de seguridad. Descendé la plataforma doblando las rodillas hasta aproximadamente 90 grados.",
+      "No dejés que la zona lumbar se despegue del asiento al bajar el peso.",
+      "Empujá la plataforma alejándola de vos extendiendo las piernas, sin trabar completamente las rodillas al llegar arriba.",
+      "Regresá la plataforma de forma controlada. Asegurá las trabas de seguridad al terminar."
+    ]
+  },
+  {
+    "id": "lying-leg-curl",
+    "nameEs": "Curl de piernas acostado",
+    "instructionsEs": [
+      "Acostáte boca abajo en la máquina de curl con el rodillo justo encima de los talones.",
+      "Agarrá las manijas para estabilizarte. Las caderas deben permanecer planas sobre el banco durante todo el ejercicio.",
+      "Doblá las rodillas jalando los talones hacia los glúteos lo más que puedas sin levantar las caderas.",
+      "Mantenés la contracción un segundo en la posición más alta y luego descendés lentamente a la posición inicial.",
+      "No uses impulso ni balanceo — controlá el peso tanto al subir como al bajar."
+    ]
+  },
+  {
+    "id": "leg-extension",
+    "nameEs": "Extensión de piernas",
+    "instructionsEs": [
+      "Sentate en la máquina con el rodillo sobre los tobillos. Ajustá el asiento para que las rodillas queden alineadas con el eje de la máquina.",
+      "Agarrá las manijas para estabilizarte y mantené la espalda contra el respaldo.",
+      "Extendé las piernas hasta que queden completamente rectas, apretando fuerte los cuádriceps al llegar arriba.",
+      "Descendé el peso lentamente a la posición inicial sin dejar que la pila toque el fondo."
+    ]
+  },
+  {
+    "id": "barbell-bench-press",
+    "nameEs": "Press de banca con barra",
+    "instructionsEs": [
+      "Acostáte en un banco plano con los ojos debajo de la barra. Apoyá los pies planos en el piso.",
+      "Agarrá la barra un poco más ancha que el ancho de hombros. Desrackeá y colocá la barra sobre la parte superior del pecho.",
+      "Retraé los omóplatos y mantené una leve curvatura en la zona lumbar para ganar estabilidad.",
+      "Descendé la barra en un arco controlado hasta el pecho medio, con los codos a unos 45 grados del torso.",
+      "Empujá la barra explosivamente de vuelta a la posición inicial. No la rebotés contra el pecho.",
+      "Volvé a rackear la barra de forma controlada al terminar el set."
+    ]
+  },
+  {
+    "id": "incline-barbell-bench-press",
+    "nameEs": "Press de banca inclinado con barra",
+    "instructionsEs": [
+      "Ajustá el banco a una inclinación de 30-45 grados. Acostáte con los ojos debajo de la barra.",
+      "Agarrá un poco más ancha que el ancho de hombros. Desrackeá y colocá la barra sobre la parte superior del pecho.",
+      "Descendé la barra hasta la parte alta del pecho, justo debajo de las clavículas, en un arco controlado.",
+      "Empujá de vuelta explosivamente manteniendo los omóplatos retraídos durante todo el movimiento.",
+      "El ángulo inclinado dirige el esfuerzo hacia la porción clavicular del pectoral mayor y el deltoides anterior."
+    ]
+  },
+  {
+    "id": "overhead-press",
+    "nameEs": "Press militar con barra",
+    "instructionsEs": [
+      "Ajustá la barra a la altura de las clavículas en el rack. Agarrala justo fuera del ancho de hombros con agarre completo (pulgares rodeando la barra).",
+      "Sacá la barra del rack y retrocedé. Parate con los pies al ancho de caderas, glúteos y core apretados.",
+      "Empujá la barra directamente hacia arriba, moviendo la cabeza ligeramente hacia atrás para que pase y luego hacia adelante una vez que la supere.",
+      "Terminá con la barra sobre el centro de los pies, brazos completamente extendidos y las orejas entre los bíceps.",
+      "Descendé la barra de vuelta al frente de los hombros de forma controlada."
+    ]
+  },
+  {
+    "id": "push-up",
+    "nameEs": "Flexión de pecho (lagartija)",
+    "instructionsEs": [
+      "Empezá en posición de plancha alta con las manos un poco más ancha que el ancho de hombros, brazos totalmente extendidos.",
+      "Mantené el cuerpo en línea recta desde la cabeza hasta los talones. No dejés que las caderas se hundan ni que se eleven.",
+      "Descendé el pecho hacia el piso doblando los codos, manteniéndolos a unos 45 grados del torso.",
+      "Cuando el pecho casi toque el piso, empujáte de vuelta a la posición inicial.",
+      "Exhalá al subir, inhalá al bajar."
+    ]
+  },
+  {
+    "id": "dips",
+    "nameEs": "Fondos en paralelas",
+    "instructionsEs": [
+      "Agarrá las barras paralelas con los brazos totalmente extendidos, cuerpo colgando verticalmente.",
+      "Inclinata levemente hacia adelante para trabajar más el pecho, o permaneé vertical para enfocarte en los tríceps.",
+      "Descendé doblando los codos hasta que la parte superior de los brazos quede paralela al piso.",
+      "Empujáte de vuelta a la posición inicial sin trabar los codos agresivamente.",
+      "Evitá el balanceo o el impulso. Añadí peso con un cinturón de lastre a medida que vas ganando fuerza."
+    ]
+  },
+  {
+    "id": "dumbbell-bench-press",
+    "nameEs": "Press de banca con mancuernas",
+    "instructionsEs": [
+      "Acostáte en un banco plano sosteniendo una mancuerna en cada mano a la altura del pecho, palmas mirando hacia adelante.",
+      "Empujá ambas mancuernas simultáneamente hacia arriba hasta que los brazos queden casi completamente extendidos.",
+      "Descendé lentamente en un arco controlado de vuelta a la posición inicial, sintiendo el estiramiento en el pecho.",
+      "Las mancuernas permiten un rango de movimiento mayor que la barra y ayudan a corregir desbalances de fuerza entre lados."
+    ]
+  },
+  {
+    "id": "pull-up",
+    "nameEs": "Dominada (agarre prono)",
+    "instructionsEs": [
+      "Colgáte de la barra con agarre prono un poco más ancho que el ancho de hombros, brazos totalmente extendidos.",
+      "Deprimí los omóplatos (jalá hacia abajo y adentro) antes de comenzar a jalar.",
+      "Jalá el pecho hacia la barra llevando los codos hacia abajo y atrás.",
+      "El objetivo es pasar la barbilla por encima de la barra.",
+      "Descendé bajo control total hasta que los brazos queden extendidos. Evitá el balanceo."
+    ]
+  },
+  {
+    "id": "close-grip-pull-up",
+    "nameEs": "Dominada con agarre supino cerrado",
+    "instructionsEs": [
+      "Colgáte de la barra con agarre supino (palmas hacia vos) a la distancia del ancho de hombros.",
+      "Mantené el core apretado y el cuerpo recto. Iniciá el movimiento deprimiendo los omóplatos.",
+      "Jalá el pecho hacia la barra llevando los codos hacia abajo y cerca de los costados.",
+      "El agarre supino pone mayor énfasis en los bíceps comparado con la dominada estándar.",
+      "Descendé lentamente hasta quedar colgado con los brazos extendidos antes de la siguiente repetición."
+    ]
+  },
+  {
+    "id": "barbell-bent-over-row",
+    "nameEs": "Remo con barra inclinado",
+    "instructionsEs": [
+      "Parate con los pies al ancho de caderas, sosteniendo una barra con agarre prono un poco más ancho que los hombros.",
+      "Hacé una bisagra de cadera hasta que el torso quede aproximadamente paralelo al piso. Mantené la columna neutra.",
+      "Dejá que la barra cuelgue con los brazos extendidos y luego jalá hacia el abdomen inferior llevando los codos hacia arriba y atrás.",
+      "Apretá los omóplatos al llegar a la posición más alta del movimiento.",
+      "Descendé la barra de forma controlada a la posición inicial. No redondees la zona lumbar."
+    ]
+  },
+  {
+    "id": "dumbbell-single-arm-row",
+    "nameEs": "Remo con mancuerna a un brazo",
+    "instructionsEs": [
+      "Apoyá la rodilla derecha y la mano derecha en un banco plano para sostenerte. Sostenés la mancuerna con la mano izquierda.",
+      "Mantené la espalda plana y paralela al piso. Dejá que la mancuerna cuelgue con el brazo extendido.",
+      "Jalá la mancuerna hacia la cadera llevando el codo hacia el techo.",
+      "Apretá el dorsal al llegar arriba y luego descendé la mancuerna lentamente a la posición inicial.",
+      "Completá todas las repeticiones de un lado antes de cambiar."
+    ]
+  },
+  {
+    "id": "cable-lat-pulldown",
+    "nameEs": "Jalón al pecho en polea",
+    "instructionsEs": [
+      "Sentate en la máquina de jalón y asegurá las rodillas bajo el soporte. Agarrá la barra más ancha que el ancho de hombros con agarre prono.",
+      "Inclináte ligeramente hacia atrás (unos 10-15 grados) y deprimí los omóplatos.",
+      "Jalá la barra hacia la parte superior del pecho llevando los codos hacia las caderas.",
+      "Mantenés la contracción brevemente y luego dejás subir la barra de forma lenta y controlada hasta la extensión completa de los brazos.",
+      "Evitá jalar la barra detrás del cuello — puede provocar tensión en la columna cervical."
+    ]
+  },
+  {
+    "id": "seated-cable-row",
+    "nameEs": "Remo en polea sentado",
+    "instructionsEs": [
+      "Sentate en la estación de remo en polea con los pies sobre la plataforma. Agarrá el maneral de agarre cerrado con ambas manos.",
+      "Mantené la espalda recta y el torso erguido — no te inclinés exageradamente hacia atrás.",
+      "Jalá el maneral hacia el abdomen inferior llevando los codos hacia atrás y apretando los omóplatos.",
+      "Pausá brevemente en la contracción máxima y luego extendé los brazos lentamente para devolver el peso.",
+      "Mantené el core contraído durante todo el movimiento para proteger la zona lumbar."
+    ]
+  },
+  {
+    "id": "barbell-curl",
+    "nameEs": "Curl de bíceps con barra",
+    "instructionsEs": [
+      "Parate sosteniendo una barra con agarre supino al ancho de hombros, brazos completamente extendidos a los costados.",
+      "Mantené los codos pegados al cuerpo y fijos durante todo el movimiento — no los adelantés.",
+      "Curvá la barra hacia arriba contrayendo los bíceps hasta llegar a la altura de los hombros.",
+      "Apretá fuerte los bíceps en la parte alta y luego descendé la barra lentamente a la posición inicial.",
+      "No usés la espalda ni el impulso para completar el movimiento — controlá el peso en ambas fases."
+    ]
+  },
+  {
+    "id": "hammer-curl",
+    "nameEs": "Curl martillo",
+    "instructionsEs": [
+      "Parate sosteniendo una mancuerna en cada mano con agarre neutro (palmas enfrentadas), brazos a los costados.",
+      "Mantené los codos fijos a los costados. Curvá una o ambas mancuernas hacia arriba sin rotar la muñeca.",
+      "El agarre neutro trabaja más el braquial y el braquiorradial que un curl convencional.",
+      "Descendé el peso lentamente y de forma controlada. Alternás brazos o trabajás ambos al mismo tiempo."
+    ]
+  },
+  {
+    "id": "cable-tricep-pushdown",
+    "nameEs": "Extensión de tríceps en polea alta",
+    "instructionsEs": [
+      "Conectá una barra recta o una cuerda a la polea alta. Paráte frente a la máquina y agarrá el accesorio con agarre prono.",
+      "Mantené los codos pegados a los costados y fijos — no los separés ni los adelantés.",
+      "Empujá el accesorio hacia abajo hasta que los brazos queden completamente extendidos. Apretá fuerte los tríceps abajo.",
+      "Regresá lentamente a la posición inicial, dejando que los antebrazos suban hasta quedar aproximadamente paralelos al piso.",
+      "Con la cuerda podés separar las manos al llegar abajo para mayor rango de movimiento."
+    ]
+  },
+  {
+    "id": "ez-bar-skull-crusher",
+    "nameEs": "Press francés con barra EZ",
+    "instructionsEs": [
+      "Acostáte en un banco plano y sostenés la barra EZ con un agarre cerrado y levemente angulado, brazos extendidos sobre el pecho.",
+      "Descendé la barra hacia la frente doblando únicamente los codos. Mantené los brazos superiores perpendiculares al piso.",
+      "Cuando la barra esté cerca de la frente, volvé a la posición inicial extendiendo los codos.",
+      "No dejés que los codos se abran hacia los lados — mantenerlos apuntando al techo durante todo el ejercicio.",
+      "Se recomienda un ayudante cuando usés cargas pesadas."
+    ]
+  },
+  {
+    "id": "dumbbell-lateral-raise",
+    "nameEs": "Elevación lateral con mancuernas",
+    "instructionsEs": [
+      "Parate sosteniendo una mancuerna en cada mano a los costados, palmas mirando hacia adentro.",
+      "Con una leve flexión en los codos, elevá ambas mancuernas hacia los lados hasta la altura de los hombros.",
+      "Liderá con los codos, no con las muñecas. Incliná levemente el frente de la mancuerna hacia abajo (como si estuvieras vaciando un vaso) para maximizar la activación del deltoides medial.",
+      "Descendé las mancuernas de forma controlada. No usés impulso ni encojás los trapecios."
+    ]
+  },
+  {
+    "id": "dumbbell-front-raise",
+    "nameEs": "Elevación frontal con mancuernas",
+    "instructionsEs": [
+      "Parate sosteniendo una mancuerna en cada mano frente a los muslos, palmas mirando hacia los muslos.",
+      "Elevá una o ambas mancuernas directamente al frente hasta la altura de los hombros, con los codos levemente flexionados.",
+      "Pausá brevemente a la altura de los hombros y luego descendé el peso lentamente a la posición inicial.",
+      "Evitá balancear el torso o usar impulso. Alternás brazos para aumentar el tiempo bajo tensión."
+    ]
+  },
+  {
+    "id": "cable-rear-delt-fly",
+    "nameEs": "Apertura para deltoides posterior en polea",
+    "instructionsEs": [
+      "Ajustá ambas poleas a la posición más alta de la máquina de cruce. Paráte en el centro y agarrá el cable izquierdo con la mano derecha y el cable derecho con la mano izquierda (cruzados).",
+      "Paráte con los pies al ancho de hombros y una leve flexión en los codos.",
+      "Jalá ambos cables hacia afuera y atrás en un arco amplio, apretando los deltoides posteriores y la espalda alta.",
+      "Regresá a la posición inicial de forma controlada.",
+      "Como alternativa, realizá este ejercicio inclinado a 90 grados con las poleas en la posición más baja."
+    ]
+  },
+  {
+    "id": "plank",
+    "nameEs": "Plancha abdominal",
+    "instructionsEs": [
+      "Colocá los antebrazos en el piso con los codos directamente debajo de los hombros. Extendé las piernas hacia atrás apoyándote en los dedos de los pies.",
+      "Mantené el cuerpo en línea recta desde la cabeza hasta los talones. No dejés que las caderas se hundan ni que suban.",
+      "Apretá el core como si fueras a recibir un golpe. Apretá también los glúteos y los cuádriceps.",
+      "Respirá de forma constante durante todo el tiempo. Mantené la posición el tiempo prescrito.",
+      "Si la forma se rompe, detené el set — una plancha corta con buena técnica es mejor que una larga con mala postura."
+    ]
+  },
+  {
+    "id": "ab-wheel-rollout",
+    "nameEs": "Extensión abdominal con rueda",
+    "instructionsEs": [
+      "Arrodilláte en el piso y agarrá la rueda abdominal con ambas manos, brazos extendidos directamente debajo de los hombros.",
+      "Apretá fuerte el core y rodá lentamente la rueda hacia adelante, extendiendo el cuerpo hacia el piso.",
+      "Avanzá hasta donde puedas mantener la columna neutra — los principiantes deben detenerse cuando el cuerpo quede paralelo al piso.",
+      "Usá el core para jalarte de vuelta a la posición inicial. No empujés con las caderas para volver.",
+      "Este es un ejercicio exigente — empezá con rango parcial de movimiento y progresá gradualmente."
+    ]
+  },
+  {
+    "id": "hanging-leg-raise",
+    "nameEs": "Elevación de piernas colgado",
+    "instructionsEs": [
+      "Colgáte de una barra de dominadas con agarre prono, brazos extendidos, cuerpo recto.",
+      "Contraé el core y evitá el balanceo. Elevá las piernas flexionando las caderas y, si podés, también las rodillas.",
+      "Para principiantes: llevá las rodillas a la altura de las caderas. Para avanzados: elevá las piernas hasta quedar paralelas al piso o más arriba.",
+      "Descendé las piernas lentamente y bajo control — no dejés que la gravedad las tire hacia abajo.",
+      "Si no podés evitar el balanceo, usás unas correas abdominales o la silla romana como alternativa."
+    ]
+  }
+]

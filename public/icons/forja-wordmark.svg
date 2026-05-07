@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" role="img" aria-label="Forja wordmark">
+  <title>Forja</title>
+  <!-- Wordmark "forja" en Inter Bold, minusculas, kerning apretado -->
+  <!-- fill="#FAFAFA" por default (sobre dark). currentColor como fallback CSS -->
+  <text
+    x="100"
+    y="46"
+    text-anchor="middle"
+    font-family="Inter, system-ui, -apple-system, sans-serif"
+    font-weight="700"
+    font-size="52"
+    letter-spacing="-0.02em"
+    fill="#FAFAFA"
+  >forja</text>
+</svg>

@@ -1,0 +1,272 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { Loader2, UserCheck, CalendarDays, Dumbbell, Clock, Target } from "lucide-react";
+import { listMyRoutines } from "@/app/actions/routines";
+import { searchExercises } from "@/app/actions/exercises";
+import { RoutineBuilderClient } from "./routine-builder-client";
+import type { DemoRoutineRow, DemoRoutineDay, DemoRoutineDayExercise } from "@/lib/offline/db";
+import type { RoutineWithDays } from "@/types/domain";
+import type { RoutineGoal } from "@/types/domain";
+
+// ── Goal config ───────────────────────────────────────────────────────────────
+
+const GOAL_META: Record<RoutineGoal, { label: string; color: string; bg: string }> = {
+  HYPERTROPHY: { label: "Hipertrofia",              color: "#FF6A1A", bg: "rgba(255,106,26,0.12)" },
+  STRENGTH:    { label: "Fuerza",                   color: "#3B82F6", bg: "rgba(59,130,246,0.12)"  },
+  ENDURANCE:   { label: "Resistencia",              color: "#22C55E", bg: "rgba(34,197,94,0.12)"   },
+  FAT_LOSS:    { label: "Pérdida de grasa",         color: "#F59E0B", bg: "rgba(245,158,11,0.12)"  },
+  GENERAL:     { label: "General / Mantenimiento",  color: "#A855F7", bg: "rgba(168,85,247,0.12)"  },
+};
+
+// ── Adapter: DemoRoutineRow → RoutineWithDays ─────────────────────────────────
+//
+// RoutineBuilderClient / useRoutineBuilderStore.initFromExisting reads:
+//   routine.id, .name, .goal, .splitDays, .durationWeeks
+//   routine.days[].id, .dayIndex, .name
+//   routine.days[].exercises[].id, .exerciseId, .exercise.nameEs,
+//     .targetSets, .targetRepsMin, .targetRepsMax, .targetRpe,
+//     .restSeconds, .tempo, .supersetGroup, .notes
+//
+// The demo row stores exercises flat (no nested exercise object), so we hydrate
+// nameEs from the exercise library we already fetched.
+
+function toRoutineWithDays(
+  row: DemoRoutineRow,
+  exerciseNames: Map<string, string>,
+): RoutineWithDays {
+  return {
+    id: row.id,
+    trainerId: row.trainerId,
+    name: row.name,
+    description: row.description,
+    goal: row.goal as RoutineGoal,
+    splitDays: row.splitDays,
+    durationWeeks: row.durationWeeks,
+    isArchived: row.isArchived,
+    createdAt: new Date(row.createdAt),
+    updatedAt: new Date(row.updatedAt),
+    days: row.daysJson.map((day: DemoRoutineDay) => ({
+      id: day.id,
+      routineTemplateId: row.id,
+      dayIndex: day.dayIndex,
+      name: day.name,
+      description: null,
+      exercises: day.exercises.map((ex: DemoRoutineDayExercise) => ({
+        id: ex.id,
+        routineDayId: day.id,
+        exerciseId: ex.exerciseId,
+        order: ex.order,
+        targetSets: ex.targetSets,
+        targetRepsMin: ex.targetRepsMin,
+        targetRepsMax: ex.targetRepsMax,
+        targetRpe: ex.targetRpe,
+        restSeconds: ex.restSeconds,
+        tempo: ex.tempo,
+        supersetGroup: null,
+        notes: ex.notes,
+        exercise: {
+          id: ex.exerciseId,
+          slug: ex.exerciseId,
+          nameEs: exerciseNames.get(ex.exerciseId) ?? ex.exerciseId,
+          nameEn: "",
+          instructionsEs: null,
+          primaryMuscle: "CHEST" as const,
+          secondaryMuscles: [],
+          equipment: "BARBELL" as const,
+          difficulty: "BEGINNER" as const,
+          thumbnailUrl: null,
+          gifUrl: null,
+          mediaUrl: null,
+          isPublic: true,
+          createdById: null,
+          deletedAt: null,
+          createdAt: new Date(),
+        },
+      })),
+    })),
+  } as unknown as RoutineWithDays;
+}
+
+// ── Props ─────────────────────────────────────────────────────────────────────
+
+interface Props {
+  routineId: string;
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+export default function RoutineDetailClient({ routineId }: Props) {
+  const [routine, setRoutine] = useState<DemoRoutineRow | null>(null);
+  const [adapted, setAdapted] = useState<RoutineWithDays | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [missing, setMissing] = useState(false);
+
+  useEffect(() => {
+    async function load() {
+      const [routinesResult, exercisesResult] = await Promise.all([
+        listMyRoutines(),
+        searchExercises({}),
+      ]);
+
+      if (!routinesResult.ok) {
+        setMissing(true);
+        setLoading(false);
+        return;
+      }
+
+      const found = routinesResult.value.find((r) => r.id === routineId);
+      if (!found) {
+        setMissing(true);
+        setLoading(false);
+        return;
+      }
+
+      // Build exerciseId → nameEs map
+      const nameMap = new Map<string, string>();
+      if (exercisesResult.ok) {
+        for (const ex of exercisesResult.value) {
+          nameMap.set(ex.id, ex.nameEs);
+        }
+      }
+
+      setRoutine(found);
+      setAdapted(toRoutineWithDays(found, nameMap));
+      setLoading(false);
+    }
+
+    load();
+  }, [routineId]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-[#FF6A1A]" aria-label="Cargando rutina" />
+      </div>
+    );
+  }
+
+  if (missing || !routine || !adapted) {
+    // notFound() can't be called inside useEffect; trigger it inline
+    return <NotFoundView />;
+  }
+
+  const goal = GOAL_META[routine.goal as RoutineGoal];
+  const totalExercises = routine.daysJson.reduce(
+    (sum, d) => sum + d.exercises.length,
+    0,
+  );
+
+  const summaryItems = [
+    {
+      icon: CalendarDays,
+      text: `${routine.splitDays} ${routine.splitDays === 1 ? "día" : "días"}/semana`,
+    },
+    {
+      icon: Dumbbell,
+      text: `${totalExercises} ${totalExercises === 1 ? "ejercicio" : "ejercicios"}`,
+    },
+    {
+      icon: Clock,
+      text: `${routine.durationWeeks} ${routine.durationWeeks === 1 ? "semana" : "semanas"}`,
+    },
+    {
+      icon: Target,
+      text: goal.label,
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* ── Hero ──────────────────────────────────────────────────────────── */}
+      <div className="rounded-2xl border border-[#3F3F46] bg-[#18181B] overflow-hidden">
+        {/* Gradient accent line */}
+        <div
+          className="h-[3px] w-full"
+          style={{
+            background: `linear-gradient(90deg, ${goal.color} 0%, transparent 100%)`,
+          }}
+          aria-hidden="true"
+        />
+
+        <div className="px-5 py-5 space-y-4">
+          {/* Top row: title + assign button */}
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-2 min-w-0">
+              {/* Goal badge */}
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
+                style={{ color: goal.color, backgroundColor: goal.bg }}
+              >
+                <span
+                  className="h-1.5 w-1.5 rounded-full"
+                  style={{ backgroundColor: goal.color }}
+                  aria-hidden="true"
+                />
+                {goal.label}
+              </span>
+
+              {/* Routine name */}
+              <h1 className="text-2xl font-bold tracking-tight text-[#FAFAFA] leading-tight truncate">
+                {routine.name}
+              </h1>
+            </div>
+
+            {/* Assign CTA */}
+            <Link
+              href={`/trainer/rutinas/${routineId}/asignar`}
+              className="shrink-0 flex items-center gap-2 rounded-xl border border-[#3F3F46] bg-[#09090B] px-4 py-2.5 text-xs font-semibold text-[#FAFAFA] min-h-[44px] hover:border-[#FF6A1A] hover:text-[#FF6A1A] transition-colors"
+            >
+              <UserCheck className="h-4 w-4" aria-hidden="true" />
+              Asignar
+            </Link>
+          </div>
+
+          {/* Summary bar */}
+          <div
+            className="flex flex-wrap gap-x-5 gap-y-2 pt-2 border-t"
+            style={{ borderColor: "#27272A" }}
+          >
+            {summaryItems.map(({ icon: Icon, text }) => (
+              <div key={text} className="flex items-center gap-1.5">
+                <Icon
+                  className="h-3.5 w-3.5 shrink-0"
+                  style={{ color: goal.color }}
+                  aria-hidden="true"
+                />
+                <span className="text-xs text-[#A1A1AA]">{text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Builder ───────────────────────────────────────────────────────── */}
+      <RoutineBuilderClient routine={adapted} />
+    </div>
+  );
+}
+
+// ── Not-found fallback (can't use notFound() outside RSC) ─────────────────────
+
+function NotFoundView() {
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-[#3F3F46] px-6 py-20 text-center">
+      <Dumbbell className="h-10 w-10 text-[#52525B]" strokeWidth={1.5} aria-hidden="true" />
+      <div>
+        <p className="text-sm font-semibold text-[#FAFAFA]">Rutina no encontrada</p>
+        <p className="mt-1 text-xs text-[#71717A]">
+          La rutina no existe o fue eliminada.
+        </p>
+      </div>
+      <Link
+        href="/trainer/rutinas"
+        className="text-xs text-[#FF6A1A] hover:text-[#E55A0E] transition-colors"
+      >
+        Volver a mis rutinas
+      </Link>
+    </div>
+  );
+}
