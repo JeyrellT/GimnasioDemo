@@ -285,17 +285,29 @@ export async function getFinanceDashboard(filters: FinanceFilters): Promise<Acti
     const utilidadCRC = ingresosCRC - gastosCRC;
     const margenPct = ingresosCRC > 0 ? Math.round((utilidadCRC / ingresosCRC) * 1000) / 10 : null;
 
+    // Prior period (previous calendar month) for deltas
+    const priorFrom = new Date(filters.fromDate.getFullYear(), filters.fromDate.getMonth() - 1, 1);
+    const priorTo = new Date(filters.fromDate.getFullYear(), filters.fromDate.getMonth(), 0, 23, 59, 59, 999);
+    const [priorExpenses, priorSales] = await Promise.all([
+      store.listExpenses(DEMO_TRAINER_ID, priorFrom.toISOString(), priorTo.toISOString()),
+      store.listSales(DEMO_TRAINER_ID, priorFrom.toISOString(), priorTo.toISOString()),
+    ]);
+    const priorIngCRC = priorSales.filter((s) => s.paidStatus === "PAID").reduce((sum, s) => sum + s.amountCRC, 0);
+    const priorGasCRC = priorExpenses.reduce((sum, e) => sum + e.amountCRC, 0);
+    const priorUtlCRC = priorIngCRC - priorGasCRC;
+    const ingresosDeltaPct = priorIngCRC > 0 ? Math.round(((ingresosCRC - priorIngCRC) / priorIngCRC) * 1000) / 10 : null;
+    const gastosDeltaPct = priorGasCRC > 0 ? Math.round(((gastosCRC - priorGasCRC) / priorGasCRC) * 1000) / 10 : null;
+    const utilidadDeltaPct = priorUtlCRC !== 0 ? Math.round(((utilidadCRC - priorUtlCRC) / Math.abs(priorUtlCRC)) * 1000) / 10 : null;
+
     const kpis: FinanceKPIs = {
       ingresosCRC,
       gastosCRC,
       utilidadCRC,
       margenPct,
-      ingresosDeltaPct: null,
-      gastosDeltaPct: null,
-      utilidadDeltaPct: null,
+      ingresosDeltaPct,
+      gastosDeltaPct,
+      utilidadDeltaPct,
     };
-
-    // Expense breakdown by category
     const categoryMap = new Map<string, number>();
     for (const exp of expenses) {
       categoryMap.set(exp.category, (categoryMap.get(exp.category) ?? 0) + exp.amountCRC);
@@ -327,7 +339,7 @@ export async function getFinanceDashboard(filters: FinanceFilters): Promise<Acti
         id: e.id,
         type: "expense" as const,
         occurredAt: e.occurredAt,
-        amountCRC: -e.amountCRC,
+        amountCRC: e.amountCRC,
         description: e.description ?? e.category,
         category: e.category,
       })),
@@ -343,11 +355,17 @@ export async function getFinanceDashboard(filters: FinanceFilters): Promise<Acti
       .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt))
       .slice(0, 20);
 
-    const oneOffCRC = paidSales.reduce((sum, s) => sum + s.amountCRC, 0);
+    // Income breakdown: SESION_PT = mensualidades (recurring), rest = ventas especiales
+    const recurringCRC = paidSales
+      .filter((s) => s.category === "SESION_PT")
+      .reduce((sum, s) => sum + s.amountCRC, 0);
+    const oneOffCRC = paidSales
+      .filter((s) => s.category !== "SESION_PT")
+      .reduce((sum, s) => sum + s.amountCRC, 0);
 
     return {
       kpis,
-      incomeBreakdown: { recurringCRC: 0, oneOffCRC },
+      incomeBreakdown: { recurringCRC, oneOffCRC },
       expenseBreakdown,
       locationCosts,
       recentTransactions,
