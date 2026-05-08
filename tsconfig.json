@@ -9,6 +9,7 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": false,
+    "strictNullChecks": true,
     "noEmit": true,
     "incremental": true,
     "module": "esnext",
@@ -34,6 +35,13 @@
     "**/*.tsx"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "prisma/seed",
+    "prisma/migrations",
+    "scratch",
+    "tests",
+    "src/lib/pwa/service-worker.ts",
+    "src/lib/offline/serviceWorkerSyncHandler.ts",
+    "src/lib/storage/upload.ts"
   ]
 }

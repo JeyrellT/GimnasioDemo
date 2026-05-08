@@ -296,7 +296,7 @@ export function groupWeightByWeek(
     bucket.clients.add(row.clientUserId);
   }
 
-  const result = [];
+  const result: Array<{ weekStart: string; avgKg: number; p25Kg: number; p75Kg: number; clientCount: number }> = [];
   for (const [weekStart, bucket] of weekMap.entries()) {
     const sorted = [...bucket.weights].sort((a, b) => a - b);
     const avg = sorted.reduce((s, v) => s + v, 0) / sorted.length;
