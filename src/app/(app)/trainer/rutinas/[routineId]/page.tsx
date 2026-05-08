@@ -4,7 +4,7 @@ export function generateStaticParams() {
   return [
     { routineId: "routine-ppl" },
     { routineId: "routine-upper-lower" },
-    { routineId: "routine-full-body" },
+    { routineId: "routine-fullbody" },
   ];
 }
 
