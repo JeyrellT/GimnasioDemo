@@ -460,6 +460,13 @@ export class ForjaDB extends Dexie {
       demoOnboardingDrafts: "id, trainerId, completedAt",
       demoExercises: "id, slug, primaryMuscle, equipment",
     });
+
+    // Version 3: compound indexes for common .where({field1, field2}) queries
+    this.version(3).stores({
+      demoTrainerClients: "id, trainerUserId, clientUserId, status, [trainerUserId+status]",
+      demoAssignedRoutines: "id, clientUserId, routineTemplateId, status, [clientUserId+status]",
+      demoSessions: "id, clientUserId, status, completedAt, [clientUserId+status]",
+    });
   }
 }
 

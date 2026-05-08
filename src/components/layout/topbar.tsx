@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut, User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { LogOut, User, ArrowLeftRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -10,7 +11,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOutAction } from "@/app/actions/auth";
 
 interface UserShape {
   name: string | null;
@@ -34,10 +34,11 @@ function getInitials(name: string | null | undefined): string {
 }
 
 export function Topbar({ user, userName, userAvatarUrl }: TopbarProps) {
+  const router = useRouter();
   const displayName = user?.name ?? userName ?? null;
   const displayAvatar = user?.avatarUrl ?? userAvatarUrl ?? null;
   return (
-    <header className="relative sticky top-0 z-40 flex h-14 items-center justify-between bg-[#09090B]/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-[#09090B]/80 sm:px-6">
+    <header className="relative flex h-14 items-center justify-between bg-canvas px-4 sm:px-6">
       {/* Bottom border: solid base + orange gradient overlay */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-[#3F3F46]/60" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#FF6A1A]/50 to-transparent" />
@@ -98,10 +99,14 @@ export function Topbar({ user, userName, userAvatarUrl }: TopbarProps) {
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
+            onSelect={() => router.push("/ingresar")}
+          >
+            <ArrowLeftRight className="h-4 w-4" aria-hidden="true" />
+            Cambiar perfil
+          </DropdownMenuItem>
+          <DropdownMenuItem
             className="text-[#EF4444] focus:text-[#EF4444]"
-            onSelect={async () => {
-              await signOutAction();
-            }}
+            onSelect={() => router.push("/ingresar")}
           >
             <LogOut className="h-4 w-4" aria-hidden="true" />
             Salir

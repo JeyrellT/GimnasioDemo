@@ -1,12 +1,16 @@
 import type { NextConfig } from "next";
 
+const isGithubPages = process.env.GITHUB_PAGES === "true";
+
 const nextConfig: NextConfig = {
-  output: "export", // Enable static export for GitHub Pages
+  ...(isGithubPages && {
+    output: "export",
+    basePath: "/GimnasioDemo",
+    assetPrefix: "/GimnasioDemo",
+  }),
   images: {
-    unoptimized: true, // Required for static export
+    unoptimized: true,
   },
-  basePath: "/GimnasioDemo", // Your GitHub repo name
-  assetPrefix: "/GimnasioDemo",
 };
 
 export default nextConfig;

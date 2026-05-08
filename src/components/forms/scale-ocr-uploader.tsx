@@ -7,9 +7,12 @@
 // =============================================================================
 
 import * as React from "react";
-import { Upload, ImageIcon, AlertTriangle, CheckCircle, Loader2 } from "lucide-react";
+import { Upload, AlertTriangle, CheckCircle, Loader2, Settings } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { ScaleData } from "@/types/profile";
+import { hasGeminiKey } from "@/lib/demo/settings-store";
+import { extractScaleBrowser } from "@/lib/demo/ocr-scale-browser";
 
 // -----------------------------------------------------------------------------
 // Types
@@ -33,13 +36,6 @@ type UploaderState =
       confidence: number;
     }
   | { phase: "error"; message: string; file?: File; objectUrl?: string };
-
-// -----------------------------------------------------------------------------
-// Feature flag (env var en tiempo de compilación)
-// -----------------------------------------------------------------------------
-
-const AI_ASSIST_LIVE =
-  process.env.NEXT_PUBLIC_AI_ASSIST_LIVE === "true";
 
 // -----------------------------------------------------------------------------
 // Component
@@ -117,34 +113,13 @@ export function ScaleOcrUploader({
     setState({ phase: "processing", file, objectUrl });
 
     try {
-      const formData = new FormData();
-      formData.append("image", file);
-
-      const res = await fetch("/api/ocr/bascula", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || "Error en el servidor de OCR.");
-      }
-
-      const json = (await res.json()) as {
-        measurements: ScaleData;
-        confidence: number;
-      };
-
-      const data: ScaleData = {
-        ...json.measurements,
-        confidence: json.confidence,
-      };
+      const { data, confidence } = await extractScaleBrowser(file);
 
       setEditableData(data);
-      setState({ phase: "extracted", file, objectUrl, data, confidence: json.confidence });
+      setState({ phase: "extracted", file, objectUrl, data, confidence });
 
       if (liveRegionRef.current) {
-        liveRegionRef.current.textContent = `Datos detectados. Confianza: ${Math.round(json.confidence * 100)}%.`;
+        liveRegionRef.current.textContent = `Datos detectados. Confianza: ${Math.round(confidence * 100)}%.`;
       }
     } catch (e) {
       const msg =
@@ -177,6 +152,9 @@ export function ScaleOcrUploader({
       ? (state as { objectUrl?: string }).objectUrl
       : null;
 
+  // Re-evaluate key presence on every render so adding the key mid-session works.
+  const geminiReady = hasGeminiKey();
+
   return (
     <div className={cn("flex flex-col gap-4", className)}>
       {/* Aria live region */}
@@ -187,16 +165,25 @@ export function ScaleOcrUploader({
         aria-atomic="true"
       />
 
-      {/* Feature flag warning */}
-      {!AI_ASSIST_LIVE && (
+      {/* No Gemini key — guide user to settings */}
+      {!geminiReady && (
         <div
           role="alert"
           className="flex items-start gap-2 rounded-xl border border-[rgba(245,158,11,0.4)] bg-[rgba(245,158,11,0.08)] px-4 py-3"
         >
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#F59E0B]" aria-hidden="true" />
-          <p className="text-sm text-[#F59E0B]">
-            OCR deshabilitado en este entorno. Ingresá los datos a mano.
-          </p>
+          <div className="flex flex-col gap-1">
+            <p className="text-sm text-[#F59E0B]">
+              Ingresá tu API key de Gemini en Ajustes para habilitar OCR.
+            </p>
+            <Link
+              href="/trainer/ajustes"
+              className="inline-flex items-center gap-1 text-xs font-medium text-[#F59E0B] underline underline-offset-2 hover:text-[#FBBF24]"
+            >
+              <Settings className="h-3 w-3" aria-hidden="true" />
+              Ir a Ajustes
+            </Link>
+          </div>
         </div>
       )}
 
@@ -269,7 +256,7 @@ export function ScaleOcrUploader({
       {/* Botones según phase */}
       {state.phase === "preview" && (
         <div className="flex gap-2">
-          {AI_ASSIST_LIVE && (
+          {geminiReady && (
             <button
               type="button"
               onClick={handleDetect}
@@ -289,9 +276,7 @@ export function ScaleOcrUploader({
       )}
 
       {/* Campos extraídos + editables */}
-      {(state.phase === "extracted" ||
-        (state.phase === "error" && previewUrl) ||
-        (!AI_ASSIST_LIVE && previewUrl)) && (
+      {(state.phase === "extracted" || state.phase === "error") && previewUrl && (
         <ExtractedFields
           data={editableData}
           confidence={state.phase === "extracted" ? state.confidence : undefined}
@@ -311,8 +296,7 @@ export function ScaleOcrUploader({
       )}
 
       {/* Botón confirmar */}
-      {(state.phase === "extracted" ||
-        (!AI_ASSIST_LIVE && previewUrl)) && (
+      {state.phase === "extracted" && (
         <button
           type="button"
           onClick={handleConfirm}
