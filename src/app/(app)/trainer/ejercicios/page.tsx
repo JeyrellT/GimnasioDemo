@@ -310,7 +310,7 @@ export default function EjerciciosPage() {
               };
               const muscleLabel = MUSCLE_LABELS[ex.primaryMuscle ?? ""] ?? ex.primaryMuscle ?? "";
               const equipLabel = EQUIPMENT_LABELS[ex.equipment ?? ""] ?? ex.equipment ?? "";
-              const thumbnail = ex.thumbnailUrl;
+              const thumbnail = ex.thumbnailUrl ?? ex.gifUrl;
 
               return (
                 <li key={ex.id}>
