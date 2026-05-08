@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — ExpenseBreakdownChart
+// VIZION — ExpenseBreakdownChart
 // Owner: frontend-react.
 // Recharts donut PieChart showing expense categories.
 // =============================================================================

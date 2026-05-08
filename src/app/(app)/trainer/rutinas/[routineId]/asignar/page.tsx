@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Assign routine page (server wrapper for static export)
+// VIZION — Assign routine page (server wrapper for static export)
 // generateStaticParams must live in a server component.
 // =============================================================================
 

@@ -1,9 +1,9 @@
 // =============================================================================
-// FORJA — Demo settings: localStorage helpers (Gemini key + demo prefs)
+// VIZION — Demo settings: localStorage helpers (Gemini key + demo prefs)
 // =============================================================================
 
-const GEMINI_KEY = "forja_demo_gemini_key";
-const DEMO_ACTIVE_KEY = "forja_demo_active";
+const GEMINI_KEY = "vizion_demo_gemini_key";
+const DEMO_ACTIVE_KEY = "vizion_demo_active";
 
 // ── Gemini API key ─────────────────────────────────────────────────────────────
 

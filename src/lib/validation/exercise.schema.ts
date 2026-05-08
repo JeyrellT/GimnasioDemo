@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Exercise library validation schemas
+// VIZION — Exercise library validation schemas
 // Owner: backend-api.
 // =============================================================================
 

@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Service Worker sync event handler
+// VIZION — Service Worker sync event handler
 // Owner: data-app-builder.
 //
 // This file is IMPORTED by the Service Worker (src/app/sw.ts, owned by
@@ -9,8 +9,8 @@
 // Server Actions are available.
 //
 // Architecture:
-//   SW receives BackgroundSync "forja-sync" event
-//     → SW posts "FORJA_SYNC_REQUEST" to all open clients (tabs)
+//   SW receives BackgroundSync "vizion-sync" event
+//     → SW posts "VIZION_SYNC_REQUEST" to all open clients (tabs)
 //     → Tab receives the message and calls syncAll() from sync.ts
 //     → syncAll() calls Server Actions directly
 //
@@ -37,14 +37,14 @@
 //
 // =============================================================================
 
-export const SYNC_TAG = "forja-sync";
+export const SYNC_TAG = "vizion-sync";
 
 /** Message type broadcast by the SW to open tabs. */
-export const SYNC_MESSAGE_TYPE = "FORJA_SYNC_REQUEST" as const;
+export const SYNC_MESSAGE_TYPE = "VIZION_SYNC_REQUEST" as const;
 
 /**
  * Handle a Background Sync event from within the SW context.
- * Posts a message to all open Forja clients requesting a sync pass.
+ * Posts a message to all open Vizion clients requesting a sync pass.
  * Falls back gracefully if the Clients API is unavailable.
  */
 export async function handleSyncEvent(): Promise<void> {

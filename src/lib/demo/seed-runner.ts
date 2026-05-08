@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Demo seed runner
+// VIZION — Demo seed runner
 // Idempotent: checks KV flag before seeding. Call from layout or provider.
 // =============================================================================
 
@@ -57,7 +57,7 @@ export async function ensureDemoSeeded(): Promise<void> {
     },
   );
 
-  console.info("[forja-demo] seed v1 completed");
+  console.info("[vizion-demo] seed v1 completed");
 }
 
 export async function resetDemoData(): Promise<void> {
@@ -96,5 +96,5 @@ export async function resetDemoData(): Promise<void> {
   );
 
   await ensureDemoSeeded();
-  console.info("[forja-demo] data reset and re-seeded");
+  console.info("[vizion-demo] data reset and re-seeded");
 }

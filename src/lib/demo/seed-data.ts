@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Demo seed data (static, hardcoded)
+// VIZION — Demo seed data (static, hardcoded)
 // All IDs are deterministic strings — never use crypto.randomUUID() here.
 // Dates are relative to 2026-05-07 (project date), expressed as ISO strings.
 // =============================================================================
@@ -1206,7 +1206,7 @@ export const DEMO_EXPENSES: DemoExpenseRow[] = [
     amountCRC: 18500,
     category: "SOFTWARE",
     locationId: null,
-    description: "Suscripción Forja Pro — abril 2026",
+    description: "Suscripción Vizion Pro — abril 2026",
     source: "MANUAL",
     visitId: null,
   },

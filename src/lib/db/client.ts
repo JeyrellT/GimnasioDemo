@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Demo mode Prisma stub
+// VIZION — Demo mode Prisma stub
 // Returns a Proxy that silently returns empty results for any DB call.
 // In demo mode, no code path should actually use this — but it prevents
 // build failures from stray imports.

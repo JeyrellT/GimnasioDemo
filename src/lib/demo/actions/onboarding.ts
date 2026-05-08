@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Demo actions: onboarding lifecycle + AI extraction
+// VIZION — Demo actions: onboarding lifecycle + AI extraction
 //
 // AI calls (extractCedulaForOnboarding, extractWorkoutPhotosForOnboarding) hit
 // Gemini directly from the browser via the demo gemini-browser client. They
@@ -29,11 +29,10 @@ import type {
 } from "@/lib/offline/db";
 import type { Gender } from "@prisma/client";
 
-import { extractCedula } from "@/lib/ai/ocr-cedula";
-import {
-  extractWorkoutPhotos,
-  type WorkoutPhotoExtraction,
-} from "@/lib/ai/extract-workout-photos";
+// AI modules are intentionally NOT statically imported — they pull in
+// @google/generative-ai (~200 kB) and should only be loaded when the user
+// actually triggers an AI extraction action.
+import type { WorkoutPhotoExtraction } from "@/lib/ai/extract-workout-photos";
 
 import { DEMO_TRAINER_ID } from "../seed-data";
 
@@ -369,6 +368,7 @@ export async function extractCedulaForOnboarding(
     const buffer = await blobToBuffer(photo.blob);
     const mimeType = photo.blob.type || "image/jpeg";
 
+    const { extractCedula } = await import("@/lib/ai/ocr-cedula");
     const extraction = await extractCedula({ imageBuffer: buffer, mimeType });
     if (!extraction.ok) throw extraction.error;
 
@@ -446,6 +446,7 @@ export async function extractWorkoutPhotosForOnboarding(
       }),
     );
 
+    const { extractWorkoutPhotos } = await import("@/lib/ai/extract-workout-photos");
     const extraction = await extractWorkoutPhotos({ images });
     if (!extraction.ok) throw extraction.error;
 

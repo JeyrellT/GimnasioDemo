@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — PAR-Q+ 2024 validation schema
+// VIZION — PAR-Q+ 2024 validation schema
 // Owner: backend-api.
 //
 // PAR-Q+ (Physical Activity Readiness Questionnaire Plus), 2024 edition.

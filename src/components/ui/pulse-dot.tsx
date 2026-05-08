@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — PulseDot
+// VIZION — PulseDot
 // Owner: frontend-react.
 // Small animated status indicator. Outer ring uses Tailwind `animate-ping`,
 // inner circle is solid. Pure CSS — no framer-motion overhead needed here.

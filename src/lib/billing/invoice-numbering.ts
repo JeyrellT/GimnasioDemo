@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Hacienda CR 4.4 invoice numbering
+// VIZION — Hacienda CR 4.4 invoice numbering
 // Owner: backend-api.
 //
 // Implements:

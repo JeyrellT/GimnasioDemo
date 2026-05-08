@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — JPEG EXIF / IPTC metadata stripping
+// VIZION — JPEG EXIF / IPTC metadata stripping
 // Owner: backend-api.
 //
 // MVP DECISION: Minimal JPEG segment stripping without external deps (no sharp,

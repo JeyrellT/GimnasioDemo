@@ -6,30 +6,30 @@ import "@/app/globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Forja",
-    template: "%s — Forja",
+    default: "Vizion",
+    template: "%s — Vizion",
   },
-  description: "Cada repetición te forja. Plataforma de entrenamiento personal para Costa Rica.",
-  metadataBase: new URL(process.env.APP_URL ?? "https://forja.app"),
+  description: "Tu visión, tu evolución. Plataforma de entrenamiento personal para Costa Rica.",
+  metadataBase: new URL(process.env.APP_URL ?? "https://vizion.app"),
   openGraph: {
     type: "website",
     locale: "es_CR",
-    url: "https://forja.app",
-    siteName: "Forja",
-    title: "Forja — Cada repetición te forja",
+    url: "https://vizion.app",
+    siteName: "Vizion",
+    title: "Vizion — Tu visión, tu evolución",
     description: "Plataforma de entrenamiento personal para entrenadores y clientes en Costa Rica.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Forja — Entrenamiento personal profesional",
+        alt: "Vizion — Entrenamiento personal profesional",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Forja — Cada repetición te forja",
+    title: "Vizion — Tu visión, tu evolución",
     description: "Plataforma de entrenamiento personal para Costa Rica.",
     images: ["/og-image.png"],
   },
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Forja",
+    title: "Vizion",
   },
   icons: {
     icon: "/icons/icon-192.svg",

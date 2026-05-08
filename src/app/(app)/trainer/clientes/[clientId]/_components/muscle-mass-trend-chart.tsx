@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — MuscleMassTrendChart
+// VIZION — MuscleMassTrendChart
 // Owner: frontend-react.
 // Chart de tendencia de masa muscular — 12 semanas. Usa recharts AreaChart.
 // =============================================================================

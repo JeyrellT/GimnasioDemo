@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — CircumferencesTable
+// VIZION — CircumferencesTable
 // Owner: frontend-react.
 // Tabla de circunferencias agrupadas con valor + delta. Navegable por teclado.
 // Alternativa accesible al body map SVG.
@@ -17,6 +17,7 @@ import type { BodyComposition } from "@/types/profile";
 
 interface CircumferencesTableProps {
   data: BodyComposition;
+  selectedZone?: string | null;
   onZoneClick?: (zone: string) => void;
   className?: string;
 }
@@ -78,6 +79,7 @@ function DeltaBadge({ delta }: { delta: number | null | undefined }) {
 
 export function CircumferencesTable({
   data,
+  selectedZone,
   onZoneClick,
   className,
 }: CircumferencesTableProps) {
@@ -153,17 +155,23 @@ export function CircumferencesTable({
                 {group.rows.map((row, idx) => {
                   const hasValue = row.value !== null;
                   const isClickable = Boolean(onZoneClick);
+                  const isSelected = selectedZone === row.zone;
 
                   return (
                     <tr
                       key={row.zone}
                       className={cn(
-                        "flex items-center justify-between py-3 transition-colors duration-100",
-                        hasValue ? cn("pl-3 pr-4", group.accentClass) : "px-4",
+                        "flex items-center justify-between py-3 transition-all duration-150",
+                        // Selection overrides accent border and background
+                        isSelected
+                          ? "border-l-2 border-l-[#FF6A1A] bg-[rgba(255,106,26,0.10)] pl-3 pr-4"
+                          : hasValue
+                            ? cn("pl-3 pr-4", group.accentClass)
+                            : "px-4",
                         isClickable
                           ? "cursor-pointer hover:bg-[rgba(39,39,42,0.9)] focus-within:bg-[rgba(39,39,42,0.9)]"
                           : "hover:bg-[rgba(255,255,255,0.02)]",
-                        idx % 2 === 1 ? "bg-[rgba(255,255,255,0.025)]" : "bg-transparent",
+                        !isSelected && idx % 2 === 1 ? "bg-[rgba(255,255,255,0.025)]" : "",
                       )}
                       onClick={isClickable ? () => onZoneClick?.(row.zone) : undefined}
                       onKeyDown={
@@ -178,9 +186,10 @@ export function CircumferencesTable({
                       }
                       role={isClickable ? "button" : "row"}
                       tabIndex={isClickable ? 0 : undefined}
+                      aria-pressed={isClickable ? isSelected : undefined}
                       aria-label={
                         isClickable
-                          ? `${row.label}: ${formatCm(row.value)}. Tocá para ver detalle.`
+                          ? `${row.label}: ${formatCm(row.value)}. Tocá para ${isSelected ? "deseleccionar" : "ver detalle"}.`
                           : undefined
                       }
                     >

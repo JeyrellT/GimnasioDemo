@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — LocationsList
+// VIZION — LocationsList
 // Grid of location cards with edit + delete (Dialog confirm). Client Component.
 // =============================================================================
 

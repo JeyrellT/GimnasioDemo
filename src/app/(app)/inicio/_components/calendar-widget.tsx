@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — CalendarWidget
+// VIZION — CalendarWidget
 // Owner: frontend-react (Agent 5).
 //
 // Displays a 14-day heatstrip + grouped event list for the trainer dashboard.

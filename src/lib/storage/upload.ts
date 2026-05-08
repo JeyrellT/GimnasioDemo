@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Storage upload helpers
+// VIZION — Storage upload helpers
 // Owner: backend-api.
 //
 // All functions use the singleton s3 client from ./client.ts.

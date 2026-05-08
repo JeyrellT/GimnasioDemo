@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — ClientProfileTabsClient
+// VIZION — ClientProfileTabsClient
 // Owner: frontend-react.
 // Tabs de contexto histórico: Histórico / Rutina / Sesiones / Notas.
 // =============================================================================

@@ -1,5 +1,5 @@
 /**
- * Web Worker de cálculos — Forja
+ * Web Worker de cálculos — Vizion
  *
  * Ejecuta cálculos pesados (TMB, TDEE, 1RM, volumen, macros) fuera del hilo principal
  * para no bloquear la UI durante el onboarding y la ejecución de sesiones.

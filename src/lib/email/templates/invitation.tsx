@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Trainer invitation email template (React Email)
+// VIZION — Trainer invitation email template (React Email)
 // Owner: backend-api.
 //
 // Sent when a trainer invites a client via createInvitation().
@@ -52,13 +52,13 @@ export default function InvitationEmail({
           {/* Header */}
           <Section style={styles.header}>
             <Heading style={styles.logo}>{APP_NAME}</Heading>
-            <Text style={styles.tagline}>Cada repetición te forja.</Text>
+            <Text style={styles.tagline}>Tu visión, tu evolución.</Text>
           </Section>
 
           {/* Content */}
           <Section style={styles.content}>
             <Heading as="h2" style={styles.title}>
-              {trainerName} te invitó a Forja
+              {trainerName} te invitó a Vizion
             </Heading>
 
             <Text style={styles.body_text}>
@@ -101,7 +101,7 @@ export default function InvitationEmail({
             <Text style={styles.footer_text}>
               {APP_NAME} protege tus datos conforme a la{" "}
               <Link
-                href="https://forja.app/legal/privacidad"
+                href="https://vizion.app/legal/privacidad"
                 style={styles.footer_link}
               >
                 Ley 8968 (LPDP) de Costa Rica

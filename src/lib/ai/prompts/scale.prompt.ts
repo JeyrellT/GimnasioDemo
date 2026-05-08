@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Bioimpedance scale OCR prompt
+// VIZION — Bioimpedance scale OCR prompt
 // Owner: ai-orchestrator.
 //
 // Targets common bathroom-scale displays available in Costa Rica:

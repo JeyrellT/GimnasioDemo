@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Demo actions: clients
+// VIZION — Demo actions: clients
 // Mirrors all signatures from src/app/actions/clients.ts
 // =============================================================================
 

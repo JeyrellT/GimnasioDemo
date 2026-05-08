@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Offline sync engine
+// VIZION — Offline sync engine
 // Owner: data-app-builder.
 //
 // Orchestrates the full sync cycle:
@@ -44,13 +44,13 @@ const clientLog = {
   info: (msg: string, ctx?: Record<string, unknown>) => {
     if (process.env.NODE_ENV === "development") {
       // eslint-disable-next-line no-console
-      console.info(`[forja:sync] ${msg}`, ctx ?? "");
+      console.info(`[vizion:sync] ${msg}`, ctx ?? "");
     }
   },
   warn: (msg: string, ctx?: Record<string, unknown>) => {
     if (process.env.NODE_ENV === "development") {
       // eslint-disable-next-line no-console
-      console.warn(`[forja:sync] ${msg}`, ctx ?? "");
+      console.warn(`[vizion:sync] ${msg}`, ctx ?? "");
     }
   },
 };
@@ -465,7 +465,7 @@ export async function registerBackgroundSync(): Promise<void> {
     // Background Sync API is not yet in stable TS lib — safe cast
     const syncManager = (registration as unknown as { sync?: { register(tag: string): Promise<void> } }).sync;
     if (syncManager) {
-      await syncManager.register("forja-sync");
+      await syncManager.register("vizion-sync");
       clientLog.info("Background sync tag registered");
     }
   } catch {

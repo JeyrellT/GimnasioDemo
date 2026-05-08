@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — /trainer/finanzas — Finance Dashboard
+// VIZION — /trainer/finanzas — Finance Dashboard
 // Owner: frontend-react.
 // =============================================================================
 

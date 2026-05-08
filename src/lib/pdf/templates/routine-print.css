@@ -1,5 +1,5 @@
 /*
- * FORJA — Rutina imprimible: estilos para PDF generado con Puppeteer
+ * VIZION — Rutina imprimible: estilos para PDF generado con Puppeteer
  * Owner: document-automation-architect.
  *
  * Modo: LIGHT solamente — los PDFs siempre se generan en fondo blanco para
@@ -11,7 +11,7 @@
  *   --border-default   : #E4E4E7  (neutral-200)
  *   --text-primary     : #09090B  (neutral-950)
  *   --text-secondary   : #52525B  (neutral-600)
- *   --accent           : #FF6A1A  (Forja Orange — brand-primary)
+ *   --accent           : #FF6A1A  (Vizion Orange — brand-primary)
  *   --accent-subtle    : #FFF3ED  (tint para celdas de superserie)
  *
  * Fuente: Inter (Google Fonts CDN).
@@ -87,7 +87,7 @@ body {
 }
 
 /* Fallback wordmark cuando no hay logo */
-.forja-wordmark {
+.vizion-wordmark {
   font-size: 24px;
   font-weight: 700;
   color: #ff6a1a;

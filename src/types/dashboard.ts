@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Dashboard-specific TypeScript interfaces
+// VIZION — Dashboard-specific TypeScript interfaces
 // Owner: backend-api.
 //
 // Consumed by:

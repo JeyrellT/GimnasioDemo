@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — /trainer/finanzas layout
+// VIZION — /trainer/finanzas layout
 // Wraps all finanzas routes. Renders the mobile FAB via FinanceFABLoader
 // (Client Component — fetches data lazily on first tap).
 // =============================================================================

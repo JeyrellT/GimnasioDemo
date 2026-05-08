@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — ExpenseForm
+// VIZION — ExpenseForm
 // Calls createExpense server action. Works inside Dialog or standalone.
 // =============================================================================
 

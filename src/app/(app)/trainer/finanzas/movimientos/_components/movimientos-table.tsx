@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — MovimientosTable
+// VIZION — MovimientosTable
 // Client component: renders rows, handles delete (with confirm) + pagination.
 // =============================================================================
 

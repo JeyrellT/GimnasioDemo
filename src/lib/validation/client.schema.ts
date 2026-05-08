@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Client profile validation schemas
+// VIZION — Client profile validation schemas
 // Owner: backend-api.
 // =============================================================================
 

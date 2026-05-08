@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — LocationForm
+// VIZION — LocationForm
 // Creates or updates a TrainerLocation. Handles FLAT / PER_KM cost model toggle.
 // =============================================================================
 

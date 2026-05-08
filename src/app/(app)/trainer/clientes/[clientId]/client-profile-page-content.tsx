@@ -213,6 +213,82 @@ function adaptToFrontend(b: BackendDetail): FrontendDetail {
   };
 }
 
+// -----------------------------------------------------------------------------
+// Bidirectional zone mapping — table zone ↔ BodyMap zone
+// -----------------------------------------------------------------------------
+
+/** Maps a CircumferencesTable zone key to the corresponding BodyMap BodyZone. */
+const TABLE_TO_BODY_ZONE: Record<string, BodyZone> = {
+  neck: "neck",
+  shoulderL: "shoulderLeft",
+  shoulderR: "shoulderRight",
+  chest: "chest",
+  bicepL: "bicepLeft",
+  bicepR: "bicepRight",
+  forearmL: "forearmLeft",
+  forearmR: "forearmRight",
+  abdomen: "abdomen",
+  waist: "waist",
+  hip: "hip",
+  gluteL: "glute",
+  gluteR: "glute",
+  quadL: "quadLeft",
+  quadR: "quadRight",
+  hamstringL: "hamstringLeft",
+  hamstringR: "hamstringRight",
+  calfL: "calfLeft",
+  calfR: "calfRight",
+};
+
+/** Maps a BodyMap BodyZone back to the first matching table zone key. */
+const BODY_TO_TABLE_ZONE: Record<BodyZone, string> = {
+  neck: "neck",
+  shoulderLeft: "shoulderL",
+  shoulderRight: "shoulderR",
+  chest: "chest",
+  bicepLeft: "bicepL",
+  bicepRight: "bicepR",
+  forearmLeft: "forearmL",
+  forearmRight: "forearmR",
+  abdomen: "abdomen",
+  waist: "waist",
+  hip: "hip",
+  glute: "gluteL",
+  quadLeft: "quadL",
+  quadRight: "quadR",
+  hamstringLeft: "hamstringL",
+  hamstringRight: "hamstringR",
+  calfLeft: "calfL",
+  calfRight: "calfR",
+};
+
+/** BodyMap zones that are only visible in the back view. */
+const BACK_ONLY_BODY_ZONES = new Set<BodyZone>(["glute", "hamstringLeft", "hamstringRight"]);
+
+/** BodyMap zones that are only visible in the front view. */
+const FRONT_ONLY_BODY_ZONES = new Set<BodyZone>([
+  "chest", "abdomen", "waist", "hip",
+  "bicepLeft", "bicepRight",
+  "forearmLeft", "forearmRight",
+  "quadLeft", "quadRight",
+]);
+
+function tableZoneToBodyZone(tableZone: string | null): BodyZone | null {
+  if (!tableZone) return null;
+  return TABLE_TO_BODY_ZONE[tableZone] ?? null;
+}
+
+function bodyZoneToTableZone(bodyZone: BodyZone): string {
+  return BODY_TO_TABLE_ZONE[bodyZone];
+}
+
+function viewForBodyZone(bodyZone: BodyZone): "front" | "back" | null {
+  if (BACK_ONLY_BODY_ZONES.has(bodyZone)) return "back";
+  if (FRONT_ONLY_BODY_ZONES.has(bodyZone)) return "front";
+  return null;
+}
+
+// -----------------------------------------------------------------------------
 function buildBodyMapZones(bc: FrontendComposition): Record<BodyZone, ZoneData | null> {
   const c = bc.circumferences;
   const f = bc.freshness;
@@ -256,6 +332,8 @@ function buildBodyMapZones(bc: FrontendComposition): Record<BodyZone, ZoneData |
 export default function ClientProfilePageContent({ clientId }: { clientId: string }) {
   const [loading, setLoading] = useState(true);
   const [backendDetail, setBackendDetail] = useState<BackendDetail | null>(null);
+  const [selectedZone, setSelectedZone] = useState<string | null>(null);
+  const [bodyView, setBodyView] = useState<"front" | "back">("front");
 
   useEffect(() => {
     getClientProfileDetail(clientId).then((result) => {
@@ -263,6 +341,20 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
       setLoading(false);
     });
   }, [clientId]);
+
+  function handleTableZoneClick(zone: string) {
+    setSelectedZone((prev) => (prev === zone ? null : zone));
+    const bodyZone = tableZoneToBodyZone(zone);
+    if (bodyZone) {
+      const requiredView = viewForBodyZone(bodyZone);
+      if (requiredView) setBodyView(requiredView);
+    }
+  }
+
+  function handleBodyZoneClick(zone: BodyZone) {
+    const tableZone = bodyZoneToTableZone(zone);
+    setSelectedZone((prev) => (prev === tableZone ? null : tableZone));
+  }
 
   if (loading) {
     return (
@@ -446,13 +538,24 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
         </div>
         <div className="grid gap-8 lg:grid-cols-[420px_1fr]">
           <div className="rounded-2xl border border-[rgba(63,63,70,0.7)] bg-gradient-to-b from-[#1A1A1D] to-[#18181B] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-            <BodyMap zones={bodyMapZones} className="w-full" />
+            <BodyMap
+              zones={bodyMapZones}
+              className="w-full"
+              view={bodyView}
+              onViewChange={setBodyView}
+              selectedZone={tableZoneToBodyZone(selectedZone)}
+              onZoneClick={handleBodyZoneClick}
+            />
           </div>
           <div className="rounded-2xl border border-[rgba(63,63,70,0.7)] bg-gradient-to-b from-[#1A1A1D] to-[#18181B] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
             <h3 className="mb-5 text-xs font-bold uppercase tracking-[0.1em] text-[#71717A]">
               Circunferencias
             </h3>
-            <CircumferencesTable data={bc} />
+            <CircumferencesTable
+              data={bc}
+              selectedZone={selectedZone}
+              onZoneClick={handleTableZoneClick}
+            />
           </div>
         </div>
       </section>

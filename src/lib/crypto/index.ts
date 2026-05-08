@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Crypto barrel
+// VIZION — Crypto barrel
 // Owner: backend-api.
 //
 // Re-exports the public surface of the crypto sub-modules.

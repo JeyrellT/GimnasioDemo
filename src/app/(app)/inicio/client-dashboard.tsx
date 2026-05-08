@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — Client Dashboard (demo stub)
+// VIZION — Client Dashboard (demo stub)
 // This component is not currently used in the demo build.
 // Replaced with demo-friendly version that avoids direct Prisma usage.
 // =============================================================================

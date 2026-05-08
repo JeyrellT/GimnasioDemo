@@ -12,7 +12,7 @@ export interface KpiSparklineProps {
   data: number[];
   /** Container height in px. Defaults to 32. */
   height?: number;
-  /** Stroke color. Defaults to Forja primary #FF6A1A. */
+  /** Stroke color. Defaults to Vizion primary #FF6A1A. */
   color?: string;
   /**
    * Fixed pixel width. When omitted the chart fills its parent via

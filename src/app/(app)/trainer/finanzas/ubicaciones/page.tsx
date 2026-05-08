@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — /trainer/finanzas/ubicaciones
+// VIZION — /trainer/finanzas/ubicaciones
 // Fetches trainer's locations + renders LocationsList (client).
 // =============================================================================
 

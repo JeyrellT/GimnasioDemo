@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Finance KPI and cost calculators
+// VIZION — Finance KPI and cost calculators
 // Owner: backend-api.
 // Pure functions — no I/O, no Prisma imports.
 // =============================================================================

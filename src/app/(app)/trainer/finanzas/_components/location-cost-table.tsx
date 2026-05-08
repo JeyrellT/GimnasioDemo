@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — LocationCostTable
+// VIZION — LocationCostTable
 // Owner: frontend-react.
 // Sortable table: Ubicación, Visitas, Costo/visita, Total, Clientes.
 // =============================================================================

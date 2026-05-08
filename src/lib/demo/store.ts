@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Demo store: typed read API over Dexie demo tables
+// VIZION — Demo store: typed read API over Dexie demo tables
 // =============================================================================
 
 import { db } from "@/lib/offline/db";

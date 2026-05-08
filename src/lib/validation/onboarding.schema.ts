@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Onboarding Zod validation schemas
+// VIZION — Onboarding Zod validation schemas
 // Owner: backend-api.
 // =============================================================================
 

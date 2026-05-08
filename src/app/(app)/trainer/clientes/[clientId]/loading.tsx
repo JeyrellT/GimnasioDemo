@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Loading skeleton: perfil de cliente
+// VIZION — Loading skeleton: perfil de cliente
 // Owner: frontend-react.
 // Uses ShimmerSkeleton for premium shimmer effect.
 // Layout mirrors the real page exactly to prevent cumulative layout shift.

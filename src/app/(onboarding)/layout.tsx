@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { VizionLogo } from "@/components/shared/vizion-logo";
 
 interface OnboardingLayoutProps {
   children: ReactNode;
@@ -21,12 +22,8 @@ export default function OnboardingLayout({ children }: OnboardingLayoutProps) {
     <div className="flex min-h-dvh flex-col bg-[#09090B]">
       {/* Top bar */}
       <header className="flex h-14 items-center justify-between border-b border-[#3F3F46] px-4">
-        <Link href="/" aria-label="Forja — inicio">
-          <svg width="28" height="28" viewBox="0 0 56 56" fill="none" aria-hidden="true">
-            <rect width="56" height="56" rx="10" fill="#1E2A38" />
-            <path d="M14 38 L28 16 L42 38 H32 L28 30 L24 38 Z" fill="#FF6A1A" />
-            <rect x="11" y="40" width="34" height="4" rx="2" fill="#FF6A1A" />
-          </svg>
+        <Link href="/" aria-label="Vizion — inicio">
+          <VizionLogo variant="mark" size={28} />
         </Link>
         <p className="text-xs text-[#71717A]">Configuración inicial</p>
         {/* Spacer */}

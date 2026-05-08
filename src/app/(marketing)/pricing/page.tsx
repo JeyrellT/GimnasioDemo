@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Precios",
   description:
-    "Planes Forja para entrenadores en Costa Rica. Solo ₡8,900, Pro ₡22,900 y Studio ₡44,900 mensuales con IVA incluido.",
+    "Planes Vizion para entrenadores en Costa Rica. Solo ₡8,900, Pro ₡22,900 y Studio ₡44,900 mensuales con IVA incluido.",
 };
 
 const plans = [

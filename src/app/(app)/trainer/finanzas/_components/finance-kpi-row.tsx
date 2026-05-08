@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — FinanceKPIRow
+// VIZION — FinanceKPIRow
 // Owner: frontend-react.
 // Renders 4 KpiHeroCards from FinanceKPIs.
 // Server Component — no "use client" needed; KpiHeroCard handles its own motion.

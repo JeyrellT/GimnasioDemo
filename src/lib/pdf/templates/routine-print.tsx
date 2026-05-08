@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Rutina imprimible (PDF template)
+// VIZION — Rutina imprimible (PDF template)
 // Owner: document-automation-architect.
 //
 // This is a PURE React component — NOT a Next.js Server Component.
@@ -171,7 +171,7 @@ export function RoutinePrint({
     ? `${formatDateEs(startsOn)} — ${formatDateEs(endsOn)}`
     : `Desde ${formatDateEs(startsOn)}`;
 
-  const appUrl = "forja.app";
+  const appUrl = "vizion.app";
 
   return (
     <>
@@ -188,8 +188,8 @@ export function RoutinePrint({
             />
           ) : (
             /* Wordmark fallback when no logo is provided */
-            <span className="forja-wordmark" aria-label="Forja">
-              Forja
+            <span className="vizion-wordmark" aria-label="Vizion">
+              Vizion
             </span>
           )}
         </div>
@@ -270,7 +270,7 @@ export function RoutinePrint({
         Puppeteer does NOT support — Puppeteer relies on the headerTemplate API.
       */}
       <footer className="doc-footer" role="contentinfo">
-        <p className="footer-tagline">Cada repetición te forja.</p>
+        <p className="footer-tagline">Tu visión, tu evolución.</p>
         <p className="footer-url">{appUrl}</p>
         {totalPages !== undefined && totalPages > 0 && (
           <p className="footer-pages">

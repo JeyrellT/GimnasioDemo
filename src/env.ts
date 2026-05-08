@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Demo mode env stub
+// VIZION — Demo mode env stub
 // Replaces the real env.ts. All values are hardcoded for static build.
 // GEMINI_API_KEY is read from localStorage at runtime, NOT from env.
 // =============================================================================
@@ -8,7 +8,7 @@ export const env = {
   NODE_ENV: "production" as const,
 
   // Auth (unused in demo)
-  NEXTAUTH_URL: "https://demo.forja.local",
+  NEXTAUTH_URL: "https://demo.vizion.local",
   NEXTAUTH_SECRET: "demo-secret-not-used",
 
   // DB (unused in demo)
@@ -17,7 +17,7 @@ export const env = {
 
   // Email (unused)
   RESEND_API_KEY: "demo",
-  RESEND_FROM_EMAIL: "demo@forja.app",
+  RESEND_FROM_EMAIL: "demo@vizion.app",
 
   // AI — placeholder; real key comes from localStorage in browser
   GEMINI_API_KEY: "",
@@ -59,7 +59,7 @@ export const env = {
   MEDIAPIPE_POSTURE_BETA: false,
 
   // App
-  APP_URL: "https://demo.forja.local",
+  APP_URL: "https://demo.vizion.local",
   NEXT_TELEMETRY_DISABLED: "1",
 
   // Docker (unused)

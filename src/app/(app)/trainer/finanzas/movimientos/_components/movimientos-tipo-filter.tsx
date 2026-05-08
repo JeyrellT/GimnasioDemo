@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — MovimientosTipoFilter
+// VIZION — MovimientosTipoFilter
 // Chip filter: Todos / Gastos / Ventas — updates URL ?tipo= param.
 // =============================================================================
 

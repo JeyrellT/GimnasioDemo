@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — KpiHeroCard
+// VIZION — KpiHeroCard
 // Owner: frontend-react.
 // Muestra un KPI individual: label, valor, delta semantizado, sparkline mini.
 // =============================================================================

@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — DashboardSection
+// VIZION — DashboardSection
 // Phase 5, Agent 10 (polish).
 // Animated entry wrapper with optional labelled section header.
 // Respects prefers-reduced-motion via framer-motion's useReducedMotion().

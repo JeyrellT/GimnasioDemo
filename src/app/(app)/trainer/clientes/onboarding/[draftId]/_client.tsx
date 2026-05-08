@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — Onboarding wizard client page
+// VIZION — Onboarding wizard client page
 // Owner: frontend-react.
 // Interactive shell that resolves the draftId param and passes it into WizardShell.
 // =============================================================================
