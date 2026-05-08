@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ImageIcon, Film, PlayCircle } from "lucide-react";
@@ -68,6 +69,8 @@ const panelVariants = {
 // ---------------------------------------------------------------------------
 
 function PhotoPanel({ src }: { src: string }) {
+  const [errored, setErrored] = React.useState(false);
+  if (errored) return <MediaPlaceholder label="Sin imagen disponible" />;
   return (
     <div className="aspect-video w-full overflow-hidden rounded-xl border border-[#3F3F46] bg-[#09090B]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -76,12 +79,15 @@ function PhotoPanel({ src }: { src: string }) {
         alt="Foto del ejercicio"
         className="h-full w-full object-cover"
         loading="lazy"
+        onError={() => setErrored(true)}
       />
     </div>
   );
 }
 
 function GifPanel({ src }: { src: string }) {
+  const [errored, setErrored] = React.useState(false);
+  if (errored) return <MediaPlaceholder label="GIF no disponible" />;
   return (
     <div className="aspect-video w-full overflow-hidden rounded-xl border border-[#3F3F46] bg-[#09090B]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -90,6 +96,7 @@ function GifPanel({ src }: { src: string }) {
         alt="Animación del ejercicio"
         className="h-full w-full object-contain"
         loading="lazy"
+        onError={() => setErrored(true)}
       />
     </div>
   );
@@ -137,6 +144,15 @@ function EmptyState() {
     <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#3F3F46] bg-[#09090B] px-6 text-center">
       <ImageIcon className="h-10 w-10 text-[#52525B]" strokeWidth={1.5} aria-hidden="true" />
       <p className="text-sm font-medium text-[#71717A]">Sin contenido multimedia</p>
+    </div>
+  );
+}
+
+function MediaPlaceholder({ label }: { label: string }) {
+  return (
+    <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#3F3F46] bg-[#09090B] px-6 text-center">
+      <ImageIcon className="h-10 w-10 text-[#52525B]" strokeWidth={1.5} aria-hidden="true" />
+      <p className="text-sm font-medium text-[#71717A]">{label}</p>
     </div>
   );
 }

@@ -18,7 +18,7 @@ import {
   DEMO_SALES,
 } from "./seed-data";
 
-const SEED_KEY = "demo_seeded_v2";
+const SEED_KEY = "demo_seeded_v3";
 
 export async function ensureDemoSeeded(): Promise<void> {
   const flag = await db.kvStore.get(SEED_KEY);
