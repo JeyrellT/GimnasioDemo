@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Demo actions: trainer dashboard
+// VIZION — Demo actions: trainer dashboard
 // Mirrors all signatures from src/app/actions/trainer-dashboard.ts
 // =============================================================================
 

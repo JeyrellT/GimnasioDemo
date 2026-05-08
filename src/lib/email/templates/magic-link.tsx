@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Magic link email template (React Email)
+// VIZION — Magic link email template (React Email)
 // Owner: backend-api.
 //
 // Tono: voseo CR, dark theme, brand orange #FF6A1A.
@@ -44,7 +44,7 @@ export default function MagicLinkEmail({
           {/* Header */}
           <Section style={styles.header}>
             <Heading style={styles.logo}>{APP_NAME}</Heading>
-            <Text style={styles.tagline}>Cada repetición te forja.</Text>
+            <Text style={styles.tagline}>Tu visión, tu evolución.</Text>
           </Section>
 
           {/* Content */}
@@ -87,7 +87,7 @@ export default function MagicLinkEmail({
           <Section style={styles.footer}>
             <Text style={styles.footer_text}>
               {APP_NAME} respeta tu privacidad conforme a la{" "}
-              <Link href="https://forja.app/legal/privacidad" style={styles.footer_link}>
+              <Link href="https://vizion.app/legal/privacidad" style={styles.footer_link}>
                 Ley 8968 (LPDP) de Costa Rica
               </Link>
               . No vendemos ni compartimos tu información personal.

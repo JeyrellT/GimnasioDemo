@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Offline module barrel + React hooks
+// VIZION — Offline module barrel + React hooks
 // Owner: data-app-builder.
 //
 // Public surface for the rest of the app. Import from "@/lib/offline" — never
@@ -30,7 +30,7 @@ export type {
   AssignedRoutineCache,
   ExerciseCache,
   KvEntry,
-  ForjaDB,
+  VizionDB,
 } from "./db";
 
 // Re-export queue operations

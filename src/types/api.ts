@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — API request / response types
+// VIZION — API request / response types
 // Owner: backend-api.
 //
 // Shapes used by Server Actions (returning Result<T>) and Route Handlers

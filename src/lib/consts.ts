@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Global constants
+// VIZION — Global constants
 // Owner: backend-api.
 //
 // Immutable values used across the server layer.
@@ -10,7 +10,7 @@ import type { SubscriptionTier } from "@prisma/client";
 
 // ── App identity ─────────────────────────────────────────────────────────────
 
-export const APP_NAME = "Forja" as const;
+export const APP_NAME = "Vizion" as const;
 export const DEFAULT_LOCALE = "es-CR" as const;
 export const DEFAULT_TZ = "America/Costa_Rica" as const;
 export const DEFAULT_CURRENCY = "CRC" as const;
@@ -112,6 +112,6 @@ export const HACIENDA_MEDIO_PAGO_TRANSFERENCIA = "02" as const;
 
 // ── Emails ───────────────────────────────────────────────────────────────────
 
-export const EMAIL_SUPPORT = "soporte@forja.app" as const;
-export const EMAIL_DPO = "dpo@forja.app" as const;
-export const EMAIL_NO_REPLY = "noreply@forja.app" as const;
+export const EMAIL_SUPPORT = "soporte@vizion.app" as const;
+export const EMAIL_DPO = "dpo@vizion.app" as const;
+export const EMAIL_NO_REPLY = "noreply@vizion.app" as const;

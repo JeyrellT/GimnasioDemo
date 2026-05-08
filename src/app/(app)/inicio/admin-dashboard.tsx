@@ -7,7 +7,7 @@ export function AdminDashboard() {
     <div className="space-y-6">
       <PageHeader
         title="Panel de administración"
-        description="Forja — métricas y gestión de la plataforma."
+        description="Vizion — métricas y gestión de la plataforma."
       />
 
       <div className="grid gap-4 sm:grid-cols-2">

@@ -63,7 +63,7 @@ export function SignInForm({ callbackUrl = "/inicio", onSuccess }: SignInFormPro
       return;
     }
 
-    toast.success("Bienvenido a Forja.");
+    toast.success("Bienvenido a Vizion.");
     onSuccess?.();
     router.push(callbackUrl);
     router.refresh();

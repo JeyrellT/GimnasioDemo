@@ -38,6 +38,7 @@ jobs:
         run: pnpm run build
         env:
           NEXT_TELEMETRY_DISABLED: 1
+          GITHUB_PAGES: "true"
 
       - name: Add .nojekyll
         run: touch out/.nojekyll

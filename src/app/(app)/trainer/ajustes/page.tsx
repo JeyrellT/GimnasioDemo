@@ -223,7 +223,7 @@ export default function AjustesPage() {
 
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = `forja-demo-${new Date().toISOString().slice(0, 10)}.json`;
+      anchor.download = `vizion-demo-${new Date().toISOString().slice(0, 10)}.json`;
       document.body.appendChild(anchor);
       anchor.click();
       document.body.removeChild(anchor);
@@ -495,7 +495,7 @@ export default function AjustesPage() {
           <div className="flex justify-between border-b border-[#27272A] pb-2">
             <span className="text-[#71717A]">Email</span>
             <span className="text-[#FAFAFA] font-mono text-xs">
-              demo@forja.app
+              demo@vizion.app
             </span>
           </div>
           <div className="flex justify-between">

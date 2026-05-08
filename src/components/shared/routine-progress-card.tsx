@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — RoutineProgressCard
+// VIZION — RoutineProgressCard
 // Owner: frontend-react.
 // Muestra la rutina activa con barra de progreso. Si no hay rutina, empty state.
 // =============================================================================

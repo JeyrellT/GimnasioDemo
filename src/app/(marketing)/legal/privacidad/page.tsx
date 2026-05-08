@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Política de privacidad",
-  description: "Política de privacidad y protección de datos de Forja.",
+  description: "Política de privacidad y protección de datos de Vizion.",
 };
 
 // TODO(legal): Completar con abogado. Secciones estructuradas según Ley 8968 CR.
@@ -18,7 +18,7 @@ export default function PrivacidadPage() {
           Política de privacidad
         </h1>
         <p className="mt-3 text-[#A1A1AA]">
-          Tu privacidad es fundamental para Forja. Esta política explica qué
+          Tu privacidad es fundamental para Vizion. Esta política explica qué
           datos recopilamos, cómo los usamos y cuáles son tus derechos bajo la
           Ley 8968 (Ley de Protección de la Persona frente al Tratamiento de sus
           Datos Personales), Costa Rica.
@@ -33,8 +33,8 @@ export default function PrivacidadPage() {
           </p>
           <p>
             Delegado de Protección de Datos (DPO):{" "}
-            <a href="mailto:dpo@forja.app" className="text-[#FF6A1A]">
-              dpo@forja.app
+            <a href="mailto:dpo@vizion.app" className="text-[#FF6A1A]">
+              dpo@vizion.app
             </a>
           </p>
           <p>
@@ -72,7 +72,7 @@ export default function PrivacidadPage() {
             </li>
             <li>
               <strong className="text-[#FAFAFA]">Pago:</strong> gestionado por
-              proveedor certificado PCI. Forja no almacena datos de tarjeta.
+              proveedor certificado PCI. Vizion no almacena datos de tarjeta.
             </li>
           </ul>
         </Section>
@@ -116,7 +116,7 @@ export default function PrivacidadPage() {
 
         <Section title="5. Procesamiento por IA">
           <p>
-            Forja usa Gemini Flash-Lite (Google) para OCR de cédula y báscula,
+            Vizion usa Gemini Flash-Lite (Google) para OCR de cédula y báscula,
             únicamente si das consentimiento explícito. Antes de enviar
             cualquier imagen a Gemini: se elimina el EXIF, se aplica un
             watermark invisible con ID de request, y nunca se incluye tu nombre
@@ -166,8 +166,8 @@ export default function PrivacidadPage() {
           </ul>
           <p>
             Para ejercer estos derechos o presentar una queja:{" "}
-            <a href="mailto:dpo@forja.app" className="text-[#FF6A1A]">
-              dpo@forja.app
+            <a href="mailto:dpo@vizion.app" className="text-[#FF6A1A]">
+              dpo@vizion.app
             </a>
             . Respondemos en máximo 20 días hábiles.
           </p>

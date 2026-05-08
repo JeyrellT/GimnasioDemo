@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — BodyFatTrendChart
+// VIZION — BodyFatTrendChart
 // Owner: frontend-react.
 // Chart de tendencia de grasa corporal — 12 semanas. Usa recharts AreaChart.
 // =============================================================================

@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Workout session validation schemas
+// VIZION — Workout session validation schemas
 // Owner: backend-api.
 // =============================================================================
 

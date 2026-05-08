@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Forja",
-    short_name: "Forja",
+    name: "Vizion",
+    short_name: "Vizion",
     description: "Entrenamiento personal hecho en Costa Rica.",
     start_url: "/",
     scope: "/",

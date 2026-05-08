@@ -1,97 +1,78 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { DemoAuthProvider } from "@/lib/demo/auth-context";
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
+import dynamic from "next/dynamic";
+import { DemoAuthProvider, useDemoAuth } from "@/lib/demo/auth-context";
 import { Topbar } from "@/components/layout/topbar";
-import { TrainerBottomNav, TrainerSidebar } from "@/components/layout/trainer-nav";
-import { OfflineBanner } from "@/components/shared/offline-banner";
 
-// DEMO_TRAINER mirrors the shape Topbar expects from the original `user` prop.
-const DEMO_TRAINER = {
-  id: "trainer-demo-001",
-  name: "Coach Demo",
-  email: "demo@forja.app",
-  role: "TRAINER" as const,
-  emailVerified: new Date("2024-01-01"),
-  pushOptIn: false,
-  avatarUrl: null,
-  gender: "MALE" as const,
-  dateOfBirth: new Date("1985-01-01"),
-  passwordHash: null,
-  locale: "es-CR",
-  theme: "dark",
-  trainerProfile: {
-    id: "trainer-profile-demo",
-    userId: "trainer-demo-001",
-    tradeName: "Forja Demo Gym",
-    specialty: "Hipertrofia y pérdida de grasa",
-    bio: "Cuenta demo para presentación.",
-    defaultMonthlyPriceCRC: { toString: () => "60000" },
-  },
-  createdAt: new Date("2024-01-01"),
-  updatedAt: new Date(),
-  deletedAt: null,
-};
+const TrainerSidebar = lazy(() =>
+  import("@/components/layout/trainer-nav").then((m) => ({ default: m.TrainerSidebar })),
+);
+const TrainerBottomNav = lazy(() =>
+  import("@/components/layout/trainer-nav").then((m) => ({ default: m.TrainerBottomNav })),
+);
+const ClientSidebar = lazy(() =>
+  import("@/components/layout/client-nav").then((m) => ({ default: m.ClientSidebar })),
+);
+const ClientBottomNav = lazy(() =>
+  import("@/components/layout/client-nav").then((m) => ({ default: m.ClientBottomNav })),
+);
+const OfflineBanner = dynamic(
+  () => import("@/components/shared/offline-banner").then((m) => m.OfflineBanner),
+  { ssr: false },
+);
 
-interface AppLayoutProps {
-  children: ReactNode;
+function AppShell({ children }: { children: ReactNode }) {
+  const { user, avatarUrl } = useDemoAuth();
+  const isTrainer = user.role === "TRAINER";
+
+  return (
+    <div className="flex min-h-dvh flex-col bg-canvas">
+      <div className="sticky top-0 z-40 bg-canvas">
+        <div className="bg-brand-primary/10 border-b border-brand-primary/30 px-4 py-1.5 text-center text-xs text-brand-primary">
+          Modo demo · Tus datos se guardan solo en este navegador
+        </div>
+        <OfflineBanner />
+        <Topbar user={{ name: user.name, avatarUrl }} />
+      </div>
+
+      <div className="flex flex-1 overflow-hidden">
+        <Suspense>
+          {isTrainer ? <TrainerSidebar /> : <ClientSidebar />}
+        </Suspense>
+
+        <main
+          id="main-content"
+          className="flex-1 overflow-y-auto scrollbar-thin pb-20 sm:pb-6 px-4 pt-6 sm:pl-56"
+        >
+          <div className="mx-auto max-w-5xl">{children}</div>
+        </main>
+      </div>
+
+      <Suspense>
+        {isTrainer ? <TrainerBottomNav /> : <ClientBottomNav />}
+      </Suspense>
+    </div>
+  );
 }
 
-export default function AppLayout({ children }: AppLayoutProps) {
-  const [seeded, setSeeded] = useState(false);
-
+export default function AppLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
-    // Lazy import to avoid SSR issues. seed-runner is created by Agent 3.
+    // Fire-and-forget background seed. Idempotent: fast KV flag check on
+    // repeat visits (~5 ms). On first visit the full bulkPut transaction runs
+    // while the user already sees the UI — Dexie live-query hooks in child
+    // components update reactively once the transaction commits.
     import("@/lib/demo/seed-runner")
-      .then(({ ensureDemoSeeded }) => {
-        ensureDemoSeeded()
-          .then(() => setSeeded(true))
-          .catch((err: unknown) => {
-            console.error("[demo] seed failed:", err);
-            setSeeded(true); // proceed anyway
-          });
-      })
+      .then(({ ensureDemoSeeded }) => ensureDemoSeeded())
       .catch((err: unknown) => {
-        console.error("[demo] seed-runner not found:", err);
-        setSeeded(true); // proceed anyway until Agent 3 delivers seed-runner
+        console.error("[demo] seed failed:", err);
       });
   }, []);
 
-  if (!seeded) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-[#09090B] text-[#A1A1AA]">
-        <p className="text-sm">Cargando demo...</p>
-      </div>
-    );
-  }
-
   return (
     <DemoAuthProvider>
-      {/* Demo banner */}
-      <div className="bg-[#FF6A1A]/10 border-b border-[#FF6A1A]/30 px-4 py-1.5 text-center text-xs text-[#FF6A1A]">
-        Modo demo · Tus datos se guardan solo en este navegador
-      </div>
-
-      <div className="flex min-h-dvh flex-col bg-[#09090B]">
-        <OfflineBanner />
-        <Topbar user={DEMO_TRAINER} />
-
-        <div className="flex flex-1 overflow-hidden">
-          {/* Desktop sidebar — always trainer in demo */}
-          <TrainerSidebar />
-
-          {/* Page content — sm:pl-56 compensates for the fixed sidebar on desktop */}
-          <main
-            id="main-content"
-            className="flex-1 overflow-y-auto scrollbar-thin pb-20 sm:pb-6 px-4 pt-6 sm:pl-56"
-          >
-            <div className="mx-auto max-w-5xl">{children}</div>
-          </main>
-        </div>
-
-        {/* Bottom nav — mobile only */}
-        <TrainerBottomNav />
-      </div>
+      <AppShell>{children}</AppShell>
     </DemoAuthProvider>
   );
 }
+

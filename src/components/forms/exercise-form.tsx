@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — ExerciseForm
+// VIZION — ExerciseForm
 // Shared create/edit form for exercises. Uses react-hook-form + zodResolver.
 //
 // Left column:  text fields, select, radio, textarea, URL fields.

@@ -19,7 +19,7 @@ const consents: ConsentItem[] = [
     id: "TERMS_AND_PRIVACY",
     label: "Términos y Política de Privacidad",
     description:
-      "Aceptás los Términos y Condiciones y la Política de Privacidad de Forja. Podés leerlos en forja.app/legal antes de aceptar.",
+      "Aceptás los Términos y Condiciones y la Política de Privacidad de Vizion. Podés leerlos en vizion.app/legal antes de aceptar.",
     required: true,
     defaultOpen: true,
   },
@@ -27,21 +27,21 @@ const consents: ConsentItem[] = [
     id: "HEALTH_DATA",
     label: "Tratamiento de datos sensibles de salud",
     description:
-      "Forja almacena tus datos de salud (peso, medidas, respuestas PAR-Q+) para que tu entrenador pueda diseñar rutinas seguras y adecuadas. Estos datos se almacenan cifrados y nunca se venden a terceros. Sin este consentimiento, no podés usar la plataforma.",
+      "Vizion almacena tus datos de salud (peso, medidas, respuestas PAR-Q+) para que tu entrenador pueda diseñar rutinas seguras y adecuadas. Estos datos se almacenan cifrados y nunca se venden a terceros. Sin este consentimiento, no podés usar la plataforma.",
     required: true,
   },
   {
     id: "AI_PROCESSING",
     label: "Procesamiento por IA (opcional)",
     description:
-      "Permitís que Forja use inteligencia artificial (Gemini de Google) para leer tu cédula y la pantalla de tu báscula automáticamente, ahorrándote tipeo. Si no aceptás, podés ingresar esos datos manualmente. Las fotos de progreso NUNCA se envían a IA.",
+      "Permitís que Vizion use inteligencia artificial (Gemini de Google) para leer tu cédula y la pantalla de tu báscula automáticamente, ahorrándote tipeo. Si no aceptás, podés ingresar esos datos manualmente. Las fotos de progreso NUNCA se envían a IA.",
     required: false,
   },
   {
     id: "MARKETING",
     label: "Comunicaciones de marketing (opcional)",
     description:
-      "Recibís emails con novedades de Forja y tips de entrenamiento. Podés cancelar la suscripción en cualquier momento desde tu perfil.",
+      "Recibís emails con novedades de Vizion y tips de entrenamiento. Podés cancelar la suscripción en cualquier momento desde tu perfil.",
     required: false,
   },
 ];

@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — useMediaQuery
+// VIZION — useMediaQuery
 // Owner: frontend-react.
 // Hook SSR-safe para media queries. Evita hydration mismatch devolviendo false
 // en el primer render del servidor.

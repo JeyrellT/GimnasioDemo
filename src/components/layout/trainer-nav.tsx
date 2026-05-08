@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { VizionLogo } from "@/components/shared/vizion-logo";
 
 const navItems = [
   { href: "/inicio", label: "Inicio", icon: LayoutDashboard },
@@ -117,15 +118,12 @@ export function TrainerSidebar() {
 
   return (
     <aside
-      className="hidden sm:flex sm:w-56 sm:flex-col sm:fixed sm:inset-y-0 sm:z-30 sm:border-r sm:border-[#3F3F46]/60 sm:bg-[#09090B]"
+      className="hidden sm:flex sm:w-56 sm:flex-col sm:fixed sm:top-[5.25rem] sm:bottom-0 sm:z-30 sm:border-r sm:border-[#3F3F46]/60 sm:bg-[#09090B]"
       aria-label="Navegación lateral"
     >
       {/* Logo mark */}
-      <div className="flex h-14 shrink-0 items-center gap-2 border-b border-[#3F3F46]/60 px-4">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#FF6A1A] to-[#C04A00] shadow-[0_0_10px_rgba(255,106,26,0.35)]">
-          <span className="text-sm font-black text-white tracking-tight">F</span>
-        </div>
-        <span className="text-sm font-bold text-[#FAFAFA] tracking-tight">Forja</span>
+      <div className="flex h-14 shrink-0 items-center border-b border-[#3F3F46]/60 px-4">
+        <VizionLogo variant="full" size={28} />
       </div>
 
       {/* Main nav */}

@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Shared primitive Zod schemas
+// VIZION — Shared primitive Zod schemas
 // Owner: backend-api.
 //
 // Reusable building blocks imported by every domain schema.

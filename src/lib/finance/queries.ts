@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Finance private query helpers (DEMO STUB)
+// VIZION — Finance private query helpers (DEMO STUB)
 // Owner: backend-api.
 //
 // In demo mode, all Prisma queries are replaced with empty stubs.

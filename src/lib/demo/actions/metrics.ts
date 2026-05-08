@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Demo actions: body metrics
+// VIZION — Demo actions: body metrics
 // =============================================================================
 
 import { db } from "@/lib/offline/db";
@@ -36,6 +36,7 @@ export async function recordBodyMetric(raw: unknown): Promise<ActionResult<{ met
       chestCm?: number;
       armCm?: number;
       thighCm?: number;
+      source?: "MANUAL" | "OCR_SCALE" | "CONNECTED_DEVICE";
       notes?: string;
     };
 
@@ -55,7 +56,7 @@ export async function recordBodyMetric(raw: unknown): Promise<ActionResult<{ met
       chestCm: input.chestCm ?? null,
       armCm: input.armCm ?? null,
       thighCm: input.thighCm ?? null,
-      source: "MANUAL",
+      source: input.source ?? "MANUAL",
       notes: input.notes ?? null,
     });
 

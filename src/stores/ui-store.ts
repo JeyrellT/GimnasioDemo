@@ -35,7 +35,7 @@ export const useUiStore = create<UiState>()(
         set({ notificationPermission: permission }),
     }),
     {
-      name: "forja-ui",
+      name: "vizion-ui",
       partialize: (state) => ({
         theme: state.theme,
         sidebarCollapsed: state.sidebarCollapsed,

@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Shared system prompt for OCR pipelines
+// VIZION — Shared system prompt for OCR pipelines
 // Owner: ai-orchestrator.
 //
 // Used as the systemInstruction for every OCR call (cedula + scale).

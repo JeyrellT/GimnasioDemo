@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Onboarding wizard page
+// VIZION — Onboarding wizard page
 // Owner: frontend-react.
 // Server component wrapper — satisfies static export + generateStaticParams.
 // The actual interactive shell is rendered by OnboardingClientPage.

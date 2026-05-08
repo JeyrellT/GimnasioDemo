@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — Error boundary: perfil de cliente
+// VIZION — Error boundary: perfil de cliente
 // Owner: frontend-react.
 // =============================================================================
 

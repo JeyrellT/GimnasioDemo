@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — OCR cedula de identidad CR
+// VIZION — OCR cedula de identidad CR
 // Owner: ai-orchestrator.
 //
 // Public API:

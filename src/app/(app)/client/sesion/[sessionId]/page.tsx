@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — /client/sesion/[sessionId] — Demo stub
+// VIZION — /client/sesion/[sessionId] — Demo stub
 // Client-facing active session page — not available in trainer demo.
 // =============================================================================
 

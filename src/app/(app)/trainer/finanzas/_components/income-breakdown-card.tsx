@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — IncomeBreakdownCard
+// VIZION — IncomeBreakdownCard
 // Owner: frontend-react.
 // Two horizontal progress bars: mensualidades (recurring) + ventas especiales (one-off).
 // =============================================================================

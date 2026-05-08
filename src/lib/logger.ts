@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Pino logger
+// VIZION — Pino logger
 // Owner: backend-api.
 //
 // Pretty-prints in development, emits structured JSON in production.

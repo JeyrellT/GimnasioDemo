@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Body metric validation schemas
+// VIZION — Body metric validation schemas
 // Owner: backend-api.
 // =============================================================================
 

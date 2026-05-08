@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Edit exercise page (server wrapper for static export)
+// VIZION — Edit exercise page (server wrapper for static export)
 // generateStaticParams must live in a server component.
 // =============================================================================
 

@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — OCR scale display (bioimpedance bathroom scales)
+// VIZION — OCR scale display (bioimpedance bathroom scales)
 // Owner: ai-orchestrator.
 //
 // Public API:

@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Transaction helpers
+// VIZION — Transaction helpers
 // Owner: database-architect.
 //
 // API:

@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — SectionReveal
+// VIZION — SectionReveal
 // Owner: frontend-react.
 // Scroll-triggered reveal: fades in + slides up (y 24px → 0) on enter.
 // once: true → animation fires once and stays visible.

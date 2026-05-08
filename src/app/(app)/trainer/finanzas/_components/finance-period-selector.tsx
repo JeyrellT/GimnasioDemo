@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — FinancePeriodSelector
+// VIZION — FinancePeriodSelector
 // Owner: frontend-react.
 // Month picker dropdown — updates URL search param ?month=YYYY-MM.
 // =============================================================================

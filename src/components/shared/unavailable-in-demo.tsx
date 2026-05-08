@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — UnavailableInDemo
+// VIZION — UnavailableInDemo
 // Shared stub component for pages not available in the demo build.
 // =============================================================================
 

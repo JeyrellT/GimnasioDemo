@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — HTML → PDF renderer
+// VIZION — HTML → PDF renderer
 // Owner: document-automation-architect.
 //
 // Thin wrapper around the Puppeteer Page API.
@@ -46,7 +46,7 @@ export interface HtmlToPdfOptions {
 }
 
 // -----------------------------------------------------------------------------
-// Default options — aligned with FORJA print layout (A4, light mode)
+// Default options — aligned with VIZION print layout (A4, light mode)
 // -----------------------------------------------------------------------------
 
 const DEFAULT_OPTIONS: Required<

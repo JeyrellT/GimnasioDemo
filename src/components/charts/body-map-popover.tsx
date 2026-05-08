@@ -108,7 +108,7 @@ export function BodyMapPopover({
         style={
           reducedMotion
             ? undefined
-            : { animation: "forja-popover-in 0.16s ease-out" }
+            : { animation: "vizion-popover-in 0.16s ease-out" }
         }
         aria-label={`Detalle de ${label}`}
       >
@@ -175,7 +175,7 @@ export function BodyMapPopover({
 // ---------------------------------------------------------------------------
 
 export const POPOVER_KEYFRAMES = `
-@keyframes forja-popover-in {
+@keyframes vizion-popover-in {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }

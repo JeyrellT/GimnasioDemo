@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Server-side formatting helpers
+// VIZION — Server-side formatting helpers
 // Owner: backend-api.
 //
 // NOTE: `src/lib/utils.ts` is owned by frontend-react (cn(), etc.).

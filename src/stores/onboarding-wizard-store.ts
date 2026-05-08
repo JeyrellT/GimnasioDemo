@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Onboarding wizard Zustand store
+// VIZION — Onboarding wizard Zustand store
 // Owner: frontend-react.
 // =============================================================================
 

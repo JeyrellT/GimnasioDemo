@@ -1,6 +1,6 @@
 /**
  * Barrel export — src/lib/calc
- * Todos los módulos de cálculo puro de Forja.
+ * Todos los módulos de cálculo puro de Vizion.
  * Seguro para importar en Web Workers y en cliente (sin deps de servidor).
  */
 

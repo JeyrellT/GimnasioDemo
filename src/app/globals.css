@@ -2,7 +2,7 @@
 @import "tailwindcss";
 
 /* =============================================================================
-   FORJA — Design tokens (Tailwind v4 @theme block)
+   VIZION — Design tokens (Tailwind v4 @theme block)
    Dark mode DEFAULT. .light class inverts surfaces (next-themes opt-in).
    ============================================================================= */
 
@@ -12,6 +12,8 @@
   --color-brand-primary-hover: #e55a0e;
   --color-brand-secondary: #1e2a38;
   --color-brand-accent: #f5c542;
+  --color-brand-copper: #d4762c;
+  --color-brand-glow: #ff8c42;
 
   /* ── Semantic ───────────────────────────────────────────────────────────── */
   --color-success: #22c55e;
@@ -169,7 +171,7 @@ body {
   line-height: 1.5;
 }
 
-/* Focus visible ring — Forja Orange */
+/* Focus visible ring — Vizion Orange */
 :focus-visible {
   outline: 2px solid var(--brand-primary);
   outline-offset: 2px;

@@ -13,6 +13,38 @@ const navItems = [
   { href: "/client/entrenador", label: "Entrenador", icon: User },
 ] as const;
 
+export function ClientSidebar() {
+  const pathname = usePathname();
+  const isActive = (href: string) =>
+    href === "/inicio" ? pathname === href : pathname.startsWith(href);
+
+  return (
+    <aside
+      className="hidden sm:flex sm:w-56 sm:flex-col sm:fixed sm:top-[5.25rem] sm:bottom-0 sm:z-30 sm:border-r sm:border-[#3F3F46]/60 sm:bg-[#09090B]"
+      aria-label="Navegación lateral"
+    >
+      <nav className="flex flex-col gap-0.5 p-3 flex-1" aria-label="Navegación principal">
+        {navItems.map(({ href, label, icon: Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors min-h-[40px]",
+              isActive(href)
+                ? "bg-[#FF6A1A]/10 text-[#FF6A1A]"
+                : "text-[#A1A1AA] hover:bg-[#27272A] hover:text-[#FAFAFA]",
+            )}
+            aria-current={isActive(href) ? "page" : undefined}
+          >
+            <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+            {label}
+          </Link>
+        ))}
+      </nav>
+    </aside>
+  );
+}
+
 /** @deprecated use ClientBottomNav */
 export function ClientNav() {
   return <ClientBottomNav />;

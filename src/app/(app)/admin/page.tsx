@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — /admin — Demo stub
+// VIZION — /admin — Demo stub
 // =============================================================================
 
 import { UnavailableInDemo } from "@/components/shared/unavailable-in-demo";

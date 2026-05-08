@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Términos y condiciones",
-  description: "Términos y condiciones de uso de Forja.",
+  description: "Términos y condiciones de uso de Vizion.",
 };
 
 // TODO(legal): Completar con abogado especialista en Ley 8968 y derecho digital CR.
@@ -19,22 +19,22 @@ export default function TerminosPage() {
           Términos y condiciones
         </h1>
         <p className="mt-3 text-[#A1A1AA]">
-          Estos términos rigen el uso de la plataforma Forja, operada por
+          Estos términos rigen el uso de la plataforma Vizion, operada por
           [Nombre comercial del operador], con domicilio en Costa Rica.
         </p>
       </header>
 
-      <div className="prose-forja space-y-10 text-[#A1A1AA] leading-relaxed">
+      <div className="prose-vizion space-y-10 text-[#A1A1AA] leading-relaxed">
         <Section title="1. Aceptación de los términos">
           <p>
-            Al acceder y utilizar Forja, aceptás estos Términos y condiciones en
+            Al acceder y utilizar Vizion, aceptás estos Términos y condiciones en
             su totalidad. Si no estás de acuerdo con alguna parte, no podés usar
             la plataforma. El uso continuado después de cambios constituye
             aceptación de los términos actualizados.
           </p>
           <p>
             La versión vigente siempre está disponible en{" "}
-            <span className="text-[#FF6A1A]">forja.app/legal/terminos</span>.
+            <span className="text-[#FF6A1A]">vizion.app/legal/terminos</span>.
             Los cambios materiales se notifican por email con 14 días de
             anticipación.
           </p>
@@ -42,31 +42,31 @@ export default function TerminosPage() {
 
         <Section title="2. Descripción del servicio">
           <p>
-            Forja es una plataforma SaaS de gestión de entrenamiento personal
+            Vizion es una plataforma SaaS de gestión de entrenamiento personal
             que permite a entrenadores certificados crear rutinas, gestionar
             clientes y registrar sesiones, y a sus clientes acceder a su rutina
             asignada y registrar su progreso.
           </p>
           <p>
-            Forja no es un servicio médico. El contenido y las rutinas son
+            Vizion no es un servicio médico. El contenido y las rutinas son
             prescriptos exclusivamente por entrenadores certificados, no por la
-            plataforma. Forja no es responsable de lesiones derivadas de la
+            plataforma. Vizion no es responsable de lesiones derivadas de la
             ejecución incorrecta de ejercicios.
           </p>
         </Section>
 
         <Section title="3. Cuentas de usuario">
           <p>
-            Para usar Forja necesitás crear una cuenta. Sos responsable de
+            Para usar Vizion necesitás crear una cuenta. Sos responsable de
             mantener la seguridad de tu cuenta y de todas las actividades que
             ocurran bajo tu acceso. Debés notificar a{" "}
-            <a href="mailto:soporte@forja.app" className="text-[#FF6A1A]">
-              soporte@forja.app
+            <a href="mailto:soporte@vizion.app" className="text-[#FF6A1A]">
+              soporte@vizion.app
             </a>{" "}
             ante cualquier uso no autorizado.
           </p>
           <p>
-            La edad mínima para usar Forja es 15 años. Entre 15 y 18 años se
+            La edad mínima para usar Vizion es 15 años. Entre 15 y 18 años se
             requiere consentimiento parental documentado. Menores de 15 años no
             pueden crear cuentas.
           </p>
@@ -89,7 +89,7 @@ export default function TerminosPage() {
         </Section>
 
         <Section title="5. Uso aceptable">
-          <p>No podés usar Forja para:</p>
+          <p>No podés usar Vizion para:</p>
           <ul className="ml-4 list-disc space-y-1">
             <li>Actividades ilegales según la legislación costarricense.</li>
             <li>
@@ -112,13 +112,13 @@ export default function TerminosPage() {
           </p>
           <p>
             Los pagos son procesados por [Tilopay / OnvoPay según
-            configuración]. Forja no almacena números de tarjeta ni datos PCI.
+            configuración]. Vizion no almacena números de tarjeta ni datos PCI.
           </p>
         </Section>
 
         <Section title="7. Propiedad intelectual">
           <p>
-            La plataforma Forja, su código, diseño y contenido son propiedad de
+            La plataforma Vizion, su código, diseño y contenido son propiedad de
             [Operador] y están protegidos por las leyes de propiedad intelectual
             de Costa Rica. No podés reproducir, distribuir ni crear obras
             derivadas sin autorización escrita.
@@ -133,10 +133,10 @@ export default function TerminosPage() {
 
         <Section title="8. Limitación de responsabilidad">
           <p>
-            En la medida permitida por la ley costarricense, Forja no será
+            En la medida permitida por la ley costarricense, Vizion no será
             responsable de daños indirectos, incidentales o consecuentes
             derivados del uso de la plataforma. La responsabilidad máxima de
-            Forja está limitada al monto pagado en los 3 meses anteriores al
+            Vizion está limitada al monto pagado en los 3 meses anteriores al
             evento que da lugar al reclamo.
           </p>
         </Section>
@@ -160,13 +160,13 @@ export default function TerminosPage() {
         <Section title="11. Contacto">
           <p>
             Consultas legales:{" "}
-            <a href="mailto:dpo@forja.app" className="text-[#FF6A1A]">
-              dpo@forja.app
+            <a href="mailto:dpo@vizion.app" className="text-[#FF6A1A]">
+              dpo@vizion.app
             </a>
             <br />
             Soporte:{" "}
-            <a href="mailto:soporte@forja.app" className="text-[#FF6A1A]">
-              soporte@forja.app
+            <a href="mailto:soporte@vizion.app" className="text-[#FF6A1A]">
+              soporte@vizion.app
             </a>
           </p>
         </Section>

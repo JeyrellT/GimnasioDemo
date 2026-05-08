@@ -16,7 +16,7 @@ export default function LpdpPage() {
         <p className="mt-3 text-[#A1A1AA]">
           La Ley de Protección de la Persona frente al Tratamiento de sus Datos
           Personales (Ley 8968) de Costa Rica te otorga derechos concretos sobre
-          tus datos. Acá te explicamos cómo ejercerlos en Forja.
+          tus datos. Acá te explicamos cómo ejercerlos en Vizion.
         </p>
       </header>
 
@@ -24,7 +24,7 @@ export default function LpdpPage() {
         <Section title="Derecho de acceso y portabilidad">
           <p>
             Podés solicitar una copia completa de todos tus datos personales que
-            Forja trata. El archivo incluye:
+            Vizion trata. El archivo incluye:
           </p>
           <ul className="ml-4 list-disc space-y-1">
             <li>Datos de perfil (nombre, email, fecha de nacimiento).</li>
@@ -50,8 +50,8 @@ export default function LpdpPage() {
             Podés corregir tus datos personales en cualquier momento desde tu
             perfil. Para datos clínicos (mediciones, PAR-Q) que requieren
             validación del entrenador, enviá la solicitud a{" "}
-            <a href="mailto:dpo@forja.app" className="text-[#FF6A1A]">
-              dpo@forja.app
+            <a href="mailto:dpo@vizion.app" className="text-[#FF6A1A]">
+              dpo@vizion.app
             </a>
             .
           </p>
@@ -115,14 +115,14 @@ export default function LpdpPage() {
           <ul className="ml-4 list-disc space-y-1">
             <li>
               Email DPO:{" "}
-              <a href="mailto:dpo@forja.app" className="text-[#FF6A1A]">
-                dpo@forja.app
+              <a href="mailto:dpo@vizion.app" className="text-[#FF6A1A]">
+                dpo@vizion.app
               </a>
             </li>
             <li>
               Soporte general:{" "}
-              <a href="mailto:soporte@forja.app" className="text-[#FF6A1A]">
-                soporte@forja.app
+              <a href="mailto:soporte@vizion.app" className="text-[#FF6A1A]">
+                soporte@vizion.app
               </a>
             </li>
           </ul>

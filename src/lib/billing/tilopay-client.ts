@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Tilopay payment gateway client
+// VIZION — Tilopay payment gateway client
 // Owner: backend-api.
 //
 // PAYMENT_PROVIDER_LIVE=false (default): All operations return fake/sandbox

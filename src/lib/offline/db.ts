@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Dexie offline database schema
+// VIZION — Dexie offline database schema
 // Owner: data-app-builder.
 //
 // IndexedDB schema for full offline-first gym session execution.
@@ -377,10 +377,10 @@ export const KV_KEYS = {
 } as const;
 
 // -----------------------------------------------------------------------------
-// ForjaDB class
+// VizionDB class
 // -----------------------------------------------------------------------------
 
-export class ForjaDB extends Dexie {
+export class VizionDB extends Dexie {
   // Existing version-1 tables
   localSessions!: Table<LocalSession, string>;
   localSets!: Table<LocalSet, string>;
@@ -405,7 +405,7 @@ export class ForjaDB extends Dexie {
   demoExercises!: Table<DemoExerciseRow, string>;
 
   constructor() {
-    super("forja-offline-v1");
+    super("vizion-offline-v1");
 
     this.version(1).stores({
       // localSessions: primary key=id, indices on syncStatus, assignedRoutineId
@@ -460,12 +460,19 @@ export class ForjaDB extends Dexie {
       demoOnboardingDrafts: "id, trainerId, completedAt",
       demoExercises: "id, slug, primaryMuscle, equipment",
     });
+
+    // Version 3: compound indexes for common .where({field1, field2}) queries
+    this.version(3).stores({
+      demoTrainerClients: "id, trainerUserId, clientUserId, status, [trainerUserId+status]",
+      demoAssignedRoutines: "id, clientUserId, routineTemplateId, status, [clientUserId+status]",
+      demoSessions: "id, clientUserId, status, completedAt, [clientUserId+status]",
+    });
   }
 }
 
 // -----------------------------------------------------------------------------
-// Singleton — import this everywhere, never instantiate ForjaDB directly.
+// Singleton — import this everywhere, never instantiate VizionDB directly.
 // Safe to import in both client components and service workers.
 // -----------------------------------------------------------------------------
 
-export const db = new ForjaDB();
+export const db = new VizionDB();

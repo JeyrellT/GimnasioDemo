@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Finance Zod validation schemas
+// VIZION — Finance Zod validation schemas
 // Owner: backend-api.
 // =============================================================================
 

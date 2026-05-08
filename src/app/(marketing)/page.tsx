@@ -3,9 +3,9 @@ import { ArrowRight, BarChart2, ClipboardList, Timer } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Forja — Cada repetición te forja",
+  title: "Vizion — Tu visión, tu evolución",
   description:
-    "Plataforma de entrenamiento personal para entrenadores y clientes en Costa Rica. Rutinas, sesiones y métricas en un solo lugar.",
+    "Tu visión, tu evolución. Plataforma de entrenamiento personal para entrenadores y clientes en Costa Rica.",
 };
 
 const features = [
@@ -55,9 +55,9 @@ export default function LandingPage() {
         </div>
 
         <h1 className="max-w-3xl text-4xl font-bold leading-tight text-[#FAFAFA] sm:text-5xl lg:text-6xl text-balance">
-          Cada repetición
+          Tu visión,
           <br />
-          <span className="text-[#FF6A1A]">te forja.</span>
+          <span className="text-[#FF6A1A]">tu evolución.</span>
         </h1>
 
         <p className="mt-6 max-w-xl text-base text-[#A1A1AA] sm:text-lg text-balance">
@@ -197,7 +197,7 @@ export default function LandingPage() {
       <section className="bg-[#1E2A38] px-4 py-24 text-center">
         <div className="mx-auto max-w-xl">
           <h2 className="text-3xl font-bold text-[#FAFAFA] text-balance">
-            Empezá a forjar hoy
+            Empezá hoy
           </h2>
           <p className="mt-4 text-[#A1A1AA]">
             30 días gratis en cualquier plan. Sin tarjeta.

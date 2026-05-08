@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — ExerciseMediaUpload
+// VIZION — ExerciseMediaUpload
 // Owner: frontend-react.
 //
 // Drag-and-drop thumbnail uploader for exercises.

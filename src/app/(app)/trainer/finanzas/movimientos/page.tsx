@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — /trainer/finanzas/movimientos
+// VIZION — /trainer/finanzas/movimientos
 // Merged paginated list of expenses + one-off sales, sorted desc by date.
 // URL: /trainer/finanzas/movimientos?month=2026-05&tipo=todos&page=1
 // =============================================================================

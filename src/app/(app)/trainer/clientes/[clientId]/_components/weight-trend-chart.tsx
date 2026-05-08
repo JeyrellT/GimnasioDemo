@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — WeightTrendChart
+// VIZION — WeightTrendChart
 // Owner: frontend-react.
 // Chart de tendencia de peso — 12 semanas. Usa recharts LineChart.
 // =============================================================================

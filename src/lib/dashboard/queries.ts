@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Dashboard private query helpers (DEMO STUB)
+// VIZION — Dashboard private query helpers (DEMO STUB)
 // Owner: backend-api.
 //
 // In demo mode, all Prisma queries are replaced with empty stubs.

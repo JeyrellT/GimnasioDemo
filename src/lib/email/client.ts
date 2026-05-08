@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Resend email client
+// VIZION — Resend email client
 // Owner: backend-api.
 //
 // Thin wrapper around the Resend SDK.

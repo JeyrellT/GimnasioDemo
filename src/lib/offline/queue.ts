@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Offline operation queue
+// VIZION — Offline operation queue
 // Owner: data-app-builder.
 //
 // Thin wrapper over the Dexie tables that adds semantic queue operations:

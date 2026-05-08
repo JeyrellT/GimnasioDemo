@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Demo mode auth actions stub
+// VIZION — Demo mode auth actions stub
 // Replaces the real server actions. All operations are no-ops or client-side
 // redirects. Static export does not support Server Actions.
 // =============================================================================
@@ -30,7 +30,7 @@ export async function requestMagicLink(
 export async function registerUser(
   _raw: unknown,
 ): Promise<ActionResult<{ sent: boolean; email: string }>> {
-  return { ok: true, value: { sent: true, email: "demo@forja.app" } };
+  return { ok: true, value: { sent: true, email: "demo@vizion.app" } };
 }
 
 // ── Update basic profile ──────────────────────────────────────────────────────

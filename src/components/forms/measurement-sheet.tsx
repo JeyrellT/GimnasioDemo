@@ -1,20 +1,39 @@
 "use client";
 
 // =============================================================================
-// FORJA — MeasurementSheet
+// VIZION — MeasurementSheet
 // Owner: frontend-react.
 // Sheet (slideout) con 3 tabs: Foto báscula / Antropometría / Composición.
 // Mobile: vaul Drawer. Tablet+: Radix Dialog.
+//
+// Heavy deps (vaul, @radix-ui/react-dialog, ScaleOcrUploader) are lazy-loaded
+// via React.lazy so they are NOT included in the initial page bundle. They are
+// only fetched when the user first opens the sheet.
 // =============================================================================
 
 import * as React from "react";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { Drawer } from "vaul";
-import { X, Loader2, CheckCircle } from "lucide-react";
+import { Loader2, CheckCircle } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
-import { ScaleOcrUploader } from "./scale-ocr-uploader";
 import type { ScaleData } from "@/types/profile";
+
+// Lazy-loaded heavy modules — fetched only when the sheet mounts (i.e. when the
+// user actually opens it). Each dynamic import creates a separate chunk so
+// vaul, radix-dialog and the OCR chain (which includes @google/generative-ai)
+// are excluded from the initial JS bundle entirely.
+const LazyScaleOcrUploader = React.lazy(() =>
+  import("./scale-ocr-uploader").then((m) => ({ default: m.ScaleOcrUploader })),
+);
+
+// Lazy wrappers for the two shell variants — they carry the heavy UI framework
+// deps (vaul / @radix-ui/react-dialog) only when needed.
+const LazyDialogShell = React.lazy(() =>
+  import("./measurement-sheet-dialog").then((m) => ({ default: m.MeasurementDialogShell })),
+);
+const LazyDrawerShell = React.lazy(() =>
+  import("./measurement-sheet-drawer").then((m) => ({ default: m.MeasurementDrawerShell })),
+);
+
 // TODO(backend-api): recordBodyMetric ya existe en actions/metrics.ts
 import { recordBodyMetric } from "@/app/actions/metrics";
 
@@ -119,12 +138,14 @@ function MeasurementContent({
   const [form, setForm] = React.useState<MeasurementFormData>(emptyForm());
   const [saveState, setSaveState] = React.useState<SaveState>("idle");
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
+  const [ocrUsed, setOcrUsed] = React.useState(false);
 
   function setField(key: keyof MeasurementFormData, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
   function handleOcrExtracted(data: ScaleData) {
+    setOcrUsed(true);
     setForm((prev) => ({
       ...prev,
       weightKg: data.weightKg?.toString() ?? prev.weightKg,
@@ -141,6 +162,7 @@ function MeasurementContent({
     setErrorMsg(null);
 
     const result = await recordBodyMetric({
+      clientUserId: clientId,
       weightKg: parseOptionalFloat(form.weightKg),
       bodyFatPct: parseOptionalFloat(form.bodyFatPct),
       muscleMassKg: parseOptionalFloat(form.muscleMassKg),
@@ -148,15 +170,13 @@ function MeasurementContent({
       hipCm: parseOptionalFloat(form.hipCm),
       neckCm: parseOptionalFloat(form.neckCm),
       chestCm: parseOptionalFloat(form.chestCm),
-      // DB usa armCm y thighCm sin lateralidad por ahora (MVP).
-      // TODO(database-architect): migrar a leftArmCm/rightArmCm etc.
       armCm:
         parseOptionalFloat(form.bicepLeftCm) ??
         parseOptionalFloat(form.bicepRightCm),
       thighCm:
         parseOptionalFloat(form.thighLeftCm) ??
         parseOptionalFloat(form.thighRightCm),
-      source: "MANUAL",
+      source: ocrUsed ? "OCR_SCALE" : "MANUAL",
     });
 
     if (result.ok) {
@@ -166,7 +186,8 @@ function MeasurementContent({
       }, 800);
     } else {
       setSaveState("error");
-      setErrorMsg(result.error.message ?? "No se guardó la medición. Reintentá.");
+      const failed = result as { ok: false; error: { message?: string } };
+      setErrorMsg(failed.error.message ?? "No se guardó la medición. Reintentá.");
     }
   }
 
@@ -220,10 +241,12 @@ function MeasurementContent({
           aria-labelledby="tab-bascula"
           hidden={activeTab !== "bascula"}
         >
-          <ScaleOcrUploader
-            onExtracted={handleOcrExtracted}
-            onError={(msg) => setErrorMsg(msg)}
-          />
+          <React.Suspense fallback={<div className="flex h-32 items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-[#FF6A1A]" /></div>}>
+            <LazyScaleOcrUploader
+              onExtracted={handleOcrExtracted}
+              onError={(msg) => setErrorMsg(msg)}
+            />
+          </React.Suspense>
         </div>
 
         {/* Antropometría */}
@@ -443,7 +466,8 @@ function AnthroFieldGrid({ fields, form, setField }: AnthroFieldGridProps) {
 }
 
 // -----------------------------------------------------------------------------
-// Shell: detecta mobile vs tablet/desktop y elige Vaul Drawer o Radix Dialog
+// Shell: detecta mobile vs tablet/desktop y elige Vaul Drawer o Radix Dialog.
+// Both variants are loaded lazily — they are NOT in the initial bundle.
 // -----------------------------------------------------------------------------
 
 export function MeasurementSheet({
@@ -457,87 +481,25 @@ export function MeasurementSheet({
     onOpenChange(false);
   }
 
-  if (isDesktop) {
-    return (
-      <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
-        <DialogPrimitive.Portal>
-          <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-[rgba(0,0,0,0.6)] backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-          <DialogPrimitive.Content
-            className={cn(
-              "fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col",
-              "bg-[#18181B] shadow-xl",
-              "data-[state=open]:animate-in data-[state=closed]:animate-out",
-              "data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
-              "duration-300",
-            )}
-            aria-describedby="measurement-sheet-desc"
-          >
-            <DialogPrimitive.Title className="sr-only">
-              Nueva medición
-            </DialogPrimitive.Title>
-            <p id="measurement-sheet-desc" className="sr-only">
-              Formulario para registrar mediciones corporales del cliente.
-            </p>
-            {/* Header */}
-            <div className="flex shrink-0 items-center justify-between border-b border-[#3F3F46] px-5 py-4">
-              <h2 className="text-base font-semibold text-[#FAFAFA]">
-                Nueva medición
-              </h2>
-              <DialogPrimitive.Close
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-[#71717A] transition-colors hover:bg-[#27272A] hover:text-[#FAFAFA] focus-visible:outline-2 focus-visible:outline-[#FF6A1A]"
-                aria-label="Cerrar"
-              >
-                <X className="h-4 w-4" aria-hidden="true" />
-              </DialogPrimitive.Close>
-            </div>
+  // Only render (and therefore fetch) the lazy shells once the sheet is opened.
+  if (!open) return null;
 
-            <MeasurementContent clientId={clientId} onSuccess={handleSuccess} />
-          </DialogPrimitive.Content>
-        </DialogPrimitive.Portal>
-      </DialogPrimitive.Root>
-    );
-  }
+  const content = <MeasurementContent clientId={clientId} onSuccess={handleSuccess} />;
 
-  // Mobile: Vaul bottom drawer
+  // Suspense boundary wraps each lazy shell variant. The fallback is invisible
+  // (no flash) because the chunks are tiny and load in <100 ms on any decent
+  // connection; on very slow connections a subtle spinner prevents blank UI.
   return (
-    <Drawer.Root open={open} onOpenChange={onOpenChange}>
-      <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-40 bg-[rgba(0,0,0,0.6)]" />
-        <Drawer.Content
-          className={cn(
-            "fixed bottom-0 left-0 right-0 z-50 flex flex-col rounded-t-2xl",
-            "bg-[#18181B] shadow-xl",
-            "max-h-[92dvh]",
-          )}
-          aria-describedby="drawer-measurement-desc"
-        >
-          <Drawer.Title className="sr-only">Nueva medición</Drawer.Title>
-          <p id="drawer-measurement-desc" className="sr-only">
-            Formulario para registrar mediciones corporales del cliente.
-          </p>
-          {/* Handle */}
-          <div className="flex justify-center pt-3 pb-2">
-            <div
-              className="h-1.5 w-12 rounded-full bg-[#3F3F46]"
-              aria-hidden="true"
-            />
-          </div>
-          {/* Header */}
-          <div className="flex shrink-0 items-center justify-between border-b border-[#3F3F46] px-5 py-3">
-            <h2 className="text-base font-semibold text-[#FAFAFA]">
-              Nueva medición
-            </h2>
-            <Drawer.Close
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-[#71717A] transition-colors hover:bg-[#27272A] hover:text-[#FAFAFA] focus-visible:outline-2 focus-visible:outline-[#FF6A1A]"
-              aria-label="Cerrar"
-            >
-              <X className="h-4 w-4" aria-hidden="true" />
-            </Drawer.Close>
-          </div>
-
-          <MeasurementContent clientId={clientId} onSuccess={handleSuccess} />
-        </Drawer.Content>
-      </Drawer.Portal>
-    </Drawer.Root>
+    <React.Suspense fallback={null}>
+      {isDesktop ? (
+        <LazyDialogShell open={open} onOpenChange={onOpenChange}>
+          {content}
+        </LazyDialogShell>
+      ) : (
+        <LazyDrawerShell open={open} onOpenChange={onOpenChange}>
+          {content}
+        </LazyDrawerShell>
+      )}
+    </React.Suspense>
   );
 }

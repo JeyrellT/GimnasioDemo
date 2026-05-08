@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Finance domain types
+// VIZION — Finance domain types
 // Owner: backend-api.
 // All monetary amounts are number (CRC). Dates are ISO 8601 strings.
 // =============================================================================

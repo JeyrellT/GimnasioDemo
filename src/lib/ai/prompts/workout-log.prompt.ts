@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Workout-log photo prompt
+// VIZION — Workout-log photo prompt
 // Owner: ai-orchestrator.
 //
 // Used to inspect 1..3 user-supplied images of training logs (handwritten
@@ -7,7 +7,7 @@
 // derive an experience-level estimate plus a coarse exercise list.
 //
 // This prompt is for ONBOARDING ONLY — the trainer or client-on-INVITE shows
-// what they were doing before joining Forja. The output is an estimate, not a
+// what they were doing before joining Vizion. The output is an estimate, not a
 // medical record. We never claim it replaces a real assessment.
 // =============================================================================
 

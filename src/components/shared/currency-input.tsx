@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — CurrencyInput (CRC ₡)
+// VIZION — CurrencyInput (CRC ₡)
 // Shared reusable component. Renders ₡ prefix inside border, right-aligns number.
 // Parses on change, formats on blur. Never stores formatted string in RHF.
 // =============================================================================

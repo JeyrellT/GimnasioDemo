@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — /trainer/finanzas loading skeleton
+// VIZION — /trainer/finanzas loading skeleton
 // Owner: frontend-react.
 // =============================================================================
 

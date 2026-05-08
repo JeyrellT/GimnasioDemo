@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Feature flags wrapper
+// VIZION — Feature flags wrapper
 // Owner: backend-api.
 //
 // Reads from env.ts by default. Structured so that migrating to

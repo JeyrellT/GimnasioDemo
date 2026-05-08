@@ -165,7 +165,7 @@ export const useSessionStore = create<SessionState>()(
         },
       }),
       {
-        name: "forja-session",
+        name: "vizion-session",
         partialize: (state) => ({
           currentSession: state.currentSession,
           currentExerciseIndex: state.currentExerciseIndex,
