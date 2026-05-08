@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { VizionLogo } from "@/components/shared/vizion-logo";
@@ -10,12 +11,14 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden px-4 py-12">
       {/* Full-bleed gym background */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      <Image
         src="/images/gym-bg.jpg"
         alt=""
+        fill
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+        className="pointer-events-none object-cover"
+        priority
+        unoptimized
       />
 
       {/* Dark overlay — allows card to pop */}

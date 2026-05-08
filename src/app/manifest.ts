@@ -1,13 +1,15 @@
 export const dynamic = "force-static";
 import type { MetadataRoute } from "next";
 
+const base = process.env.GITHUB_PAGES === "true" ? "/GimnasioDemo" : "";
+
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Vizion",
     short_name: "Vizion",
     description: "Entrenamiento personal hecho en Costa Rica.",
-    start_url: "/",
-    scope: "/",
+    start_url: `${base}/`,
+    scope: `${base}/`,
     display: "standalone",
     orientation: "portrait",
     theme_color: "#09090B",
@@ -17,25 +19,25 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ["fitness", "health"],
     icons: [
       {
-        src: "/icons/icon-192.svg",
+        src: `${base}/icons/icon-192.svg`,
         sizes: "192x192",
         type: "image/svg+xml",
         purpose: "any",
       },
       {
-        src: "/icons/icon-512.svg",
+        src: `${base}/icons/icon-512.svg`,
         sizes: "512x512",
         type: "image/svg+xml",
         purpose: "any",
       },
       {
-        src: "/icons/icon-192.svg",
+        src: `${base}/icons/icon-192.svg`,
         sizes: "192x192",
         type: "image/svg+xml",
         purpose: "maskable",
       },
       {
-        src: "/icons/apple-touch-icon.svg",
+        src: `${base}/icons/apple-touch-icon.svg`,
         sizes: "180x180",
         type: "image/svg+xml",
       },
@@ -43,18 +45,18 @@ export default function manifest(): MetadataRoute.Manifest {
     shortcuts: [
       {
         name: "Sesión de hoy",
-        url: "/client/sesion",
-        icons: [{ src: "/icons/icon-192.svg", sizes: "192x192" }],
+        url: `${base}/client/sesion`,
+        icons: [{ src: `${base}/icons/icon-192.svg`, sizes: "192x192" }],
       },
       {
         name: "Mis clientes",
-        url: "/trainer/clientes",
-        icons: [{ src: "/icons/icon-192.svg", sizes: "192x192" }],
+        url: `${base}/trainer/clientes`,
+        icons: [{ src: `${base}/icons/icon-192.svg`, sizes: "192x192" }],
       },
     ],
     screenshots: [
       {
-        src: "/og-image.svg",
+        src: `${base}/og-image.svg`,
         sizes: "1200x630",
         type: "image/svg+xml",
         form_factor: "wide",

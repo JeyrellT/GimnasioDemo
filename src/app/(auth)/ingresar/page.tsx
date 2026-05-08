@@ -8,14 +8,14 @@ export default function IngresarPage() {
   const router = useRouter();
 
   function handleSelect(profile: DemoUser) {
-    localStorage.setItem("forja-demo-profile", JSON.stringify(profile.id));
+    localStorage.setItem("vizion-demo-profile", JSON.stringify(profile.id));
     router.push(profile.role === "TRAINER" ? "/inicio" : "/client/sesion");
   }
 
   return (
     <div className="space-y-8">
       <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-bold text-neutral-50">Forja Demo</h1>
+        <h1 className="text-2xl font-bold text-neutral-50">Vizion Demo</h1>
         <p className="text-sm text-neutral-400">
           Elegí un perfil para explorar la demo. Tus datos se guardan solo en
           este navegador.

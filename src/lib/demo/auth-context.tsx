@@ -24,7 +24,7 @@ export const DEMO_PROFILES: DemoUser[] = [
   {
     id: "trainer-demo-001",
     name: "Coach Demo",
-    email: "demo@forja.app",
+    email: "demo@vizion.app",
     role: "TRAINER",
     avatarInitials: "CD",
   },
@@ -51,7 +51,7 @@ export const DEMO_PROFILES: DemoUser[] = [
   },
 ];
 
-const STORAGE_KEY = "forja-demo-profile";
+const STORAGE_KEY = "vizion-demo-profile";
 
 function avatarKey(userId: string) {
   return `avatar-${userId}`;

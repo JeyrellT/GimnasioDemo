@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, User, ArrowLeftRight } from "lucide-react";
+import { VizionLogo } from "@/components/shared/vizion-logo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -27,7 +28,7 @@ interface TopbarProps {
 }
 
 function getInitials(name: string | null | undefined): string {
-  if (!name) return "F";
+  if (!name) return "V";
   const parts = name.trim().split(" ");
   if (parts.length === 1) return (parts[0]?.[0] ?? "F").toUpperCase();
   return ((parts[0]?.[0] ?? "") + (parts[parts.length - 1]?.[0] ?? "")).toUpperCase();
@@ -44,16 +45,7 @@ export function Topbar({ user, userName, userAvatarUrl }: TopbarProps) {
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#FF6A1A]/50 to-transparent" />
 
       <Link href="/inicio" aria-label="Ir al inicio">
-        {/* SVG logo: <img> plain is preferred over next/image for vector
-            assets (no raster optimization needed; avoids aspect-ratio warnings). */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/icons/forja-logo-horizontal.svg"
-          alt="Forja"
-          width={96}
-          height={32}
-          className="h-8 w-auto"
-        />
+        <VizionLogo variant="full" size={28} />
       </Link>
 
       <DropdownMenu>

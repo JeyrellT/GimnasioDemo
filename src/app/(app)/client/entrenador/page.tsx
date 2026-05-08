@@ -48,7 +48,7 @@ export default function ClientEntrenadorPage() {
         <div className="mt-5 divide-y divide-neutral-800">
           <div className="flex items-center gap-3 py-3">
             <Mail className="h-4 w-4 text-neutral-600" />
-            <span className="text-sm text-neutral-300">demo@forja.app</span>
+            <span className="text-sm text-neutral-300">demo@vizion.app</span>
           </div>
           <div className="flex items-center gap-3 py-3">
             <Dumbbell className="h-4 w-4 text-neutral-600" />
