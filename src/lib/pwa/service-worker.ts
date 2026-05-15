@@ -78,7 +78,7 @@ const serwist = new Serwist({
 
     // ── Sesión activa — NetworkFirst agresivo ─────────────────────────────
     {
-      matcher: ({ url }) => url.pathname.startsWith("/client/sesion"),
+      matcher: ({ url }) => url.pathname.startsWith("/client/rutinas"),
       handler: new NetworkFirst({
         cacheName: "vizion-session",
         networkTimeoutSeconds: 2,

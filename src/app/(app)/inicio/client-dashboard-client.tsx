@@ -97,7 +97,7 @@ export function ClientDashboardClient({ userId, name }: Props) {
 
       {data.activeRoutine && (
         <Link
-          href="/client/sesion"
+          href="/client/rutinas"
           className="block rounded-2xl border border-neutral-800 bg-neutral-900 p-5 transition-colors hover:border-brand-primary/40"
         >
           <div className="flex items-start justify-between">

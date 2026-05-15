@@ -9,7 +9,7 @@ export default function IngresarPage() {
 
   function handleSelect(profile: DemoUser) {
     localStorage.setItem("vizion-demo-profile", JSON.stringify(profile.id));
-    router.push(profile.role === "TRAINER" ? "/inicio" : "/client/sesion");
+    router.push(profile.role === "TRAINER" ? "/inicio" : "/client/rutinas");
   }
 
   return (

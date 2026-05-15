@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ClipboardList, Dumbbell, TrendingUp, Scale, User } from "lucide-react";
+import { Home, ClipboardList, TrendingUp, Scale } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
   { href: "/inicio", label: "Inicio", icon: Home },
   { href: "/client/rutinas", label: "Rutinas", icon: ClipboardList },
-  { href: "/client/sesion", label: "Sesion", icon: Dumbbell },
   { href: "/client/progreso", label: "Progreso", icon: TrendingUp },
   { href: "/client/mediciones", label: "Mediciones", icon: Scale },
 ] as const;

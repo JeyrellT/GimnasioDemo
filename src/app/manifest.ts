@@ -44,8 +44,8 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     shortcuts: [
       {
-        name: "Sesión de hoy",
-        url: `${base}/client/sesion`,
+        name: "Mis rutinas",
+        url: `${base}/client/rutinas`,
         icons: [{ src: `${base}/icons/icon-192.svg`, sizes: "192x192" }],
       },
       {
