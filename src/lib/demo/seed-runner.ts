@@ -18,7 +18,7 @@ import {
   DEMO_SALES,
 } from "./seed-data";
 
-const SEED_KEY = "demo_seeded_v4";
+const SEED_KEY = "demo_seeded_v5";
 
 export async function ensureDemoSeeded(): Promise<void> {
   const flag = await db.kvStore.get(SEED_KEY);
@@ -57,7 +57,7 @@ export async function ensureDemoSeeded(): Promise<void> {
     },
   );
 
-  console.info("[vizion-demo] seed v4 completed");
+  console.info("[vizion-demo] seed v5 completed");
 }
 
 export async function resetDemoData(): Promise<void> {
