@@ -98,6 +98,28 @@ function DifficultyDots({ level }: { level: string | null }) {
   );
 }
 
+// ── Card thumbnail with error fallback ────────────────────────────────────────
+
+function CardThumbnail({ src, alt }: { src: string; alt: string }) {
+  const [errored, setErrored] = useState(false);
+  if (errored) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#27272A] to-[#18181B]">
+        <Dumbbell className="h-8 w-8 text-[#3F3F46]" strokeWidth={1.5} aria-hidden="true" />
+      </div>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt={alt}
+      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+      onError={() => setErrored(true)}
+    />
+  );
+}
+
 // ── URL helpers ───────────────────────────────────────────────────────────────
 
 function buildHref(params: {
@@ -321,12 +343,7 @@ export default function EjerciciosPage() {
                     {/* Thumbnail */}
                     <div className="relative aspect-video w-full overflow-hidden bg-[#27272A]">
                       {thumbnail ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={thumbnail}
-                          alt={ex.nameEs}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
+                        <CardThumbnail src={thumbnail} alt={ex.nameEs} />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#27272A] to-[#18181B]">
                           <Dumbbell
