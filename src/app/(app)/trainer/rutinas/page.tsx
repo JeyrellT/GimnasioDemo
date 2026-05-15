@@ -12,8 +12,9 @@ import {
   TrendingDown,
   LayoutGrid,
   Loader2,
+  Trash2,
 } from "lucide-react";
-import { listMyRoutines } from "@/app/actions/routines";
+import { listMyRoutines, deleteRoutine } from "@/app/actions/routines";
 import { PageHeader } from "@/components/shared/page-header";
 import { formatDateCR } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
@@ -120,11 +121,11 @@ export default function RutinasPage() {
 
   const [routines, setRoutines] = useState<DemoRoutineRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     listMyRoutines().then((result) => {
       if (result.ok) {
-        // Sort by updatedAt desc
         const sorted = [...result.value].sort((a, b) =>
           b.updatedAt.localeCompare(a.updatedAt),
         );
@@ -133,6 +134,14 @@ export default function RutinasPage() {
       setLoading(false);
     });
   }, []);
+
+  async function handleDelete(routineId: string) {
+    const result = await deleteRoutine(routineId);
+    if (result.ok) {
+      setRoutines((prev) => prev.filter((r) => r.id !== routineId));
+    }
+    setConfirmDeleteId(null);
+  }
 
   const filtered = routines.filter((r) => {
     if (activeFilter === "activas") return !r.isArchived;
@@ -251,36 +260,29 @@ export default function RutinasPage() {
             const cfg = getGoalConfig(r.goal);
             const GoalIcon = cfg.icon;
             return (
-              <li key={r.id}>
+              <li key={r.id} className="relative">
                 <Link
                   href={`/trainer/rutinas/${r.id}`}
                   className={[
-                    // Base
                     "group relative flex flex-col overflow-hidden rounded-xl border border-[#3F3F46] border-l-4",
                     cfg.borderColor,
-                    // Glassmorphism
                     "bg-[#18181B]/80 backdrop-blur-sm",
                     "shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]",
-                    // Hover
                     "hover:bg-[#27272A]/80",
                     "hover:scale-[1.02]",
                     "hover:shadow-[0_0_20px_rgba(255,106,26,0.08)]",
                     "transition-all duration-200",
-                    // Archived dim
                     r.isArchived ? "opacity-60" : "opacity-100",
                   ].join(" ")}
                 >
-                  {/* Top gradient accent */}
                   <div
                     aria-hidden="true"
                     className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${cfg.gradientFrom} via-transparent to-transparent`}
                   />
 
                   <div className="flex flex-col gap-3 p-4">
-                    {/* Card header row */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-start gap-3 min-w-0">
-                        {/* Goal icon badge */}
                         <div
                           className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${cfg.iconBg}`}
                         >
@@ -301,38 +303,87 @@ export default function RutinasPage() {
                         </div>
                       </div>
 
-                      {/* Status indicator */}
-                      {r.isArchived ? (
-                        <span className="shrink-0 rounded-full border border-[#3F3F46] bg-[#27272A] px-2 py-0.5 text-xs text-[#71717A]">
-                          Archivada
-                        </span>
-                      ) : (
-                        <span className="mt-1 flex shrink-0 items-center gap-1.5 text-xs text-[#71717A]">
-                          <span
-                            className="inline-block h-1.5 w-1.5 rounded-full bg-[#22C55E]"
-                            aria-label="Activa"
-                          />
-                          Activa
-                        </span>
-                      )}
+                      <div className="flex shrink-0 items-center gap-2">
+                        {r.isArchived ? (
+                          <span className="rounded-full border border-[#3F3F46] bg-[#27272A] px-2 py-0.5 text-xs text-[#71717A]">
+                            Archivada
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1.5 text-xs text-[#71717A]">
+                            <span
+                              className="inline-block h-1.5 w-1.5 rounded-full bg-[#22C55E]"
+                              aria-label="Activa"
+                            />
+                            Activa
+                          </span>
+                        )}
+                      </div>
                     </div>
 
-                    {/* Meta chips */}
                     <div className="flex items-center gap-2 flex-wrap">
                       <MetaChip label={`${r.splitDays} días/sem`} />
                       <MetaChip label={`${r.durationWeeks} sem`} />
                     </div>
 
-                    {/* Footer */}
-                    <p className="text-xs text-[#52525B]">
-                      Actualizada {formatDateCR(r.updatedAt, "d MMM yyyy")}
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-[#52525B]">
+                        Actualizada {formatDateCR(r.updatedAt, "d MMM yyyy")}
+                      </p>
+                    </div>
                   </div>
                 </Link>
+
+                {/* Delete button — positioned absolute top-right, outside the Link */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setConfirmDeleteId(r.id);
+                  }}
+                  className="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-lg bg-[#27272A]/80 border border-[#3F3F46] text-[#71717A] hover:text-[#EF4444] hover:border-[#EF4444]/40 hover:bg-[#EF4444]/10 transition-colors"
+                  aria-label={`Eliminar ${r.name}`}
+                >
+                  <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
+                </button>
               </li>
             );
           })}
         </ul>
+      )}
+
+      {/* Delete confirmation modal */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-sm rounded-2xl border border-[#3F3F46] bg-[#18181B] p-6 shadow-2xl">
+            <div className="flex flex-col items-center gap-4 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EF4444]/10">
+                <Trash2 className="h-6 w-6 text-[#EF4444]" strokeWidth={1.75} />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-[#FAFAFA]">Eliminar rutina</h3>
+                <p className="mt-1 text-sm text-[#A1A1AA]">
+                  Esta acción no se puede deshacer. La rutina se eliminará permanentemente.
+                </p>
+              </div>
+              <div className="flex w-full gap-3">
+                <button
+                  type="button"
+                  onClick={() => setConfirmDeleteId(null)}
+                  className="flex-1 rounded-lg border border-[#3F3F46] bg-[#27272A] px-4 py-2.5 text-sm font-medium text-[#FAFAFA] hover:bg-[#3F3F46] transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(confirmDeleteId)}
+                  className="flex-1 rounded-lg bg-[#EF4444] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#DC2626] transition-colors"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

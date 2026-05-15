@@ -63,6 +63,18 @@ export async function archiveRoutine(routineId: string): Promise<ActionResult<vo
   });
 }
 
+// ── deleteRoutine ────────────────────────────────────────────────────────────
+
+export async function deleteRoutine(routineId: string): Promise<ActionResult<void>> {
+  return tryCatch(async () => {
+    const existing = await store.getRoutine(routineId);
+    if (!existing || existing.trainerId !== DEMO_TRAINER_ID) {
+      throw new NotFoundError("ROUTINE_NOT_FOUND", "Rutina no encontrada.");
+    }
+    await db.demoRoutines.delete(routineId);
+  });
+}
+
 // ── duplicateRoutine ──────────────────────────────────────────────────────────
 
 export async function duplicateRoutine(routineId: string): Promise<ActionResult<CreateRoutineResult>> {

@@ -3,6 +3,7 @@ export {
   createRoutineTemplate,
   updateRoutineTemplate,
   archiveRoutine,
+  deleteRoutine,
   duplicateRoutine,
   addRoutineDay,
   updateRoutineDay,

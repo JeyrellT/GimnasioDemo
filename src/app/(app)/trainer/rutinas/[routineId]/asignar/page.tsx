@@ -7,9 +7,7 @@ import AsignarClient from "./_client";
 
 export function generateStaticParams() {
   return [
-    { routineId: "routine-ppl" },
-    { routineId: "routine-upper-lower" },
-    { routineId: "routine-fullbody" },
+    { routineId: "routine-programa-macho" },
   ];
 }
 
