@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronUp,
   CalendarDays,
+  Play,
 } from "lucide-react";
 import { useDemoUser } from "@/lib/demo/auth-context";
 import {
@@ -22,6 +23,7 @@ import type {
   DemoRoutineDay,
   DemoExerciseRow,
 } from "@/lib/offline/db";
+import { ExerciseVideoModal } from "@/components/client/ExerciseVideoModal";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -59,6 +61,7 @@ export default function ClientRutinasPage() {
   const [cards, setCards] = useState<RoutineCard[]>([]);
   const [expandedRoutine, setExpandedRoutine] = useState<string | null>(null);
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
+  const [selectedExercise, setSelectedExercise] = useState<ExerciseWithDetails | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -261,31 +264,39 @@ export default function ClientRutinasPage() {
                         {dayOpen && (
                           <div className="border-t border-[#3F3F46]/40 divide-y divide-[#3F3F46]/30">
                             {exercises.map((ex) => (
-                              <div key={ex.exerciseId} className="px-3 py-2.5">
-                                <p className="text-sm font-medium text-[#E4E4E7]">
-                                  {ex.exercise?.nameEs ?? ex.exerciseId}
-                                </p>
-                                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-[#71717A]">
-                                  <span>{ex.targetSets} series</span>
-                                  <span>
-                                    {ex.targetRepsMin === ex.targetRepsMax
-                                      ? `${ex.targetRepsMin} reps`
-                                      : `${ex.targetRepsMin}-${ex.targetRepsMax} reps`}
-                                  </span>
-                                  {ex.targetRpe && (
-                                    <span>RPE {ex.targetRpe}</span>
-                                  )}
-                                  <span className="inline-flex items-center gap-0.5">
-                                    <Clock className="h-3 w-3" />
-                                    {ex.restSeconds}s
-                                  </span>
-                                </div>
-                                {ex.notes && (
-                                  <p className="mt-1 text-xs text-[#52525B] italic">
-                                    {ex.notes}
+                              <button
+                                type="button"
+                                key={ex.exerciseId}
+                                onClick={() => ex.exercise && setSelectedExercise(ex)}
+                                className="group flex w-full items-center justify-between px-3 py-2.5 text-left transition-colors hover:bg-[#FF6A1A]/5"
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm font-medium text-[#E4E4E7]">
+                                    {ex.exercise?.nameEs ?? ex.exerciseId}
                                   </p>
-                                )}
-                              </div>
+                                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-[#71717A]">
+                                    <span>{ex.targetSets} series</span>
+                                    <span>
+                                      {ex.targetRepsMin === ex.targetRepsMax
+                                        ? `${ex.targetRepsMin} reps`
+                                        : `${ex.targetRepsMin}-${ex.targetRepsMax} reps`}
+                                    </span>
+                                    {ex.targetRpe && (
+                                      <span>RPE {ex.targetRpe}</span>
+                                    )}
+                                    <span className="inline-flex items-center gap-0.5">
+                                      <Clock className="h-3 w-3" />
+                                      {ex.restSeconds}s
+                                    </span>
+                                  </div>
+                                  {ex.notes && (
+                                    <p className="mt-1 text-xs text-[#52525B] italic">
+                                      {ex.notes}
+                                    </p>
+                                  )}
+                                </div>
+                                <Play className="ml-2 h-3.5 w-3.5 shrink-0 text-[#52525B] transition-colors group-hover:text-[#FF6A1A]" />
+                              </button>
                             ))}
                           </div>
                         )}
@@ -298,6 +309,21 @@ export default function ClientRutinasPage() {
           );
         })}
       </div>
+
+      {selectedExercise?.exercise && (
+        <ExerciseVideoModal
+          open={!!selectedExercise}
+          onClose={() => setSelectedExercise(null)}
+          exercise={selectedExercise.exercise}
+          context={{
+            targetSets: selectedExercise.targetSets,
+            targetRepsMin: selectedExercise.targetRepsMin,
+            targetRepsMax: selectedExercise.targetRepsMax,
+            restSeconds: selectedExercise.restSeconds,
+            notes: selectedExercise.notes,
+          }}
+        />
+      )}
     </div>
   );
 }
