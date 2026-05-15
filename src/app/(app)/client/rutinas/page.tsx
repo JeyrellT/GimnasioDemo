@@ -72,7 +72,7 @@ export default function ClientRutinasPage() {
 
       const result: RoutineCard[] = await Promise.all(
         sorted.map(async (ar) => {
-          const routine = await getRoutine(ar.routineTemplateId);
+          const routine = (await getRoutine(ar.routineTemplateId)) ?? null;
           const days: DayWithExercises[] = routine
             ? await Promise.all(
                 routine.daysJson.map(async (day) => {
