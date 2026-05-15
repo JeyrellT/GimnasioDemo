@@ -2,16 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Dumbbell, TrendingUp, Scale, User } from "lucide-react";
+import { Home, ClipboardList, Dumbbell, TrendingUp, Scale, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
   { href: "/inicio", label: "Inicio", icon: Home },
-  { href: "/client/sesion", label: "Sesión", icon: Dumbbell },
+  { href: "/client/rutinas", label: "Rutinas", icon: ClipboardList },
+  { href: "/client/sesion", label: "Sesion", icon: Dumbbell },
   { href: "/client/progreso", label: "Progreso", icon: TrendingUp },
   { href: "/client/mediciones", label: "Mediciones", icon: Scale },
-  { href: "/client/entrenador", label: "Entrenador", icon: User },
 ] as const;
 
 // ─── Bottom Nav (mobile) ──────────────────────────────────────────────────────

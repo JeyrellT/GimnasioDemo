@@ -13,6 +13,7 @@ import {
   LayoutGrid,
   Loader2,
   Trash2,
+  Users,
 } from "lucide-react";
 import { listMyRoutines, deleteRoutine } from "@/app/actions/routines";
 import { PageHeader } from "@/components/shared/page-header";
@@ -333,18 +334,28 @@ export default function RutinasPage() {
                   </div>
                 </Link>
 
-                {/* Delete button — positioned absolute top-right, outside the Link */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setConfirmDeleteId(r.id);
-                  }}
-                  className="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-lg bg-[#27272A]/80 border border-[#3F3F46] text-[#71717A] hover:text-[#EF4444] hover:border-[#EF4444]/40 hover:bg-[#EF4444]/10 transition-colors"
-                  aria-label={`Eliminar ${r.name}`}
-                >
-                  <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
-                </button>
+                {/* Action buttons — positioned absolute top-right, outside the Link */}
+                <div className="absolute top-2 right-2 z-10 flex gap-1.5">
+                  <Link
+                    href={`/trainer/rutinas/${r.id}/asignar`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#27272A]/80 border border-[#3F3F46] text-[#71717A] hover:text-[#FF6A1A] hover:border-[#FF6A1A]/40 hover:bg-[#FF6A1A]/10 transition-colors"
+                    aria-label={`Asignar ${r.name}`}
+                  >
+                    <Users className="h-3.5 w-3.5" strokeWidth={1.75} />
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setConfirmDeleteId(r.id);
+                    }}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#27272A]/80 border border-[#3F3F46] text-[#71717A] hover:text-[#EF4444] hover:border-[#EF4444]/40 hover:bg-[#EF4444]/10 transition-colors"
+                    aria-label={`Eliminar ${r.name}`}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
+                  </button>
+                </div>
               </li>
             );
           })}
