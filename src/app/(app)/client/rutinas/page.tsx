@@ -24,6 +24,7 @@ import type {
   DemoExerciseRow,
 } from "@/lib/offline/db";
 import { ExerciseVideoModal } from "@/components/client/ExerciseVideoModal";
+import { getExerciseVideoUrl } from "@/lib/demo/exercise-videos";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -315,6 +316,7 @@ export default function ClientRutinasPage() {
           open={!!selectedExercise}
           onClose={() => setSelectedExercise(null)}
           exercise={selectedExercise.exercise}
+          videoUrl={getExerciseVideoUrl(selectedExercise.exerciseId)}
           context={{
             targetSets: selectedExercise.targetSets,
             targetRepsMin: selectedExercise.targetRepsMin,

@@ -30,6 +30,7 @@ interface ExerciseVideoModalProps {
   open: boolean;
   onClose: () => void;
   exercise: DemoExerciseRow;
+  videoUrl: string | null;
   context: {
     targetSets: number;
     targetRepsMin: number;
@@ -97,15 +98,55 @@ interface MediaHeroProps {
   nameEs: string;
   gifUrl: string | null;
   thumbnailUrl: string | null;
+  videoUrl: string | null;
 }
 
-function MediaHero({ nameEs, gifUrl, thumbnailUrl }: MediaHeroProps) {
+function MediaHero({ nameEs, gifUrl, thumbnailUrl, videoUrl }: MediaHeroProps) {
   const [imgError, setImgError] = React.useState(false);
+  const [playing, setPlaying] = React.useState(false);
+
+  // Reset playing state when exercise changes
+  const exerciseKey = nameEs;
+  const prevKey = React.useRef(exerciseKey);
+  React.useEffect(() => {
+    if (prevKey.current !== exerciseKey) {
+      setPlaying(false);
+      setImgError(false);
+      prevKey.current = exerciseKey;
+    }
+  }, [exerciseKey]);
 
   const hasGif = Boolean(gifUrl && !imgError);
   const hasThumbnail = Boolean(thumbnailUrl && !imgError);
   const showPlaceholder = imgError || (!gifUrl && !thumbnailUrl);
+  const canPlay = Boolean(videoUrl);
 
+  // ── Video player mode ──────────────────────────────────────────────
+  if (playing && videoUrl) {
+    return (
+      <div className="relative aspect-video w-full overflow-hidden bg-black">
+        <iframe
+          src={videoUrl + "&autoplay=1"}
+          title={`Video tutorial: ${nameEs}`}
+          className="h-full w-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          loading="eager"
+        />
+        {/* Back to thumbnail button */}
+        <button
+          type="button"
+          onClick={() => setPlaying(false)}
+          className="absolute left-3 top-3 z-20 flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-sm px-3 py-1.5 text-[11px] font-medium text-white/80 ring-1 ring-white/10 transition-colors hover:bg-black/80 hover:text-white"
+        >
+          <X className="h-3 w-3" />
+          Cerrar video
+        </button>
+      </div>
+    );
+  }
+
+  // ── Thumbnail mode ─────────────────────────────────────────────────
   return (
     <div className="relative aspect-video w-full overflow-hidden bg-[#18181B]">
       {/* Media layer */}
@@ -118,26 +159,15 @@ function MediaHero({ nameEs, gifUrl, thumbnailUrl }: MediaHeroProps) {
           onError={() => setImgError(true)}
         />
       ) : hasThumbnail ? (
-        <>
-          <Image
-            src={thumbnailUrl!}
-            alt={`Vista previa de ${nameEs}`}
-            fill
-            className="object-cover"
-            sizes="(max-width: 640px) 100vw, 448px"
-            onError={() => setImgError(true)}
-            priority
-          />
-          {/* Subtle play hint overlay */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm ring-1 ring-white/20">
-              <PlayCircle
-                className="h-8 w-8 text-white/80"
-                aria-hidden="true"
-              />
-            </div>
-          </div>
-        </>
+        <Image
+          src={thumbnailUrl!}
+          alt={`Vista previa de ${nameEs}`}
+          fill
+          className="object-cover"
+          sizes="(max-width: 640px) 100vw, 448px"
+          onError={() => setImgError(true)}
+          priority
+        />
       ) : (
         // Placeholder
         <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-[#52525B]">
@@ -148,13 +178,45 @@ function MediaHero({ nameEs, gifUrl, thumbnailUrl }: MediaHeroProps) {
         </div>
       )}
 
+      {/* Play button overlay */}
+      {canPlay && !showPlaceholder && (
+        <button
+          type="button"
+          onClick={() => setPlaying(true)}
+          aria-label="Reproducir video tutorial"
+          className="absolute inset-0 z-10 flex items-center justify-center group/play"
+        >
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#FF6A1A]/90 shadow-lg shadow-[#FF6A1A]/30 ring-2 ring-white/20 transition-transform duration-200 group-hover/play:scale-110 group-active/play:scale-95">
+            <PlayCircle
+              className="h-8 w-8 text-white"
+              aria-hidden="true"
+            />
+          </div>
+          <span className="absolute bottom-14 rounded-full bg-black/60 backdrop-blur-sm px-3 py-1 text-xs font-medium text-white/90">
+            Ver tutorial
+          </span>
+        </button>
+      )}
+
+      {/* Static play icon when no video available */}
+      {!canPlay && hasThumbnail && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm ring-1 ring-white/20">
+            <PlayCircle
+              className="h-8 w-8 text-white/80"
+              aria-hidden="true"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Bottom gradient for name overlay legibility */}
       {!showPlaceholder && (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 to-transparent" />
       )}
 
       {/* Exercise name overlaid at bottom */}
-      <div className="absolute inset-x-0 bottom-0 px-4 pb-4">
+      <div className="absolute inset-x-0 bottom-0 px-4 pb-4 pointer-events-none">
         <DialogPrimitive.Title className="line-clamp-2 text-lg font-bold leading-tight text-[#FAFAFA] drop-shadow-md">
           {nameEs}
         </DialogPrimitive.Title>
@@ -286,6 +348,7 @@ export function ExerciseVideoModal({
   open,
   onClose,
   exercise,
+  videoUrl,
   context,
 }: ExerciseVideoModalProps) {
   const difficultyMeta = DIFFICULTY_META[exercise.difficulty] ?? {
@@ -372,6 +435,7 @@ export function ExerciseVideoModal({
                     nameEs={exercise.nameEs}
                     gifUrl={exercise.gifUrl}
                     thumbnailUrl={exercise.thumbnailUrl}
+                    videoUrl={videoUrl}
                   />
 
                   {/* Hidden title for a11y (visible title is inside MediaHero) */}
