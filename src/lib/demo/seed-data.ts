@@ -1,7 +1,7 @@
 // =============================================================================
 // VIZION — Demo seed data (static, hardcoded)
 // All IDs are deterministic strings — never use crypto.randomUUID() here.
-// Dates are relative to 2026-05-07 (project date), expressed as ISO strings.
+// Dates are relative to 2026-05-15 (project date), expressed as ISO strings.
 // =============================================================================
 
 import type {
@@ -839,44 +839,44 @@ export const DEMO_ASSIGNED_ROUTINES: DemoAssignedRoutineRow[] = [
     id: "ar-ana-macho",
     clientUserId: "client-ana",
     routineTemplateId: "routine-programa-macho",
-    startsOn: "2026-03-10",
-    endsOn: "2026-05-05",
+    startsOn: "2026-03-25",
+    endsOn: "2026-05-20",
     status: "ACTIVE",
-    snapshotJson: { templateId: "routine-programa-macho", templateName: "Programa Macho", splitDays: 4, durationWeeks: 8, snapshotAt: "2026-03-10T00:00:00Z" },
+    snapshotJson: { templateId: "routine-programa-macho", templateName: "Programa Macho", splitDays: 4, durationWeeks: 8, snapshotAt: "2026-03-25T00:00:00Z" },
   },
   {
     id: "ar-bruno-macho",
     clientUserId: "client-bruno",
     routineTemplateId: "routine-programa-macho",
-    startsOn: "2026-03-17",
-    endsOn: "2026-05-12",
+    startsOn: "2026-03-31",
+    endsOn: "2026-05-25",
     status: "ACTIVE",
-    snapshotJson: { templateId: "routine-programa-macho", templateName: "Programa Macho", splitDays: 4, durationWeeks: 8, snapshotAt: "2026-03-17T00:00:00Z" },
+    snapshotJson: { templateId: "routine-programa-macho", templateName: "Programa Macho", splitDays: 4, durationWeeks: 8, snapshotAt: "2026-03-31T00:00:00Z" },
   },
   {
     id: "ar-carlos-macho",
     clientUserId: "client-carlos",
     routineTemplateId: "routine-programa-macho",
-    startsOn: "2026-03-24",
-    endsOn: "2026-05-19",
+    startsOn: "2026-03-27",
+    endsOn: "2026-05-22",
     status: "ACTIVE",
-    snapshotJson: { templateId: "routine-programa-macho", templateName: "Programa Macho", splitDays: 4, durationWeeks: 8, snapshotAt: "2026-03-24T00:00:00Z" },
+    snapshotJson: { templateId: "routine-programa-macho", templateName: "Programa Macho", splitDays: 4, durationWeeks: 8, snapshotAt: "2026-03-27T00:00:00Z" },
   },
   {
     id: "ar-diana-macho",
     clientUserId: "client-diana",
     routineTemplateId: "routine-programa-macho",
-    startsOn: "2026-03-10",
-    endsOn: "2026-05-05",
+    startsOn: "2026-03-23",
+    endsOn: "2026-05-18",
     status: "ACTIVE",
-    snapshotJson: { templateId: "routine-programa-macho", templateName: "Programa Macho", splitDays: 4, durationWeeks: 8, snapshotAt: "2026-03-10T00:00:00Z" },
+    snapshotJson: { templateId: "routine-programa-macho", templateName: "Programa Macho", splitDays: 4, durationWeeks: 8, snapshotAt: "2026-03-23T00:00:00Z" },
   },
 ];
 
 // ── Sessions (helper to generate past date strings) ─────────────────────────────────────────
 
 function daysAgo(n: number): string {
-  const d = new Date("2026-05-07T00:00:00Z");
+  const d = new Date("2026-05-15T00:00:00Z");
   d.setDate(d.getDate() - n);
   return d.toISOString();
 }
@@ -1162,6 +1162,103 @@ export const DEMO_SESSIONS: DemoSessionRow[] = [
       { id: "s-b05-4", exerciseId: "ex-curl-martillo", setNumber: 1, weightKg: 14, reps: 12, rpe: 7, isWarmup: false, isPr: false },
     ],
   },
+  // Recent sessions (close to May 15 for calendar visibility)
+  {
+    id: "sess-ana-10",
+    clientUserId: "client-ana",
+    assignedRoutineId: "ar-ana-macho",
+    dayIndex: 3,
+    status: "COMPLETED",
+    startedAt: daysAgo(1),
+    completedAt: daysAgo(1),
+    totalDurationSec: 2400,
+    bodyweightKg: 68.3,
+    subjectiveFatigue: 2,
+    notes: "Abdominales rápidos",
+    isFreeWorkout: false,
+    setsJson: [
+      { id: "s-a10-1", exerciseId: "ex-russian-twist", setNumber: 1, weightKg: 5, reps: 20, rpe: 6, isWarmup: false, isPr: false },
+      { id: "s-a10-2", exerciseId: "ex-russian-twist", setNumber: 2, weightKg: 5, reps: 20, rpe: 7, isWarmup: false, isPr: false },
+      { id: "s-a10-3", exerciseId: "ex-plancha", setNumber: 1, weightKg: 0, reps: 1, rpe: 7, isWarmup: false, isPr: false },
+    ],
+  },
+  {
+    id: "sess-bruno-06",
+    clientUserId: "client-bruno",
+    assignedRoutineId: "ar-bruno-macho",
+    dayIndex: 2,
+    status: "COMPLETED",
+    startedAt: daysAgo(2),
+    completedAt: daysAgo(2),
+    totalDurationSec: 4800,
+    bodyweightKg: 83.5,
+    subjectiveFatigue: 4,
+    notes: "Piernas pesadas hoy",
+    isFreeWorkout: false,
+    setsJson: [
+      { id: "s-b06-1", exerciseId: "ex-desplante-bulgaro", setNumber: 1, weightKg: 24, reps: 12, rpe: 8, isWarmup: false, isPr: false },
+      { id: "s-b06-2", exerciseId: "ex-desplante-bulgaro", setNumber: 2, weightKg: 26, reps: 12, rpe: 9, isWarmup: false, isPr: true },
+      { id: "s-b06-3", exerciseId: "ex-prensa", setNumber: 1, weightKg: 145, reps: 12, rpe: 8, isWarmup: false, isPr: true },
+      { id: "s-b06-4", exerciseId: "ex-prensa", setNumber: 2, weightKg: 145, reps: 10, rpe: 9, isWarmup: false, isPr: false },
+    ],
+  },
+  {
+    id: "sess-diana-01",
+    clientUserId: "client-diana",
+    assignedRoutineId: "ar-diana-macho",
+    dayIndex: 0,
+    status: "COMPLETED",
+    startedAt: daysAgo(4),
+    completedAt: daysAgo(4),
+    totalDurationSec: 3600,
+    bodyweightKg: 62,
+    subjectiveFatigue: 3,
+    notes: null,
+    isFreeWorkout: false,
+    setsJson: [
+      { id: "s-d01-1", exerciseId: "ex-press-banca", setNumber: 1, weightKg: 25, reps: 10, rpe: 7, isWarmup: false, isPr: false },
+      { id: "s-d01-2", exerciseId: "ex-press-banca", setNumber: 2, weightKg: 25, reps: 10, rpe: 8, isWarmup: false, isPr: false },
+      { id: "s-d01-3", exerciseId: "ex-aperturas", setNumber: 1, weightKg: 6, reps: 12, rpe: 7, isWarmup: false, isPr: false },
+    ],
+  },
+  {
+    id: "sess-diana-02",
+    clientUserId: "client-diana",
+    assignedRoutineId: "ar-diana-macho",
+    dayIndex: 1,
+    status: "COMPLETED",
+    startedAt: daysAgo(2),
+    completedAt: daysAgo(2),
+    totalDurationSec: 3900,
+    bodyweightKg: 62,
+    subjectiveFatigue: 3,
+    notes: null,
+    isFreeWorkout: false,
+    setsJson: [
+      { id: "s-d02-1", exerciseId: "ex-remo-mancuerna", setNumber: 1, weightKg: 10, reps: 12, rpe: 7, isWarmup: false, isPr: false },
+      { id: "s-d02-2", exerciseId: "ex-remo-mancuerna", setNumber: 2, weightKg: 10, reps: 12, rpe: 8, isWarmup: false, isPr: false },
+      { id: "s-d02-3", exerciseId: "ex-curl-mancuerna", setNumber: 1, weightKg: 5, reps: 12, rpe: 7, isWarmup: false, isPr: false },
+    ],
+  },
+  {
+    id: "sess-carlos-01",
+    clientUserId: "client-carlos",
+    assignedRoutineId: "ar-carlos-macho",
+    dayIndex: 0,
+    status: "COMPLETED",
+    startedAt: daysAgo(6),
+    completedAt: daysAgo(6),
+    totalDurationSec: 3300,
+    bodyweightKg: 90,
+    subjectiveFatigue: 4,
+    notes: "Primera sesión de Carlos",
+    isFreeWorkout: false,
+    setsJson: [
+      { id: "s-c01-1", exerciseId: "ex-press-banca", setNumber: 1, weightKg: 60, reps: 10, rpe: 7, isWarmup: false, isPr: false },
+      { id: "s-c01-2", exerciseId: "ex-press-banca", setNumber: 2, weightKg: 60, reps: 8, rpe: 8, isWarmup: false, isPr: false },
+      { id: "s-c01-3", exerciseId: "ex-aperturas", setNumber: 1, weightKg: 12, reps: 12, rpe: 7, isWarmup: false, isPr: false },
+    ],
+  },
 ];
 
 // ── Body metrics ──────────────────────────────────────────────────────────────
@@ -1170,7 +1267,7 @@ export const DEMO_SESSIONS: DemoSessionRow[] = [
 // Bruno: MUSCLE_GAIN — weight 80 → 83 over 12 weeks (ascending)
 
 function weeksAgo(n: number): string {
-  const d = new Date("2026-05-07T08:00:00Z");
+  const d = new Date("2026-05-15T08:00:00Z");
   d.setDate(d.getDate() - n * 7);
   return d.toISOString();
 }
@@ -1238,7 +1335,7 @@ export const DEMO_LOCATIONS: DemoLocationRow[] = [
 // ── Location visits (16 total) ────────────────────────────────────────────────
 
 function isoDate(daysBack: number): string {
-  const d = new Date("2026-05-07T09:00:00Z");
+  const d = new Date("2026-05-15T09:00:00Z");
   d.setDate(d.getDate() - daysBack);
   return d.toISOString();
 }

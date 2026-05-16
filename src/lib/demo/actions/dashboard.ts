@@ -42,7 +42,7 @@ export async function getDashboardKPIs(
       .where({ trainerUserId: DEMO_TRAINER_ID, status: "ACTIVE" })
       .toArray();
 
-    const today = new Date("2026-05-07T00:00:00Z");
+    const today = new Date("2026-05-15T00:00:00Z");
     const weekStart = new Date(today);
     weekStart.setDate(today.getDate() - today.getDay());
     const prevWeekStart = new Date(weekStart);
@@ -180,7 +180,7 @@ export async function getDashboardKPIs(
 
 export async function getDashboardCalendarEvents(): Promise<ActionResult<DashboardCalendar>> {
   return tryCatch(async () => {
-    const today = new Date("2026-05-07T00:00:00Z");
+    const today = new Date("2026-05-15T00:00:00Z");
     const past7 = new Date(today);
     past7.setDate(today.getDate() - 7);
     const future7 = new Date(today);
@@ -259,9 +259,9 @@ export async function getDashboardRoster(
       .where({ trainerUserId: DEMO_TRAINER_ID, status: "ACTIVE" })
       .toArray();
 
-    const today = new Date("2026-05-07T00:00:00Z").toISOString();
-    const sevenDaysAgo = new Date("2026-04-30T00:00:00Z").toISOString();
-    const fourteenDaysAgo = new Date("2026-04-23T00:00:00Z").toISOString();
+    const today = new Date("2026-05-15T00:00:00Z").toISOString();
+    const sevenDaysAgo = new Date("2026-05-08T00:00:00Z").toISOString();
+    const fourteenDaysAgo = new Date("2026-05-01T00:00:00Z").toISOString();
 
     const rosterRaw = await Promise.all(
       links.map(async (link) => {
@@ -433,7 +433,7 @@ export async function getDashboardAggregates(
 
 export async function getDashboardAlerts(): Promise<ActionResult<DashboardAlert[]>> {
   return tryCatch(async () => {
-    const today = new Date("2026-05-07T00:00:00Z");
+    const today = new Date("2026-05-15T00:00:00Z");
     const fourteenDaysAgo = new Date(today);
     fourteenDaysAgo.setDate(today.getDate() - 14);
     const fourteenDaysAgoIso = fourteenDaysAgo.toISOString();

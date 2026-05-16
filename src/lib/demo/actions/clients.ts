@@ -107,7 +107,7 @@ function computeStreak(sessions: DemoSessionRow[]): number {
 
   const daySet = new Set(completed);
   let streak = 0;
-  const today = new Date("2026-05-07");
+  const today = new Date("2026-05-15");
   for (let i = 0; i <= 30; i++) {
     const d = new Date(today);
     d.setUTCDate(today.getUTCDate() - i);
@@ -134,7 +134,7 @@ export async function listMyClients(
     const clientIds = links.map((l) => l.clientUserId);
     const clientRows = await db.demoClients.where("id").anyOf(clientIds).toArray();
 
-    const now = new Date("2026-05-07T00:00:00Z").toISOString();
+    const now = new Date("2026-05-15T00:00:00Z").toISOString();
     const sevenDaysAgo = new Date("2026-04-30T00:00:00Z").toISOString();
 
     const clients: ClientListItem[] = await Promise.all(
@@ -206,7 +206,7 @@ export async function getClientProfileDetail(
     const sessions = await store.listSessionsForClient(clientId);
     const completedSessions = sessions.filter((s) => s.status === "COMPLETED");
 
-    const twelveWeeksAgo = new Date("2026-05-07");
+    const twelveWeeksAgo = new Date("2026-05-15");
     twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 84);
     const history = metrics.filter((m) => new Date(m.recordedAt) >= twelveWeeksAgo);
 
@@ -281,7 +281,7 @@ export async function getClientProfileDetail(
     };
 
     const anchor28 = metrics.find((m) => {
-      const d = new Date("2026-05-07");
+      const d = new Date("2026-05-15");
       d.setDate(d.getDate() - 28);
       return new Date(m.recordedAt) <= d;
     });
@@ -292,13 +292,13 @@ export async function getClientProfileDetail(
 
     const startedAt = link?.startedAt ?? client.createdAt;
     const daysSinceStart = Math.floor(
-      (new Date("2026-05-07").getTime() - new Date(startedAt).getTime()) / 86400000,
+      (new Date("2026-05-15").getTime() - new Date(startedAt).getTime()) / 86400000,
     );
 
     let adherence7d: number | null = null;
     let adherence30d: number | null = null;
     if (activeRoutine && routine) {
-      const now7 = new Date("2026-05-07T23:59:59Z").toISOString();
+      const now7 = new Date("2026-05-15T23:59:59Z").toISOString();
       const ago7 = new Date("2026-04-30T00:00:00Z").toISOString();
       const ago30 = new Date("2026-04-07T00:00:00Z").toISOString();
       const s7 = completedSessions.filter((s) => s.completedAt && s.completedAt >= ago7 && s.completedAt <= now7).length;
