@@ -808,3 +808,44 @@ export async function getActiveSession(): Promise<
     return { session: (session as SessionDetail | null) ?? null };
   });
 }
+
+// =============================================================================
+// getMyTodaySession
+// Returns today's session (completed or in-progress) for the current user.
+// =============================================================================
+
+export async function getMyTodaySession(): Promise<
+  ActionResult<{ session: SessionDetail | null }>
+> {
+  return tryCatch(async () => {
+    const user = await requireUser();
+
+    // Today's boundaries in UTC
+    const now = new Date();
+    const startOfDay = new Date(now);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    const endOfDay = new Date(now);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
+    const session = await prisma.workoutSession.findFirst({
+      where: {
+        clientUserId: user.id,
+        startedAt: { gte: startOfDay, lte: endOfDay },
+        deletedAt: null,
+      },
+      orderBy: { startedAt: "desc" },
+      include: SESSION_INCLUDE,
+    });
+
+    return { session: (session as SessionDetail | null) ?? null };
+  });
+}
+
+// -----------------------------------------------------------------------------
+// Aliases — match the names the proxy layer (src/app/actions/) expects
+// -----------------------------------------------------------------------------
+
+/** @alias listClientSessions — proxy expects `getMySessionHistory`. */
+export async function getMySessionHistory(...args: Parameters<typeof listClientSessions>) {
+  return listClientSessions(...args);
+}

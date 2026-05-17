@@ -1,4 +1,4 @@
-// DEMO MODE — re-exports from src/lib/demo/actions/
+// PRODUCTION — re-exports from real server actions (Prisma / PostgreSQL)
 export {
   getMyTodaySession,
   startSession,
@@ -7,4 +7,4 @@ export {
   abortSession,
   getMySessionHistory,
   getActiveSession,
-} from "@/lib/demo/actions/sessions";
+} from "@/server/actions/sessions.actions";

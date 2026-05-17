@@ -498,3 +498,17 @@ export async function deleteExercise(
     return { deleted: true as const };
   });
 }
+
+// -----------------------------------------------------------------------------
+// Aliases — match the names the proxy layer (src/app/actions/) expects
+// -----------------------------------------------------------------------------
+
+/** @alias getExercise — proxy expects `getExerciseDetail`. */
+export async function getExerciseDetail(...args: Parameters<typeof getExercise>) {
+  return getExercise(...args);
+}
+
+/** @alias createExercise — proxy expects `createPrivateExercise`. */
+export async function createPrivateExercise(...args: Parameters<typeof createExercise>) {
+  return createExercise(...args);
+}

@@ -1,4 +1,4 @@
-// DEMO MODE — re-exports from src/lib/demo/actions/
+// PRODUCTION — re-exports from real server actions (Prisma / PostgreSQL)
 export {
   createRoutineTemplate,
   updateRoutineTemplate,
@@ -16,4 +16,4 @@ export {
   addRoutineComment,
   listMyRoutines,
   getClientRoutines,
-} from "@/lib/demo/actions/routines";
+} from "@/server/actions/routines.actions";

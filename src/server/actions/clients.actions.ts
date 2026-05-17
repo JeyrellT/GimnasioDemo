@@ -20,6 +20,7 @@ import { z } from "zod";
 
 import { prisma } from "@/server/db";
 import {
+  requireUser,
   requireTrainer,
   assertOwnsClient,
   requireActiveSubscription,
@@ -54,6 +55,7 @@ import type {
   ListClientsResult,
 } from "@/types/api";
 import type { ClientListItem } from "@/types/domain";
+import type { ClientProfile, LpdpRequest } from "@prisma/client";
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -951,3 +953,162 @@ export async function saveClientGoal(
     return { updated: true };
   });
 }
+
+// =============================================================================
+// getClientProfileDetail
+// =============================================================================
+
+/**
+ * Return the ClientProfile record for a client.
+ *
+ * Access rules (either condition allows the call):
+ *   1. Authenticated trainer who owns an ACTIVE link to clientUserId.
+ *   2. Authenticated user reading their own profile (clientUserId === session user id).
+ *
+ * Returns null when the profile has not been created yet (should not happen in
+ * normal flow, but is a valid DB state before onboarding completes).
+ */
+export async function getClientProfileDetail(
+  clientUserId: string,
+): Promise<ActionResult<ClientProfile | null>> {
+  return tryCatch(async () => {
+    const user = await requireUser();
+
+    if (!clientUserId) {
+      throw new ValidationError("CLIENT_USER_ID_REQUIRED", "ID de usuario requerido");
+    }
+
+    // Allow own-profile access; otherwise enforce trainer ownership.
+    if (user.id !== clientUserId) {
+      if (user.role !== "TRAINER") {
+        throw new ValidationError(
+          "PROFILE_ACCESS_DENIED",
+          "Solo podés consultar tu propio perfil.",
+        );
+      }
+      await assertOwnsClient(user.id, clientUserId);
+    }
+
+    const profile = await prisma.clientProfile.findUnique({
+      where: { userId: clientUserId, deletedAt: null },
+    });
+
+    logInfo("client.profile_detail_accessed", {
+      actorId: user.id,
+      clientUserId,
+    });
+
+    return profile;
+  });
+}
+
+// =============================================================================
+// updateTrainerNotes  (alias)
+// =============================================================================
+
+/**
+ * Alias for updateTrainerClientNotes — kept for proxy-layer compatibility.
+ * Both names are exported so consumers can use either.
+ */
+export async function updateTrainerNotes(...args: Parameters<typeof updateTrainerClientNotes>) {
+  return updateTrainerClientNotes(...args);
+}
+
+// =============================================================================
+// getLpdpRequests
+// =============================================================================
+
+/**
+ * List LPDP (Ley 8968 / data-privacy) requests that belong to any client of
+ * the authenticated trainer.
+ *
+ * LPDP request processing is driven by the dedicated API routes
+ * (src/app/api/lpdp/…); this action exposes a read-only view for the trainer
+ * dashboard. It joins via TrainerClient so each trainer only sees their own
+ * clients' requests.
+ */
+export async function getLpdpRequests(): Promise<ActionResult<LpdpRequest[]>> {
+  return tryCatch(async () => {
+    const trainer = await requireTrainer();
+
+    // Resolve the set of client user-ids this trainer currently owns.
+    const links = await prisma.trainerClient.findMany({
+      where: {
+        trainerId: trainer.id,
+        deletedAt: null,
+        status: { in: ["ACTIVE", "PENDING", "PAUSED"] },
+      },
+      select: { clientId: true },
+    });
+
+    const clientIds = links.map((l) => l.clientId);
+
+    if (clientIds.length === 0) {
+      return [];
+    }
+
+    const requests = await prisma.lpdpRequest.findMany({
+      where: {
+        userId: { in: clientIds },
+        deletedAt: null,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    logInfo("lpdp.requests_listed", {
+      trainerId: trainer.id,
+      count: requests.length,
+    });
+
+    return requests;
+  });
+}
+
+// =============================================================================
+// recordTrainerNoteUpdate
+// =============================================================================
+
+/**
+ * Write an audit log entry when a trainer updates private notes for a client.
+ * Call this after a successful updateTrainerClientNotes / updateTrainerNotes
+ * when you need an explicit, separately-tracked audit event (e.g. from a UI
+ * component that already stored the notes via a different path).
+ */
+export async function recordTrainerNoteUpdate(
+  clientUserId: string,
+): Promise<ActionResult<{ recorded: true }>> {
+  return tryCatch(async () => {
+    const trainer = await requireTrainer();
+
+    if (!clientUserId) {
+      throw new ValidationError("CLIENT_USER_ID_REQUIRED", "ID de cliente requerido");
+    }
+
+    await assertOwnsClient(trainer.id, clientUserId);
+
+    const { ipAddress, userAgent } = await getRequestMeta();
+
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: trainer.id,
+        action: "UPDATE",
+        entityType: "TrainerClient",
+        entityId: `${trainer.id}:${clientUserId}`,
+        ipAddress,
+        userAgent,
+        metadata: { field: "notesPrivate", clientUserId },
+      },
+    });
+
+    logInfo("client.trainer_note_update_recorded", {
+      trainerId: trainer.id,
+      clientUserId,
+    });
+
+    return { recorded: true };
+  });
+}
+
+// =============================================================================
+// updateTrainerProfile — re-exported via the proxy file (src/app/actions/clients.ts)
+// because "use server" files cannot use `export { ... } from ...` syntax.

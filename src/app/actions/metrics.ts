@@ -1,6 +1,6 @@
-// DEMO MODE — re-exports from src/lib/demo/actions/
+// PRODUCTION — re-exports from real server actions (Prisma / PostgreSQL)
 export {
   listMetrics,
   getLatestMetric,
   recordBodyMetric,
-} from "@/lib/demo/actions/metrics";
+} from "@/server/actions/metrics.actions";

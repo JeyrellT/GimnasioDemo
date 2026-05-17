@@ -21,7 +21,7 @@ import type { Session, User } from "next-auth";
 import type { AdapterUser } from "@auth/core/adapters";
 
 import { authConfig } from "./auth.config";
-import { prisma } from "@/server/db";
+import { prisma, prismaRaw } from "@/server/db";
 import { serverEnv } from "@/server/env";
 import { verifyPassword } from "@/lib/crypto/passwords";
 import { sendEmail } from "@/lib/email/client";
@@ -66,7 +66,9 @@ async function writeAuditLog(
 
 export const fullAuthConfig: NextAuthConfig = {
   ...authConfig,
-  adapter: PrismaAdapter(prisma),
+  // prismaRaw — auth tables (Account, Session, VerificationToken) don't have
+  // deletedAt, so the soft-delete extension must not apply to the adapter.
+  adapter: PrismaAdapter(prismaRaw),
 
   providers: [
     // ── 1. Magic link (email) ────────────────────────────────────────────────

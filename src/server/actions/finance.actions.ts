@@ -1048,3 +1048,85 @@ export async function getFinanceSummary(
     };
   });
 }
+
+// =============================================================================
+// deleteOneOffSale
+// Soft-deletes a one-off sale. Only the creator can delete.
+// =============================================================================
+
+export async function deleteOneOffSale(
+  id: string,
+): Promise<ActionResult<{ deleted: true }>> {
+  return tryCatch(async () => {
+    const trainer = await requireTrainer();
+
+    const sale = await prisma.oneOffSale.findUnique({
+      where: { id },
+      select: { id: true, trainerUserId: true },
+    });
+
+    if (!sale) {
+      throw new NotFoundError("SALE_NOT_FOUND", "Venta no encontrada.");
+    }
+    if (sale.trainerUserId !== trainer.id) {
+      throw new ForbiddenError("SALE_NOT_OWNED", "Esta venta no te pertenece.");
+    }
+
+    await prisma.oneOffSale.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+
+    logInfo("finance.deleteOneOffSale", { userId: trainer.id, saleId: id });
+
+    return { deleted: true as const };
+  });
+}
+
+// =============================================================================
+// deleteLocationVisit
+// Soft-deletes a location visit. Only the visit owner can delete.
+// =============================================================================
+
+export async function deleteLocationVisit(
+  id: string,
+): Promise<ActionResult<{ deleted: true }>> {
+  return tryCatch(async () => {
+    const trainer = await requireTrainer();
+
+    const visit = await prisma.locationVisit.findUnique({
+      where: { id },
+      select: { id: true, trainerUserId: true },
+    });
+
+    if (!visit) {
+      throw new NotFoundError("VISIT_NOT_FOUND", "Visita no encontrada.");
+    }
+    if (visit.trainerUserId !== trainer.id) {
+      throw new ForbiddenError("VISIT_NOT_OWNED", "Esta visita no te pertenece.");
+    }
+
+    await prisma.locationVisit.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+
+    logInfo("finance.deleteLocationVisit", { userId: trainer.id, visitId: id });
+
+    return { deleted: true as const };
+  });
+}
+
+// -----------------------------------------------------------------------------
+// Aliases — match the names the proxy layer (src/app/actions/) expects
+// -----------------------------------------------------------------------------
+
+/** @alias recordVisit — proxy expects `createLocationVisit`. */
+export async function createLocationVisit(...args: Parameters<typeof recordVisit>) {
+  return recordVisit(...args);
+}
+
+/** @alias getFinanceSummary — proxy expects `getFinanceDashboard`. */
+export async function getFinanceDashboard(...args: Parameters<typeof getFinanceSummary>) {
+  return getFinanceSummary(...args);
+}

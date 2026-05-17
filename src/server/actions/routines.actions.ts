@@ -942,3 +942,189 @@ export async function cancelAssignedRoutine(
     return { updated: true as const };
   });
 }
+
+// =============================================================================
+// duplicateRoutine
+// Deep-copies a routine template (days + exercises). Trainer-only.
+// =============================================================================
+
+export async function duplicateRoutine(
+  routineId: string,
+): Promise<ActionResult<CreateRoutineResult>> {
+  return tryCatch(async () => {
+    const user = await requireTrainer();
+
+    const source = await prisma.routineTemplate.findUnique({
+      where: { id: routineId, deletedAt: null },
+      include: {
+        days: {
+          where: { deletedAt: null },
+          orderBy: { dayIndex: "asc" },
+          include: {
+            exercises: {
+              where: { deletedAt: null },
+              orderBy: { orderIndex: "asc" },
+            },
+          },
+        },
+      },
+    });
+
+    if (!source) {
+      throw new NotFoundError("ROUTINE_NOT_FOUND", "Rutina no encontrada.");
+    }
+    if (source.trainerUserId !== user.id) {
+      throw new ForbiddenError("ROUTINE_NOT_OWNED", "Esta rutina no te pertenece.");
+    }
+
+    const copy = await prisma.routineTemplate.create({
+      data: {
+        trainerUserId: user.id,
+        name: `${source.name} (copia)`,
+        goal: source.goal,
+        isArchived: false,
+        days: {
+          create: source.days.map((day) => ({
+            dayIndex: day.dayIndex,
+            label: day.label,
+            exercises: {
+              create: day.exercises.map((ex) => ({
+                exerciseId: ex.exerciseId,
+                orderIndex: ex.orderIndex,
+                sets: ex.sets,
+                repsMin: ex.repsMin,
+                repsMax: ex.repsMax,
+                restSeconds: ex.restSeconds,
+                notes: ex.notes,
+              })),
+            },
+          })),
+        },
+      },
+      select: { id: true },
+    });
+
+    logInfo("routines.duplicateRoutine", {
+      trainerId: user.id,
+      sourceId: routineId,
+      newId: copy.id,
+    });
+
+    return { routineId: copy.id };
+  });
+}
+
+// =============================================================================
+// addRoutineComment
+// =============================================================================
+
+export async function addRoutineComment(
+  routineId: string,
+  body: string,
+): Promise<ActionResult<{ commentId: string }>> {
+  return tryCatch(async () => {
+    const user = await requireTrainer();
+
+    const routine = await prisma.routineTemplate.findUnique({
+      where: { id: routineId, deletedAt: null },
+      select: { id: true, trainerUserId: true },
+    });
+
+    if (!routine) {
+      throw new NotFoundError("ROUTINE_NOT_FOUND", "Rutina no encontrada.");
+    }
+    if (routine.trainerUserId !== user.id) {
+      throw new ForbiddenError("ROUTINE_NOT_OWNED", "Esta rutina no te pertenece.");
+    }
+
+    const trimmed = body.trim();
+    if (!trimmed || trimmed.length > 2000) {
+      throw new ValidationError(
+        "COMMENT_INVALID",
+        "El comentario debe tener entre 1 y 2000 caracteres.",
+      );
+    }
+
+    const comment = await prisma.routineComment.create({
+      data: {
+        routineTemplateId: routineId,
+        authorUserId: user.id,
+        body: trimmed,
+      },
+      select: { id: true },
+    });
+
+    return { commentId: comment.id };
+  });
+}
+
+// =============================================================================
+// getClientRoutines
+// =============================================================================
+
+export async function getClientRoutines(
+  clientUserId: string,
+): Promise<ActionResult<{ routines: RoutineSummary[] }>> {
+  return tryCatch(async () => {
+    const user = await requireTrainer();
+    await assertOwnsClient(user.id, clientUserId);
+
+    const assigned = await prisma.assignedRoutine.findMany({
+      where: {
+        clientUserId,
+        status: "ACTIVE",
+        deletedAt: null,
+      },
+      orderBy: { assignedAt: "desc" },
+      include: {
+        routineTemplate: {
+          select: {
+            id: true,
+            name: true,
+            goal: true,
+            days: {
+              where: { deletedAt: null },
+              select: { id: true },
+            },
+          },
+        },
+      },
+    });
+
+    const routines: RoutineSummary[] = assigned.map((ar) => ({
+      id: ar.routineTemplate.id,
+      name: ar.routineTemplate.name,
+      goal: ar.routineTemplate.goal,
+      daysPerWeek: ar.routineTemplate.days.length,
+      assignedAt: ar.assignedAt,
+    }));
+
+    return { routines };
+  });
+}
+
+// -----------------------------------------------------------------------------
+// Aliases — match the names the proxy layer (src/app/actions/) expects
+// -----------------------------------------------------------------------------
+
+export async function createRoutineTemplate(...args: Parameters<typeof createRoutine>) {
+  return createRoutine(...args);
+}
+export async function updateRoutineTemplate(...args: Parameters<typeof updateRoutine>) {
+  return updateRoutine(...args);
+}
+export async function addRoutineDay(...args: Parameters<typeof addDayToRoutine>) {
+  return addDayToRoutine(...args);
+}
+export async function updateRoutineDay(...args: Parameters<typeof updateDay>) {
+  return updateDay(...args);
+}
+export async function deleteRoutineDay(...args: Parameters<typeof removeDay>) {
+  return removeDay(...args);
+}
+export async function reorderExercises(...args: Parameters<typeof reorderExercisesInDay>) {
+  return reorderExercisesInDay(...args);
+}
+export async function assignRoutineToClient(...args: Parameters<typeof assignRoutine>) {
+  return assignRoutine(...args);
+}

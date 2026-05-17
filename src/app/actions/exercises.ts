@@ -1,8 +1,8 @@
-// DEMO MODE — re-exports from src/lib/demo/actions/
+// PRODUCTION — re-exports from real server actions (Prisma / PostgreSQL)
 export {
   searchExercises,
   getExerciseDetail,
   createPrivateExercise,
   updateExercise,
   deleteExercise,
-} from "@/lib/demo/actions/exercises";
+} from "@/server/actions/exercises.actions";

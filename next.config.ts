@@ -45,8 +45,9 @@ const nextConfig: NextConfig = {
     },
   }),
 
-  // --- Skip TypeScript errors during build (backend modules have Prisma 6 type
-  // --- issues that need proper migration — fix in a dedicated pass) ----------
+  // TODO: Remove after fixing component-level type mismatches (object → FormData).
+  // Prisma 6 $use() → Client Extensions migration complete (2026-05-17).
+  // Remaining TS errors: ~40 component files passing objects where server actions expect FormData.
   typescript: {
     ignoreBuildErrors: true,
   },

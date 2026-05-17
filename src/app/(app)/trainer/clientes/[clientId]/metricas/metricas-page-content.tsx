@@ -5,15 +5,15 @@ import { Loader2 } from "lucide-react";
 import { listMetrics } from "@/app/actions/metrics";
 import { PageHeader } from "@/components/shared/page-header";
 import { formatDateCR } from "@/lib/utils";
-import type { DemoMetricRow } from "@/lib/offline/db";
+import type { BodyMetric } from "@prisma/client";
 
 export default function MetricasPageContent({ clientId }: { clientId: string }) {
-  const [metrics, setMetrics] = useState<DemoMetricRow[] | null>(null);
+  const [metrics, setMetrics] = useState<BodyMetric[] | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     listMetrics(clientId).then((result) => {
-      setMetrics(result.ok ? result.value : []);
+      setMetrics(result.ok ? result.value.metrics : []);
       setLoading(false);
     });
   }, [clientId]);
@@ -28,8 +28,8 @@ export default function MetricasPageContent({ clientId }: { clientId: string }) 
 
   const list = metrics ?? [];
   // listMetrics returns ascending; display descending (most recent first)
-  const sorted = [...list].sort((a, b) =>
-    b.recordedAt.localeCompare(a.recordedAt),
+  const sorted = [...list].sort(
+    (a, b) => b.recordedAt.getTime() - a.recordedAt.getTime(),
   );
 
   return (

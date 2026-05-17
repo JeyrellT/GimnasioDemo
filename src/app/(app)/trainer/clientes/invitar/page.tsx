@@ -16,7 +16,9 @@ export default function InvitarPage() {
   async function startWizard() {
     setCreating(true);
     try {
-      const result = await createOnboardingDraft("TRAINER_SIDE");
+      const fd = new FormData();
+      fd.set("mode", "TRAINER_SIDE");
+      const result = await createOnboardingDraft(fd);
       if (!result.ok) {
         toast.error(result.error.message);
         return;

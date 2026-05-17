@@ -104,14 +104,14 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
     }
 
     if (isOnline) {
-      const result = await recordSet({
-        sessionId: session.id,
-        exerciseId: currentExercise.exerciseId,
-        setNumber,
-        weightKg: weight ?? undefined,
-        reps: reps ?? undefined,
-        rpe: rpe ?? undefined,
-      });
+      const fd = new FormData();
+      fd.set("sessionId", session.id);
+      fd.set("exerciseId", currentExercise.exerciseId);
+      fd.set("setNumber", String(setNumber));
+      if (weight !== null) fd.set("weightKg", String(weight));
+      if (reps !== null) fd.set("reps", String(reps));
+      if (rpe !== null) fd.set("rpe", String(rpe));
+      const result = await recordSet(fd);
 
       if (result.ok && result.value.isPr) {
         toast.success(`Nuevo PR en ${currentExercise.nameEs}`, {
@@ -126,12 +126,9 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
 
   async function handleComplete() {
     setCompleting(true);
-    const totalSecs = Math.floor((Date.now() - sessionStartTime) / 1000);
-    const result = await completeSessionAction({
-      sessionId: session.id,
-      totalDurationSec: totalSecs,
-      subjectiveFatigue: fatigue ?? undefined,
-    });
+    const fd = new FormData();
+    if (fatigue !== null) fd.set("subjectiveFatigue", String(fatigue));
+    const result = await completeSessionAction(session.id, fd);
     setCompleting(false);
 
     if (result.ok) {

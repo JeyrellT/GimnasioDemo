@@ -16,7 +16,7 @@ export function NotasClient({ clientId, initialNotes }: NotasClientProps) {
 
   async function handleSave() {
     setSaving(true);
-    const result = await updateTrainerNotes({ clientId, notes });
+    const result = await updateTrainerNotes(clientId, notes);
     setSaving(false);
     if (result.ok) {
       toast.success("Listo.");

@@ -11,7 +11,7 @@
 // =============================================================================
 
 import { prisma, Prisma } from "@/server/db";
-import { requireTrainer, requireUser } from "@/server/guards";
+import { requireTrainer, requireUser, assertOwnsClient } from "@/server/guards";
 import { tryCatch } from "@/lib/result";
 import {
   ValidationError,
@@ -19,8 +19,16 @@ import {
   ForbiddenError,
 } from "@/lib/errors";
 import { logInfo, logError } from "@/lib/logger";
+import { MAX_PHOTO_SIZE_BYTES } from "@/lib/consts";
+import {
+  generateStorageKey,
+  uploadFile,
+  BucketType,
+} from "@/lib/storage/upload";
 import type { ActionResult } from "@/types/api";
 import type { OnboardingMode } from "@prisma/client";
+import type { OnboardingCedulaExtraction } from "@/types/onboarding";
+import type { WorkoutPhotoExtraction } from "@/lib/ai/extract-workout-photos";
 
 // =============================================================================
 // Helper types
@@ -641,5 +649,281 @@ export async function listOnboardingDrafts(): Promise<
     });
 
     return { drafts };
+  });
+}
+
+// =============================================================================
+// saveOnboardingStep — alias of updateOnboardingStep
+// =============================================================================
+
+export async function saveOnboardingStep(...args: Parameters<typeof updateOnboardingStep>) {
+  return updateOnboardingStep(...args);
+}
+
+// =============================================================================
+// createClientFromOnboarding — alias of completeOnboarding
+// =============================================================================
+
+export async function createClientFromOnboarding(...args: Parameters<typeof completeOnboarding>) {
+  return completeOnboarding(...args);
+}
+
+// =============================================================================
+// abandonOnboardingDraft
+// Soft-deletes a draft by setting abandonedAt. Trainer must own the draft.
+// =============================================================================
+
+export async function abandonOnboardingDraft(
+  draftId: string,
+): Promise<ActionResult<{ abandoned: true }>> {
+  return tryCatch(async () => {
+    const trainer = await requireTrainer();
+
+    const draft = await prisma.onboardingDraft.findUnique({
+      where: { id: draftId },
+      select: {
+        id: true,
+        trainerId: true,
+        completedAt: true,
+        abandonedAt: true,
+      },
+    });
+
+    if (!draft) {
+      throw new NotFoundError("DRAFT_NOT_FOUND", "Borrador no encontrado.");
+    }
+
+    if (draft.trainerId !== trainer.id) {
+      throw new ForbiddenError(
+        "DRAFT_NOT_OWNED",
+        "Este borrador no te pertenece.",
+      );
+    }
+
+    if (draft.completedAt) {
+      throw new ValidationError(
+        "DRAFT_COMPLETED",
+        "No se puede abandonar un onboarding ya completado.",
+      );
+    }
+
+    if (draft.abandonedAt) {
+      throw new ValidationError(
+        "DRAFT_ALREADY_ABANDONED",
+        "Este borrador ya fue abandonado.",
+      );
+    }
+
+    await prisma.onboardingDraft.update({
+      where: { id: draftId },
+      data: { abandonedAt: new Date() },
+    });
+
+    await writeAuditLog(trainer.id, draftId, { action: "ABANDON" });
+
+    logInfo("Onboarding draft abandoned", {
+      trainerId: trainer.id,
+      draftId,
+    });
+
+    return { abandoned: true };
+  });
+}
+
+// =============================================================================
+// grantAiConsent
+// Sets aiConsentGranted=true on an onboarding draft and creates an AI_PROCESSING
+// Consent record if a clientUserId is already linked to the draft.
+// Takes draftId to match the component call-site contract.
+// =============================================================================
+
+export async function grantAiConsent(
+  draftId: string,
+): Promise<ActionResult<void>> {
+  return tryCatch(async () => {
+    const trainer = await requireTrainer();
+
+    const draft = await prisma.onboardingDraft.findUnique({
+      where: { id: draftId },
+      select: { id: true, trainerId: true, clientUserId: true, aiConsentGranted: true },
+    });
+
+    if (!draft) {
+      throw new NotFoundError("DRAFT_NOT_FOUND", "Borrador no encontrado.");
+    }
+
+    if (draft.trainerId !== trainer.id) {
+      throw new ForbiddenError(
+        "DRAFT_NOT_OWNED",
+        "Este borrador no te pertenece.",
+      );
+    }
+
+    const now = new Date();
+
+    // Mark the draft's aiConsentGranted flag
+    await prisma.onboardingDraft.update({
+      where: { id: draftId },
+      data: { aiConsentGranted: true, aiConsentGrantedAt: now },
+    });
+
+    // If the draft already has a linked client, also write a Consent record
+    if (draft.clientUserId && !draft.aiConsentGranted) {
+      const existingConsent = await prisma.consent.findFirst({
+        where: { userId: draft.clientUserId, type: "AI_PROCESSING", revokedAt: null },
+        select: { id: true },
+      });
+
+      if (!existingConsent) {
+        const consent = await prisma.consent.create({
+          data: {
+            userId: draft.clientUserId,
+            type: "AI_PROCESSING",
+            granted: true,
+            version: "1.0",
+            grantedAt: now,
+          },
+          select: { id: true },
+        });
+
+        await prisma.auditLog.create({
+          data: {
+            actorUserId: trainer.id,
+            action: "CREATE",
+            entityType: "Consent",
+            entityId: consent.id,
+            metadata: {
+              type: "AI_PROCESSING",
+              clientUserId: draft.clientUserId,
+              source: "onboarding",
+              draftId,
+            } as Prisma.InputJsonValue,
+          },
+        });
+      }
+    }
+
+    logInfo("AI consent granted on draft", { trainerId: trainer.id, draftId });
+  });
+}
+
+// =============================================================================
+// checkEmailAvailable
+// Returns whether an email is free to register.
+// =============================================================================
+
+export async function checkEmailAvailable(
+  email: string,
+): Promise<ActionResult<{ available: boolean }>> {
+  return tryCatch(async () => {
+    await requireUser();
+
+    if (!email || !email.includes("@")) {
+      throw new ValidationError(
+        "INVALID_EMAIL",
+        "El correo electrónico no es válido.",
+      );
+    }
+
+    const existing = await prisma.user.findUnique({
+      where: { email: email.toLowerCase().trim() },
+      select: { id: true },
+    });
+
+    return { available: existing === null };
+  });
+}
+
+// =============================================================================
+// uploadOnboardingImage
+// Receives a file blob in FormData, uploads it to R2, and returns the storage
+// key + public URL. Return type matches the demo layer's { key, url } contract
+// so that onboarding components work without changes.
+// =============================================================================
+
+export async function uploadOnboardingImage(
+  formData: FormData,
+): Promise<ActionResult<{ key: string; url: string }>> {
+  return tryCatch(async () => {
+    const trainer = await requireTrainer();
+
+    const file = formData.get("file");
+    if (!(file instanceof Blob)) {
+      throw new ValidationError(
+        "UPLOAD_NO_FILE",
+        "No se recibió ninguna imagen.",
+      );
+    }
+
+    if (file.size > MAX_PHOTO_SIZE_BYTES) {
+      throw new ValidationError(
+        "UPLOAD_TOO_LARGE",
+        "La imagen supera el límite de 10 MB.",
+      );
+    }
+
+    const contentType = file.type || "image/jpeg";
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(contentType)) {
+      throw new ValidationError(
+        "INVALID_CONTENT_TYPE",
+        "Tipo de archivo no permitido. Usá JPEG, PNG o WebP.",
+      );
+    }
+
+    const ext = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
+    const key = generateStorageKey("onboarding-images", trainer.id, ext);
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const { url } = await uploadFile({
+      bucket: BucketType.PHOTOS,
+      key,
+      body: buffer,
+      contentType,
+    });
+
+    logInfo("Onboarding image uploaded", { trainerId: trainer.id, key });
+
+    return { key, url };
+  });
+}
+
+// =============================================================================
+// extractCedulaForOnboarding
+// Stub — server-side OCR not yet implemented. Agent 4 will replace with Gemini.
+// Signature matches the demo layer: (draftId, imageKey) → OnboardingCedulaExtraction.
+// =============================================================================
+
+export async function extractCedulaForOnboarding(
+  _draftId: string,
+  _imageKey: string,
+): Promise<ActionResult<OnboardingCedulaExtraction>> {
+  return tryCatch(async () => {
+    await requireTrainer();
+
+    throw new ValidationError(
+      "OCR_NOT_IMPLEMENTED",
+      "El procesamiento de cédula por IA aún no está disponible en el servidor.",
+    );
+  });
+}
+
+// =============================================================================
+// extractWorkoutPhotosForOnboarding
+// Stub — server-side photo analysis not yet implemented. Agent 4 replaces with Gemini.
+// Signature matches the demo layer: (draftId, imageKeys) → WorkoutPhotoExtraction.
+// =============================================================================
+
+export async function extractWorkoutPhotosForOnboarding(
+  _draftId: string,
+  _imageKeys: string[],
+): Promise<ActionResult<WorkoutPhotoExtraction>> {
+  return tryCatch(async () => {
+    await requireTrainer();
+
+    throw new ValidationError(
+      "PHOTO_ANALYSIS_NOT_IMPLEMENTED",
+      "El análisis de fotos de entrenamiento por IA aún no está disponible en el servidor.",
+    );
   });
 }

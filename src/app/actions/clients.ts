@@ -1,5 +1,4 @@
-// DEMO MODE — re-exports from src/lib/demo/actions/
-// "use server" intentionally removed: these are client-side Dexie actions.
+// PRODUCTION — re-exports from real server actions (Prisma / PostgreSQL)
 export {
   listMyClients,
   getClientDetail,
@@ -15,6 +14,8 @@ export {
   endRelationship,
   getLpdpRequests,
   saveClientGoal,
-  updateTrainerProfile,
   recordTrainerNoteUpdate,
-} from "@/lib/demo/actions/clients";
+} from "@/server/actions/clients.actions";
+
+// updateTrainerProfile lives in auth.actions.ts (mutates User + TrainerProfile).
+export { updateTrainerProfile } from "@/server/actions/auth.actions";

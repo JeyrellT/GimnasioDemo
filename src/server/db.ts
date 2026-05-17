@@ -4,16 +4,19 @@
 //
 // Two exports:
 //   prisma        — soft-delete-aware client (auto-filters deletedAt IS NULL)
-//   prismaRaw     — unfiltered client for admin / LPDP queries
+//   prismaRaw     — unfiltered client for admin / LPDP / PrismaAdapter queries
 //
 // The globalThis caching pattern prevents Next.js hot-reload from exhausting
 // the Postgres connection pool by re-instantiating PrismaClient on every HMR.
 //
-// Soft-delete middleware:
+// Soft-delete extension (Prisma 6 Client Extensions API):
 //   Intercepts findMany, findFirst, findUnique (and their OrThrow variants) and
 //   injects `where: { deletedAt: null }` automatically. This protects every
 //   domain query from accidentally reading soft-deleted records without requiring
 //   callers to remember the filter.
+//
+//   Models WITHOUT deletedAt (NextAuth tables): Account, Session, VerificationToken.
+//   These are skipped by the extension automatically.
 //
 //   Caveat: `upsert`, `update`, `create`, `delete` are NOT intercepted — callers
 //   remain responsible for correctly setting/clearing deletedAt.
@@ -28,9 +31,11 @@ import { logInfo, logWarn } from "@/lib/logger";
 // Global caching types — prevents multiple instances during hot reload
 // -----------------------------------------------------------------------------
 
+type SoftDeleteClient = ReturnType<typeof buildSoftDeleteClient>;
+
 declare global {
   // eslint-disable-next-line no-var
-  var __prisma: PrismaClient | undefined;
+  var __prisma: SoftDeleteClient | undefined;
   // eslint-disable-next-line no-var
   var __prismaRaw: PrismaClient | undefined;
 }
@@ -54,8 +59,6 @@ function createClient(label: string): PrismaClient {
 
   if (serverEnv.NODE_ENV === "development") {
     // Log slow queries (>500ms) and all warnings.
-    // The `as any` is unavoidable — the Prisma event type is only available
-    // after the specific log config has been set.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (client as any).$on("query", (e: { query: string; duration: number }) => {
       if (e.duration > 500) {
@@ -73,7 +76,6 @@ function createClient(label: string): PrismaClient {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (client as any).$on("error", (e: { message: string }) => {
-    // Errors always logged regardless of NODE_ENV.
     logWarn(`[${label}] Prisma error`, { message: e.message });
   });
 
@@ -83,64 +85,79 @@ function createClient(label: string): PrismaClient {
 }
 
 // -----------------------------------------------------------------------------
-// Soft-delete middleware
+// Soft-delete extension (Prisma 6 Client Extensions API)
 // -----------------------------------------------------------------------------
 
-// Operations that should have deletedAt IS NULL injected automatically.
-const SOFT_FILTERED_OPS = new Set([
-  "findMany",
-  "findFirst",
-  "findFirstOrThrow",
-  "findUnique",
-  "findUniqueOrThrow",
-]);
+// Models WITHOUT deletedAt — skip soft-delete injection for these.
+const NO_SOFT_DELETE = new Set(["Account", "Session", "VerificationToken"]);
 
 /**
- * Prisma middleware that auto-injects `where: { deletedAt: null }` on read
- * operations, unless the caller explicitly passes `deletedAt` in their where
- * clause (which signals an intentional query on soft-deleted records).
+ * Helper: injects `deletedAt: null` into the where clause if applicable.
+ * Skips models without deletedAt and respects explicit deletedAt filters.
  */
-function softDeleteMiddleware(): Parameters<PrismaClient["$use"]>[0] {
-  return async (params, next) => {
-    if (params.action && SOFT_FILTERED_OPS.has(params.action)) {
-      // If the caller already filters on deletedAt, respect their intent.
-      if (
-        params.args?.where !== undefined &&
-        "deletedAt" in (params.args.where as Record<string, unknown>)
-      ) {
-        return next(params);
-      }
+function injectSoftFilter(
+  model: string | undefined,
+  args: Record<string, unknown>,
+): void {
+  if (!model || NO_SOFT_DELETE.has(model)) return;
 
-      // Inject the soft-delete filter.
-      params.args = params.args ?? {};
-      params.args.where = {
-        ...(params.args.where ?? {}),
-        deletedAt: null,
-      };
-    }
+  const where = (args.where ?? {}) as Record<string, unknown>;
 
-    return next(params);
-  };
+  // If the caller already filters on deletedAt, respect their intent.
+  if ("deletedAt" in where) return;
+
+  args.where = { ...where, deletedAt: null };
+}
+
+/**
+ * Builds an extended Prisma client with automatic soft-delete filtering
+ * on all read operations (findMany, findFirst, findUnique + OrThrow variants).
+ */
+function buildSoftDeleteClient(base: PrismaClient) {
+  return base.$extends({
+    query: {
+      $allModels: {
+        async findMany({ model, args, query }) {
+          injectSoftFilter(model, args as Record<string, unknown>);
+          return query(args);
+        },
+        async findFirst({ model, args, query }) {
+          injectSoftFilter(model, args as Record<string, unknown>);
+          return query(args);
+        },
+        async findFirstOrThrow({ model, args, query }) {
+          injectSoftFilter(model, args as Record<string, unknown>);
+          return query(args);
+        },
+        async findUnique({ model, args, query }) {
+          injectSoftFilter(model, args as Record<string, unknown>);
+          return query(args);
+        },
+        async findUniqueOrThrow({ model, args, query }) {
+          injectSoftFilter(model, args as Record<string, unknown>);
+          return query(args);
+        },
+      },
+    },
+  });
 }
 
 // -----------------------------------------------------------------------------
 // Singleton: prisma (soft-delete aware)
 // -----------------------------------------------------------------------------
 
-function getSoftClient(): PrismaClient {
+function getSoftClient(): SoftDeleteClient {
   if (globalThis.__prisma) return globalThis.__prisma;
 
-  const client = createClient("prisma");
-  // $use is the legacy middleware API — still the correct API in Prisma 5/6 for
-  // query-level middleware without the query extension overhead.
-  client.$use(softDeleteMiddleware());
+  const base = createClient("prisma");
+  const client = buildSoftDeleteClient(base);
 
   globalThis.__prisma = client;
   return client;
 }
 
 // -----------------------------------------------------------------------------
-// Singleton: prismaRaw (no soft-delete filter — admin / LPDP use only)
+// Singleton: prismaRaw (no soft-delete filter — admin / LPDP / auth adapter)
 // -----------------------------------------------------------------------------
 
 function getRawClient(): PrismaClient {
@@ -156,17 +173,18 @@ function getRawClient(): PrismaClient {
 // -----------------------------------------------------------------------------
 
 /**
- * Soft-delete-aware Prisma client.
+ * Soft-delete-aware Prisma client (extended via Prisma 6 Client Extensions).
  * All findMany / findFirst / findUnique queries automatically exclude rows
  * where `deletedAt IS NOT NULL`.
  *
  * Use this for all regular domain queries.
  */
-export const prisma: PrismaClient = getSoftClient();
+export const prisma = getSoftClient();
 
 /**
- * Unfiltered Prisma client — no soft-delete middleware applied.
+ * Unfiltered Prisma client — no soft-delete extension applied.
  * Use ONLY for:
+ *   - PrismaAdapter (NextAuth — auth tables don't have deletedAt)
  *   - Admin queries that must see deleted records
  *   - LPDP data exports (must include deleted user data)
  *   - Hard-delete operations

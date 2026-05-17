@@ -435,3 +435,34 @@ export async function listProgressPhotos(
     return { photos: rows };
   });
 }
+
+// =============================================================================
+// getLatestMetric
+// Returns the most recent BodyMetric for a client.
+// =============================================================================
+
+export async function getLatestMetric(
+  clientUserId: string,
+): Promise<ActionResult<BodyMetric | null>> {
+  return tryCatch(async () => {
+    const actor = await requireUser();
+
+    // Access control: self or trainer who owns the client
+    if (actor.id !== clientUserId) {
+      if (actor.role !== "TRAINER") {
+        throw new ForbiddenError(
+          "FORBIDDEN",
+          "No tenés acceso a las métricas de este cliente.",
+        );
+      }
+      await assertOwnsClient(actor.id, clientUserId);
+    }
+
+    const latest = await prisma.bodyMetric.findFirst({
+      where: { clientUserId },
+      orderBy: { recordedAt: "desc" },
+    });
+
+    return latest;
+  });
+}

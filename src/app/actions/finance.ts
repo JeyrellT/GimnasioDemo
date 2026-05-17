@@ -1,4 +1,4 @@
-// DEMO MODE — re-exports from src/lib/demo/actions/
+// PRODUCTION — re-exports from real server actions (Prisma / PostgreSQL)
 export {
   listLocations,
   createLocation,
@@ -13,4 +13,4 @@ export {
   createLocationVisit,
   deleteLocationVisit,
   getFinanceDashboard,
-} from "@/lib/demo/actions/finance";
+} from "@/server/actions/finance.actions";
