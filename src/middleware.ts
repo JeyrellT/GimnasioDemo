@@ -44,7 +44,6 @@ const PUBLIC_PREFIXES: string[] = [
   "/api/webhooks",
   "/api/auth",
   "/api/health",
-  "/api/admin", // temporary — seed endpoint (delete with seed-test-user route)
 ];
 
 /**
