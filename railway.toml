@@ -5,10 +5,10 @@
 
 [build]
 builder = "NIXPACKS"
-buildCommand = "NODE_ENV=development pnpm install --frozen-lockfile && pnpm exec prisma generate && pnpm exec prisma migrate deploy && pnpm build"
+buildCommand = "NODE_ENV=development pnpm install --frozen-lockfile && pnpm exec prisma generate && pnpm build"
 
 [deploy]
-startCommand = "pnpm start"
+startCommand = "pnpm exec prisma migrate deploy && pnpm start"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 300         # seconds to wait for first healthy response
 restartPolicyType = "ON_FAILURE"
