@@ -1,0 +1,16 @@
+# =============================================================================
+# VIZION — Railway deployment configuration
+# Docs: https://docs.railway.app/reference/config-as-code
+# =============================================================================
+
+[build]
+builder = "NIXPACKS"
+buildCommand = "pnpm install --frozen-lockfile && pnpm prisma generate && pnpm prisma migrate deploy && pnpm build"
+
+[deploy]
+startCommand = "pnpm start"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 300         # seconds to wait for first healthy response
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5
+numReplicas = 1

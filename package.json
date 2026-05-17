@@ -6,12 +6,16 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p ${PORT:-3000}",
     "lint": "biome lint src",
     "format": "biome format src",
     "test": "vitest",
     "test:e2e": "playwright test",
-    "seed": "tsx prisma/seed/index.ts"
+    "seed": "tsx prisma/seed/index.ts",
+    "db:migrate": "prisma migrate deploy",
+    "db:studio": "prisma studio",
+    "db:generate": "prisma generate",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "next": "15.5.15",
