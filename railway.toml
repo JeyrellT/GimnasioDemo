@@ -8,7 +8,7 @@ builder = "NIXPACKS"
 buildCommand = "NODE_ENV=development pnpm install --frozen-lockfile && pnpm exec prisma generate && pnpm build"
 
 [deploy]
-startCommand = "pnpm exec prisma db push --accept-data-loss --skip-generate && pnpm start"
+startCommand = "(pnpm exec prisma migrate deploy || (echo '>>> migrate failed, resetting DB...' && pnpm exec prisma db push --force-reset --accept-data-loss --skip-generate && pnpm exec prisma migrate resolve --applied 20260506000000_init && pnpm exec prisma migrate resolve --applied 20260506175122_add_password_hash && pnpm exec prisma migrate resolve --applied 20260507185543_add_finance_onboarding)) && exec pnpm start"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 300         # seconds to wait for first healthy response
 restartPolicyType = "ON_FAILURE"
