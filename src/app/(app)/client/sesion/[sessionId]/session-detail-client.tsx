@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Loader2, Dumbbell } from "lucide-react";
-import { useDemoUser } from "@/lib/demo/auth-context";
+import { useAuth } from "@/components/providers/auth-provider";
 import { getSession } from "@/lib/demo/store";
 import type { DemoSessionRow } from "@/lib/offline/db";
 import Link from "next/link";
 
 export function SessionDetailClient() {
-  const user = useDemoUser();
+  const { user } = useAuth();
   const params = useParams<{ sessionId: string }>();
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<DemoSessionRow | null>(null);
@@ -24,6 +24,8 @@ export function SessionDetailClient() {
       setLoading(false);
     });
   }, [params.sessionId]);
+
+  if (!user) return null;
 
   if (loading) {
     return (

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, Dumbbell, Clock, ChevronDown, ChevronUp } from "lucide-react";
-import { useDemoUser } from "@/lib/demo/auth-context";
+import { useAuth } from "@/components/providers/auth-provider";
 import {
   getActiveAssignedRoutine,
   getRoutine,
@@ -27,7 +27,7 @@ interface DayWithExercises {
 }
 
 export default function ClientSesionPage() {
-  const user = useDemoUser();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [routine, setRoutine] = useState<DemoRoutineRow | null>(null);
   const [days, setDays] = useState<DayWithExercises[]>([]);
@@ -35,6 +35,7 @@ export default function ClientSesionPage() {
 
   useEffect(() => {
     async function load() {
+      if (!user) { setLoading(false); return; }
       const assigned = await getActiveAssignedRoutine(user.id);
       if (!assigned) {
         setLoading(false);
@@ -74,7 +75,7 @@ export default function ClientSesionPage() {
       setLoading(false);
     }
     load();
-  }, [user.id]);
+  }, [user]);
 
   if (loading) {
     return (

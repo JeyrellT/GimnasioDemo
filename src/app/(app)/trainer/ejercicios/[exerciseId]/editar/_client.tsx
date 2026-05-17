@@ -6,7 +6,7 @@ import { ArrowLeft, Lock, Loader2 } from "lucide-react";
 import { getExerciseDetail } from "@/app/actions/exercises";
 import { ExerciseForm } from "@/components/forms/exercise-form";
 import { PageHeader } from "@/components/shared/page-header";
-import { DEMO_TRAINER_ID } from "@/lib/demo/seed-data";
+import { useAuth } from "@/components/providers/auth-provider";
 import type { DemoExerciseRow } from "@/lib/offline/db";
 import type { MuscleGroup, ExerciseEquipment, ExerciseDifficulty } from "@prisma/client";
 
@@ -15,11 +15,14 @@ interface Props {
 }
 
 export default function EditarEjercicioClient({ exerciseId }: Props) {
+  const { user } = useAuth();
   const [exercise, setExercise] = useState<DemoExerciseRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<"ok" | "not-found" | "public" | "not-owner">("ok");
 
   useEffect(() => {
+    if (!user) return;
+
     getExerciseDetail({ id: exerciseId }).then((result) => {
       if (!result.ok) {
         setStatus("not-found");
@@ -37,7 +40,7 @@ export default function EditarEjercicioClient({ exerciseId }: Props) {
       }
 
       // Only the owner trainer can edit
-      if (ex.createdById !== DEMO_TRAINER_ID) {
+      if (ex.createdById !== user.id) {
         setStatus("not-owner");
         setLoading(false);
         return;
@@ -46,7 +49,7 @@ export default function EditarEjercicioClient({ exerciseId }: Props) {
       setExercise(ex);
       setLoading(false);
     });
-  }, [exerciseId]);
+  }, [exerciseId, user]);
 
   if (loading) {
     return (

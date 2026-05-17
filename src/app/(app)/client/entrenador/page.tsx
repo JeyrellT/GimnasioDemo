@@ -2,21 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, Dumbbell, Mail, MapPin } from "lucide-react";
-import { useDemoUser } from "@/lib/demo/auth-context";
+import { useAuth } from "@/components/providers/auth-provider";
 import { getTrainerClientLink } from "@/lib/demo/store";
 import type { DemoTrainerClientRow } from "@/lib/offline/db";
 
 export default function ClientEntrenadorPage() {
-  const user = useDemoUser();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [link, setLink] = useState<DemoTrainerClientRow | null>(null);
 
   useEffect(() => {
+    if (!user) { setLoading(false); return; }
     getTrainerClientLink(user.id).then((tc) => {
       setLink(tc ?? null);
       setLoading(false);
     });
-  }, [user.id]);
+  }, [user]);
 
   if (loading) {
     return (

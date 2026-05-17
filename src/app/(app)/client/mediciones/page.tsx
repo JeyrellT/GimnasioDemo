@@ -2,18 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, Scale, TrendingDown, TrendingUp, Minus, Plus } from "lucide-react";
-import { useDemoUser } from "@/lib/demo/auth-context";
+import { useAuth } from "@/components/providers/auth-provider";
 import { listMetricsForClient } from "@/lib/demo/store";
 import type { DemoMetricRow } from "@/lib/offline/db";
 import { MeasurementSheet } from "@/components/forms/measurement-sheet";
 
 export default function ClientMedicionesPage() {
-  const user = useDemoUser();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<DemoMetricRow[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   function loadMetrics() {
+    if (!user) { setLoading(false); return; }
     listMetricsForClient(user.id).then((all) => {
       const sorted = [...all].sort(
         (a, b) => b.recordedAt.localeCompare(a.recordedAt),
@@ -26,7 +27,7 @@ export default function ClientMedicionesPage() {
   useEffect(() => {
     loadMetrics();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user.id]);
+  }, [user]);
 
   if (loading) {
     return (
@@ -35,6 +36,8 @@ export default function ClientMedicionesPage() {
       </div>
     );
   }
+
+  if (!user) return null;
 
   return (
     <div className="space-y-6">

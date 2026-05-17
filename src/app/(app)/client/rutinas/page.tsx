@@ -11,7 +11,7 @@ import {
   CalendarDays,
   Play,
 } from "lucide-react";
-import { useDemoUser } from "@/lib/demo/auth-context";
+import { useAuth } from "@/components/providers/auth-provider";
 import {
   listAssignedRoutines,
   getRoutine,
@@ -57,7 +57,7 @@ interface RoutineCard {
 // ---------------------------------------------------------------------------
 
 export default function ClientRutinasPage() {
-  const user = useDemoUser();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [cards, setCards] = useState<RoutineCard[]>([]);
   const [expandedRoutine, setExpandedRoutine] = useState<string | null>(null);
@@ -66,6 +66,7 @@ export default function ClientRutinasPage() {
 
   useEffect(() => {
     async function load() {
+      if (!user) { setLoading(false); return; }
       const assigned = await listAssignedRoutines(user.id);
       // Sort: ACTIVE first, then by date descending
       const sorted = [...assigned].sort((a, b) => {
@@ -107,7 +108,7 @@ export default function ClientRutinasPage() {
       setLoading(false);
     }
     load();
-  }, [user.id]);
+  }, [user]);
 
   if (loading) {
     return (

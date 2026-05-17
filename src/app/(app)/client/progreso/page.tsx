@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, CheckCircle2, Calendar, Timer } from "lucide-react";
-import { useDemoUser } from "@/lib/demo/auth-context";
+import { useAuth } from "@/components/providers/auth-provider";
 import { listSessionsForClient } from "@/lib/demo/store";
 import type { DemoSessionRow } from "@/lib/offline/db";
 
 export default function ClientProgresoPage() {
-  const user = useDemoUser();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [sessions, setSessions] = useState<DemoSessionRow[]>([]);
 
   useEffect(() => {
+    if (!user) { setLoading(false); return; }
     listSessionsForClient(user.id).then((all) => {
       const sorted = all
         .filter((s) => s.status === "COMPLETED")
@@ -19,7 +20,7 @@ export default function ClientProgresoPage() {
       setSessions(sorted);
       setLoading(false);
     });
-  }, [user.id]);
+  }, [user]);
 
   if (loading) {
     return (

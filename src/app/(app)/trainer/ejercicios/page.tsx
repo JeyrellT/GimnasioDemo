@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Library, Search, Plus, Dumbbell, Loader2 } from "lucide-react";
 import { searchExercises } from "@/app/actions/exercises";
 import { PageHeader } from "@/components/shared/page-header";
-import { DEMO_TRAINER_ID } from "@/lib/demo/seed-data";
+import { useAuth } from "@/components/providers/auth-provider";
 import type { ExerciseSearchResult } from "@/types/api";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -140,6 +140,7 @@ function buildHref(params: {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function EjerciciosPage() {
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -168,7 +169,6 @@ export default function EjerciciosPage() {
       // Apply ownership filter client-side (demo: check createdById via the full list)
       let filtered = result.value;
       if (owner === "mine") {
-        // In demo mode, privately created exercises have createdById === DEMO_TRAINER_ID
         // searchExercises returns ExerciseSearchResult which lacks createdById,
         // so we can't filter by "mine" accurately here — show all as fallback.
         filtered = result.value;
