@@ -1,23 +1,45 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { DemoAuthProvider, useDemoAuth } from "@/lib/demo/auth-context";
+import { useRouter } from "next/navigation";
+import { AuthProvider, useAuth } from "@/components/providers/auth-provider";
 import { Topbar } from "@/components/layout/topbar";
 import { TrainerBottomNav, TrainerSidebar } from "@/components/layout/trainer-nav";
 import { ClientBottomNav, ClientSidebar } from "@/components/layout/client-nav";
 import { OfflineBanner } from "@/components/shared/offline-banner";
 
+const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+
 function AppShell({ children }: { children: ReactNode }) {
-  const { user, avatarUrl } = useDemoAuth();
+  const { user, avatarUrl, isLoading, isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  // Production: redirect to login if not authenticated
+  if (!IS_DEMO && !isLoading && !isAuthenticated) {
+    router.replace("/ingresar");
+    return null;
+  }
+
+  // Show loading state while session is being fetched
+  if (isLoading || !user) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-canvas text-neutral-400">
+        <p className="text-sm">Cargando...</p>
+      </div>
+    );
+  }
+
   const isTrainer = user.role === "TRAINER";
 
   return (
     <div className="flex min-h-dvh flex-col bg-canvas">
       {/* Sticky header block: banner + topbar together */}
       <div className="sticky top-0 z-40 bg-canvas">
-        <div className="bg-brand-primary/10 border-b border-brand-primary/30 px-4 py-1.5 text-center text-xs text-brand-primary">
-          Modo demo · Tus datos se guardan solo en este navegador
-        </div>
+        {IS_DEMO && (
+          <div className="bg-brand-primary/10 border-b border-brand-primary/30 px-4 py-1.5 text-center text-xs text-brand-primary">
+            Modo demo &middot; Tus datos se guardan solo en este navegador
+          </div>
+        )}
         <OfflineBanner />
         <Topbar user={{ name: user.name, avatarUrl }} />
       </div>
@@ -40,25 +62,27 @@ function AppShell({ children }: { children: ReactNode }) {
 }
 
 export default function AppLayout({ children }: { children: ReactNode }) {
-  const [seeded, setSeeded] = useState(false);
+  const [ready, setReady] = useState(!IS_DEMO);
 
+  // Demo mode only: seed IndexedDB before rendering
   useEffect(() => {
+    if (!IS_DEMO) return;
     import("@/lib/demo/seed-runner")
       .then(({ ensureDemoSeeded }) => {
         ensureDemoSeeded()
-          .then(() => setSeeded(true))
+          .then(() => setReady(true))
           .catch((err: unknown) => {
             console.error("[demo] seed failed:", err);
-            setSeeded(true);
+            setReady(true);
           });
       })
       .catch((err: unknown) => {
         console.error("[demo] seed-runner not found:", err);
-        setSeeded(true);
+        setReady(true);
       });
   }, []);
 
-  if (!seeded) {
+  if (!ready) {
     return (
       <div className="flex h-screen items-center justify-center bg-canvas text-neutral-400">
         <p className="text-sm">Cargando demo...</p>
@@ -67,8 +91,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <DemoAuthProvider>
+    <AuthProvider>
       <AppShell>{children}</AppShell>
-    </DemoAuthProvider>
+    </AuthProvider>
   );
 }

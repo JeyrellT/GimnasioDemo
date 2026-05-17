@@ -70,13 +70,17 @@ export function SignInForm({ callbackUrl = "/inicio", onSuccess }: SignInFormPro
   };
 
   const onMagicSubmit = async (values: MagicValues) => {
-    const result = await requestMagicLink(values.email, callbackUrl);
+    const fd = new FormData();
+    fd.set("email", values.email.trim().toLowerCase());
+    if (callbackUrl) fd.set("callbackUrl", callbackUrl);
+
+    const result = await requestMagicLink(fd);
     if (!result.ok) {
-      toast.error("No se pudo enviar el enlace. Reintentá.");
+      toast.error("No se pudo enviar el enlace. Reintenta.");
       return;
     }
     onSuccess?.();
-    toast.success("Revisá tu correo para ingresar.");
+    toast.success("Revisa tu correo para ingresar.");
   };
 
   if (mode === "password") {

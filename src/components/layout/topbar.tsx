@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { LogOut, User, ArrowLeftRight } from "lucide-react";
 import { VizionLogo } from "@/components/shared/vizion-logo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,6 +13,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
 interface UserShape {
   name: string | null;
@@ -90,18 +93,26 @@ export function Topbar({ user, userName, userAvatarUrl }: TopbarProps) {
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onSelect={() => router.push("/ingresar")}
-          >
-            <ArrowLeftRight className="h-4 w-4" aria-hidden="true" />
-            Cambiar perfil
-          </DropdownMenuItem>
+          {IS_DEMO && (
+            <DropdownMenuItem
+              onSelect={() => router.push("/ingresar")}
+            >
+              <ArrowLeftRight className="h-4 w-4" aria-hidden="true" />
+              Cambiar perfil
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             className="text-[#EF4444] focus:text-[#EF4444]"
-            onSelect={() => router.push("/ingresar")}
+            onSelect={() => {
+              if (IS_DEMO) {
+                router.push("/ingresar");
+              } else {
+                signOut({ callbackUrl: "/ingresar" });
+              }
+            }}
           >
             <LogOut className="h-4 w-4" aria-hidden="true" />
-            Salir
+            Cerrar sesion
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
