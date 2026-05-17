@@ -37,6 +37,22 @@ jobs:
       - name: Generate Prisma client
         run: pnpm prisma generate
 
+      - name: Swap NextAuth route for static export
+        run: |
+          cat > 'src/app/api/auth/[...nextauth]/route.ts' << 'STUB'
+          import { NextResponse } from "next/server";
+          export const dynamic = "force-static";
+          export function generateStaticParams() {
+            return [{ nextauth: ["session"] }, { nextauth: ["signin"] }, { nextauth: ["signout"] }];
+          }
+          export function GET() {
+            return NextResponse.json({ error: "not available in demo" }, { status: 404 });
+          }
+          export function POST() {
+            return NextResponse.json({ error: "not available in demo" }, { status: 404 });
+          }
+          STUB
+
       - name: Build static export
         run: pnpm run build
         env:
