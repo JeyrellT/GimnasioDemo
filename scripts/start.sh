@@ -7,11 +7,31 @@
 
 set -e
 
+MAX_RETRIES=3
+RETRY_DELAY=5
+
 echo ">>> Running prisma migrate deploy..."
-if pnpm exec prisma migrate deploy; then
-  echo ">>> Migrations applied successfully"
-else
-  echo ">>> migrate deploy failed — resetting DB schema..."
+attempt=1
+migrate_ok=false
+
+while [ "$attempt" -le "$MAX_RETRIES" ]; do
+  if pnpm exec prisma migrate deploy; then
+    echo ">>> Migrations applied successfully"
+    migrate_ok=true
+    break
+  else
+    echo ">>> migrate deploy failed (attempt $attempt/$MAX_RETRIES)"
+    if [ "$attempt" -lt "$MAX_RETRIES" ]; then
+      echo ">>> Retrying in ${RETRY_DELAY}s..."
+      sleep $RETRY_DELAY
+    fi
+    attempt=$((attempt + 1))
+  fi
+done
+
+if [ "$migrate_ok" = false ]; then
+  echo ">>> All $MAX_RETRIES migrate attempts failed — resetting DB schema..."
+  echo ">>> WARNING: This will drop all tables and recreate them!"
   pnpm exec prisma db push --force-reset --accept-data-loss --skip-generate
   echo ">>> Marking migrations as applied..."
   pnpm exec prisma migrate resolve --applied 20260506000000_init

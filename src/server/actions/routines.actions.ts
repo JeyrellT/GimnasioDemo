@@ -963,7 +963,7 @@ export async function duplicateRoutine(
           include: {
             exercises: {
               where: { deletedAt: null },
-              orderBy: { orderIndex: "asc" },
+              orderBy: { order: "asc" },
             },
           },
         },
@@ -973,28 +973,34 @@ export async function duplicateRoutine(
     if (!source) {
       throw new NotFoundError("ROUTINE_NOT_FOUND", "Rutina no encontrada.");
     }
-    if (source.trainerUserId !== user.id) {
+    if (source.trainerId !== user.id) {
       throw new ForbiddenError("ROUTINE_NOT_OWNED", "Esta rutina no te pertenece.");
     }
 
     const copy = await prisma.routineTemplate.create({
       data: {
-        trainerUserId: user.id,
+        trainerId: user.id,
         name: `${source.name} (copia)`,
         goal: source.goal,
+        splitDays: source.splitDays,
+        durationWeeks: source.durationWeeks,
         isArchived: false,
         days: {
           create: source.days.map((day) => ({
             dayIndex: day.dayIndex,
-            label: day.label,
+            name: day.name,
+            description: day.description,
             exercises: {
               create: day.exercises.map((ex) => ({
                 exerciseId: ex.exerciseId,
-                orderIndex: ex.orderIndex,
-                sets: ex.sets,
-                repsMin: ex.repsMin,
-                repsMax: ex.repsMax,
+                order: ex.order,
+                targetSets: ex.targetSets,
+                targetRepsMin: ex.targetRepsMin,
+                targetRepsMax: ex.targetRepsMax,
+                targetRpe: ex.targetRpe,
                 restSeconds: ex.restSeconds,
+                tempo: ex.tempo,
+                supersetGroup: ex.supersetGroup,
                 notes: ex.notes,
               })),
             },
@@ -1027,13 +1033,13 @@ export async function addRoutineComment(
 
     const routine = await prisma.routineTemplate.findUnique({
       where: { id: routineId, deletedAt: null },
-      select: { id: true, trainerUserId: true },
+      select: { id: true, trainerId: true },
     });
 
     if (!routine) {
       throw new NotFoundError("ROUTINE_NOT_FOUND", "Rutina no encontrada.");
     }
-    if (routine.trainerUserId !== user.id) {
+    if (routine.trainerId !== user.id) {
       throw new ForbiddenError("ROUTINE_NOT_OWNED", "Esta rutina no te pertenece.");
     }
 
