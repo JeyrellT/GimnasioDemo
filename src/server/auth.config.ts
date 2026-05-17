@@ -44,6 +44,9 @@ declare module "next-auth/jwt" {
 // -----------------------------------------------------------------------------
 
 export const authConfig = {
+  // Trust the host header on Railway/cloud platforms (reverse proxy).
+  trustHost: true,
+
   // JWT sessions — stateless, no DB session table needed.
   session: {
     strategy: "jwt" as const,
