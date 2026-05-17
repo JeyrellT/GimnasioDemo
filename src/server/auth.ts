@@ -1,23 +1,14 @@
 // =============================================================================
-// VIZION — NextAuth v5 real configuration
+// VIZION — NextAuth v5 full configuration (Node.js runtime only)
 // Owner: backend-api.
 //
-// Session strategy: JWT (stateless). We do not persist sessions in the DB so
-// horizontal scale is frictionless. The JWT carries { id, role, name } only —
-// never sensitive fields.
+// Extends the edge-compatible base config (auth.config.ts) with:
+//   - PrismaAdapter (requires PrismaClient → Node.js runtime)
+//   - Email + Credentials providers
+//   - DB-dependent callbacks (signIn, jwt with role fetch)
 //
-// Providers:
-//   1. Email (magic link) — via Resend + MagicLinkEmail React template.
-//   2. Credentials (email + password) — PBKDF2 verification via verifyPassword().
-//
-// Callbacks:
-//   - signIn:   blocks soft-deleted users; updates lastLoginAt; writes AuditLog.
-//   - jwt:      stamps id, role, name into the token.
-//   - session:  exposes id, role, name on session.user.
-//
-// Pages:
-//   /ingresar — sign-in page
-//   /ingresar — error page (same page, reads ?error= param)
+// IMPORTANT: This file MUST NOT be imported from middleware.ts.
+// Middleware uses auth.config.ts directly to stay Edge-compatible.
 // =============================================================================
 
 import NextAuth from "next-auth";
@@ -29,6 +20,7 @@ import type { JWT } from "next-auth/jwt";
 import type { Session, User } from "next-auth";
 import type { AdapterUser } from "@auth/core/adapters";
 
+import { authConfig } from "./auth.config";
 import { prisma } from "@/server/db";
 import { serverEnv } from "@/server/env";
 import { verifyPassword } from "@/lib/crypto/passwords";
@@ -38,32 +30,7 @@ import MagicLinkEmail from "@/lib/email/templates/magic-link";
 import { MAGIC_LINK_EXPIRY_MIN } from "@/lib/consts";
 import type { UserRole, AuditAction } from "@prisma/client";
 
-// -----------------------------------------------------------------------------
-// Augment next-auth types to carry role through the JWT / session pipeline
-// -----------------------------------------------------------------------------
-
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      email: string;
-      name: string;
-      role: UserRole;
-    };
-  }
-
-  interface User {
-    role?: UserRole;
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT {
-    id: string;
-    role: UserRole;
-    name: string;
-  }
-}
+// Type augmentations are in auth.config.ts (shared by Edge + Node configs)
 
 // -----------------------------------------------------------------------------
 // Internal helpers
@@ -97,21 +64,9 @@ async function writeAuditLog(
 // NextAuth configuration object
 // -----------------------------------------------------------------------------
 
-export const authConfig: NextAuthConfig = {
+export const fullAuthConfig: NextAuthConfig = {
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
-
-  // JWT sessions — stateless, no DB session table needed.
-  session: {
-    strategy: "jwt",
-    // 30-day inactivity expiry. Tokens are short-lived at the HTTP layer via
-    // the rolling session cookie — this is the absolute max lifetime.
-    maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
-  },
-
-  pages: {
-    signIn: "/ingresar",
-    error: "/ingresar",
-  },
 
   providers: [
     // ── 1. Magic link (email) ────────────────────────────────────────────────
@@ -213,6 +168,8 @@ export const authConfig: NextAuthConfig = {
   // ---------------------------------------------------------------------------
 
   callbacks: {
+    ...authConfig.callbacks,
+
     /**
      * signIn callback — runs after any provider successfully authenticates.
      * Blocks soft-deleted users and fires post-auth side effects.
@@ -297,6 +254,6 @@ export const authConfig: NextAuthConfig = {
 // Initialize NextAuth and export named exports
 // -----------------------------------------------------------------------------
 
-const { auth, handlers, signIn, signOut } = NextAuth(authConfig);
+const { auth, handlers, signIn, signOut } = NextAuth(fullAuthConfig);
 
 export { auth, handlers, signIn, signOut };

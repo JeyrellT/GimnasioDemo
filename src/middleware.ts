@@ -21,9 +21,13 @@
 // asset extensions so middleware never runs on non-page requests.
 // =============================================================================
 
-import { auth } from "@/server/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "@/server/auth.config";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+
+// Create an Edge-compatible auth wrapper — no PrismaClient, no Node.js modules.
+const { auth } = NextAuth(authConfig);
 
 // -----------------------------------------------------------------------------
 // Public path prefixes — requests matching these skip the auth gate.
@@ -39,6 +43,7 @@ const PUBLIC_PREFIXES: string[] = [
   "/legal",
   "/api/webhooks",
   "/api/auth",
+  "/api/health",
 ];
 
 /**
