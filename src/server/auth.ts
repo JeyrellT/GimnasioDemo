@@ -85,7 +85,7 @@ async function writeAuditLog(
         action,
         entityType: "User",
         entityId: actorUserId,
-        metadata: metadata ?? null,
+        metadata: metadata as import("@prisma/client").Prisma.InputJsonValue | undefined,
       },
     });
   } catch (err) {
