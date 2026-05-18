@@ -1,6 +1,5 @@
-"use server";
-
 // DEMO MODE — exercise media uploads are disabled in the static demo.
+// "use server" removed: no server runtime in static export.
 
 import { err } from "@/lib/result";
 import { ValidationError } from "@/lib/errors";

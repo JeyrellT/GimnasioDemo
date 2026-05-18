@@ -86,22 +86,6 @@ export async function tryCatch<T>(
     }
 
     const { errorToResult } = await import("./errors");
-    const result = errorToResult<T>(e);
-
-    // Strip class instances to plain objects so Next.js can serialize
-    // the result across the server/client boundary without errors.
-    if (!result.ok) {
-      return {
-        ok: false,
-        error: {
-          name: result.error.name,
-          code: result.error.code,
-          message: result.error.message,
-          httpStatus: result.error.httpStatus,
-        } as unknown as AppError,
-      };
-    }
-
-    return result;
+    return errorToResult<T>(e);
   }
 }
