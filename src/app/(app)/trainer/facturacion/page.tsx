@@ -1,4 +1,4 @@
-import { requireTrainer } from "@/lib/auth/guards";
+import { requireTrainer } from "@/server/guards";
 import { getMyTrainerInvoices } from "@/app/actions/billing";
 import { formatCRC, formatDateCR } from "@/lib/utils";
 import { Receipt } from "lucide-react";
@@ -9,8 +9,7 @@ export const metadata: Metadata = { title: "Facturación" };
 
 export default async function FacturacionPage() {
   await requireTrainer();
-  const result = await getMyTrainerInvoices();
-  const invoices = result.ok ? result.value : [];
+  const invoices = await getMyTrainerInvoices();
 
   return (
     <div className="space-y-6">
