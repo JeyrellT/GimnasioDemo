@@ -29,6 +29,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { encode } from "next-auth/jwt";
 import { prisma } from "@/server/db";
 import { logError, logInfo, logWarn } from "@/lib/logger";
+import { serverEnv } from "@/server/env";
 
 // Force Node.js runtime — we use Prisma which requires Node.js.
 export const runtime = "nodejs";
@@ -62,7 +63,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const { searchParams } = request.nextUrl;
   const token = searchParams.get("token");
 
-  const errorUrl = new URL("/ingresar", request.url);
+  // Use APP_URL instead of request.url — behind Railway's proxy request.url
+  // resolves to localhost:PORT, which breaks redirects.
+  const baseUrl = serverEnv.APP_URL;
+
+  const errorUrl = new URL("/ingresar", baseUrl);
   errorUrl.searchParams.set("error", "invalid_token");
 
   // ── 1. Validate token presence ──────────────────────────────────────────────
@@ -150,7 +155,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     // ── 8. Set cookie and redirect ─────────────────────────────────────────────
     const isSecure = useSecureCookies();
-    const welcomeUrl = new URL("/client/bienvenida", request.url);
+    const welcomeUrl = new URL("/client/bienvenida", baseUrl);
 
     const response = NextResponse.redirect(welcomeUrl);
 
