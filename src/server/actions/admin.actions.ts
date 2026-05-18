@@ -33,6 +33,7 @@ import type { ActionResult } from "@/types/api";
 import type {
   UserRole,
   SubscriptionStatus,
+  SubscriptionTier,
   TrainerProfile,
   ClientProfile,
   TrainerSubscription,
@@ -884,5 +885,356 @@ export async function getCurrentImpersonation(): Promise<
         role: target.role,
       },
     };
+  });
+}
+
+// =============================================================================
+// LICENSE CONTROL — activate / deactivate / change plan / extend period
+// =============================================================================
+// These four actions give SUPER_ADMIN full lifecycle control over a trainer's
+// subscription license. They are the canonical "activate / deactivate" surface
+// pedida por operaciones; the older `extendTrial` and `forceCancelSubscription`
+// remain for narrow use cases (trial-only extend, hard cancel from list view).
+
+// -----------------------------------------------------------------------------
+// activateSubscription
+// -----------------------------------------------------------------------------
+// Creates a new ACTIVE subscription if the trainer doesn't have one, or
+// reactivates an existing subscription (regardless of prior status: TRIAL,
+// PAST_DUE, READ_ONLY, CANCELLED). Sets status=ACTIVE, clears cancelledAt,
+// sets currentPeriodStart=now and currentPeriodEnd=now + durationMonths.
+// trialEndsAt is cleared (a manually-activated license is not in trial).
+// -----------------------------------------------------------------------------
+
+const activateSubscriptionSchema = z.object({
+  trainerUserId: z.string().cuid(),
+  planTier: z.enum(["SOLO", "PRO", "STUDIO"]),
+  durationMonths: z.number().int().min(1).max(36),
+  reason: z.string().min(5, "La razón debe tener al menos 5 caracteres."),
+});
+
+export async function activateSubscription(input: {
+  trainerUserId: string;
+  planTier: SubscriptionTier;
+  durationMonths: number;
+  reason: string;
+}): Promise<
+  ActionResult<{
+    activated: true;
+    subscriptionId: string;
+    status: SubscriptionStatus;
+    currentPeriodEnd: Date;
+  }>
+> {
+  return tryCatch(async () => {
+    const actor = await requireSuperAdmin();
+
+    const { trainerUserId, planTier, durationMonths, reason } =
+      activateSubscriptionSchema.parse(input);
+
+    // Verify the user exists AND is a TRAINER. We don't let admins issue a
+    // license to a CLIENT or another admin — only trainers can have one.
+    const target = await prisma.user.findUnique({
+      where: { id: trainerUserId },
+      select: { id: true, role: true, email: true },
+    });
+
+    if (!target) {
+      throw new NotFoundError("USER_NOT_FOUND", "Usuario no encontrado.");
+    }
+
+    if (target.role !== "TRAINER") {
+      throw new ValidationError(
+        "NOT_A_TRAINER",
+        "Solo se pueden activar licencias para usuarios con rol TRAINER.",
+      );
+    }
+
+    const now = new Date();
+    const currentPeriodEnd = new Date(now);
+    currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + durationMonths);
+
+    // Upsert: a TrainerSubscription is unique per trainerUserId.
+    const sub = await prisma.trainerSubscription.upsert({
+      where: { trainerUserId },
+      create: {
+        trainerUserId,
+        planTier,
+        status: "ACTIVE",
+        currentPeriodStart: now,
+        currentPeriodEnd,
+        trialEndsAt: null,
+        cancelledAt: null,
+      },
+      update: {
+        planTier,
+        status: "ACTIVE",
+        currentPeriodStart: now,
+        currentPeriodEnd,
+        trialEndsAt: null,
+        cancelledAt: null,
+      },
+      select: { id: true, status: true, currentPeriodEnd: true },
+    });
+
+    await writeAdminAuditLog(
+      actor.id,
+      "ACTIVATE_SUBSCRIPTION",
+      "TrainerSubscription",
+      sub.id,
+      {
+        trainerUserId,
+        planTier,
+        durationMonths,
+        currentPeriodEnd: currentPeriodEnd.toISOString(),
+        reason,
+      },
+    );
+
+    logInfo("Subscription activated", {
+      actorId: actor.id,
+      trainerUserId,
+      planTier,
+      durationMonths,
+    });
+
+    return {
+      activated: true,
+      subscriptionId: sub.id,
+      status: sub.status,
+      currentPeriodEnd: sub.currentPeriodEnd,
+    };
+  });
+}
+
+// -----------------------------------------------------------------------------
+// deactivateSubscription
+// -----------------------------------------------------------------------------
+// Soft-disable a license. Two modes:
+//   - READ_ONLY  → trainer can still log in and view data but cannot write
+//                  (mutations are gated by requireActiveSubscription).
+//   - CANCELLED  → hard cancel. Sets cancelledAt = now.
+// Distinct from `forceCancelSubscription` which only supports CANCELLED.
+// -----------------------------------------------------------------------------
+
+const deactivateSubscriptionSchema = z.object({
+  subscriptionId: z.string().cuid(),
+  mode: z.enum(["READ_ONLY", "CANCELLED"]),
+  reason: z.string().min(5, "La razón debe tener al menos 5 caracteres."),
+});
+
+export async function deactivateSubscription(input: {
+  subscriptionId: string;
+  mode: "READ_ONLY" | "CANCELLED";
+  reason: string;
+}): Promise<
+  ActionResult<{ updated: true; newStatus: SubscriptionStatus }>
+> {
+  return tryCatch(async () => {
+    const actor = await requireSuperAdmin();
+
+    const { subscriptionId, mode, reason } =
+      deactivateSubscriptionSchema.parse(input);
+
+    const sub = await prisma.trainerSubscription.findUnique({
+      where: { id: subscriptionId },
+      select: { id: true, status: true, trainerUserId: true },
+    });
+
+    if (!sub) {
+      throw new NotFoundError(
+        "SUBSCRIPTION_NOT_FOUND",
+        "Suscripción no encontrada.",
+      );
+    }
+
+    if (sub.status === mode) {
+      throw new ConflictError(
+        "ALREADY_IN_TARGET_STATUS",
+        `La suscripción ya está en estado ${mode}.`,
+      );
+    }
+
+    await prisma.trainerSubscription.update({
+      where: { id: subscriptionId },
+      data: {
+        status: mode,
+        // Only stamp cancelledAt when going to CANCELLED. READ_ONLY is recoverable.
+        ...(mode === "CANCELLED" ? { cancelledAt: new Date() } : {}),
+      },
+    });
+
+    await writeAdminAuditLog(
+      actor.id,
+      "DEACTIVATE_SUBSCRIPTION",
+      "TrainerSubscription",
+      subscriptionId,
+      { mode, reason, trainerUserId: sub.trainerUserId },
+    );
+
+    logInfo("Subscription deactivated", {
+      actorId: actor.id,
+      subscriptionId,
+      mode,
+      trainerUserId: sub.trainerUserId,
+    });
+
+    return { updated: true, newStatus: mode };
+  });
+}
+
+// -----------------------------------------------------------------------------
+// changeSubscriptionPlan
+// -----------------------------------------------------------------------------
+// Change the planTier (SOLO / PRO / STUDIO) without resetting the period.
+// Useful for upgrades / downgrades. Does not modify status.
+// -----------------------------------------------------------------------------
+
+const changeSubscriptionPlanSchema = z.object({
+  subscriptionId: z.string().cuid(),
+  newTier: z.enum(["SOLO", "PRO", "STUDIO"]),
+  reason: z.string().min(5, "La razón debe tener al menos 5 caracteres."),
+});
+
+export async function changeSubscriptionPlan(input: {
+  subscriptionId: string;
+  newTier: SubscriptionTier;
+  reason: string;
+}): Promise<
+  ActionResult<{
+    updated: true;
+    previousTier: SubscriptionTier;
+    newTier: SubscriptionTier;
+  }>
+> {
+  return tryCatch(async () => {
+    const actor = await requireSuperAdmin();
+
+    const { subscriptionId, newTier, reason } =
+      changeSubscriptionPlanSchema.parse(input);
+
+    const sub = await prisma.trainerSubscription.findUnique({
+      where: { id: subscriptionId },
+      select: { id: true, planTier: true, trainerUserId: true },
+    });
+
+    if (!sub) {
+      throw new NotFoundError(
+        "SUBSCRIPTION_NOT_FOUND",
+        "Suscripción no encontrada.",
+      );
+    }
+
+    if (sub.planTier === newTier) {
+      throw new ConflictError(
+        "ALREADY_ON_TIER",
+        `La suscripción ya está en el plan ${newTier}.`,
+      );
+    }
+
+    await prisma.trainerSubscription.update({
+      where: { id: subscriptionId },
+      data: { planTier: newTier },
+    });
+
+    await writeAdminAuditLog(
+      actor.id,
+      "CHANGE_SUBSCRIPTION_PLAN",
+      "TrainerSubscription",
+      subscriptionId,
+      {
+        previousTier: sub.planTier,
+        newTier,
+        reason,
+        trainerUserId: sub.trainerUserId,
+      },
+    );
+
+    logInfo("Subscription plan changed", {
+      actorId: actor.id,
+      subscriptionId,
+      previousTier: sub.planTier,
+      newTier,
+    });
+
+    return {
+      updated: true,
+      previousTier: sub.planTier,
+      newTier,
+    };
+  });
+}
+
+// -----------------------------------------------------------------------------
+// extendSubscriptionPeriod
+// -----------------------------------------------------------------------------
+// Add N days to currentPeriodEnd. Works on any subscription status (including
+// CANCELLED — useful when granting a grace period after a cancellation).
+// -----------------------------------------------------------------------------
+
+const extendSubscriptionPeriodSchema = z.object({
+  subscriptionId: z.string().cuid(),
+  days: z.number().int().min(1).max(365),
+});
+
+export async function extendSubscriptionPeriod(input: {
+  subscriptionId: string;
+  days: number;
+}): Promise<
+  ActionResult<{ updated: true; newCurrentPeriodEnd: Date }>
+> {
+  return tryCatch(async () => {
+    const actor = await requireSuperAdmin();
+
+    const { subscriptionId, days } =
+      extendSubscriptionPeriodSchema.parse(input);
+
+    const sub = await prisma.trainerSubscription.findUnique({
+      where: { id: subscriptionId },
+      select: { id: true, currentPeriodEnd: true, trainerUserId: true },
+    });
+
+    if (!sub) {
+      throw new NotFoundError(
+        "SUBSCRIPTION_NOT_FOUND",
+        "Suscripción no encontrada.",
+      );
+    }
+
+    // Extend from the later of (now, currentPeriodEnd) — avoids back-dating
+    // when the current period has already ended.
+    const now = new Date();
+    const base =
+      sub.currentPeriodEnd.getTime() > now.getTime()
+        ? sub.currentPeriodEnd
+        : now;
+    const newCurrentPeriodEnd = new Date(
+      base.getTime() + days * 24 * 60 * 60 * 1000,
+    );
+
+    await prisma.trainerSubscription.update({
+      where: { id: subscriptionId },
+      data: { currentPeriodEnd: newCurrentPeriodEnd },
+    });
+
+    await writeAdminAuditLog(
+      actor.id,
+      "EXTEND_SUBSCRIPTION_PERIOD",
+      "TrainerSubscription",
+      subscriptionId,
+      {
+        days,
+        newCurrentPeriodEnd: newCurrentPeriodEnd.toISOString(),
+        trainerUserId: sub.trainerUserId,
+      },
+    );
+
+    logInfo("Subscription period extended", {
+      actorId: actor.id,
+      subscriptionId,
+      days,
+    });
+
+    return { updated: true, newCurrentPeriodEnd };
   });
 }

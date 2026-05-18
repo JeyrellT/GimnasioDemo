@@ -7,8 +7,8 @@ import Link from "next/link";
 import { listAllSubscriptions } from "@/server/actions/admin.actions";
 import { PageHeader } from "@/components/shared/page-header";
 import { formatDateCR } from "@/lib/utils";
-import { SubscriptionRowActions } from "../_components/subscription-row-actions";
-import type { SubscriptionStatus } from "@prisma/client";
+import { LicenseControl } from "../_components/license-control";
+import type { SubscriptionStatus, SubscriptionTier } from "@prisma/client";
 
 type SearchParams = {
   status?: string;
@@ -35,9 +35,9 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const PLAN_LABELS: Record<string, string> = {
-  BASIC: "Básico",
+  SOLO: "Solo",
   PRO: "Pro",
-  ELITE: "Elite",
+  STUDIO: "Studio",
 };
 
 export default async function AdminSubscriptionsPage({
@@ -180,10 +180,12 @@ export default async function AdminSubscriptionsPage({
                       {formatDateCR(sub.createdAt, "d MMM yyyy")}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <SubscriptionRowActions
+                      <LicenseControl
+                        mode="row"
                         subscriptionId={sub.id}
                         trainerUserId={sub.trainerUserId}
                         status={sub.status}
+                        planTier={sub.planTier as SubscriptionTier}
                       />
                     </td>
                   </tr>

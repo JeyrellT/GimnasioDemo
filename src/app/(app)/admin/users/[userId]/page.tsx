@@ -9,7 +9,9 @@ import { getUserDetail } from "@/server/actions/admin.actions";
 import { PageHeader } from "@/components/shared/page-header";
 import { formatDateCR } from "@/lib/utils";
 import { UserActions } from "../../_components/user-actions";
+import { LicenseControl } from "../../_components/license-control";
 import { ArrowLeft } from "lucide-react";
+import type { SubscriptionStatus, SubscriptionTier } from "@prisma/client";
 
 const ROLE_LABELS: Record<string, string> = {
   TRAINER: "Trainer",
@@ -140,7 +142,7 @@ export default async function AdminUserDetailPage({
             </div>
           </section>
 
-          {/* Trainer subscription */}
+          {/* Trainer subscription info (read-only summary) */}
           {sub && (
             <section className="rounded-xl border border-[#3F3F46]/60 bg-[#18181B] p-5">
               <h2 className="text-xs font-bold uppercase tracking-widest text-[#71717A] mb-4">
@@ -161,6 +163,17 @@ export default async function AdminUserDetailPage({
                 />
               </div>
             </section>
+          )}
+
+          {/* License control — trainers only. Shows "Activar" when no sub exists. */}
+          {detail.role === "TRAINER" && (
+            <LicenseControl
+              mode="panel"
+              subscriptionId={sub?.id ?? null}
+              trainerUserId={detail.id}
+              status={(sub?.status as SubscriptionStatus | undefined) ?? null}
+              planTier={(sub?.planTier as SubscriptionTier | undefined) ?? null}
+            />
           )}
 
           {/* Counts */}
