@@ -1,0 +1,37 @@
+# =============================================================================
+# Railway service config — TEMPLATE
+# Copiar a la raíz del proyecto como `railway.toml` y adaptar.
+# Docs: https://docs.railway.app/reference/config-as-code
+# =============================================================================
+
+[build]
+# NIXPACKS = auto-detect del stack (Node, Python, etc.)
+# Cambiar a "DOCKERFILE" si el proyecto tiene Dockerfile.
+builder = "NIXPACKS"
+
+# Build command: instalar deps + generar Prisma client (si aplica) + build de Next.
+# Para FastAPI/Python: "pip install -r requirements.txt"
+# Para Express plano: "pnpm install"
+buildCommand = "NODE_ENV=development pnpm install --frozen-lockfile && pnpm exec prisma generate && pnpm build"
+
+[deploy]
+# Start command: usar siempre un script externo (más fácil de versionar).
+# El script debería correr migraciones (si aplica) antes de arrancar.
+startCommand = "sh scripts/start.sh"
+
+# Endpoint que Railway pinguea para saber si está vivo.
+# Devolver 200 + JSON simple. Ver `/api/health/route.ts` de Vizion como referencia.
+healthcheckPath = "/api/health"
+
+# Cuánto esperar la primera respuesta exitosa antes de marcar el deploy como fallido.
+# 300s = 5min (suficiente para builds normales + start)
+healthcheckTimeout = 300
+
+# Política de restart cuando el proceso muere.
+# ON_FAILURE = restart solo si el exit code != 0
+# ALWAYS = restart siempre (incluso si exit code = 0)
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5
+
+# 1 réplica es el default. Aumentar solo si necesitás HA real (Pro+ permite scaling).
+numReplicas = 1

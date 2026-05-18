@@ -1,0 +1,58 @@
+#!/bin/sh
+# =============================================================================
+# Railway startup script — TEMPLATE
+# Copiar a scripts/start.sh y dar permisos: chmod +x scripts/start.sh
+#
+# Estrategia "self-healing":
+#   1. Intenta `prisma migrate deploy` con retries
+#   2. Si todo falla, hace `db push --force-reset` (DESTRUCTIVO, perdés data)
+#      y marca todas las migraciones como aplicadas para no quedar atascado
+#   3. Arranca Next.js
+#
+# IMPORTANTE: El fallback destructivo solo es seguro en proyectos nuevos.
+# En proyectos con data productiva, comentar el bloque del fallback y atender
+# manualmente cualquier falla de migración.
+# =============================================================================
+
+set -e
+
+MAX_RETRIES=3
+RETRY_DELAY=5
+
+echo ">>> Running prisma migrate deploy..."
+attempt=1
+migrate_ok=false
+
+while [ "$attempt" -le "$MAX_RETRIES" ]; do
+  if pnpm exec prisma migrate deploy; then
+    echo ">>> Migrations applied successfully"
+    migrate_ok=true
+    break
+  else
+    echo ">>> migrate deploy failed (attempt $attempt/$MAX_RETRIES)"
+    if [ "$attempt" -lt "$MAX_RETRIES" ]; then
+      echo ">>> Retrying in ${RETRY_DELAY}s..."
+      sleep $RETRY_DELAY
+    fi
+    attempt=$((attempt + 1))
+  fi
+done
+
+if [ "$migrate_ok" = false ]; then
+  echo ">>> All $MAX_RETRIES migrate attempts failed — resetting DB schema..."
+  echo ">>> WARNING: This will drop all tables and recreate them!"
+  pnpm exec prisma db push --force-reset --accept-data-loss --skip-generate
+  echo ">>> Marking ALL migrations as applied..."
+  # Iterar sobre cada directorio de migración y marcarlo como aplicado.
+  # Esto evita que el próximo deploy intente re-aplicar y vuelva a romper.
+  for dir in prisma/migrations/*/; do
+    name=$(basename "$dir")
+    if [ "$name" != "migration_lock.toml" ]; then
+      pnpm exec prisma migrate resolve --applied "$name" || true
+    fi
+  done
+  echo ">>> DB reset complete"
+fi
+
+echo ">>> Starting app..."
+exec pnpm start
