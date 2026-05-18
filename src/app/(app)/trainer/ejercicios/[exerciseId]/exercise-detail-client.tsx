@@ -116,8 +116,6 @@ export default function ExerciseDetailClient({ exerciseId }: Props) {
 
   const isOwner =
     user !== null && exercise.createdById !== null && exercise.createdById === user.id;
-  const hasMedia = !!(exercise.thumbnailUrl ?? exercise.gifUrl ?? exercise.mediaUrl);
-
   function handleEditInstructions() {
     setInstructionsDraft(exercise?.instructionsEs ?? "");
     setEditingInstructions(true);
@@ -232,17 +230,16 @@ export default function ExerciseDetailClient({ exerciseId }: Props) {
 
         {/* Right column: media + instructions */}
         <div className="flex flex-col gap-4">
-          {/* Media gallery */}
-          {hasMedia && (
-            <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-              <h2 className="mb-2 text-sm font-semibold text-[#FAFAFA]">Multimedia</h2>
-              <ExerciseMediaGallery
-                thumbnailUrl={exercise.thumbnailUrl}
-                gifUrl={exercise.gifUrl}
-                mediaUrl={exercise.mediaUrl}
-              />
-            </div>
-          )}
+          {/* Media gallery — always visible, with static fallback for photos */}
+          <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <h2 className="mb-2 text-sm font-semibold text-[#FAFAFA]">Multimedia</h2>
+            <ExerciseMediaGallery
+              thumbnailUrl={exercise.thumbnailUrl}
+              gifUrl={exercise.gifUrl}
+              mediaUrl={exercise.mediaUrl}
+              slug={exercise.slug}
+            />
+          </div>
 
           {/* Instructions */}
           <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
