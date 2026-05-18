@@ -1113,8 +1113,16 @@ export async function getClientRoutines(
 // Aliases — match the names the proxy layer (src/app/actions/) expects
 // -----------------------------------------------------------------------------
 
-export async function createRoutineTemplate(...args: Parameters<typeof createRoutine>) {
-  return createRoutine(...args);
+export async function createRoutineTemplate(
+  input: { name: string; description?: string; goal: string; splitDays: number; durationWeeks: number },
+): Promise<ActionResult<CreateRoutineResult>> {
+  const fd = new FormData();
+  fd.set("name", input.name);
+  if (input.description) fd.set("description", input.description);
+  fd.set("goal", input.goal);
+  fd.set("splitDays", String(input.splitDays));
+  fd.set("durationWeeks", String(input.durationWeeks));
+  return createRoutine(fd);
 }
 export async function updateRoutineTemplate(...args: Parameters<typeof updateRoutine>) {
   return updateRoutine(...args);

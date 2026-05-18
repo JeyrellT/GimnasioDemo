@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Loader2, UserCheck, CalendarDays, Dumbbell, Clock, Target } from "lucide-react";
-import { listMyRoutines } from "@/app/actions/routines";
+import { getRoutine } from "@/app/actions/routines";
 import { searchExercises } from "@/app/actions/exercises";
 import { RoutineBuilderClient } from "./routine-builder-client";
-import type { DemoRoutineRow, DemoRoutineDay, DemoRoutineDayExercise } from "@/lib/offline/db";
+import type { RoutineDetail } from "@/server/actions/routines.actions";
 import type { RoutineWithDays } from "@/types/domain";
 import type { RoutineGoal } from "@/types/domain";
 
@@ -21,75 +20,6 @@ const GOAL_META: Record<RoutineGoal, { label: string; color: string; bg: string 
   GENERAL:     { label: "General / Mantenimiento",  color: "#A855F7", bg: "rgba(168,85,247,0.12)"  },
 };
 
-// ── Adapter: DemoRoutineRow → RoutineWithDays ─────────────────────────────────
-//
-// RoutineBuilderClient / useRoutineBuilderStore.initFromExisting reads:
-//   routine.id, .name, .goal, .splitDays, .durationWeeks
-//   routine.days[].id, .dayIndex, .name
-//   routine.days[].exercises[].id, .exerciseId, .exercise.nameEs,
-//     .targetSets, .targetRepsMin, .targetRepsMax, .targetRpe,
-//     .restSeconds, .tempo, .supersetGroup, .notes
-//
-// The demo row stores exercises flat (no nested exercise object), so we hydrate
-// nameEs from the exercise library we already fetched.
-
-function toRoutineWithDays(
-  row: DemoRoutineRow,
-  exerciseNames: Map<string, string>,
-): RoutineWithDays {
-  return {
-    id: row.id,
-    trainerId: row.trainerId,
-    name: row.name,
-    description: row.description,
-    goal: row.goal as RoutineGoal,
-    splitDays: row.splitDays,
-    durationWeeks: row.durationWeeks,
-    isArchived: row.isArchived,
-    createdAt: new Date(row.createdAt),
-    updatedAt: new Date(row.updatedAt),
-    days: row.daysJson.map((day: DemoRoutineDay) => ({
-      id: day.id,
-      routineTemplateId: row.id,
-      dayIndex: day.dayIndex,
-      name: day.name,
-      description: null,
-      exercises: day.exercises.map((ex: DemoRoutineDayExercise) => ({
-        id: ex.id,
-        routineDayId: day.id,
-        exerciseId: ex.exerciseId,
-        order: ex.order,
-        targetSets: ex.targetSets,
-        targetRepsMin: ex.targetRepsMin,
-        targetRepsMax: ex.targetRepsMax,
-        targetRpe: ex.targetRpe,
-        restSeconds: ex.restSeconds,
-        tempo: ex.tempo,
-        supersetGroup: null,
-        notes: ex.notes,
-        exercise: {
-          id: ex.exerciseId,
-          slug: ex.exerciseId,
-          nameEs: exerciseNames.get(ex.exerciseId) ?? ex.exerciseId,
-          nameEn: "",
-          instructionsEs: null,
-          primaryMuscle: "CHEST" as const,
-          secondaryMuscles: [],
-          equipment: "BARBELL" as const,
-          difficulty: "BEGINNER" as const,
-          thumbnailUrl: null,
-          gifUrl: null,
-          mediaUrl: null,
-          isPublic: true,
-          createdById: null,
-          deletedAt: null,
-          createdAt: new Date(),
-        },
-      })),
-    })),
-  } as unknown as RoutineWithDays;
-}
-
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -99,41 +29,24 @@ interface Props {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function RoutineDetailClient({ routineId }: Props) {
-  const [routine, setRoutine] = useState<DemoRoutineRow | null>(null);
-  const [adapted, setAdapted] = useState<RoutineWithDays | null>(null);
+  const [routine, setRoutine] = useState<RoutineDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [missing, setMissing] = useState(false);
 
   useEffect(() => {
     async function load() {
-      const [routinesResult, exercisesResult] = await Promise.all([
-        listMyRoutines(),
+      const [routineResult] = await Promise.all([
+        getRoutine(routineId),
         searchExercises({}),
       ]);
 
-      if (!routinesResult.ok) {
+      if (!routineResult.ok) {
         setMissing(true);
         setLoading(false);
         return;
       }
 
-      const found = routinesResult.value.find((r) => r.id === routineId);
-      if (!found) {
-        setMissing(true);
-        setLoading(false);
-        return;
-      }
-
-      // Build exerciseId → nameEs map
-      const nameMap = new Map<string, string>();
-      if (exercisesResult.ok) {
-        for (const ex of exercisesResult.value) {
-          nameMap.set(ex.id, ex.nameEs);
-        }
-      }
-
-      setRoutine(found);
-      setAdapted(toRoutineWithDays(found, nameMap));
+      setRoutine(routineResult.value);
       setLoading(false);
     }
 
@@ -148,13 +61,12 @@ export default function RoutineDetailClient({ routineId }: Props) {
     );
   }
 
-  if (missing || !routine || !adapted) {
-    // notFound() can't be called inside useEffect; trigger it inline
+  if (missing || !routine) {
     return <NotFoundView />;
   }
 
-  const goal = GOAL_META[routine.goal as RoutineGoal];
-  const totalExercises = routine.daysJson.reduce(
+  const goal = GOAL_META[routine.goal];
+  const totalExercises = routine.days.reduce(
     (sum, d) => sum + d.exercises.length,
     0,
   );
@@ -244,7 +156,7 @@ export default function RoutineDetailClient({ routineId }: Props) {
       </div>
 
       {/* ── Builder ───────────────────────────────────────────────────────── */}
-      <RoutineBuilderClient routine={adapted} />
+      <RoutineBuilderClient routine={routine as unknown as RoutineWithDays} />
     </div>
   );
 }

@@ -19,7 +19,7 @@ import { listMyRoutines, deleteRoutine } from "@/app/actions/routines";
 import { PageHeader } from "@/components/shared/page-header";
 import { formatDateCR } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
-import type { DemoRoutineRow } from "@/lib/offline/db";
+import type { RoutineSummary } from "@/types/domain";
 
 // ---------------------------------------------------------------------------
 // Goal config — color tokens and icons per goal type
@@ -120,15 +120,15 @@ export default function RutinasPage() {
         ? "activas"
         : "todas";
 
-  const [routines, setRoutines] = useState<DemoRoutineRow[]>([]);
+  const [routines, setRoutines] = useState<RoutineSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     listMyRoutines().then((result) => {
       if (result.ok) {
-        const sorted = [...result.value].sort((a, b) =>
-          b.updatedAt.localeCompare(a.updatedAt),
+        const sorted = [...result.value].sort(
+          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
         );
         setRoutines(sorted);
       }

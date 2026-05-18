@@ -15,5 +15,6 @@ export {
   assignRoutineToClient,
   addRoutineComment,
   listMyRoutines,
+  getRoutine,
   getClientRoutines,
 } from "@/server/actions/routines.actions";
