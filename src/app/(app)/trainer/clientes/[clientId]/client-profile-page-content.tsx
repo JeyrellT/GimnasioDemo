@@ -115,6 +115,19 @@ const BACKEND_TO_FRONTEND_ZONE: Record<BackendBodyZone, keyof FrontendCompositio
 };
 
 function adaptToFrontend(b: BackendDetail): FrontendDetail {
+  // Defensive: backend may return an incomplete shape (e.g. just-created
+  // clients without any BodyMetric records). Fall back to an empty composition.
+  const bc = b.bodyComposition ?? {
+    weightKg: null,
+    bodyFatPct: null,
+    muscleMassKg: null,
+    visceralFat: null,
+    basalMetabolicRate: null,
+    bmi: null,
+    circumferences: {} as BackendDetail["bodyComposition"]["circumferences"],
+    freshness: {} as BackendDetail["bodyComposition"]["freshness"],
+  };
+
   const freshness = {} as FrontendComposition["freshness"];
   const allFrontKeys: Array<keyof FrontendComposition["freshness"]> = [
     "neck", "shoulderL", "shoulderR", "chest",
@@ -126,7 +139,7 @@ function adaptToFrontend(b: BackendDetail): FrontendDetail {
   for (const k of allFrontKeys) {
     freshness[k] = { lastMeasuredAt: null, daysSince: null };
   }
-  for (const [bk, fr] of Object.entries(b.bodyComposition.freshness)) {
+  for (const [bk, fr] of Object.entries(bc.freshness ?? {})) {
     const fk = BACKEND_TO_FRONTEND_ZONE[bk as BackendBodyZone];
     if (fk && fr) {
       freshness[fk] = {
@@ -136,25 +149,25 @@ function adaptToFrontend(b: BackendDetail): FrontendDetail {
     }
   }
 
-  const weightHistory12w = b.metricsHistory
+  const weightHistory12w = (b.metricsHistory ?? [])
     .map((m) => (m.weightKg !== null ? Number(m.weightKg) : null))
     .filter((n): n is number => n !== null);
-  const bodyFatHistory12w = b.metricsHistory
+  const bodyFatHistory12w = (b.metricsHistory ?? [])
     .map((m) => (m.bodyFatPct !== null ? Number(m.bodyFatPct) : null))
     .filter((n): n is number => n !== null);
-  const muscleMassHistory12w = b.metricsHistory
+  const muscleMassHistory12w = (b.metricsHistory ?? [])
     .map((m) => (m.muscleMassKg !== null ? Number(m.muscleMassKg) : null))
     .filter((n): n is number => n !== null);
 
   const composition: FrontendComposition = {
-    weightKg: b.bodyComposition.weightKg,
-    bodyFatPct: b.bodyComposition.bodyFatPct,
-    muscleMassKg: b.bodyComposition.muscleMassKg,
-    visceralFat: b.bodyComposition.visceralFat,
-    basalMetabolicRate: b.bodyComposition.basalMetabolicRate,
-    bmi: b.bodyComposition.bmi
-      ?? computeBmi(b.bodyComposition.weightKg, b.profile?.heightCm ?? null),
-    circumferences: { ...b.bodyComposition.circumferences },
+    weightKg: bc.weightKg,
+    bodyFatPct: bc.bodyFatPct,
+    muscleMassKg: bc.muscleMassKg,
+    visceralFat: bc.visceralFat,
+    basalMetabolicRate: bc.basalMetabolicRate,
+    bmi: bc.bmi
+      ?? computeBmi(bc.weightKg, b.profile?.heightCm ?? null),
+    circumferences: { ...(bc.circumferences ?? {}) } as FrontendComposition["circumferences"],
     freshness,
   };
 
