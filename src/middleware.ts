@@ -180,8 +180,10 @@ export const config = {
      *   - _next/static (static files)
      *   - _next/image (image optimization)
      *   - favicon.ico
-     *   - Files with extensions: .svg .png .jpg .jpeg .gif .webp .ico .woff .woff2 .ttf .otf .json .xml .txt
+     *   - manifest.webmanifest (PWA manifest — must stay public)
+     *   - robots.txt / sitemap.xml (SEO assets)
+     *   - Files with extensions: .svg .png .jpg .jpeg .gif .webp .ico .woff .woff2 .ttf .otf .json .xml .txt .webmanifest
      */
-    "/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|ttf|otf|json|xml|txt)$).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico|manifest\\.webmanifest|robots\\.txt|sitemap\\.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|ttf|otf|json|xml|txt|webmanifest)$).*)",
   ],
 };
