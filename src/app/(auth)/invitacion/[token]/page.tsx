@@ -3,9 +3,7 @@ import { UserPlus, AlertTriangle } from "lucide-react";
 import { validateInvitationToken } from "@/app/actions/clients";
 import type { Metadata } from "next";
 
-export function generateStaticParams() {
-  return [{ token: "demo-token" }];
-}
+// Production: dynamically rendered. Demo uses generateStaticParams in its branch.
 
 interface InvitacionPageProps {
   params: Promise<{ token: string }>;

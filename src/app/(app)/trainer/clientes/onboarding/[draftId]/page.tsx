@@ -7,16 +7,7 @@
 
 import { OnboardingClientPage } from "./_client";
 
-// ── generateStaticParams ──────────────────────────────────────────────────────
-// Satisfies Next.js static export requirement for dynamic segments.
-// Actual drafts are created at runtime in IndexedDB; "draft-demo" is a
-// placeholder so the segment is pre-rendered.
-
-export function generateStaticParams() {
-  return [{ draftId: "draft-demo" }];
-}
-
-// ── Page ──────────────────────────────────────────────────────────────────────
+// Production: dynamically rendered. Demo uses generateStaticParams in its branch.
 
 interface PageProps {
   params: Promise<{ draftId: string }>;

@@ -10,6 +10,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { getOnboardingDraft } from "@/app/actions/onboarding";
 import { WizardShell } from "../_components/wizard-shell";
+import { useAuth } from "@/components/providers/auth-provider";
 import type { OnboardingDraftDTO } from "@/types/onboarding";
 
 // ── Inner content (rendered once draft is loaded) ─────────────────────────────
@@ -20,6 +21,7 @@ interface ContentProps {
 
 export function OnboardingClientPage({ draftId }: ContentProps) {
   const router = useRouter();
+  const { user } = useAuth();
   const [draft, setDraft] = React.useState<OnboardingDraftDTO | null>(null);
   const [loading, setLoading] = React.useState(true);
 
@@ -50,5 +52,5 @@ export function OnboardingClientPage({ draftId }: ContentProps) {
 
   if (!draft) return null;
 
-  return <WizardShell draft={draft} trainerId="trainer-demo-001" />;
+  return <WizardShell draft={draft} trainerId={user?.id ?? ""} />;
 }

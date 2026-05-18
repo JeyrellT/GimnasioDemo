@@ -27,7 +27,11 @@ import {
 } from "@/lib/storage/upload";
 import type { ActionResult } from "@/types/api";
 import type { OnboardingMode } from "@prisma/client";
-import type { OnboardingCedulaExtraction } from "@/types/onboarding";
+import type {
+  OnboardingCedulaExtraction,
+  OnboardingDraftDTO,
+  OnboardingPayload,
+} from "@/types/onboarding";
 import type { WorkoutPhotoExtraction } from "@/lib/ai/extract-workout-photos";
 
 // =============================================================================
@@ -262,7 +266,7 @@ export async function updateOnboardingStep(
 
     // Merge new data into existing dataJson
     const existingData = (draft.dataJson as Record<string, unknown>) ?? {};
-    const mergedData = { ...existingData, [`step_${step}`]: data };
+    const mergedData = { ...existingData, [`step${step}`]: data };
 
     await prisma.onboardingDraft.update({
       where: { id: draftId },
@@ -284,7 +288,7 @@ export async function updateOnboardingStep(
 
 export async function completeOnboarding(
   draftId: string,
-): Promise<ActionResult<{ userId: string }>> {
+): Promise<ActionResult<{ clientUserId: string }>> {
   return tryCatch(async () => {
     const actor = await requireUser();
 
@@ -559,7 +563,7 @@ export async function completeOnboarding(
       newUserId: userId,
     });
 
-    return { userId };
+    return { clientUserId: userId };
   });
 }
 
@@ -569,7 +573,7 @@ export async function completeOnboarding(
 
 export async function getOnboardingDraft(
   draftId: string,
-): Promise<ActionResult<OnboardingDraftDetail>> {
+): Promise<ActionResult<OnboardingDraftDTO>> {
   return tryCatch(async () => {
     const actor = await requireUser();
 
@@ -610,9 +614,18 @@ export async function getOnboardingDraft(
       );
     }
 
+    // Transform to DTO format expected by frontend
+    const draftData = (draft.dataJson as Record<string, unknown>) ?? {};
     return {
-      ...draft,
-      dataJson: (draft.dataJson as Record<string, unknown>) ?? {},
+      id: draft.id,
+      mode: draft.mode,
+      currentStep: Math.max(1, draft.currentStep),
+      data: draftData as Partial<OnboardingPayload>,
+      aiConsentGranted: draft.aiConsentGranted,
+      cedulaExtractionCount: draft.cedulaExtractionCount,
+      workoutPhotoExtractionCount: draft.workoutPhotoExtractionCount,
+      expiresAt: draft.expiresAt.toISOString(),
+      completedAt: draft.completedAt?.toISOString() ?? null,
     };
   });
 }
