@@ -158,24 +158,15 @@ export default function EjerciciosPage() {
 
   const loadExercises = useCallback(async () => {
     setLoading(true);
-    const result = await searchExercises({
-      query: q,
-      primaryMuscle: muscle,
-      equipment,
-      limit: 40,
-    });
+    const result = await searchExercises(
+      q ?? "",
+      { muscle, equipment },
+      1,
+      40,
+    );
 
     if (result.ok) {
-      // Apply ownership filter client-side (demo: check createdById via the full list)
-      let filtered = result.value;
-      if (owner === "mine") {
-        // searchExercises returns ExerciseSearchResult which lacks createdById,
-        // so we can't filter by "mine" accurately here — show all as fallback.
-        filtered = result.value;
-      } else if (owner === "public") {
-        filtered = result.value;
-      }
-      setExercises(filtered);
+      setExercises(result.value.exercises);
     } else {
       setExercises([]);
     }
