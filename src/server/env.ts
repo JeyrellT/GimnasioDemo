@@ -50,6 +50,17 @@ const envSchema = z.object({
     .string()
     .min(32, "NEXTAUTH_SECRET must be at least 32 characters"),
 
+  // ── Admin bootstrap ───────────────────────────────────────────────────────
+  // Email of the user to be promoted to SUPER_ADMIN by the seed script
+  // (prisma/seed/super-admin.ts). Optional — only required at seed time.
+  SUPER_ADMIN_EMAIL: z.string().email().optional(),
+  // Secret used to sign the impersonation cookie. Must differ from
+  // NEXTAUTH_SECRET so leaking one doesn't compromise the other. Min 32 chars.
+  IMPERSONATION_SECRET: z
+    .string()
+    .min(32, "IMPERSONATION_SECRET must be at least 32 characters")
+    .optional(),
+
   // ── Email — Resend (optional until email flows are activated) ───────────────
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().email().optional(),
