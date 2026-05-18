@@ -1,5 +1,6 @@
+"use server";
+
 // DEMO MODE — consent actions are no-ops in the static demo.
-// "use server" removed: no server runtime in static export.
 
 import { ok } from "@/lib/result";
 import type { ActionResult, ConsentItem } from "@/types/api";
