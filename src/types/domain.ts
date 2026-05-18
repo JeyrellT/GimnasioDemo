@@ -49,7 +49,6 @@ export {
   ExerciseDifficulty,
   ExerciseEquipment,
   MuscleGroup,
-  RoutineGoal,
   AssignedRoutineStatus,
   WorkoutSessionStatus,
   SubscriptionTier,
@@ -61,6 +60,19 @@ export {
   LpdpRequestStatus,
   AuditAction,
 } from "@prisma/client";
+
+export const BUILT_IN_GOALS = [
+  "HYPERTROPHY",
+  "STRENGTH",
+  "ENDURANCE",
+  "FAT_LOSS",
+  "GENERAL",
+] as const;
+
+export type BuiltInGoal = (typeof BUILT_IN_GOALS)[number];
+
+/** @deprecated Use `string` for goals — kept for backward compat */
+export type RoutineGoal = string;
 
 // Re-export Decimal for callers that format monetary values
 export type { Decimal } from "@prisma/client/runtime/library";
@@ -198,7 +210,7 @@ export interface RoutineSnapshotDay {
 export interface RoutineSnapshot {
   templateId: string;
   templateName: string;
-  goal: import("@prisma/client").RoutineGoal;
+  goal: string;
   splitDays: number;
   durationWeeks: number;
   days: RoutineSnapshotDay[];

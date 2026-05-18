@@ -36,9 +36,11 @@ import {
   INVITATION_EXPIRY_DAYS,
   MAX_CLIENTS_BY_TIER,
 } from "@/lib/consts";
-import { generateOpaqueToken } from "@/lib/crypto/tokens";
+import { generateOpaqueToken, generateSecureRandomString } from "@/lib/crypto/tokens";
+import { hashPassword } from "@/lib/crypto/passwords";
 import { sendEmail } from "@/lib/email/client";
 import InvitationEmail from "@/lib/email/templates/invitation";
+import ClientWelcomeEmail from "@/lib/email/templates/client-welcome";
 
 import {
   createInvitationSchema,
@@ -1134,6 +1136,246 @@ export async function recordTrainerNoteUpdate(
     });
 
     return { recorded: true };
+  });
+}
+
+// =============================================================================
+// quickAddClient
+// =============================================================================
+
+/**
+ * Trainer-invoked action that immediately provisions a CLIENT account and sends
+ * a welcome email containing a one-time auto-login link.
+ *
+ * Steps:
+ *   1. Validate input (Zod: email required, name optional).
+ *   2. Assert no existing User with that email.
+ *   3. Generate a 12-char provisional password, hash it (PBKDF2).
+ *   4. Create User (role: CLIENT, mustChangePassword: true).
+ *   5. Create ClientProfile.
+ *   6. Create TrainerClient link (ACTIVE).
+ *   7. Create Invitation row for the auto-login token.
+ *   8. Send welcome email.
+ */
+
+const quickAddClientSchema = z.object({
+  email: z
+    .string()
+    .email("Correo electrónico inválido")
+    .transform((v) => v.toLowerCase().trim()),
+  name: z.string().trim().min(1).max(120).optional(),
+});
+
+export async function quickAddClient(input: {
+  email: string;
+  name?: string;
+}): Promise<ActionResult<{ clientId: string; invitationId: string }>> {
+  return tryCatch(async () => {
+    const trainer = await requireTrainer();
+
+    const parsed = quickAddClientSchema.safeParse(input);
+    if (!parsed.success) {
+      throw new ValidationError(
+        "QUICK_ADD_INPUT",
+        parsed.error.issues[0]?.message ?? "Datos de entrada inválidos",
+        parsed.error,
+      );
+    }
+
+    const { email, name } = parsed.data;
+
+    // -- Check email not already taken --
+    const existing = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, deletedAt: true },
+    });
+
+    if (existing && existing.deletedAt === null) {
+      throw new ConflictError(
+        "EMAIL_ALREADY_USED",
+        "Ya existe una cuenta con ese correo electrónico.",
+      );
+    }
+
+    // -- Provisional password --
+    const provisionalPassword = generateSecureRandomString(12);
+    const passwordHash = await hashPassword(provisionalPassword);
+
+    // -- Resolve display name --
+    const displayName = name ?? email.split("@")[0] ?? email;
+
+    // -- Token for auto-login link --
+    const token = generateOpaqueToken(32);
+    const expiresAt = new Date(
+      Date.now() + INVITATION_EXPIRY_DAYS * 24 * 60 * 60 * 1000,
+    );
+
+    const appUrl = process.env.APP_URL ?? "https://vizion.app";
+    // Link goes through the auto-login API which validates the token, sets the
+    // session cookie, and redirects to /client/bienvenida.
+    const welcomeUrl = `${appUrl}/api/cliente/aceptar-invitacion?token=${token}`;
+
+    const { ipAddress, userAgent } = await getRequestMeta();
+
+    const { clientId, invitationId } = await prisma.$transaction(async (tx) => {
+      // Create the CLIENT user
+      const newUser = await tx.user.create({
+        data: {
+          email,
+          name: displayName,
+          role: "CLIENT",
+          passwordHash,
+          mustChangePassword: true,
+          locale: "es-CR",
+        },
+        select: { id: true },
+      });
+
+      // Ensure ClientProfile exists
+      await tx.clientProfile.create({
+        data: {
+          userId: newUser.id,
+          parqStatus: "NOT_COMPLETED",
+        },
+      });
+
+      // Create TrainerClient link
+      await tx.trainerClient.create({
+        data: {
+          trainerId: trainer.id,
+          clientId: newUser.id,
+          status: "ACTIVE",
+          startedAt: new Date(),
+        },
+      });
+
+      // Create invitation (auto-login token)
+      const inv = await tx.invitation.create({
+        data: {
+          trainerId: trainer.id,
+          email,
+          token,
+          expiresAt,
+          clientId: newUser.id,
+        },
+        select: { id: true },
+      });
+
+      // Audit log
+      await tx.auditLog.create({
+        data: {
+          actorUserId: trainer.id,
+          action: "CREATE",
+          entityType: "User",
+          entityId: newUser.id,
+          ipAddress,
+          userAgent,
+          metadata: { flow: "quick_add_client", invitationId: inv.id },
+        },
+      });
+
+      return { clientId: newUser.id, invitationId: inv.id };
+    });
+
+    // -- Send welcome email (outside transaction) --
+    try {
+      const trainerName =
+        (trainer as { trainerProfile?: { tradeName?: string }; name: string })
+          .trainerProfile?.tradeName ?? trainer.name;
+
+      await sendEmail({
+        to: email,
+        subject: `${trainerName} creó tu cuenta en Vizion`,
+        react: React.createElement(ClientWelcomeEmail, {
+          trainerName,
+          welcomeUrl,
+        }),
+      });
+    } catch (e) {
+      logError(e, {
+        action: "quickAddClient.sendEmail",
+        invitationId,
+        clientId,
+      });
+      // Email failure does NOT roll back the created account.
+    }
+
+    logInfo("client.quick_added", {
+      trainerId: trainer.id,
+      clientId,
+      invitationId,
+    });
+
+    return { clientId, invitationId };
+  });
+}
+
+// =============================================================================
+// completeFirstLogin
+// =============================================================================
+
+/**
+ * Called on the /client/bienvenida page after the user sets their own password.
+ * Clears mustChangePassword and updates name if provided.
+ *
+ * Any authenticated user may call this — it operates on the calling user's own
+ * record. The mustChangePassword middleware gate prevents other navigation
+ * until this action succeeds.
+ */
+
+const completeFirstLoginSchema = z.object({
+  password: z
+    .string()
+    .min(8, "La contraseña debe tener al menos 8 caracteres"),
+  name: z.string().trim().min(1).max(120).optional(),
+});
+
+export async function completeFirstLogin(input: {
+  name?: string;
+  password: string;
+}): Promise<ActionResult<{ success: true }>> {
+  return tryCatch(async () => {
+    const user = await requireUser();
+
+    const parsed = completeFirstLoginSchema.safeParse(input);
+    if (!parsed.success) {
+      throw new ValidationError(
+        "FIRST_LOGIN_INPUT",
+        parsed.error.issues[0]?.message ?? "Datos de entrada inválidos",
+        parsed.error,
+      );
+    }
+
+    const { password, name } = parsed.data;
+
+    const newHash = await hashPassword(password);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash: newHash,
+        mustChangePassword: false,
+        ...(name ? { name } : {}),
+      },
+    });
+
+    const { ipAddress, userAgent } = await getRequestMeta();
+
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: user.id,
+        action: "UPDATE",
+        entityType: "User",
+        entityId: user.id,
+        ipAddress,
+        userAgent,
+        metadata: { field: "passwordHash", flow: "first_login" },
+      },
+    });
+
+    logInfo("client.first_login_completed", { userId: user.id });
+
+    return { success: true };
   });
 }
 

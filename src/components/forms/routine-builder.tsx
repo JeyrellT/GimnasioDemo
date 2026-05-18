@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -67,6 +67,8 @@ import {
   addRoutineDay,
   deleteRoutineDay,
   reorderExercises as reorderExercisesAction,
+  createCustomGoal,
+  listCustomGoals,
 } from "@/app/actions/routines";
 import { searchExercises } from "@/app/actions/exercises";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -76,7 +78,7 @@ import type { ExerciseSearchResult } from "@/types/api";
 
 const metaSchema = z.object({
   name: z.string().min(2, "Nombre muy corto").max(100),
-  goal: z.enum(["HYPERTROPHY", "STRENGTH", "ENDURANCE", "FAT_LOSS", "GENERAL"]),
+  goal: z.string().min(1, "Seleccioná un objetivo"),
   splitDays: z.number().min(1).max(7),
   durationWeeks: z.number().min(1).max(52),
 });
@@ -85,7 +87,7 @@ type MetaValues = z.infer<typeof metaSchema>;
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const GOALS: Array<{ value: MetaValues["goal"]; label: string; color: string }> = [
+const GOALS: Array<{ value: string; label: string; color: string }> = [
   { value: "HYPERTROPHY", label: "Hipertrofia",        color: "#FF6A1A" },
   { value: "STRENGTH",    label: "Fuerza",             color: "#3B82F6" },
   { value: "ENDURANCE",   label: "Resistencia",        color: "#22C55E" },
@@ -675,7 +677,15 @@ function ExerciseSearchPanel({
 
 // ── Meta Form ─────────────────────────────────────────────────────────────────
 
-function MetaForm({ form }: { form: ReturnType<typeof useForm<MetaValues>> }) {
+function MetaForm({
+  form,
+  customGoals,
+  onCreateGoal,
+}: {
+  form: ReturnType<typeof useForm<MetaValues>>;
+  customGoals: Array<{ id: string; name: string }>;
+  onCreateGoal: () => void;
+}) {
   return (
     <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 space-y-4">
       {/* Section header */}
@@ -721,27 +731,50 @@ function MetaForm({ form }: { form: ReturnType<typeof useForm<MetaValues>> }) {
                   <Target className="h-3 w-3 text-[#FF6A1A]" aria-hidden="true" />
                   Objetivo
                 </FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="bg-[#09090B] border-[#3F3F46] h-11 text-sm">
-                      <SelectValue placeholder="Elegí un objetivo" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="bg-[#18181B] border-[#3F3F46]">
-                    {GOALS.map((g) => (
-                      <SelectItem key={g.value} value={g.value} className="text-sm">
-                        <div className="flex items-center gap-2.5">
-                          <span
-                            className="h-2.5 w-2.5 rounded-full shrink-0"
-                            style={{ backgroundColor: g.color }}
-                            aria-hidden="true"
-                          />
-                          {g.label}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2">
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="bg-[#09090B] border-[#3F3F46] h-11 text-sm">
+                        <SelectValue placeholder="Elegí un objetivo" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-[#18181B] border-[#3F3F46]">
+                      {GOALS.map((g) => (
+                        <SelectItem key={g.value} value={g.value} className="text-sm">
+                          <div className="flex items-center gap-2.5">
+                            <span
+                              className="h-2.5 w-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: g.color }}
+                              aria-hidden="true"
+                            />
+                            {g.label}
+                          </div>
+                        </SelectItem>
+                      ))}
+                      {customGoals.map((g) => (
+                        <SelectItem key={g.id} value={g.name} className="text-sm">
+                          <div className="flex items-center gap-2.5">
+                            <span
+                              className="h-2.5 w-2.5 rounded-full shrink-0 bg-[#A1A1AA]"
+                              aria-hidden="true"
+                            />
+                            {g.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={onCreateGoal}
+                    title="Crear objetivo"
+                    className="h-11 w-11 shrink-0 border-[#3F3F46] bg-[#09090B] text-[#A1A1AA] hover:border-[#FF6A1A] hover:text-[#FF6A1A]"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -826,22 +859,28 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
   const [addingDay, setAddingDay] = useState(false);
   const [, startTransition] = useTransition();
   const [addExerciseDayId, setAddExerciseDayId] = useState<string | null>(null);
+  const [customGoals, setCustomGoals] = useState<Array<{ id: string; name: string }>>([]);
+  const [goalDialogOpen, setGoalDialogOpen] = useState(false);
 
   const form = useForm<MetaValues>({
     resolver: zodResolver(metaSchema),
     defaultValues: {
       name: store.name,
-      goal: store.goal as MetaValues["goal"],
+      goal: store.goal,
       splitDays: store.splitDays,
       durationWeeks: store.durationWeeks,
     },
   });
 
+  useEffect(() => {
+    listCustomGoals().then((r) => { if (r.ok) setCustomGoals(r.value); });
+  }, []);
+
   // Sync form defaults when store changes (e.g. on initFromExisting)
   useEffect(() => {
     form.reset({
       name: store.name,
-      goal: store.goal as MetaValues["goal"],
+      goal: store.goal,
       splitDays: store.splitDays,
       durationWeeks: store.durationWeeks,
     });
@@ -926,7 +965,7 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
   return (
     <div className="space-y-5">
       {/* Meta form */}
-      <MetaForm form={form} />
+      <MetaForm form={form} customGoals={customGoals} onCreateGoal={() => setGoalDialogOpen(true)} />
 
       {/* Stats chips */}
       {(store.days.length > 0 || totalExercises > 0) && (
@@ -1012,7 +1051,7 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
       <button
         type="button"
         onClick={form.handleSubmit(handleSave)}
-        disabled={saving || !store.isDirty}
+        disabled={saving}
         className={[
           "relative w-full h-12 rounded-xl font-semibold text-white text-sm",
           "bg-gradient-to-r from-[#FF6A1A] to-[#E55A0E]",
@@ -1022,7 +1061,7 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
           "enabled:hover:shadow-[0_0_20px_rgba(255,106,26,0.45)] enabled:hover:brightness-110",
           "enabled:active:scale-[0.98]",
         ].join(" ")}
-        aria-disabled={saving || !store.isDirty}
+        aria-disabled={saving}
       >
         {saving ? (
           <>
@@ -1036,6 +1075,90 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
           </>
         )}
       </button>
+
+      {goalDialogOpen && (
+        <CreateGoalInlineDialog
+          onClose={() => setGoalDialogOpen(false)}
+          onCreated={(g) => {
+            setCustomGoals((prev) => [...prev, g].sort((a, b) => a.name.localeCompare(b.name)));
+            form.setValue("goal", g.name);
+            setGoalDialogOpen(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function CreateGoalInlineDialog({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated: (goal: { id: string; name: string }) => void;
+}) {
+  const [name, setName] = useState("");
+  const [saving, setSaving] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setTimeout(() => inputRef.current?.focus(), 50);
+  }, []);
+
+  async function handleSave() {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setSaving(true);
+    const result = await createCustomGoal(trimmed);
+    setSaving(false);
+    if (result.ok) {
+      toast.success("Objetivo creado");
+      onCreated(result.value);
+    } else {
+      toast.error(result.error.message);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="w-full max-w-sm rounded-xl border border-[#3F3F46] bg-[#18181B] p-5 shadow-2xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-[#FAFAFA]">Nuevo objetivo</h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md p-1 text-[#71717A] hover:bg-[#27272A] hover:text-[#FAFAFA]"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <Input
+          ref={inputRef}
+          placeholder="Ej: Flexibilidad, Rehabilitación..."
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") { e.preventDefault(); handleSave(); }
+          }}
+          maxLength={50}
+          className="bg-[#27272A] border-[#3F3F46]"
+        />
+        <div className="mt-4 flex justify-end gap-2">
+          <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleSave}
+            disabled={!name.trim() || saving}
+            className="bg-[#FF6A1A] hover:bg-[#E55A0E] text-white"
+          >
+            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+            Guardar
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

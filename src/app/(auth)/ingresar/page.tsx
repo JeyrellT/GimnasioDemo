@@ -539,13 +539,12 @@ function ProdHub() {
           </p>
         </div>
 
-        {/* Tarjetas de rol */}
-        <div className="grid grid-cols-2 gap-3">
-          {/* Entrenador/a */}
+        {/* Tarjeta de rol — solo Entrenador/a */}
+        <div className="flex justify-center">
           <button
             type="button"
             onClick={() => openRegister("TRAINER")}
-            className="group flex cursor-pointer flex-col items-start gap-3 rounded-xl border border-[#3F3F46] p-4 text-left transition-all hover:border-[#FF6A1A] focus-visible:border-[#FF6A1A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6A1A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#18181B]"
+            className="group flex w-full max-w-xs cursor-pointer flex-col items-start gap-3 rounded-xl border border-[#3F3F46] p-4 text-left transition-all hover:border-[#FF6A1A] focus-visible:border-[#FF6A1A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6A1A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#18181B]"
             style={{ borderLeftWidth: "3px", borderLeftColor: "#FF6A1A" }}
           >
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#FF6A1A]/10 text-[#FF6A1A] transition-colors group-hover:bg-[#FF6A1A]/20">
@@ -558,23 +557,19 @@ function ProdHub() {
               </p>
             </div>
           </button>
+        </div>
 
-          {/* Cliente */}
+        {/* Info para clientes */}
+        <p className="text-center text-sm text-[#71717A]">
+          ¿Sos cliente? Pedile a tu coach que te agregue. Si ya tenés cuenta,{" "}
           <button
             type="button"
-            onClick={() => openRegister("CLIENT")}
-            className="group flex cursor-pointer flex-col items-start gap-3 rounded-xl border border-[#3F3F46] p-4 text-left transition-all hover:border-[#FF6A1A] focus-visible:border-[#FF6A1A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6A1A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#18181B]"
-            style={{ borderLeftWidth: "3px", borderLeftColor: "#FF6A1A" }}
+            onClick={openLogin}
+            className="font-medium text-[#FF6A1A] hover:text-[#E55A0E] transition-colors underline-offset-4 hover:underline"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#FF6A1A]/10 text-[#FF6A1A] transition-colors group-hover:bg-[#FF6A1A]/20">
-              <User className="h-5 w-5" aria-hidden="true" />
-            </div>
-            <div className="space-y-0.5">
-              <p className="text-sm font-semibold text-[#FAFAFA]">Cliente</p>
-              <p className="text-xs text-[#71717A]">Entrenás con un coach</p>
-            </div>
+            Ingresá
           </button>
-        </div>
+        </p>
 
         {/* Enlace al login para usuarios existentes */}
         <p className="text-center text-sm text-[#71717A]">

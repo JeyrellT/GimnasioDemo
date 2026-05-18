@@ -52,6 +52,17 @@ const PUBLIC_PREFIXES: string[] = [
   "/api/webhooks",
   "/api/auth",
   "/api/health",
+  "/api/cliente/aceptar-invitacion",
+];
+
+/**
+ * Paths that an authenticated user with mustChangePassword === true is still
+ * allowed to visit. Everything else gets redirected to /client/bienvenida.
+ */
+const MUST_CHANGE_PASSWORD_EXEMPT: string[] = [
+  "/client/bienvenida",
+  "/api/auth",
+  "/api/cliente/aceptar-invitacion",
 ];
 
 /**
@@ -142,7 +153,9 @@ export default auth(function middleware(req: NextRequest) {
   // auth() injects `req.auth` on the extended request object.
   // Cast is required because NextAuth augments NextRequest.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const session = (req as any).auth as { user?: { id?: string } } | null;
+  const session = (req as any).auth as {
+    user?: { id?: string; mustChangePassword?: boolean };
+  } | null;
 
   if (!session?.user?.id) {
     // Build the redirect URL with a callbackUrl so the sign-in page can
@@ -153,6 +166,22 @@ export default auth(function middleware(req: NextRequest) {
     const signInUrl = new URL("/ingresar", req.url);
     signInUrl.searchParams.set("callbackUrl", safePath);
     return NextResponse.redirect(signInUrl);
+  }
+
+  // ── mustChangePassword gate ────────────────────────────────────────────────
+  // If the session JWT carries mustChangePassword === true AND the user is not
+  // already on an exempt path, force them to the password-change page.
+  // NOTE: mustChangePassword is stamped into the JWT by the jwt() callback
+  // (see auth.ts). Until the token is refreshed after completeFirstLogin(),
+  // this flag stays true in the Edge-visible session.
+  if (session.user.mustChangePassword === true) {
+    const isExempt = MUST_CHANGE_PASSWORD_EXEMPT.some((prefix) =>
+      pathname.startsWith(prefix),
+    );
+    if (!isExempt) {
+      const bienvenidaUrl = new URL("/client/bienvenida", req.url);
+      return NextResponse.redirect(bienvenidaUrl);
+    }
   }
 
   // Session exists — allow the request through.

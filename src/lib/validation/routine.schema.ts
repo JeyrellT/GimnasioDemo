@@ -19,10 +19,7 @@ import {
 export const createRoutineSchema = z.object({
   name: z.string().trim().min(2, "Mínimo 2 caracteres").max(100, "Máximo 100 caracteres"),
   description: z.string().trim().max(1000).optional(),
-  goal: z.enum(
-    ["HYPERTROPHY", "STRENGTH", "ENDURANCE", "FAT_LOSS", "GENERAL"],
-    { required_error: "Seleccioná un objetivo para la rutina" },
-  ),
+  goal: z.string().min(1, "Seleccioná un objetivo para la rutina"),
   splitDays: z.coerce
     .number()
     .int()
@@ -157,7 +154,7 @@ const snapshotDaySchema = z.object({
 export const assignedRoutineSnapshotSchema = z.object({
   templateId: z.string().min(1),
   templateName: z.string().min(1),
-  goal: z.enum(["HYPERTROPHY", "STRENGTH", "ENDURANCE", "FAT_LOSS", "GENERAL"]),
+  goal: z.string().min(1),
   splitDays: z.number().int().min(1).max(6),
   durationWeeks: z.number().int().min(1),
   days: z.array(snapshotDaySchema),

@@ -15,6 +15,8 @@ export {
   getLpdpRequests,
   saveClientGoal,
   recordTrainerNoteUpdate,
+  quickAddClient,
+  completeFirstLogin,
 } from "@/server/actions/clients.actions";
 
 // updateTrainerProfile lives in auth.actions.ts (mutates User + TrainerProfile).

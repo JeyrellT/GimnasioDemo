@@ -91,7 +91,8 @@ const GOAL_CONFIG: Record<GoalKey, GoalConfig> = {
 };
 
 function getGoalConfig(goal: string): GoalConfig {
-  return GOAL_CONFIG[goal as GoalKey] ?? GOAL_CONFIG.GENERAL;
+  if (goal in GOAL_CONFIG) return GOAL_CONFIG[goal as GoalKey];
+  return { ...GOAL_CONFIG.GENERAL, label: goal };
 }
 
 // ---------------------------------------------------------------------------

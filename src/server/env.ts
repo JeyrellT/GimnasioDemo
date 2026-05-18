@@ -61,7 +61,14 @@ const envSchema = z.object({
     .min(32, "IMPERSONATION_SECRET must be at least 32 characters")
     .optional(),
 
-  // ── Email — Resend (optional until email flows are activated) ───────────────
+  // ── Email — Gmail SMTP via nodemailer ─────────────────────────────────────
+  // Active transport. Requires 2FA + App Password on the GMAIL_USER account.
+  // Generate at: https://myaccount.google.com/apppasswords
+  GMAIL_USER: z.string().email().optional(),
+  GMAIL_APP_PASSWORD: z.string().min(1).optional(),
+  GMAIL_FROM_NAME: z.string().default("Vizion"),
+
+  // ── Email — Resend (legacy, kept for backward compat) ─────────────────────
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().email().optional(),
 

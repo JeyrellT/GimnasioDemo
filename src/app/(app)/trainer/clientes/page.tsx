@@ -1,24 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Loader2, UserPlus, Users } from "lucide-react";
 import { listMyClients } from "@/app/actions/clients";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
+import { QuickAddClientDialog } from "@/components/forms/quick-add-client-dialog";
 import { formatDateCR } from "@/lib/utils";
 import type { ClientListItem } from "@/types/domain";
 
 export default function ClientesPage() {
   const [clients, setClients] = useState<ClientListItem[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
-  useEffect(() => {
+  const loadClients = useCallback(() => {
     listMyClients().then((result) => {
       setClients(result.ok ? result.value.clients : []);
       setLoading(false);
     });
   }, []);
+
+  useEffect(() => {
+    loadClients();
+  }, [loadClients]);
 
   if (loading) {
     return (
@@ -36,13 +42,24 @@ export default function ClientesPage() {
         title="Mis clientes"
         description={`${list.length} cliente${list.length !== 1 ? "s" : ""} activo${list.length !== 1 ? "s" : ""}`}
         actions={
-          <Link
-            href="/trainer/clientes/invitar"
-            className="flex items-center gap-2 rounded-lg bg-[#FF6A1A] px-4 py-2 text-sm font-semibold text-white min-h-[44px] hover:bg-[#E55A0E] transition-colors"
-          >
-            <UserPlus className="h-4 w-4" aria-hidden="true" />
-            Invitar
-          </Link>
+          <div className="flex items-center gap-2">
+            {/* Primary CTA */}
+            <button
+              type="button"
+              onClick={() => setDialogOpen(true)}
+              className="flex items-center gap-2 rounded-lg bg-[#FF6A1A] px-4 py-2 text-sm font-semibold text-white min-h-[44px] hover:bg-[#E55A0E] transition-colors"
+            >
+              <UserPlus className="h-4 w-4" aria-hidden="true" />
+              Agregar cliente
+            </button>
+            {/* Secondary: full onboarding wizard */}
+            <Link
+              href="/trainer/clientes/invitar"
+              className="flex items-center gap-1.5 rounded-lg border border-[#3F3F46] px-3 py-2 text-sm text-[#A1A1AA] min-h-[44px] hover:border-[#71717A] hover:text-[#FAFAFA] transition-colors"
+            >
+              Onboarding completo
+            </Link>
+          </div>
         }
       />
 
@@ -50,8 +67,8 @@ export default function ClientesPage() {
         <EmptyState
           icon={Users}
           title="No tenés clientes todavía"
-          description="Invitá al primero para empezar a trabajar."
-          action={{ label: "Invitar cliente", href: "/trainer/clientes/invitar" }}
+          description="Agregá al primero para empezar a trabajar."
+          action={{ label: "Agregar cliente", href: "/trainer/clientes/invitar" }}
         />
       ) : (
         <ul className="space-y-2">
@@ -120,6 +137,14 @@ export default function ClientesPage() {
           ))}
         </ul>
       )}
+      <QuickAddClientDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        onSuccess={() => {
+          setLoading(true);
+          loadClients();
+        }}
+      />
     </div>
   );
 }
