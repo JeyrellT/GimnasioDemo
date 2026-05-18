@@ -1,12 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Forja favicon">
-  <title>Forja</title>
-  <!-- Favicon 32x32 con background transparente -->
-  <!-- Isotipo simplificado: sin chispa para maxima legibilidad a 16x16 -->
-  <!-- La escala es 32/64=0.5 del isotipo base -->
-  <!-- Base trapezoidal inferior: y=23..30, rx=2 -->
-  <rect x="3.5" y="23" width="25" height="7" rx="2" fill="#1E2A38"/>
-  <!-- Cuerpo central -->
-  <polygon points="7,23 25,23 23.5,16 8.5,16" fill="#1E2A38"/>
-  <!-- Cara superior con chaflan: la parte visible y llamativa en naranja -->
-  <polygon points="2,10 25,10 30,16 2,16" fill="#FF6A1A"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Vizion favicon">
+  <title>Vizion</title>
+  <!-- Dumbbell icon 32x32 — brand orange -->
+  <!-- Left outer plate -->
+  <rect x="3" y="10" width="4" height="12" rx="1.5" fill="#FF6A1A"/>
+  <!-- Left inner plate -->
+  <rect x="8" y="12" width="3" height="8" rx="1" fill="#FF6A1A"/>
+  <!-- Bar -->
+  <rect x="11" y="14.5" width="10" height="3" rx="1" fill="#FF6A1A"/>
+  <!-- Right inner plate -->
+  <rect x="21" y="12" width="3" height="8" rx="1" fill="#FF6A1A"/>
+  <!-- Right outer plate -->
+  <rect x="25" y="10" width="4" height="12" rx="1.5" fill="#FF6A1A"/>
 </svg>

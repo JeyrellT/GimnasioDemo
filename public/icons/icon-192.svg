@@ -1,28 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-label="Forja app icon">
-  <title>Forja</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-label="Vizion app icon">
+  <title>Vizion</title>
   <defs>
-    <!-- Gradiente vertical de brand-primary a brand-accent (top de cara superior a bottom de base) -->
     <linearGradient id="brand-grad-192" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#FF6A1A"/>
       <stop offset="100%" stop-color="#F5C542"/>
     </linearGradient>
   </defs>
-  <!-- Background: neutral-950 con rx=42 (soft squircle, ~22% del lado) -->
-  <!-- Maskable: safe zone es el 80% central = 192*0.1=19.2px de margen cada lado -->
-  <!-- El isotipo debe caber dentro de x=19.2..172.8, y=19.2..172.8 -->
+  <!-- Background: dark squircle -->
   <rect x="0" y="0" width="192" height="192" rx="42" fill="#09090B"/>
-  <!-- Isotipo centrado en safe zone: escala para caber en ~120px centrado en 192 -->
-  <!-- (192-120)/2=36 de margen. El yunque base viewBox 64x64 se escala a 120x120 via scale(1.875) -->
-  <!-- translate para centrar: 36px de offset -->
-  <g transform="translate(36, 36) scale(1.875)">
-    <!-- Todos los elementos del yunque con gradiente de marca -->
-    <!-- Base trapezoidal inferior -->
-    <rect x="7" y="46" width="50" height="14" rx="4" fill="url(#brand-grad-192)"/>
-    <!-- Cuerpo central -->
-    <polygon points="14,46 50,46 47,32 17,32" fill="url(#brand-grad-192)"/>
-    <!-- Cara superior con chaflan: color top del gradiente (naranja) -->
-    <polygon points="4,20 50,20 60,32 4,32" fill="url(#brand-grad-192)"/>
-    <!-- Chispa brasa: highlight en blanco semitransparente sobre gradiente -->
-    <polygon points="52,20 60,20 60,28" fill="#FFFFFF" opacity="0.3"/>
+  <!-- Dumbbell centered in safe zone -->
+  <g transform="translate(96, 96)">
+    <!-- Left outer plate -->
+    <rect x="-62" y="-24" width="16" height="48" rx="5" fill="url(#brand-grad-192)"/>
+    <!-- Left inner plate -->
+    <rect x="-44" y="-16" width="12" height="32" rx="4" fill="url(#brand-grad-192)"/>
+    <!-- Bar -->
+    <rect x="-32" y="-5" width="64" height="10" rx="4" fill="url(#brand-grad-192)"/>
+    <!-- Right inner plate -->
+    <rect x="32" y="-16" width="12" height="32" rx="4" fill="url(#brand-grad-192)"/>
+    <!-- Right outer plate -->
+    <rect x="46" y="-24" width="16" height="48" rx="5" fill="url(#brand-grad-192)"/>
+    <!-- Highlight shimmer on left plate -->
+    <rect x="-62" y="-24" width="5" height="48" rx="3" fill="#FFFFFF" opacity="0.15"/>
   </g>
 </svg>
