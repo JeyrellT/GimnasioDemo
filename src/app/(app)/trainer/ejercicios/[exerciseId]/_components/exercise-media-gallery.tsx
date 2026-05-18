@@ -42,8 +42,41 @@ function getVimeoEmbedUrl(url: string): string | null {
   return `https://player.vimeo.com/video/${match[1]}`;
 }
 
+/**
+ * Extracts Google Drive file ID from various URL formats:
+ *   - drive.google.com/file/d/FILE_ID/view
+ *   - drive.google.com/open?id=FILE_ID
+ *   - drive.google.com/uc?id=FILE_ID
+ */
+function getGoogleDriveFileId(url: string): string | null {
+  const filePathMatch = /drive\.google\.com\/file\/d\/([A-Za-z0-9_-]+)/.exec(url);
+  if (filePathMatch) return filePathMatch[1];
+  const queryMatch = /drive\.google\.com\/(?:open|uc)\?.*?id=([A-Za-z0-9_-]+)/.exec(url);
+  if (queryMatch) return queryMatch[1];
+  return null;
+}
+
+/** Returns an embeddable preview URL for Google Drive videos. */
+function getGoogleDriveEmbedUrl(url: string): string | null {
+  const fileId = getGoogleDriveFileId(url);
+  if (!fileId) return null;
+  return `https://drive.google.com/file/d/${fileId}/preview`;
+}
+
+/** Returns a direct image URL for Google Drive images. */
+function getGoogleDriveImageUrl(url: string): string | null {
+  const fileId = getGoogleDriveFileId(url);
+  if (!fileId) return null;
+  return `https://lh3.googleusercontent.com/d/${fileId}=w1000`;
+}
+
+/** True if the URL points to Google Drive. */
+function isGoogleDriveUrl(url: string): boolean {
+  return /drive\.google\.com/.test(url);
+}
+
 function getEmbedUrl(url: string): string | null {
-  return getYouTubeEmbedUrl(url) ?? getVimeoEmbedUrl(url);
+  return getYouTubeEmbedUrl(url) ?? getVimeoEmbedUrl(url) ?? getGoogleDriveEmbedUrl(url);
 }
 
 // ---------------------------------------------------------------------------
@@ -70,12 +103,14 @@ const panelVariants = {
 
 function PhotoPanel({ src }: { src: string }) {
   const [errored, setErrored] = React.useState(false);
+  // Convert Google Drive share links to direct image URLs
+  const resolvedSrc = isGoogleDriveUrl(src) ? (getGoogleDriveImageUrl(src) ?? src) : src;
   if (errored) return <MediaPlaceholder label="Sin imagen disponible" />;
   return (
     <div className="aspect-video w-full overflow-hidden rounded-xl border border-[#3F3F46] bg-[#09090B]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={src}
+        src={resolvedSrc}
         alt="Foto del ejercicio"
         className="h-full w-full object-cover"
         loading="lazy"
@@ -87,12 +122,14 @@ function PhotoPanel({ src }: { src: string }) {
 
 function GifPanel({ src }: { src: string }) {
   const [errored, setErrored] = React.useState(false);
+  // Convert Google Drive share links to direct image URLs
+  const resolvedSrc = isGoogleDriveUrl(src) ? (getGoogleDriveImageUrl(src) ?? src) : src;
   if (errored) return <MediaPlaceholder label="GIF no disponible" />;
   return (
     <div className="aspect-video w-full overflow-hidden rounded-xl border border-[#3F3F46] bg-[#09090B]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={src}
+        src={resolvedSrc}
         alt="Animación del ejercicio"
         className="h-full w-full object-contain"
         loading="lazy"

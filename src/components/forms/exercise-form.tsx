@@ -337,12 +337,12 @@ export function ExerciseForm({ exercise }: ExerciseFormProps) {
                 <FormItem>
                   <FormLabel>
                     GIF URL{" "}
-                    <span className="text-[#71717A] font-normal">(opcional)</span>
+                    <span className="text-[#71717A] font-normal">(opcional — URL directa o Google Drive)</span>
                   </FormLabel>
                   <FormControl>
                     <Input
                       type="url"
-                      placeholder="https://..."
+                      placeholder="https://drive.google.com/file/d/..."
                       autoComplete="off"
                       {...field}
                     />
@@ -361,13 +361,13 @@ export function ExerciseForm({ exercise }: ExerciseFormProps) {
                   <FormLabel>
                     Video URL{" "}
                     <span className="text-[#71717A] font-normal">
-                      (opcional — YouTube / Vimeo)
+                      (opcional — YouTube / Vimeo / Google Drive)
                     </span>
                   </FormLabel>
                   <FormControl>
                     <Input
                       type="url"
-                      placeholder="https://youtube.com/..."
+                      placeholder="https://drive.google.com/file/d/... o YouTube"
                       autoComplete="off"
                       {...field}
                     />
