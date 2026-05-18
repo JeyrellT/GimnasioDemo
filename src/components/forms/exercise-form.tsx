@@ -206,7 +206,7 @@ export function ExerciseForm({ exercise }: ExerciseFormProps) {
           return;
         }
         toast.success("Ejercicio actualizado.");
-        router.push(`/trainer/ejercicios/${result.value.exerciseId}`);
+        router.push(`/trainer/ejercicios/${exercise.id}`);
       } else {
         // Create path
         const result = await createPrivateExercise(payload);

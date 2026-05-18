@@ -193,22 +193,22 @@ async function assertSessionOwnerInProgress(
  * - If neither is provided, creates a free workout (isFreeWorkout = true).
  * - Rejects if the client already has an IN_PROGRESS session.
  */
+export interface StartSessionInput {
+  assignedRoutineId?: string;
+  dayIndex?: number;
+  isFreeWorkout?: boolean;
+  bodyweightKg?: number;
+}
+
 export async function startSession(
-  formData: FormData,
+  input: StartSessionInput,
 ): Promise<ActionResult<StartSessionResult>> {
   return tryCatch(async () => {
     const user = await requireUser();
 
-    const assignedRoutineId =
-      formData.get("assignedRoutineId")?.toString() || null;
-    const dayIndexRaw = formData.get("dayIndex")?.toString();
-    const dayIndex =
-      dayIndexRaw !== undefined && dayIndexRaw !== "" && dayIndexRaw !== null
-        ? Number(dayIndexRaw)
-        : null;
-    const bodyweightKgRaw = formData.get("bodyweightKg")?.toString();
-    const bodyweightKg =
-      bodyweightKgRaw && bodyweightKgRaw !== "" ? Number(bodyweightKgRaw) : null;
+    const assignedRoutineId = input.assignedRoutineId || null;
+    const dayIndex = input.dayIndex !== undefined ? input.dayIndex : null;
+    const bodyweightKg = input.bodyweightKg !== undefined ? input.bodyweightKg : null;
 
     // Guard: no two IN_PROGRESS sessions for the same client
     const existing = await prisma.workoutSession.findFirst({
@@ -310,22 +310,31 @@ export async function startSession(
  *
  * Warmup sets are excluded from PR detection.
  */
+export interface RecordSetInput {
+  sessionId: string;
+  exerciseId: string;
+  setNumber: number;
+  weightKg?: number;
+  reps?: number;
+  rpe?: number;
+  restTakenSec?: number;
+  isWarmup?: boolean;
+  failed?: boolean;
+  notes?: string;
+}
+
 export async function recordSet(
-  formData: FormData,
+  input: RecordSetInput,
 ): Promise<ActionResult<RecordSetResult>> {
   return tryCatch(async () => {
     const user = await requireUser();
 
-    const sessionId = formData.get("sessionId")?.toString();
-    const exerciseId = formData.get("exerciseId")?.toString();
-    const setNumber = Number(formData.get("setNumber"));
-    const weightKgRaw = formData.get("weightKg")?.toString();
-    const repsRaw = formData.get("reps")?.toString();
-    const rpeRaw = formData.get("rpe")?.toString();
-    const restTakenSecRaw = formData.get("restTakenSec")?.toString();
-    const isWarmup = formData.get("isWarmup") === "true";
-    const failed = formData.get("failed") === "true";
-    const notes = formData.get("notes")?.toString() || null;
+    const sessionId = input.sessionId;
+    const exerciseId = input.exerciseId;
+    const setNumber = input.setNumber;
+    const isWarmup = input.isWarmup ?? false;
+    const failed = input.failed ?? false;
+    const notes = input.notes || null;
 
     if (!sessionId || !exerciseId) {
       throw new ValidationError(
@@ -334,12 +343,10 @@ export async function recordSet(
       );
     }
 
-    const weightKg =
-      weightKgRaw && weightKgRaw !== "" ? Number(weightKgRaw) : null;
-    const reps = repsRaw && repsRaw !== "" ? Number(repsRaw) : null;
-    const rpe = rpeRaw && rpeRaw !== "" ? Number(rpeRaw) : null;
-    const restTakenSec =
-      restTakenSecRaw && restTakenSecRaw !== "" ? Number(restTakenSecRaw) : null;
+    const weightKg = input.weightKg !== undefined ? input.weightKg : null;
+    const reps = input.reps !== undefined ? input.reps : null;
+    const rpe = input.rpe !== undefined ? input.rpe : null;
+    const restTakenSec = input.restTakenSec !== undefined ? input.restTakenSec : null;
 
     // Validate RPE range
     if (rpe !== null && (rpe < RPE_MIN || rpe > RPE_MAX)) {
@@ -539,25 +546,29 @@ export async function deleteSet(
  * Optionally records subjectiveFatigue, notes, bodyweightKg.
  * Creates a notification for the linked trainer (if applicable).
  */
+export interface CompleteSessionInput {
+  sessionId: string;
+  totalDurationSec?: number;
+  subjectiveFatigue?: number;
+  notes?: string;
+  bodyweightKg?: number;
+}
+
 export async function completeSession(
-  sessionId: string,
-  formData?: FormData,
+  input: CompleteSessionInput,
 ): Promise<ActionResult<{ completed: true; totalDurationSec: number }>> {
   return tryCatch(async () => {
     const user = await requireUser();
 
+    const sessionId = input.sessionId;
     const session = await assertSessionOwnerInProgress(sessionId, user.id);
 
     const now = new Date();
-    const totalDurationSec = Math.round(
-      (now.getTime() - session.startedAt.getTime()) / 1000,
-    );
+    const totalDurationSec = input.totalDurationSec !== undefined
+      ? input.totalDurationSec
+      : Math.round((now.getTime() - session.startedAt.getTime()) / 1000);
 
-    const subjectiveFatigueRaw = formData?.get("subjectiveFatigue")?.toString();
-    const subjectiveFatigue =
-      subjectiveFatigueRaw && subjectiveFatigueRaw !== ""
-        ? Number(subjectiveFatigueRaw)
-        : null;
+    const subjectiveFatigue = input.subjectiveFatigue !== undefined ? input.subjectiveFatigue : null;
 
     if (
       subjectiveFatigue !== null &&
@@ -570,10 +581,8 @@ export async function completeSession(
       );
     }
 
-    const notes = formData?.get("notes")?.toString() || null;
-    const bodyweightKgRaw = formData?.get("bodyweightKg")?.toString();
-    const bodyweightKg =
-      bodyweightKgRaw && bodyweightKgRaw !== "" ? Number(bodyweightKgRaw) : null;
+    const notes = input.notes || null;
+    const bodyweightKg = input.bodyweightKg !== undefined ? input.bodyweightKg : null;
 
     // Load full session to get assignedRoutine link for trainer notification
     const fullSession = await prisma.workoutSession.findUnique({

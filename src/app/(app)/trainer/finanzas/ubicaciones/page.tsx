@@ -27,7 +27,7 @@ export default function UbicacionesPage() {
 
   React.useEffect(() => {
     listLocations().then((result) => {
-      if (result.ok) setLocations(result.value);
+      if (result.ok) setLocations(result.value.locations as unknown as TrainerLocationDTO[]);
       setLoading(false);
     });
   }, []);

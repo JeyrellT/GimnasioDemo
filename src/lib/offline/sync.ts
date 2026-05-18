@@ -217,7 +217,7 @@ async function syncOneMetric(metric: LocalMetric): Promise<boolean> {
 
   try {
     const result = await recordBodyMetric({
-      recordedAt: metric.recordedAt,
+      recordedAt: metric.recordedAt instanceof Date ? metric.recordedAt.toISOString() : String(metric.recordedAt),
       weightKg: metric.weightKg ?? undefined,
       bodyFatPct: metric.bodyFatPct ?? undefined,
       muscleMassKg: metric.muscleMassKg ?? undefined,

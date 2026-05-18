@@ -312,12 +312,25 @@ export async function createRoutine(
  * Cannot change splitDays (would invalidate existing day indices) without a
  * proper migration — that operation is not exposed here.
  */
+export interface UpdateRoutineInput {
+  routineId: string;
+  name?: string;
+  description?: string;
+  goal?: string;
+  durationWeeks?: number;
+  splitDays?: number;
+}
+
 export async function updateRoutine(
-  id: string,
-  formData: FormData,
+  idOrInput: string | UpdateRoutineInput,
+  formData?: FormData,
 ): Promise<ActionResult<{ updated: true }>> {
   return tryCatch(async () => {
     const user = await requireTrainer();
+
+    const id = typeof idOrInput === "object" ? idOrInput.routineId : idOrInput;
+    const typed = typeof idOrInput === "object" ? idOrInput : null;
+    const fd = formData ?? null;
 
     const routine = await prisma.routineTemplate.findUnique({
       where: { id, deletedAt: null },
@@ -333,16 +346,16 @@ export async function updateRoutine(
 
     const patch: Prisma.RoutineTemplateUpdateInput = {};
 
-    const name = formData.get("name")?.toString().trim();
+    const name = typed ? typed.name?.trim() : fd?.get("name")?.toString().trim();
     if (name) patch.name = name;
 
-    const description = formData.get("description")?.toString().trim();
+    const description = typed ? typed.description?.trim() : fd?.get("description")?.toString().trim();
     if (description !== undefined) patch.description = description || null;
 
-    const goalRaw = formData.get("goal")?.toString();
+    const goalRaw = typed ? typed.goal : fd?.get("goal")?.toString();
     if (goalRaw) patch.goal = parseGoal(goalRaw);
 
-    const durationWeeks = Number(formData.get("durationWeeks"));
+    const durationWeeks = typed ? (typed.durationWeeks ?? 0) : Number(fd?.get("durationWeeks"));
     if (durationWeeks > 0) patch.durationWeeks = durationWeeks;
 
     await prisma.routineTemplate.update({ where: { id }, data: patch });
@@ -427,10 +440,18 @@ export async function archiveRoutine(
  * Add a new RoutineDay to a RoutineTemplate.
  * dayIndex is auto-incremented from the current max.
  */
+export interface AddDayToRoutineInput {
+  routineId: string;
+  name: string;
+  dayIndex?: number;
+}
+
 export async function addDayToRoutine(
-  routineId: string,
-  name: string,
+  routineIdOrInput: string | AddDayToRoutineInput,
+  nameArg?: string,
 ): Promise<ActionResult<{ dayId: string }>> {
+  const routineId = typeof routineIdOrInput === "object" ? routineIdOrInput.routineId : routineIdOrInput;
+  const name = typeof routineIdOrInput === "object" ? routineIdOrInput.name : (nameArg ?? "");
   return tryCatch(async () => {
     const user = await requireTrainer();
 
@@ -543,6 +564,41 @@ export async function removeDay(
 // Exercise-in-day management
 // =============================================================================
 
+// ── Typed input interfaces for exercise-in-day mutations ──────────────────────
+
+export interface AddExerciseToDayInput {
+  routineDayId: string;
+  exerciseId: string;
+  targetSets?: number;
+  targetRepsMin?: number;
+  targetRepsMax?: number;
+  targetRpe?: number | null;
+  restSeconds?: number;
+  tempo?: string | null;
+  supersetGroup?: number | null;
+  notes?: string | null;
+}
+
+export interface UpdateExerciseInDayInput {
+  routineExerciseId: string;
+  targetSets?: number;
+  targetRepsMin?: number;
+  targetRepsMax?: number;
+  targetRpe?: number | null;
+  restSeconds?: number;
+  tempo?: string | null;
+  supersetGroup?: number | null;
+  notes?: string | null;
+}
+
+export interface AssignRoutineInput {
+  clientId: string;
+  routineTemplateId: string;
+  startsOn: string;
+  endsOn?: string;
+  trainerNotes?: string;
+}
+
 /**
  * Add an exercise to a RoutineDay.
  *
@@ -550,21 +606,24 @@ export async function removeDay(
  * `order` is auto-incremented from the current maximum.
  */
 export async function addExerciseToDay(
-  formData: FormData,
+  input: AddExerciseToDayInput | FormData,
 ): Promise<ActionResult<{ routineExerciseId: string }>> {
   return tryCatch(async () => {
     const user = await requireTrainer();
 
-    const routineDayId = formData.get("routineDayId")?.toString();
-    const exerciseId = formData.get("exerciseId")?.toString();
-    const targetSets = Number(formData.get("targetSets"));
-    const targetRepsMin = Number(formData.get("targetRepsMin"));
-    const targetRepsMax = Number(formData.get("targetRepsMax"));
-    const targetRpeRaw = formData.get("targetRpe")?.toString();
-    const restSeconds = Number(formData.get("restSeconds")) || 90;
-    const tempo = formData.get("tempo")?.toString() || null;
-    const supersetGroupRaw = formData.get("supersetGroup")?.toString();
-    const notes = formData.get("notes")?.toString() || null;
+    const fd = input instanceof FormData ? input : null;
+    const typed = fd === null ? (input as AddExerciseToDayInput) : null;
+
+    const routineDayId = typed ? typed.routineDayId : fd!.get("routineDayId")?.toString();
+    const exerciseId = typed ? typed.exerciseId : fd!.get("exerciseId")?.toString();
+    const targetSets = typed ? (typed.targetSets ?? 0) : Number(fd!.get("targetSets"));
+    const targetRepsMin = typed ? (typed.targetRepsMin ?? 0) : Number(fd!.get("targetRepsMin"));
+    const targetRepsMax = typed ? (typed.targetRepsMax ?? 0) : Number(fd!.get("targetRepsMax"));
+    const targetRpeRaw = typed ? (typed.targetRpe !== undefined ? String(typed.targetRpe ?? "") : undefined) : fd!.get("targetRpe")?.toString();
+    const restSeconds = typed ? (typed.restSeconds ?? 90) : (Number(fd!.get("restSeconds")) || 90);
+    const tempo = typed ? (typed.tempo ?? null) : (fd!.get("tempo")?.toString() || null);
+    const supersetGroupRaw = typed ? (typed.supersetGroup !== undefined ? String(typed.supersetGroup ?? "") : undefined) : fd!.get("supersetGroup")?.toString();
+    const notes = typed ? (typed.notes ?? null) : (fd!.get("notes")?.toString() || null);
 
     if (!routineDayId || !exerciseId) {
       throw new ValidationError(
@@ -636,11 +695,16 @@ export async function addExerciseToDay(
 
 /** Update prescription parameters for a RoutineExercise. */
 export async function updateExerciseInDay(
-  id: string,
-  formData: FormData,
+  idOrInput: string | UpdateExerciseInDayInput,
+  formData?: FormData,
 ): Promise<ActionResult<{ updated: true }>> {
   return tryCatch(async () => {
     const user = await requireTrainer();
+
+    // Normalize: if first arg is an object, extract routineExerciseId
+    const id = typeof idOrInput === "object" ? idOrInput.routineExerciseId : idOrInput;
+    const typed = typeof idOrInput === "object" ? idOrInput : null;
+    const fd = formData ?? null;
 
     const re = await prisma.routineExercise.findUnique({
       where: { id, deletedAt: null },
@@ -663,30 +727,39 @@ export async function updateExerciseInDay(
 
     const patch: Prisma.RoutineExerciseUpdateInput = {};
 
-    const targetSets = formData.get("targetSets")?.toString();
-    if (targetSets) patch.targetSets = Number(targetSets);
+    const targetSetsRaw = typed ? typed.targetSets : (fd?.get("targetSets")?.toString() ? Number(fd.get("targetSets")) : undefined);
+    if (targetSetsRaw !== undefined && targetSetsRaw !== null) patch.targetSets = Number(targetSetsRaw);
 
-    const targetRepsMin = formData.get("targetRepsMin")?.toString();
-    if (targetRepsMin) patch.targetRepsMin = Number(targetRepsMin);
+    const targetRepsMinRaw = typed ? typed.targetRepsMin : (fd?.get("targetRepsMin")?.toString() ? Number(fd.get("targetRepsMin")) : undefined);
+    if (targetRepsMinRaw !== undefined && targetRepsMinRaw !== null) patch.targetRepsMin = Number(targetRepsMinRaw);
 
-    const targetRepsMax = formData.get("targetRepsMax")?.toString();
-    if (targetRepsMax) patch.targetRepsMax = Number(targetRepsMax);
+    const targetRepsMaxRaw = typed ? typed.targetRepsMax : (fd?.get("targetRepsMax")?.toString() ? Number(fd.get("targetRepsMax")) : undefined);
+    if (targetRepsMaxRaw !== undefined && targetRepsMaxRaw !== null) patch.targetRepsMax = Number(targetRepsMaxRaw);
 
-    const targetRpe = formData.get("targetRpe")?.toString();
-    if (targetRpe !== undefined) patch.targetRpe = targetRpe ? Number(targetRpe) : null;
+    const targetRpeTyped = typed ? typed.targetRpe : undefined;
+    const targetRpeFd = !typed && fd ? fd.get("targetRpe")?.toString() : undefined;
+    if (typed) {
+      patch.targetRpe = targetRpeTyped !== undefined ? (targetRpeTyped !== null ? Number(targetRpeTyped) : null) : undefined;
+    } else if (targetRpeFd !== undefined) {
+      patch.targetRpe = targetRpeFd ? Number(targetRpeFd) : null;
+    }
 
-    const restSeconds = formData.get("restSeconds")?.toString();
-    if (restSeconds) patch.restSeconds = Number(restSeconds);
+    const restSecondsRaw = typed ? typed.restSeconds : (fd?.get("restSeconds")?.toString() ? Number(fd.get("restSeconds")) : undefined);
+    if (restSecondsRaw !== undefined && restSecondsRaw !== null) patch.restSeconds = Number(restSecondsRaw);
 
-    const tempo = formData.get("tempo")?.toString();
-    if (tempo !== undefined) patch.tempo = tempo || null;
+    const tempoVal = typed ? typed.tempo : fd?.get("tempo")?.toString();
+    if (tempoVal !== undefined) patch.tempo = tempoVal || null;
 
-    const supersetGroup = formData.get("supersetGroup")?.toString();
-    if (supersetGroup !== undefined)
-      patch.supersetGroup = supersetGroup ? Number(supersetGroup) : null;
+    const supersetGroupTyped = typed ? typed.supersetGroup : undefined;
+    const supersetGroupFd = !typed && fd ? fd.get("supersetGroup")?.toString() : undefined;
+    if (typed) {
+      patch.supersetGroup = supersetGroupTyped !== undefined ? (supersetGroupTyped !== null ? Number(supersetGroupTyped) : null) : undefined;
+    } else if (supersetGroupFd !== undefined) {
+      patch.supersetGroup = supersetGroupFd ? Number(supersetGroupFd) : null;
+    }
 
-    const notes = formData.get("notes")?.toString();
-    if (notes !== undefined) patch.notes = notes || null;
+    const notesVal = typed ? typed.notes : fd?.get("notes")?.toString();
+    if (notesVal !== undefined) patch.notes = notesVal || null;
 
     await prisma.routineExercise.update({ where: { id }, data: patch });
 
@@ -731,12 +804,14 @@ export async function removeExerciseFromDay(
 
 /**
  * Reorder exercises within a RoutineDay by updating their `order` field.
- * `orderedIds` must contain every exercise id in the day.
+ * Accepts either (dayId, orderedIds) or ({ routineDayId, orderedIds }).
  */
 export async function reorderExercisesInDay(
-  dayId: string,
-  orderedIds: string[],
+  dayIdOrInput: string | { routineDayId: string; orderedIds: string[] },
+  orderedIdsArg?: string[],
 ): Promise<ActionResult<{ updated: true }>> {
+  const dayId = typeof dayIdOrInput === "object" ? dayIdOrInput.routineDayId : dayIdOrInput;
+  const orderedIds = typeof dayIdOrInput === "object" ? dayIdOrInput.orderedIds : (orderedIdsArg ?? []);
   return tryCatch(async () => {
     const user = await requireTrainer();
 
@@ -797,15 +872,18 @@ export async function reorderExercisesInDay(
  * 5. Create in-app Notification for the client.
  */
 export async function assignRoutine(
-  formData: FormData,
+  input: AssignRoutineInput | FormData,
 ): Promise<ActionResult<AssignRoutineResult>> {
   return tryCatch(async () => {
     const user = await requireTrainer();
 
-    const clientId = formData.get("clientId")?.toString();
-    const routineTemplateId = formData.get("routineTemplateId")?.toString();
-    const startsOnRaw = formData.get("startsOn")?.toString();
-    const trainerNotes = formData.get("trainerNotes")?.toString() || null;
+    const fd = input instanceof FormData ? input : null;
+    const typed = fd === null ? (input as AssignRoutineInput) : null;
+
+    const clientId = typed ? typed.clientId : fd!.get("clientId")?.toString();
+    const routineTemplateId = typed ? typed.routineTemplateId : fd!.get("routineTemplateId")?.toString();
+    const startsOnRaw = typed ? typed.startsOn : fd!.get("startsOn")?.toString();
+    const trainerNotes = typed ? (typed.trainerNotes || null) : (fd!.get("trainerNotes")?.toString() || null);
 
     if (!clientId || !routineTemplateId || !startsOnRaw) {
       throw new ValidationError(
@@ -977,10 +1055,11 @@ export async function duplicateRoutine(
       throw new ForbiddenError("ROUTINE_NOT_OWNED", "Esta rutina no te pertenece.");
     }
 
+    const copyName = `${source.name} (copia)`;
     const copy = await prisma.routineTemplate.create({
       data: {
         trainerId: user.id,
-        name: `${source.name} (copia)`,
+        name: copyName,
         goal: source.goal,
         splitDays: source.splitDays,
         durationWeeks: source.durationWeeks,
@@ -1016,7 +1095,7 @@ export async function duplicateRoutine(
       newId: copy.id,
     });
 
-    return { routineId: copy.id };
+    return { routineId: copy.id, name: copyName };
   });
 }
 
@@ -1025,21 +1104,24 @@ export async function duplicateRoutine(
 // =============================================================================
 
 export async function addRoutineComment(
-  routineId: string,
+  assignedRoutineId: string,
   body: string,
 ): Promise<ActionResult<{ commentId: string }>> {
   return tryCatch(async () => {
     const user = await requireTrainer();
 
-    const routine = await prisma.routineTemplate.findUnique({
-      where: { id: routineId, deletedAt: null },
-      select: { id: true, trainerId: true },
+    // Verify the trainer owns the client who has this assignment
+    const assignment = await prisma.assignedRoutine.findUnique({
+      where: { id: assignedRoutineId, deletedAt: null },
+      include: {
+        routineTemplate: { select: { trainerId: true } },
+      },
     });
 
-    if (!routine) {
-      throw new NotFoundError("ROUTINE_NOT_FOUND", "Rutina no encontrada.");
+    if (!assignment) {
+      throw new NotFoundError("ASSIGNED_ROUTINE_NOT_FOUND", "Rutina asignada no encontrada.");
     }
-    if (routine.trainerId !== user.id) {
+    if (assignment.routineTemplate.trainerId !== user.id) {
       throw new ForbiddenError("ROUTINE_NOT_OWNED", "Esta rutina no te pertenece.");
     }
 
@@ -1053,7 +1135,7 @@ export async function addRoutineComment(
 
     const comment = await prisma.routineComment.create({
       data: {
-        routineTemplateId: routineId,
+        assignedRoutineId,
         authorUserId: user.id,
         body: trimmed,
       },
@@ -1088,10 +1170,11 @@ export async function getClientRoutines(
             id: true,
             name: true,
             goal: true,
-            days: {
-              where: { deletedAt: null },
-              select: { id: true },
-            },
+            splitDays: true,
+            durationWeeks: true,
+            isArchived: true,
+            createdAt: true,
+            updatedAt: true,
           },
         },
       },
@@ -1101,8 +1184,11 @@ export async function getClientRoutines(
       id: ar.routineTemplate.id,
       name: ar.routineTemplate.name,
       goal: ar.routineTemplate.goal,
-      daysPerWeek: ar.routineTemplate.days.length,
-      assignedAt: ar.assignedAt,
+      splitDays: ar.routineTemplate.splitDays,
+      durationWeeks: ar.routineTemplate.durationWeeks,
+      isArchived: ar.routineTemplate.isArchived,
+      createdAt: ar.routineTemplate.createdAt,
+      updatedAt: ar.routineTemplate.updatedAt,
     }));
 
     return { routines };

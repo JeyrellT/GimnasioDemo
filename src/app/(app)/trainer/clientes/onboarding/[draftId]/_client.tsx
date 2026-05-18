@@ -10,7 +10,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { getOnboardingDraft } from "@/app/actions/onboarding";
 import { WizardShell } from "../_components/wizard-shell";
-import type { OnboardingDraftDTO } from "@/types/onboarding";
+import type { OnboardingDraftDTO, OnboardingPayload } from "@/types/onboarding";
 
 // ── Inner content (rendered once draft is loaded) ─────────────────────────────
 
@@ -30,7 +30,20 @@ export function OnboardingClientPage({ draftId }: ContentProps) {
         router.replace("/trainer/clientes");
         return;
       }
-      setDraft(result.value);
+      const detail = result.value;
+      // Map OnboardingDraftDetail (server shape) → OnboardingDraftDTO (UI shape)
+      const dto: OnboardingDraftDTO = {
+        id: detail.id,
+        mode: detail.mode,
+        currentStep: detail.currentStep,
+        data: (detail.dataJson ?? {}) as Partial<OnboardingPayload>,
+        aiConsentGranted: detail.aiConsentGranted,
+        cedulaExtractionCount: detail.cedulaExtractionCount,
+        workoutPhotoExtractionCount: detail.workoutPhotoExtractionCount,
+        expiresAt: detail.expiresAt instanceof Date ? detail.expiresAt.toISOString() : String(detail.expiresAt),
+        completedAt: detail.completedAt instanceof Date ? detail.completedAt.toISOString() : (detail.completedAt ?? null),
+      };
+      setDraft(dto);
       setLoading(false);
     });
   }, [draftId, router]);

@@ -387,10 +387,12 @@ export async function createInvitation(
 /**
  * Validate a raw invitation token without consuming it.
  * Used by the invitation landing page to pre-fill the form.
+ * Accepts either a raw string token or an object `{ token }`.
  */
 export async function validateInvitationToken(
-  token: string,
+  tokenOrInput: string | { token: string },
 ): Promise<ActionResult<{ valid: boolean; trainerName: string; email: string }>> {
+  const token = typeof tokenOrInput === "object" ? tokenOrInput.token : tokenOrInput;
   return tryCatch(async () => {
     if (!token?.trim()) {
       throw new ValidationError("TOKEN_REQUIRED", "Token de invitación requerido");
@@ -672,6 +674,15 @@ export async function updateClientPrice(
 
 /** Update the trainer's private notes for a client (never shown to the client). */
 export async function updateTrainerClientNotes(
+  clientIdOrInput: string | { clientId: string; notes: string },
+  notes?: string,
+): Promise<ActionResult<{ updated: true }>> {
+  const clientId = typeof clientIdOrInput === "object" ? clientIdOrInput.clientId : clientIdOrInput;
+  const resolvedNotes = typeof clientIdOrInput === "object" ? clientIdOrInput.notes : (notes ?? "");
+  return _updateTrainerClientNotesImpl(clientId, resolvedNotes);
+}
+
+async function _updateTrainerClientNotesImpl(
   clientId: string,
   notes: string,
 ): Promise<ActionResult<{ updated: true }>> {
@@ -890,17 +901,21 @@ export async function endRelationship(
 
 /**
  * Set or update the fitness goal for a client.
- * The trainer calls this on behalf of their client (trainer-facing action).
+ * - Trainer path: saveClientGoal(clientId, goal, notes)
+ * - Client self-service path: saveClientGoal({ goal, goalNotes? })
  */
 export async function saveClientGoal(
-  clientId: string,
-  goal: string,
+  clientIdOrInput: string | { goal: string; goalNotes?: string; clientId?: string },
+  goal?: string,
   notes?: string,
 ): Promise<ActionResult<{ updated: true }>> {
   return tryCatch(async () => {
-    const trainer = await requireTrainer();
+    // Determine whether this is a trainer call or client self-service call
+    const isObj = typeof clientIdOrInput === "object";
+    const resolvedGoal = isObj ? clientIdOrInput.goal : (goal ?? "");
+    const resolvedNotes = isObj ? clientIdOrInput.goalNotes : notes;
 
-    const parsed = setGoalSchema.safeParse({ goal, goalNotes: notes });
+    const parsed = setGoalSchema.safeParse({ goal: resolvedGoal, goalNotes: resolvedNotes });
     if (!parsed.success) {
       throw new ValidationError(
         "GOAL_INPUT",
@@ -909,7 +924,20 @@ export async function saveClientGoal(
       );
     }
 
-    await assertOwnsClient(trainer.id, clientId);
+    let clientId: string;
+    if (isObj && !clientIdOrInput.clientId) {
+      // Client self-service: user updates their own goal
+      const user = await requireUser();
+      clientId = user.id;
+    } else {
+      const resolvedClientId = isObj ? clientIdOrInput.clientId! : clientIdOrInput;
+      const trainer = await requireTrainer();
+      await assertOwnsClient(trainer.id, resolvedClientId);
+      clientId = resolvedClientId;
+    }
+
+    // For compatibility: if called as trainer, re-use requireTrainer actor for audit
+    const actor = await requireUser();
 
     // Look up the ClientProfile for the given clientId (User.id)
     const clientProfile = await prisma.clientProfile.findUnique({
@@ -937,7 +965,7 @@ export async function saveClientGoal(
 
       await tx.auditLog.create({
         data: {
-          actorUserId: trainer.id,
+          actorUserId: actor.id,
           action: "UPDATE",
           entityType: "ClientProfile",
           entityId: clientProfile.id,
@@ -948,7 +976,7 @@ export async function saveClientGoal(
       });
     });
 
-    logInfo("client.goal_updated", { trainerId: trainer.id, clientId });
+    logInfo("client.goal_updated", { actorId: actor.id, clientId });
 
     return { updated: true };
   });

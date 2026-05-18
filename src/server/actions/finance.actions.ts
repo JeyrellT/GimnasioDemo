@@ -99,6 +99,17 @@ export interface FinanceSummary {
 // Internal helpers
 // =============================================================================
 
+/**
+ * Extract a positive decimal number from a FormData field.
+ * Returns the number, or null if the field is absent/invalid.
+ */
+function parsePositiveDecimal(formData: FormData, field: string): number | null {
+  const raw = formData.get(field)?.toString().trim();
+  if (!raw) return null;
+  const n = parseFloat(raw);
+  return isNaN(n) || n <= 0 ? null : n;
+}
+
 async function writeAuditLog(
   actorUserId: string,
   entityType: string,
@@ -120,26 +131,80 @@ async function writeAuditLog(
   }
 }
 
-function parsePositiveDecimal(formData: FormData, key: string): number | null {
-  const raw = formData.get(key);
-  if (typeof raw !== "string" || raw.trim() === "") return null;
-  const n = parseFloat(raw);
-  return isNaN(n) || n < 0 ? null : n;
+// =============================================================================
+// Typed input interfaces
+// =============================================================================
+
+export interface CreateLocationInput {
+  name: string;
+  kind: LocationKind;
+  address?: string;
+  costModel?: LocationCostModel;
+  costPerVisitCRC?: number | null;
+  costPerKmCRC?: number | null;
+  defaultKm?: number | null;
+  monthlyRentCRC?: number | null;
+  notes?: string | null;
 }
 
-function parseRequiredPositiveDecimal(
-  formData: FormData,
-  key: string,
-  label: string,
-): number {
-  const n = parsePositiveDecimal(formData, key);
-  if (n === null || n <= 0) {
-    throw new ValidationError(
-      "INVALID_AMOUNT",
-      `${label} debe ser un número positivo.`,
-    );
-  }
-  return n;
+export interface UpdateLocationInput {
+  id: string;
+  name?: string;
+  kind?: LocationKind;
+  address?: string | null;
+  costModel?: LocationCostModel;
+  costPerVisitCRC?: number | null;
+  costPerKmCRC?: number | null;
+  defaultKm?: number | null;
+  monthlyRentCRC?: number | null;
+  notes?: string | null;
+}
+
+export interface RecordVisitInput {
+  locationId: string;
+  visitedAt?: string;
+  kmTraveled?: number;
+  notes?: string;
+}
+
+export interface CreateExpenseInput {
+  occurredAt?: string;
+  amountCRC: number;
+  category: ExpenseCategory;
+  locationId?: string;
+  description?: string;
+}
+
+export interface CreateOneOffSaleInput {
+  occurredAt?: string;
+  amountCRC: number;
+  category: IncomeCategory;
+  paidStatus?: OneOffPaidStatus;
+  clientUserId?: string;
+  description?: string;
+  paymentMethod?: string;
+}
+
+export interface ListExpensesInput {
+  category?: string;
+  from?: string;
+  to?: string;
+  fromDate?: Date;
+  toDate?: Date;
+}
+
+export interface ListOneOffSalesInput {
+  category?: string;
+  from?: string;
+  to?: string;
+  fromDate?: Date;
+  toDate?: Date;
+}
+
+export interface GetFinanceSummaryInput {
+  fromDate?: Date;
+  toDate?: Date;
+  month?: string;
 }
 
 // =============================================================================
@@ -177,20 +242,18 @@ export async function listLocations(): Promise<
 }
 
 export async function createLocation(
-  formData: FormData,
+  input: CreateLocationInput,
 ): Promise<ActionResult<{ locationId: string }>> {
   return tryCatch(async () => {
     const trainer = await requireTrainer();
 
-    const name = formData.get("name");
-    if (typeof name !== "string" || !name.trim()) {
+    if (!input.name?.trim()) {
       throw new ValidationError(
         "MISSING_NAME",
         "El nombre del lugar es requerido.",
       );
     }
 
-    const rawKind = formData.get("kind") as LocationKind;
     const validKinds: LocationKind[] = [
       "HOME",
       "GYM",
@@ -199,38 +262,30 @@ export async function createLocation(
       "OUTDOOR",
       "OTHER",
     ];
-    if (!validKinds.includes(rawKind)) {
+    if (!validKinds.includes(input.kind)) {
       throw new ValidationError(
         "INVALID_KIND",
         "Tipo de lugar inválido.",
       );
     }
 
-    const rawCostModel = formData.get("costModel") as LocationCostModel;
     const validModels: LocationCostModel[] = ["FLAT", "PER_KM", "HYBRID"];
-    const costModel: LocationCostModel = validModels.includes(rawCostModel)
-      ? rawCostModel
+    const costModel: LocationCostModel = input.costModel && validModels.includes(input.costModel)
+      ? input.costModel
       : "FLAT";
-
-    const address = formData.get("address");
-    const notes = formData.get("notes");
 
     const location = await prisma.trainerLocation.create({
       data: {
         trainerUserId: trainer.id,
-        name: name.trim(),
-        address:
-          typeof address === "string" && address.trim()
-            ? address.trim()
-            : null,
-        kind: rawKind,
+        name: input.name.trim(),
+        address: input.address?.trim() || null,
+        kind: input.kind,
         costModel,
-        costPerVisitCRC: parsePositiveDecimal(formData, "costPerVisitCRC"),
-        costPerKmCRC: parsePositiveDecimal(formData, "costPerKmCRC"),
-        defaultKm: parsePositiveDecimal(formData, "defaultKm"),
-        monthlyRentCRC: parsePositiveDecimal(formData, "monthlyRentCRC"),
-        notes:
-          typeof notes === "string" && notes.trim() ? notes.trim() : null,
+        costPerVisitCRC: input.costPerVisitCRC ?? null,
+        costPerKmCRC: input.costPerKmCRC ?? null,
+        defaultKm: input.defaultKm ?? null,
+        monthlyRentCRC: input.monthlyRentCRC ?? null,
+        notes: input.notes?.trim() || null,
       },
       select: { id: true },
     });
@@ -249,11 +304,11 @@ export async function createLocation(
 }
 
 export async function updateLocation(
-  id: string,
-  formData: FormData,
+  input: UpdateLocationInput,
 ): Promise<ActionResult<{ updated: true }>> {
   return tryCatch(async () => {
     const trainer = await requireTrainer();
+    const id = input.id;
 
     const location = await prisma.trainerLocation.findUnique({
       where: { id },
@@ -271,34 +326,19 @@ export async function updateLocation(
       );
     }
 
-    const name = formData.get("name");
-    const rawCostModel = formData.get("costModel") as LocationCostModel;
     const validModels: LocationCostModel[] = ["FLAT", "PER_KM", "HYBRID"];
-    const address = formData.get("address");
-    const notes = formData.get("notes");
 
     await prisma.trainerLocation.update({
       where: { id },
       data: {
-        ...(typeof name === "string" && name.trim()
-          ? { name: name.trim() }
-          : {}),
-        ...(typeof address === "string"
-          ? { address: address.trim() || null }
-          : {}),
-        ...(validModels.includes(rawCostModel)
-          ? { costModel: rawCostModel }
-          : {}),
-        costPerVisitCRC:
-          parsePositiveDecimal(formData, "costPerVisitCRC") ?? undefined,
-        costPerKmCRC:
-          parsePositiveDecimal(formData, "costPerKmCRC") ?? undefined,
-        defaultKm: parsePositiveDecimal(formData, "defaultKm") ?? undefined,
-        monthlyRentCRC:
-          parsePositiveDecimal(formData, "monthlyRentCRC") ?? undefined,
-        ...(typeof notes === "string"
-          ? { notes: notes.trim() || null }
-          : {}),
+        ...(input.name?.trim() ? { name: input.name.trim() } : {}),
+        ...(input.address !== undefined ? { address: input.address?.trim() || null } : {}),
+        ...(input.costModel && validModels.includes(input.costModel) ? { costModel: input.costModel } : {}),
+        ...(input.costPerVisitCRC !== undefined ? { costPerVisitCRC: input.costPerVisitCRC } : {}),
+        ...(input.costPerKmCRC !== undefined ? { costPerKmCRC: input.costPerKmCRC } : {}),
+        ...(input.defaultKm !== undefined ? { defaultKm: input.defaultKm } : {}),
+        ...(input.monthlyRentCRC !== undefined ? { monthlyRentCRC: input.monthlyRentCRC } : {}),
+        ...(input.notes !== undefined ? { notes: input.notes?.trim() || null } : {}),
       },
     });
 
@@ -352,13 +392,12 @@ export async function deleteLocation(
 // =============================================================================
 
 export async function recordVisit(
-  formData: FormData,
+  input: RecordVisitInput,
 ): Promise<ActionResult<{ visitId: string; costCRC: number }>> {
   return tryCatch(async () => {
     const trainer = await requireTrainer();
 
-    const locationId = formData.get("locationId");
-    if (typeof locationId !== "string" || !locationId.trim()) {
+    if (!input.locationId?.trim()) {
       throw new ValidationError(
         "MISSING_LOCATION",
         "El lugar de visita es requerido.",
@@ -366,7 +405,7 @@ export async function recordVisit(
     }
 
     const location = await prisma.trainerLocation.findUnique({
-      where: { id: locationId.trim() },
+      where: { id: input.locationId.trim() },
       select: {
         id: true,
         trainerUserId: true,
@@ -389,10 +428,9 @@ export async function recordVisit(
       );
     }
 
-    const rawVisitedAt = formData.get("visitedAt");
     const visitedAt =
-      typeof rawVisitedAt === "string" && rawVisitedAt.trim()
-        ? new Date(rawVisitedAt)
+      input.visitedAt && input.visitedAt.trim()
+        ? new Date(input.visitedAt)
         : new Date();
 
     if (isNaN(visitedAt.getTime())) {
@@ -402,8 +440,8 @@ export async function recordVisit(
       );
     }
 
-    const kmTraveled = parsePositiveDecimal(formData, "kmTraveled");
-    const notes = formData.get("notes");
+    const kmTraveled = input.kmTraveled !== undefined && input.kmTraveled >= 0 ? input.kmTraveled : null;
+    const notesStr = input.notes?.trim() || null;
 
     // Compute cost based on the location's cost model
     let computedCostCRC = 0;
@@ -436,8 +474,7 @@ export async function recordVisit(
           visitedAt,
           kmTraveled: kmTraveled ?? undefined,
           computedCostCRC,
-          notes:
-            typeof notes === "string" && notes.trim() ? notes.trim() : null,
+          notes: notesStr,
         },
         select: { id: true },
       });
@@ -527,28 +564,25 @@ export async function listVisits(filters?: {
 // =============================================================================
 
 export async function createExpense(
-  formData: FormData,
+  input: CreateExpenseInput,
 ): Promise<ActionResult<{ expenseId: string }>> {
   return tryCatch(async () => {
     const trainer = await requireTrainer();
 
-    const amountCRC = parseRequiredPositiveDecimal(
-      formData,
-      "amountCRC",
-      "El monto",
-    );
+    if (!input.amountCRC || input.amountCRC <= 0) {
+      throw new ValidationError("INVALID_AMOUNT", "El monto debe ser un número positivo.");
+    }
+    const amountCRC = input.amountCRC;
 
-    const rawOccurredAt = formData.get("occurredAt");
-    const occurredAt =
-      typeof rawOccurredAt === "string" && rawOccurredAt.trim()
-        ? new Date(rawOccurredAt)
-        : new Date();
+    const occurredAt = input.occurredAt?.trim()
+      ? new Date(input.occurredAt)
+      : new Date();
 
     if (isNaN(occurredAt.getTime())) {
       throw new ValidationError("INVALID_DATE", "La fecha no es válida.");
     }
 
-    const rawCategory = formData.get("category") as ExpenseCategory;
+    const rawCategory = input.category;
     const validCategories: ExpenseCategory[] = [
       "TRANSPORTE",
       "ALQUILER_ESPACIO",
@@ -569,11 +603,7 @@ export async function createExpense(
       );
     }
 
-    const rawLocationId = formData.get("locationId");
-    const locationId =
-      typeof rawLocationId === "string" && rawLocationId.trim()
-        ? rawLocationId.trim()
-        : null;
+    const locationId = input.locationId?.trim() || null;
 
     // Validate location belongs to trainer if provided
     if (locationId) {
@@ -589,8 +619,6 @@ export async function createExpense(
       }
     }
 
-    const description = formData.get("description");
-
     const expense = await prisma.trainerExpense.create({
       data: {
         trainerUserId: trainer.id,
@@ -598,10 +626,7 @@ export async function createExpense(
         amountCRC,
         category: rawCategory,
         locationId,
-        description:
-          typeof description === "string" && description.trim()
-            ? description.trim()
-            : null,
+        description: input.description?.trim() || null,
         source: "MANUAL",
       },
       select: { id: true },
@@ -713,11 +738,7 @@ export async function deleteExpense(
   });
 }
 
-export async function listExpenses(filters?: {
-  category?: string;
-  from?: string;
-  to?: string;
-}): Promise<ActionResult<{ expenses: ExpenseItem[]; total: number }>> {
+export async function listExpenses(filters?: ListExpensesInput): Promise<ActionResult<{ expenses: ExpenseItem[]; total: number }>> {
   return tryCatch(async () => {
     const trainer = await requireTrainer();
 
@@ -746,10 +767,14 @@ export async function listExpenses(filters?: {
       where.category = filters.category as ExpenseCategory;
     }
 
-    if (filters?.from || filters?.to) {
+    // Support both {from, to} string ISO and {fromDate, toDate} Date objects
+    const fromDate = filters?.fromDate ?? (filters?.from ? new Date(filters.from) : undefined);
+    const toDate = filters?.toDate ?? (filters?.to ? new Date(filters.to) : undefined);
+
+    if (fromDate || toDate) {
       where.occurredAt = {};
-      if (filters.from) where.occurredAt.gte = new Date(filters.from);
-      if (filters.to) where.occurredAt.lte = new Date(filters.to);
+      if (fromDate) where.occurredAt.gte = fromDate;
+      if (toDate) where.occurredAt.lte = toDate;
     }
 
     const [rows, total] = await prisma.$transaction([
@@ -787,28 +812,25 @@ export async function listExpenses(filters?: {
 // =============================================================================
 
 export async function createOneOffSale(
-  formData: FormData,
+  input: CreateOneOffSaleInput,
 ): Promise<ActionResult<{ saleId: string }>> {
   return tryCatch(async () => {
     const trainer = await requireTrainer();
 
-    const amountCRC = parseRequiredPositiveDecimal(
-      formData,
-      "amountCRC",
-      "El monto",
-    );
+    if (!input.amountCRC || input.amountCRC <= 0) {
+      throw new ValidationError("INVALID_AMOUNT", "El monto debe ser un número positivo.");
+    }
+    const amountCRC = input.amountCRC;
 
-    const rawOccurredAt = formData.get("occurredAt");
-    const occurredAt =
-      typeof rawOccurredAt === "string" && rawOccurredAt.trim()
-        ? new Date(rawOccurredAt)
-        : new Date();
+    const occurredAt = input.occurredAt?.trim()
+      ? new Date(input.occurredAt)
+      : new Date();
 
     if (isNaN(occurredAt.getTime())) {
       throw new ValidationError("INVALID_DATE", "La fecha no es válida.");
     }
 
-    const rawCategory = formData.get("category") as IncomeCategory;
+    const rawCategory = input.category;
     const validCategories: IncomeCategory[] = [
       "SESION_PT",
       "EVALUACION_INICIAL",
@@ -826,20 +848,12 @@ export async function createOneOffSale(
       );
     }
 
-    const rawPaidStatus = formData.get("paidStatus") as OneOffPaidStatus;
     const validPaidStatuses: OneOffPaidStatus[] = ["PAID", "PENDING", "CANCELLED"];
-    const paidStatus: OneOffPaidStatus = validPaidStatuses.includes(rawPaidStatus)
-      ? rawPaidStatus
+    const paidStatus: OneOffPaidStatus = input.paidStatus && validPaidStatuses.includes(input.paidStatus)
+      ? input.paidStatus
       : "PAID";
 
-    const rawClientId = formData.get("clientId");
-    const clientId =
-      typeof rawClientId === "string" && rawClientId.trim()
-        ? rawClientId.trim()
-        : null;
-
-    const description = formData.get("description");
-    const paymentMethod = formData.get("paymentMethod");
+    const clientId = input.clientUserId?.trim() || null;
 
     const sale = await prisma.oneOffSale.create({
       data: {
@@ -848,14 +862,8 @@ export async function createOneOffSale(
         occurredAt,
         amountCRC,
         category: rawCategory,
-        description:
-          typeof description === "string" && description.trim()
-            ? description.trim()
-            : null,
-        paymentMethod:
-          typeof paymentMethod === "string" && paymentMethod.trim()
-            ? paymentMethod.trim()
-            : null,
+        description: input.description?.trim() || null,
+        paymentMethod: input.paymentMethod?.trim() || null,
         paidStatus,
         paidAt: paidStatus === "PAID" ? occurredAt : null,
       },
@@ -877,11 +885,7 @@ export async function createOneOffSale(
   });
 }
 
-export async function listOneOffSales(filters?: {
-  category?: string;
-  from?: string;
-  to?: string;
-}): Promise<ActionResult<{ sales: SaleItem[]; total: number }>> {
+export async function listOneOffSales(filters?: ListOneOffSalesInput): Promise<ActionResult<{ sales: SaleItem[]; total: number }>> {
   return tryCatch(async () => {
     const trainer = await requireTrainer();
 
@@ -907,10 +911,14 @@ export async function listOneOffSales(filters?: {
       where.category = filters.category as IncomeCategory;
     }
 
-    if (filters?.from || filters?.to) {
+    // Support both {from, to} string ISO and {fromDate, toDate} Date objects
+    const fromDate = filters?.fromDate ?? (filters?.from ? new Date(filters.from) : undefined);
+    const toDate = filters?.toDate ?? (filters?.to ? new Date(filters.to) : undefined);
+
+    if (fromDate || toDate) {
       where.occurredAt = {};
-      if (filters.from) where.occurredAt.gte = new Date(filters.from);
-      if (filters.to) where.occurredAt.lte = new Date(filters.to);
+      if (fromDate) where.occurredAt.gte = fromDate;
+      if (toDate) where.occurredAt.lte = toDate;
     }
 
     const [rows, total] = await prisma.$transaction([
@@ -1126,7 +1134,17 @@ export async function createLocationVisit(...args: Parameters<typeof recordVisit
   return recordVisit(...args);
 }
 
-/** @alias getFinanceSummary — proxy expects `getFinanceDashboard`. */
-export async function getFinanceDashboard(...args: Parameters<typeof getFinanceSummary>) {
-  return getFinanceSummary(...args);
+/** @alias getFinanceSummary — proxy expects `getFinanceDashboard`.
+ * Accepts either a "YYYY-MM" month string or a { fromDate, toDate } object.
+ */
+export async function getFinanceDashboard(
+  input: string | GetFinanceSummaryInput,
+): Promise<ActionResult<FinanceSummary>> {
+  if (typeof input === "string") {
+    return getFinanceSummary(input);
+  }
+  // Derive month string from fromDate if provided
+  const d = input.fromDate ?? new Date();
+  const month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  return getFinanceSummary(input.month ?? month);
 }

@@ -14,7 +14,7 @@ import { IncomeBreakdownCard } from "./_components/income-breakdown-card";
 import { ExpenseBreakdownChart } from "./_components/expense-breakdown-chart";
 import { LocationCostTable } from "./_components/location-cost-table";
 import { RecentTransactionsList } from "./_components/recent-transactions-list";
-import type { FinanceDashboardPayload } from "@/types/finance";
+import type { FinanceSummary } from "@/server/actions/finance.actions";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -58,7 +58,7 @@ export default function FinanzasPage() {
   const searchParams = useSearchParams();
   const monthStr = searchParams.get("month") ?? currentMonthStr();
 
-  const [payload, setPayload] = React.useState<FinanceDashboardPayload | null>(null);
+  const [payload, setPayload] = React.useState<FinanceSummary | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
 
@@ -66,13 +66,11 @@ export default function FinanzasPage() {
     setLoading(true);
     setError(null);
 
-    const { fromDate, toDate } = monthToRange(monthStr);
-
-    getFinanceDashboard({ fromDate, toDate }).then((result) => {
+    getFinanceDashboard(monthStr).then((result) => {
       if (!result.ok) {
         setError("Error al cargar el dashboard");
       } else {
-        setPayload(result.value);
+        setPayload(result.value as unknown as FinanceSummary);
       }
       setLoading(false);
     });
@@ -99,18 +97,28 @@ export default function FinanzasPage() {
     );
   }
 
+  // Cast to access optional dashboard fields — these may be undefined until a
+  // dedicated aggregation action is implemented.
+  const dash = payload as unknown as {
+    kpis?: Parameters<typeof FinanceKPIRow>[0]["kpis"];
+    incomeBreakdown?: Parameters<typeof IncomeBreakdownCard>[0]["breakdown"];
+    expenseBreakdown?: Parameters<typeof ExpenseBreakdownChart>[0]["data"];
+    locationCosts?: Parameters<typeof LocationCostTable>[0]["rows"];
+    recentTransactions?: Parameters<typeof RecentTransactionsList>[0]["transactions"];
+  };
+
   return (
     <FinanceShell trainerName="Coach Demo" currentMonth={monthStr}>
-      <FinanceKPIRow kpis={payload.kpis} />
+      {dash.kpis && <FinanceKPIRow kpis={dash.kpis} />}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <IncomeBreakdownCard breakdown={payload.incomeBreakdown} />
-        <ExpenseBreakdownChart data={payload.expenseBreakdown} />
+        {dash.incomeBreakdown && <IncomeBreakdownCard breakdown={dash.incomeBreakdown} />}
+        {dash.expenseBreakdown && <ExpenseBreakdownChart data={dash.expenseBreakdown} />}
       </div>
 
-      <LocationCostTable rows={payload.locationCosts} />
+      {dash.locationCosts && <LocationCostTable rows={dash.locationCosts} />}
 
-      <RecentTransactionsList transactions={payload.recentTransactions} />
+      {dash.recentTransactions && <RecentTransactionsList transactions={dash.recentTransactions} />}
     </FinanceShell>
   );
 }

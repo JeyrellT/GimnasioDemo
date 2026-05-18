@@ -499,7 +499,7 @@ function ExerciseSearchPanel({
       setSearching(true);
       searchExercises({ limit: 12 }).then((res) => {
         if (cancelled) return;
-        setResults(res.ok ? res.value : []);
+        setResults(res.ok ? res.value.exercises : []);
         setSearching(false);
       });
       return;
@@ -514,7 +514,7 @@ function ExerciseSearchPanel({
     setSearching(true);
     searchExercises({ query, limit: 12 }).then((res) => {
       if (cancelled) return;
-      setResults(res.ok ? res.value : []);
+      setResults(res.ok ? res.value.exercises : []);
       setSearching(false);
     });
 
@@ -552,7 +552,7 @@ function ExerciseSearchPanel({
     // Update local store with the real DB ID
     const draft: DraftExercise = {
       id: "local-" + Math.random().toString(36).slice(2),
-      routineExerciseId: result.value.exerciseId, // server ID for the routineExercise
+      routineExerciseId: result.value.routineExerciseId, // server ID for the routineExercise
       exerciseId: ex.id,
       nameEs: ex.nameEs,
       targetSets: 4,

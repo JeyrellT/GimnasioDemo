@@ -201,7 +201,7 @@ export async function createOnboardingDraft(
 export async function updateOnboardingStep(
   draftId: string,
   step: number,
-  data: Record<string, unknown>,
+  data: object,
 ): Promise<ActionResult<{ updated: true }>> {
   return tryCatch(async () => {
     const actor = await requireUser();

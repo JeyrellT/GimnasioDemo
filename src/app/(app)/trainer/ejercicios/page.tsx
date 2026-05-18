@@ -166,16 +166,10 @@ export default function EjerciciosPage() {
     });
 
     if (result.ok) {
-      // Apply ownership filter client-side (demo: check createdById via the full list)
-      let filtered = result.value;
-      if (owner === "mine") {
-        // searchExercises returns ExerciseSearchResult which lacks createdById,
-        // so we can't filter by "mine" accurately here — show all as fallback.
-        filtered = result.value;
-      } else if (owner === "public") {
-        filtered = result.value;
-      }
-      setExercises(filtered);
+      // searchExercises returns { exercises, total } — extract the array
+      const exercises = result.value.exercises;
+      // Apply ownership filter client-side (ExerciseSearchResult lacks createdById, so show all as fallback)
+      setExercises(exercises);
     } else {
       setExercises([]);
     }

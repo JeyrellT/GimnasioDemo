@@ -92,8 +92,20 @@ function parseDifficulty(value: string | undefined): ExerciseDifficulty | undefi
 // searchExercises
 // -----------------------------------------------------------------------------
 
+export interface SearchExercisesInput {
+  query?: string;
+  primaryMuscle?: string;
+  equipment?: string;
+  difficulty?: string;
+  muscle?: string;
+  page?: number;
+  limit?: number;
+}
+
 /**
  * Full-text or filter-based exercise search.
+ *
+ * Accepts either a plain string query or a SearchExercisesInput object.
  *
  * When `query` is provided, uses PostgreSQL tsvector full-text search against
  * the `searchVector` column (maintained by DB trigger, language: spanish).
@@ -102,7 +114,7 @@ function parseDifficulty(value: string | undefined): ExerciseDifficulty | undefi
  * Visibility: isPublic=true OR createdById=currentUser.
  */
 export async function searchExercises(
-  query: string,
+  queryOrInput?: string | SearchExercisesInput,
   filters?: {
     muscle?: string;
     equipment?: string;
@@ -111,6 +123,17 @@ export async function searchExercises(
   page = 1,
   limit = 20,
 ): Promise<ActionResult<{ exercises: ExerciseSearchResult[]; total: number }>> {
+  // Normalize: if first arg is an object, extract fields
+  if (queryOrInput !== undefined && typeof queryOrInput === "object") {
+    const inp = queryOrInput;
+    return searchExercises(
+      inp.query ?? "",
+      { muscle: inp.primaryMuscle ?? inp.muscle, equipment: inp.equipment, difficulty: inp.difficulty },
+      inp.page ?? 1,
+      inp.limit ?? 20,
+    );
+  }
+  const query = (queryOrInput ?? "") as string;
   return tryCatch(async () => {
     const user = await requireUser();
 
@@ -252,7 +275,8 @@ export async function searchExercises(
  * Returns the full Exercise row including instructions.
  * Enforces visibility: public OR owned by current user.
  */
-export async function getExercise(id: string): Promise<ActionResult<Exercise>> {
+export async function getExercise(id: string | { id: string }): Promise<ActionResult<Exercise>> {
+  if (typeof id === "object") return getExercise(id.id);
   return tryCatch(async () => {
     const user = await requireUser();
 
@@ -279,6 +303,20 @@ export async function getExercise(id: string): Promise<ActionResult<Exercise>> {
 // createExercise
 // -----------------------------------------------------------------------------
 
+export interface CreateExerciseInput {
+  nameEs: string;
+  nameEn?: string;
+  instructionsEs?: string;
+  instructionsEn?: string;
+  primaryMuscle: string;
+  secondaryMuscles?: string | string[];
+  equipment: string;
+  difficulty: string;
+  mediaUrl?: string;
+  gifUrl?: string;
+  thumbnailUrl?: string;
+}
+
 /**
  * Create a private exercise owned by the current trainer.
  *
@@ -286,22 +324,27 @@ export async function getExercise(id: string): Promise<ActionResult<Exercise>> {
  * suffix to guarantee uniqueness.
  */
 export async function createExercise(
-  formData: FormData,
+  input: CreateExerciseInput | FormData,
 ): Promise<ActionResult<{ exerciseId: string }>> {
   return tryCatch(async () => {
     const user = await requireTrainer();
 
-    const nameEs = formData.get("nameEs")?.toString().trim();
-    const nameEn = formData.get("nameEn")?.toString().trim() ?? "";
-    const instructionsEs = formData.get("instructionsEs")?.toString().trim() ?? "";
-    const instructionsEn = formData.get("instructionsEn")?.toString().trim() ?? undefined;
-    const primaryMuscleRaw = formData.get("primaryMuscle")?.toString();
-    const secondaryMusclesRaw = formData.get("secondaryMuscles")?.toString();
-    const equipmentRaw = formData.get("equipment")?.toString();
-    const difficultyRaw = formData.get("difficulty")?.toString();
-    const mediaUrl = formData.get("mediaUrl")?.toString() ?? undefined;
-    const gifUrl = formData.get("gifUrl")?.toString() ?? undefined;
-    const thumbnailUrl = formData.get("thumbnailUrl")?.toString() ?? undefined;
+    const formData = input instanceof FormData ? input : null;
+    const typed = formData === null ? (input as CreateExerciseInput) : null;
+
+    const nameEs = typed ? typed.nameEs.trim() : formData!.get("nameEs")?.toString().trim();
+    const nameEn = typed ? (typed.nameEn?.trim() ?? "") : (formData!.get("nameEn")?.toString().trim() ?? "");
+    const instructionsEs = typed ? (typed.instructionsEs?.trim() ?? "") : (formData!.get("instructionsEs")?.toString().trim() ?? "");
+    const instructionsEn = typed ? typed.instructionsEn?.trim() : formData!.get("instructionsEn")?.toString().trim() ?? undefined;
+    const primaryMuscleRaw = typed ? typed.primaryMuscle : formData!.get("primaryMuscle")?.toString();
+    const secondaryMusclesRaw = typed
+      ? (Array.isArray(typed.secondaryMuscles) ? typed.secondaryMuscles.join(",") : (typed.secondaryMuscles ?? ""))
+      : formData!.get("secondaryMuscles")?.toString();
+    const equipmentRaw = typed ? typed.equipment : formData!.get("equipment")?.toString();
+    const difficultyRaw = typed ? typed.difficulty : formData!.get("difficulty")?.toString();
+    const mediaUrl = typed ? (typed.mediaUrl ?? undefined) : (formData!.get("mediaUrl")?.toString() ?? undefined);
+    const gifUrl = typed ? (typed.gifUrl ?? undefined) : (formData!.get("gifUrl")?.toString() ?? undefined);
+    const thumbnailUrl = typed ? (typed.thumbnailUrl ?? undefined) : (formData!.get("thumbnailUrl")?.toString() ?? undefined);
 
     if (!nameEs) {
       throw new ValidationError("NAME_REQUIRED", "El nombre en español es obligatorio.");
@@ -373,16 +416,36 @@ export async function createExercise(
 // updateExercise
 // -----------------------------------------------------------------------------
 
+export interface UpdateExerciseInput {
+  id: string;
+  nameEs?: string;
+  nameEn?: string;
+  instructionsEs?: string;
+  instructionsEn?: string;
+  primaryMuscle?: string;
+  secondaryMuscles?: string | string[];
+  equipment?: string;
+  difficulty?: string;
+  mediaUrl?: string | null;
+  gifUrl?: string | null;
+  thumbnailUrl?: string | null;
+}
+
 /**
  * Update a private exercise. Only the creator can edit.
  * Public (seeded) exercises are read-only.
  */
 export async function updateExercise(
-  id: string,
-  formData: FormData,
-): Promise<ActionResult<{ updated: true }>> {
+  idOrInput: string | UpdateExerciseInput,
+  formData?: FormData,
+): Promise<ActionResult<{ updated: true; exerciseId?: string }>> {
   return tryCatch(async () => {
     const user = await requireTrainer();
+
+    // Normalize: if first arg is an object, extract id and fields
+    const id = typeof idOrInput === "object" ? idOrInput.id : idOrInput;
+    const typed = typeof idOrInput === "object" ? idOrInput : null;
+    const fd = formData ?? null;
 
     const exercise = await prisma.exercise.findUnique({
       where: { id, deletedAt: null },
@@ -407,22 +470,25 @@ export async function updateExercise(
 
     const patch: Prisma.ExerciseUpdateInput = {};
 
-    const nameEs = formData.get("nameEs")?.toString().trim();
+    const nameEs = typed ? typed.nameEs?.trim() : fd?.get("nameEs")?.toString().trim();
     if (nameEs) patch.nameEs = nameEs;
 
-    const nameEn = formData.get("nameEn")?.toString().trim();
+    const nameEn = typed ? typed.nameEn?.trim() : fd?.get("nameEn")?.toString().trim();
     if (nameEn !== undefined) patch.nameEn = nameEn;
 
-    const instructionsEs = formData.get("instructionsEs")?.toString().trim();
+    const instructionsEs = typed ? typed.instructionsEs?.trim() : fd?.get("instructionsEs")?.toString().trim();
     if (instructionsEs !== undefined) patch.instructionsEs = instructionsEs;
 
-    const instructionsEn = formData.get("instructionsEn")?.toString().trim();
+    const instructionsEn = typed ? typed.instructionsEn?.trim() : fd?.get("instructionsEn")?.toString().trim();
     if (instructionsEn !== undefined) patch.instructionsEn = instructionsEn;
 
-    const primaryMuscle = parseMuscle(formData.get("primaryMuscle")?.toString());
+    const primaryMuscleRaw = typed ? typed.primaryMuscle : fd?.get("primaryMuscle")?.toString();
+    const primaryMuscle = parseMuscle(primaryMuscleRaw);
     if (primaryMuscle) patch.primaryMuscle = primaryMuscle;
 
-    const secondaryMusclesRaw = formData.get("secondaryMuscles")?.toString();
+    const secondaryMusclesRaw = typed
+      ? (Array.isArray(typed.secondaryMuscles) ? typed.secondaryMuscles.join(",") : typed.secondaryMuscles)
+      : fd?.get("secondaryMuscles")?.toString();
     if (secondaryMusclesRaw !== null && secondaryMusclesRaw !== undefined) {
       patch.secondaryMuscles = secondaryMusclesRaw
         .split(",")
@@ -430,26 +496,28 @@ export async function updateExercise(
         .filter((m): m is MuscleGroup => m !== undefined);
     }
 
-    const equipment = parseEquipment(formData.get("equipment")?.toString());
+    const equipmentRaw = typed ? typed.equipment : fd?.get("equipment")?.toString();
+    const equipment = parseEquipment(equipmentRaw);
     if (equipment) patch.equipment = equipment;
 
-    const difficulty = parseDifficulty(formData.get("difficulty")?.toString());
+    const difficultyRaw = typed ? typed.difficulty : fd?.get("difficulty")?.toString();
+    const difficulty = parseDifficulty(difficultyRaw);
     if (difficulty) patch.difficulty = difficulty;
 
-    const mediaUrl = formData.get("mediaUrl")?.toString();
+    const mediaUrl = typed ? typed.mediaUrl : fd?.get("mediaUrl")?.toString();
     if (mediaUrl !== undefined) patch.mediaUrl = mediaUrl || null;
 
-    const gifUrl = formData.get("gifUrl")?.toString();
+    const gifUrl = typed ? typed.gifUrl : fd?.get("gifUrl")?.toString();
     if (gifUrl !== undefined) patch.gifUrl = gifUrl || null;
 
-    const thumbnailUrl = formData.get("thumbnailUrl")?.toString();
+    const thumbnailUrl = typed ? typed.thumbnailUrl : fd?.get("thumbnailUrl")?.toString();
     if (thumbnailUrl !== undefined) patch.thumbnailUrl = thumbnailUrl || null;
 
     await prisma.exercise.update({ where: { id }, data: patch });
 
     logInfo("exercises.updateExercise", { userId: user.id, exerciseId: id });
 
-    return { updated: true as const };
+    return { updated: true as const, exerciseId: id };
   });
 }
 

@@ -151,21 +151,25 @@ export default function MovimientosPage() {
   React.useEffect(() => {
     setState((s) => ({ ...s, loading: true }));
 
-    const { fromDate, toDate } = monthToRange(month);
+    const range = monthToRange(month);
 
     const emptyExpenses: ExpenseDTO[] = [];
     const emptySales: OneOffSaleDTO[] = [];
+    const { fromDate, toDate } = range;
 
     Promise.all([
       tipo === "ventas"
-        ? Promise.resolve({ ok: true as const, value: emptyExpenses })
+        ? Promise.resolve({ ok: true as const, value: { expenses: emptyExpenses, total: 0 } })
         : listExpenses({ fromDate, toDate }),
       tipo === "gastos"
-        ? Promise.resolve({ ok: true as const, value: emptySales })
+        ? Promise.resolve({ ok: true as const, value: { sales: emptySales, total: 0 } })
         : listOneOffSales({ fromDate, toDate }),
     ]).then(([expensesResult, salesResult]) => {
-      const expenses = expensesResult.ok ? expensesResult.value.map(expenseToRow) : [];
-      const sales = salesResult.ok ? salesResult.value.map(saleToRow) : [];
+      const rawExpenses = expensesResult.ok && 'expenses' in expensesResult.value ? expensesResult.value.expenses : [];
+      const rawSales = salesResult.ok && 'sales' in salesResult.value ? salesResult.value.sales : [];
+      // Map server types to DTO shapes (occurredAt → ISO string)
+      const expenses = rawExpenses.map((e) => expenseToRow({ ...e, occurredAt: e.occurredAt instanceof Date ? e.occurredAt.toISOString() : String(e.occurredAt) } as import("@/types/finance").ExpenseDTO));
+      const sales = rawSales.map((s) => saleToRow({ ...s, occurredAt: s.occurredAt instanceof Date ? s.occurredAt.toISOString() : String(s.occurredAt) } as import("@/types/finance").OneOffSaleDTO));
 
       const all = [...expenses, ...sales].sort(
         (a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime(),

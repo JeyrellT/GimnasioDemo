@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, TrendingDown, TrendingUp, Loader2, CheckCircle2 } from "lucide-react";
 import { createExpense, createOneOffSale } from "@/app/actions/finance";
+import type { ExpenseCategory, IncomeCategory } from "@prisma/client";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -101,9 +102,9 @@ export default function NuevaEntradaPage() {
 
     let result;
     if (mode === "gasto") {
-      result = await createExpense({ occurredAt, amountCRC: amountNum, category, description: description || undefined });
+      result = await createExpense({ occurredAt, amountCRC: amountNum, category: category as ExpenseCategory, description: description || undefined });
     } else {
-      result = await createOneOffSale({ occurredAt, amountCRC: amountNum, category, description: description || undefined, paidStatus: "PAID" });
+      result = await createOneOffSale({ occurredAt, amountCRC: amountNum, category: category as IncomeCategory, description: description || undefined, paidStatus: "PAID" });
     }
 
     setSaving(false);

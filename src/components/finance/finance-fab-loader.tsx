@@ -27,10 +27,10 @@ export function FinanceFABLoader() {
 
     const [locResult, clientResult] = await Promise.all([
       listLocations(),
-      listMyClients({}),
+      listMyClients(),
     ]);
 
-    const rawLocations = locResult.ok ? locResult.value : [];
+    const rawLocations = locResult.ok ? locResult.value.locations : [];
     const rawClients = clientResult.ok ? clientResult.value.clients : [];
 
     const locations: Array<{ id: string; name: string }> = rawLocations.map((l) => ({

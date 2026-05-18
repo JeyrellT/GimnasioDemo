@@ -145,18 +145,35 @@ async function sendMagicLinkForUser(
  *   5. Send magic-link for email verification.
  *   6. Create AuditLog.
  */
+export interface RegisterUserInput {
+  email: string;
+  name: string;
+  role?: "TRAINER" | "CLIENT";
+  dateOfBirth?: string;
+  password?: string;
+}
+
 export async function registerUser(
-  formData: FormData,
+  input: RegisterUserInput | FormData,
 ): Promise<ActionResult<RequestMagicLinkResult>> {
   return tryCatch(async () => {
     // -- Input validation --
-    const parsed = registerSchema.safeParse({
-      email: formData.get("email"),
-      name: formData.get("name"),
-      dateOfBirth: formData.get("dateOfBirth") ?? undefined,
-      password: formData.get("password"),
-      role: formData.get("role") ?? "CLIENT",
-    });
+    const raw = input instanceof FormData
+      ? {
+          email: input.get("email"),
+          name: input.get("name"),
+          dateOfBirth: input.get("dateOfBirth") ?? undefined,
+          password: input.get("password"),
+          role: input.get("role") ?? "CLIENT",
+        }
+      : {
+          email: input.email,
+          name: input.name,
+          dateOfBirth: input.dateOfBirth ?? undefined,
+          password: input.password ?? "",
+          role: input.role ?? "CLIENT",
+        };
+    const parsed = registerSchema.safeParse(raw);
 
     if (!parsed.success) {
       throw new ValidationError(
@@ -270,13 +287,15 @@ export async function registerUser(
  * exists. This prevents user enumeration attacks.
  */
 export async function requestMagicLink(
-  formData: FormData,
+  emailOrInput: string | FormData,
+  callbackUrl?: string,
 ): Promise<ActionResult<RequestMagicLinkResult>> {
   return tryCatch(async () => {
-    const parsed = requestMagicLinkSchema.safeParse({
-      email: formData.get("email"),
-      callbackUrl: formData.get("callbackUrl") ?? undefined,
-    });
+    const parsed = requestMagicLinkSchema.safeParse(
+      typeof emailOrInput === "string"
+        ? { email: emailOrInput, callbackUrl: callbackUrl ?? undefined }
+        : { email: emailOrInput.get("email"), callbackUrl: emailOrInput.get("callbackUrl") ?? undefined },
+    );
 
     if (!parsed.success) {
       throw new ValidationError(
@@ -396,26 +415,39 @@ export async function updateProfile(
  * Update trainer-specific profile fields.
  * Requires TRAINER role (enforced by requireTrainer()).
  */
+export interface UpdateTrainerProfileInput {
+  tradeName?: string;
+  specialty?: string;
+  bio?: string;
+  certificationUrl?: string;
+  fiscalIdType?: string;
+  fiscalIdNumber?: string;
+  fiscalAddress?: string;
+  haciendaUsername?: string;
+  defaultMonthlyPriceCRC?: number;
+}
+
 export async function updateTrainerProfile(
-  formData: FormData,
+  input: UpdateTrainerProfileInput | FormData,
 ): Promise<ActionResult<{ updated: true }>> {
   return tryCatch(async () => {
     const user = await requireTrainer();
 
-    const rawDefaultPrice = formData.get("defaultMonthlyPriceCRC");
+    const raw = input instanceof FormData
+      ? {
+          tradeName: input.get("tradeName") ?? undefined,
+          specialty: input.get("specialty") ?? undefined,
+          bio: input.get("bio") ?? undefined,
+          certificationUrl: input.get("certificationUrl") ?? undefined,
+          fiscalIdType: input.get("fiscalIdType") ?? undefined,
+          fiscalIdNumber: input.get("fiscalIdNumber") ?? undefined,
+          fiscalAddress: input.get("fiscalAddress") ?? undefined,
+          haciendaUsername: input.get("haciendaUsername") ?? undefined,
+          defaultMonthlyPriceCRC: input.get("defaultMonthlyPriceCRC") !== null ? input.get("defaultMonthlyPriceCRC") : undefined,
+        }
+      : input;
 
-    const parsed = updateTrainerProfileSchema.safeParse({
-      tradeName: formData.get("tradeName") ?? undefined,
-      specialty: formData.get("specialty") ?? undefined,
-      bio: formData.get("bio") ?? undefined,
-      certificationUrl: formData.get("certificationUrl") ?? undefined,
-      fiscalIdType: formData.get("fiscalIdType") ?? undefined,
-      fiscalIdNumber: formData.get("fiscalIdNumber") ?? undefined,
-      fiscalAddress: formData.get("fiscalAddress") ?? undefined,
-      haciendaUsername: formData.get("haciendaUsername") ?? undefined,
-      defaultMonthlyPriceCRC:
-        rawDefaultPrice !== null ? rawDefaultPrice : undefined,
-    });
+    const parsed = updateTrainerProfileSchema.safeParse(raw);
 
     if (!parsed.success) {
       throw new ValidationError(

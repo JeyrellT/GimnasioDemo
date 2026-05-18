@@ -75,17 +75,32 @@ async function writeAuditLog(
 // Client records own metrics; trainer can record on behalf of a client.
 // =============================================================================
 
+export interface RecordBodyMetricInput {
+  clientUserId?: string;
+  weightKg?: number;
+  bodyFatPct?: number;
+  muscleMassKg?: number;
+  waistCm?: number;
+  hipCm?: number;
+  neckCm?: number;
+  chestCm?: number;
+  armCm?: number;
+  thighCm?: number;
+  source?: BodyMetricSource;
+  notes?: string;
+  recordedAt?: string;
+}
+
 export async function recordBodyMetric(
-  formData: FormData,
+  input: RecordBodyMetricInput,
 ): Promise<ActionResult<RecordBodyMetricResult>> {
   return tryCatch(async () => {
     const actor = await requireUser();
 
     // Determine target client
-    const rawClientId = formData.get("clientUserId");
     const targetClientId =
-      typeof rawClientId === "string" && rawClientId.trim() !== ""
-        ? rawClientId.trim()
+      input.clientUserId && input.clientUserId.trim() !== ""
+        ? input.clientUserId.trim()
         : actor.id;
 
     // If recording for someone else, caller must be a trainer with ownership
@@ -99,33 +114,18 @@ export async function recordBodyMetric(
       await assertOwnsClient(actor.id, targetClientId);
     }
 
-    // Parse numeric fields (all optional)
-    const parseDecimal = (key: string): number | undefined => {
-      const raw = formData.get(key);
-      if (typeof raw !== "string" || raw.trim() === "") return undefined;
-      const n = parseFloat(raw);
-      if (isNaN(n)) throw new ValidationError("INVALID_FIELD", `Campo inválido: ${key}`);
-      return n;
-    };
+    const weightKg = input.weightKg;
+    const bodyFatPct = input.bodyFatPct;
+    const muscleMassKg = input.muscleMassKg;
+    const waistCm = input.waistCm;
+    const hipCm = input.hipCm;
+    const neckCm = input.neckCm;
+    const chestCm = input.chestCm;
+    const armCm = input.armCm;
+    const thighCm = input.thighCm;
 
-    const weightKg = parseDecimal("weightKg");
-    const bodyFatPct = parseDecimal("bodyFatPct");
-    const muscleMassKg = parseDecimal("muscleMassKg");
-    const waistCm = parseDecimal("waistCm");
-    const hipCm = parseDecimal("hipCm");
-    const neckCm = parseDecimal("neckCm");
-    const chestCm = parseDecimal("chestCm");
-    const armCm = parseDecimal("armCm");
-    const thighCm = parseDecimal("thighCm");
-
-    const rawSource = formData.get("source");
-    const source: BodyMetricSource =
-      rawSource === "OCR_SCALE" || rawSource === "CONNECTED_DEVICE"
-        ? rawSource
-        : "MANUAL";
-
-    const notes = formData.get("notes");
-    const notesStr = typeof notes === "string" ? notes.trim() || null : null;
+    const source: BodyMetricSource = input.source ?? "MANUAL";
+    const notesStr = input.notes?.trim() || null;
 
     // Create the BodyMetric row
     const metric = await prisma.bodyMetric.create({
