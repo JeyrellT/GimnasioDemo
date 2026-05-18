@@ -3,6 +3,6 @@ export {
   searchExercises,
   getExerciseDetail,
   createPrivateExercise,
-  updateExercise,
+  updateExerciseFromForm as updateExercise,
   deleteExercise,
 } from "@/server/actions/exercises.actions";

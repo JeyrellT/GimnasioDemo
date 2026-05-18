@@ -568,15 +568,90 @@ export async function deleteExercise(
 }
 
 // -----------------------------------------------------------------------------
-// Aliases — match the names the proxy layer (src/app/actions/) expects
+// Bridges — accept plain objects from the frontend and convert to FormData
+// internally. This matches how react-hook-form sends data.
 // -----------------------------------------------------------------------------
 
-/** @alias getExercise — proxy expects `getExerciseDetail`. */
-export async function getExerciseDetail(...args: Parameters<typeof getExercise>) {
-  return getExercise(...args);
+/**
+ * getExerciseDetail — accepts string ID or `{ id }` object (demo compat).
+ */
+export async function getExerciseDetail(
+  idOrObj: string | { id?: string },
+): Promise<ActionResult<Exercise>> {
+  const id = typeof idOrObj === "string" ? idOrObj : idOrObj.id;
+  if (!id) {
+    return { ok: false, error: { code: "EXERCISE_INPUT", message: "ID requerido." } } as ActionResult<Exercise>;
+  }
+  return getExercise(id);
 }
 
-/** @alias createExercise — proxy expects `createPrivateExercise`. */
-export async function createPrivateExercise(...args: Parameters<typeof createExercise>) {
-  return createExercise(...args);
+/**
+ * createPrivateExercise — accepts a plain object from exercise-form.
+ * Builds FormData internally and delegates to createExercise.
+ */
+export async function createPrivateExercise(
+  input: {
+    nameEs: string;
+    nameEn?: string;
+    instructionsEs: string;
+    primaryMuscle: string;
+    secondaryMuscles?: string[];
+    equipment: string;
+    difficulty: string;
+    thumbnailUrl?: string;
+    gifUrl?: string;
+    mediaUrl?: string;
+  },
+): Promise<ActionResult<{ exerciseId: string }>> {
+  const fd = new FormData();
+  fd.set("nameEs", input.nameEs);
+  if (input.nameEn) fd.set("nameEn", input.nameEn);
+  fd.set("instructionsEs", input.instructionsEs);
+  fd.set("primaryMuscle", input.primaryMuscle);
+  if (input.secondaryMuscles?.length) {
+    fd.set("secondaryMuscles", input.secondaryMuscles.join(","));
+  }
+  fd.set("equipment", input.equipment);
+  fd.set("difficulty", input.difficulty);
+  if (input.thumbnailUrl) fd.set("thumbnailUrl", input.thumbnailUrl);
+  if (input.gifUrl) fd.set("gifUrl", input.gifUrl);
+  if (input.mediaUrl) fd.set("mediaUrl", input.mediaUrl);
+  return createExercise(fd);
+}
+
+/**
+ * updateExerciseFromForm — accepts `{ id, ...patch }` from exercise-form.
+ * Builds FormData and delegates to updateExercise.
+ * Returns `{ exerciseId }` for navigation redirect.
+ */
+export async function updateExerciseFromForm(
+  input: {
+    id: string;
+    nameEs?: string;
+    nameEn?: string;
+    instructionsEs?: string;
+    primaryMuscle?: string;
+    secondaryMuscles?: string[];
+    equipment?: string;
+    difficulty?: string;
+    thumbnailUrl?: string;
+    gifUrl?: string;
+    mediaUrl?: string;
+  },
+): Promise<ActionResult<{ exerciseId: string }>> {
+  const fd = new FormData();
+  if (input.nameEs) fd.set("nameEs", input.nameEs);
+  if (input.nameEn !== undefined) fd.set("nameEn", input.nameEn);
+  if (input.instructionsEs !== undefined) fd.set("instructionsEs", input.instructionsEs);
+  if (input.primaryMuscle) fd.set("primaryMuscle", input.primaryMuscle);
+  if (input.secondaryMuscles) fd.set("secondaryMuscles", input.secondaryMuscles.join(","));
+  if (input.equipment) fd.set("equipment", input.equipment);
+  if (input.difficulty) fd.set("difficulty", input.difficulty);
+  if (input.thumbnailUrl !== undefined) fd.set("thumbnailUrl", input.thumbnailUrl);
+  if (input.gifUrl !== undefined) fd.set("gifUrl", input.gifUrl);
+  if (input.mediaUrl !== undefined) fd.set("mediaUrl", input.mediaUrl);
+
+  const result = await updateExercise(input.id, fd);
+  if (!result.ok) return result as unknown as ActionResult<{ exerciseId: string }>;
+  return { ok: true, value: { exerciseId: input.id } };
 }

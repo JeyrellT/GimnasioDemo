@@ -146,7 +146,7 @@ export function SignInForm({ callbackUrl = "/inicio", onSuccess }: SignInFormPro
             <span className="w-full border-t border-[#3F3F46]" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-[#09090B] px-2 text-[#71717A]">o</span>
+            <span className="bg-[#18181B] px-2 text-[#71717A]">o</span>
           </div>
         </div>
 

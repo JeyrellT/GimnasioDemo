@@ -7,8 +7,7 @@ import { getExerciseDetail } from "@/app/actions/exercises";
 import { ExerciseForm } from "@/components/forms/exercise-form";
 import { PageHeader } from "@/components/shared/page-header";
 import { useAuth } from "@/components/providers/auth-provider";
-import type { DemoExerciseRow } from "@/lib/offline/db";
-import type { MuscleGroup, ExerciseEquipment, ExerciseDifficulty } from "@prisma/client";
+import type { Exercise, MuscleGroup, ExerciseEquipment, ExerciseDifficulty } from "@prisma/client";
 
 interface Props {
   exerciseId: string;
@@ -16,7 +15,7 @@ interface Props {
 
 export default function EditarEjercicioClient({ exerciseId }: Props) {
   const { user } = useAuth();
-  const [exercise, setExercise] = useState<DemoExerciseRow | null>(null);
+  const [exercise, setExercise] = useState<Exercise | null>(null);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<"ok" | "not-found" | "public" | "not-owner">("ok");
 

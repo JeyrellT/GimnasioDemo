@@ -3,78 +3,53 @@
 import { useEffect, useState } from "react";
 import { Loader2, Dumbbell, Clock, ChevronDown, ChevronUp } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
-import {
-  getActiveAssignedRoutine,
-  getRoutine,
-  getExercise,
-} from "@/lib/demo/store";
-import type { DemoRoutineRow, DemoRoutineDay, DemoExerciseRow } from "@/lib/offline/db";
-
-interface ExerciseWithDetails {
-  exerciseId: string;
-  exercise: DemoExerciseRow | null;
-  targetSets: number;
-  targetRepsMin: number;
-  targetRepsMax: number;
-  targetRpe: number | null;
-  restSeconds: number;
-  notes: string | null;
-}
+import { getMyActiveRoutine } from "@/app/actions/client-portal";
+import type { MyAssignedRoutine } from "@/server/actions/client-portal.actions";
+import type {
+  RoutineSnapshot,
+  RoutineSnapshotDay,
+  RoutineSnapshotExercise,
+} from "@/types/domain";
 
 interface DayWithExercises {
-  day: DemoRoutineDay;
-  exercises: ExerciseWithDetails[];
+  day: RoutineSnapshotDay;
+  exercises: RoutineSnapshotExercise[];
+}
+
+function parseSnapshot(raw: unknown): RoutineSnapshot | null {
+  if (!raw || typeof raw !== "object") return null;
+  const s = raw as Record<string, unknown>;
+  if (!Array.isArray(s.days)) return null;
+  return raw as RoutineSnapshot;
 }
 
 export default function ClientSesionPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [routine, setRoutine] = useState<DemoRoutineRow | null>(null);
+  const [assigned, setAssigned] = useState<MyAssignedRoutine | null>(null);
+  const [snapshot, setSnapshot] = useState<RoutineSnapshot | null>(null);
   const [days, setDays] = useState<DayWithExercises[]>([]);
   const [expandedDay, setExpandedDay] = useState<number>(0);
 
   useEffect(() => {
-    async function load() {
-      if (!user) { setLoading(false); return; }
-      const assigned = await getActiveAssignedRoutine(user.id);
-      if (!assigned) {
-        setLoading(false);
-        return;
-      }
-
-      const r = await getRoutine(assigned.routineTemplateId);
-      if (!r) {
-        setLoading(false);
-        return;
-      }
-
-      setRoutine(r);
-
-      const daysData: DayWithExercises[] = await Promise.all(
-        r.daysJson.map(async (day) => {
-          const exercises = await Promise.all(
-            day.exercises.map(async (ex) => {
-              const exercise = await getExercise(ex.exerciseId);
-              return {
-                exerciseId: ex.exerciseId,
-                exercise: exercise ?? null,
-                targetSets: ex.targetSets,
-                targetRepsMin: ex.targetRepsMin,
-                targetRepsMax: ex.targetRepsMax,
-                targetRpe: ex.targetRpe,
-                restSeconds: ex.restSeconds,
-                notes: ex.notes,
-              };
-            }),
+    if (!user) { setLoading(false); return; }
+    getMyActiveRoutine().then((result) => {
+      if (result.ok && result.value) {
+        const ar = result.value;
+        setAssigned(ar);
+        const snap = parseSnapshot(ar.snapshotJson);
+        if (snap) {
+          setSnapshot(snap);
+          setDays(
+            snap.days.map((day) => ({
+              day,
+              exercises: day.exercises,
+            })),
           );
-          return { day, exercises };
-        }),
-      );
-
-      setDays(daysData);
+        }
+      }
       setLoading(false);
-    }
-    load();
+    });
   }, [user]);
 
   if (loading) {
@@ -85,7 +60,7 @@ export default function ClientSesionPage() {
     );
   }
 
-  if (!routine) {
+  if (!assigned || !snapshot) {
     return (
       <div className="max-w-md mx-auto py-12 px-6 text-center space-y-4">
         <Dumbbell className="h-12 w-12 text-neutral-600 mx-auto" />
@@ -100,10 +75,12 @@ export default function ClientSesionPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-neutral-50">{routine.name}</h1>
+        <h1 className="text-2xl font-bold text-neutral-50">
+          {snapshot.templateName}
+        </h1>
         <p className="text-sm text-neutral-500 mt-1">
-          {routine.splitDays} días · {routine.durationWeeks} semanas ·{" "}
-          {routine.goal.toLowerCase().replace("_", " ")}
+          {snapshot.splitDays} días · {snapshot.durationWeeks} semanas ·{" "}
+          {snapshot.goal.toLowerCase().replace("_", " ")}
         </p>
       </div>
 
@@ -112,7 +89,7 @@ export default function ClientSesionPage() {
           const open = expandedDay === idx;
           return (
             <div
-              key={day.id}
+              key={day.dayIndex}
               className="rounded-xl border border-neutral-800 bg-neutral-900 overflow-hidden"
             >
               <button
@@ -145,7 +122,7 @@ export default function ClientSesionPage() {
                   {exercises.map((ex) => (
                     <div key={ex.exerciseId} className="px-4 py-3">
                       <p className="text-sm font-medium text-neutral-200">
-                        {ex.exercise?.nameEs ?? ex.exerciseId}
+                        {ex.nameEs}
                       </p>
                       <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-500">
                         <span>{ex.targetSets} series</span>
@@ -154,7 +131,9 @@ export default function ClientSesionPage() {
                             ? `${ex.targetRepsMin} reps`
                             : `${ex.targetRepsMin}-${ex.targetRepsMax} reps`}
                         </span>
-                        {ex.targetRpe && <span>RPE {ex.targetRpe}</span>}
+                        {ex.targetRpe !== null && (
+                          <span>RPE {ex.targetRpe}</span>
+                        )}
                         <span className="inline-flex items-center gap-0.5">
                           <Clock className="h-3 w-3" />
                           {ex.restSeconds}s descanso

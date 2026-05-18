@@ -1,15 +1,6 @@
-// =============================================================================
-// VIZION — Assign routine page (server wrapper for static export)
-// generateStaticParams must live in a server component.
-// =============================================================================
-
 import AsignarClient from "./_client";
 
-export function generateStaticParams() {
-  return [
-    { routineId: "routine-programa-macho" },
-  ];
-}
+// Production: dynamically rendered. Demo uses generateStaticParams in its branch.
 
 export default async function AsignarPage({
   params,

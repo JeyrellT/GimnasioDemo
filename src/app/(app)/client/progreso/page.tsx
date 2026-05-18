@@ -3,21 +3,21 @@
 import { useEffect, useState } from "react";
 import { Loader2, CheckCircle2, Calendar, Timer } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
-import { listSessionsForClient } from "@/lib/demo/store";
-import type { DemoSessionRow } from "@/lib/offline/db";
+import { getMySessionHistory } from "@/app/actions/client-portal";
+import type { MySessionSummary } from "@/server/actions/client-portal.actions";
 
 export default function ClientProgresoPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [sessions, setSessions] = useState<DemoSessionRow[]>([]);
+  const [sessions, setSessions] = useState<MySessionSummary[]>([]);
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
-    listSessionsForClient(user.id).then((all) => {
-      const sorted = all
-        .filter((s) => s.status === "COMPLETED")
-        .sort((a, b) => (b.completedAt ?? "").localeCompare(a.completedAt ?? ""));
-      setSessions(sorted);
+    getMySessionHistory().then((result) => {
+      if (result.ok) {
+        // Server returns only COMPLETED sessions ordered by startedAt DESC.
+        setSessions(result.value);
+      }
       setLoading(false);
     });
   }, [user]);
@@ -30,7 +30,10 @@ export default function ClientProgresoPage() {
     );
   }
 
-  const totalSets = sessions.reduce((sum, s) => sum + s.setsJson.length, 0);
+  const totalSets = sessions.reduce(
+    (sum, s) => sum + s._count.performedSets,
+    0,
+  );
   const totalMinutes = sessions.reduce(
     (sum, s) => sum + Math.round((s.totalDurationSec ?? 0) / 60),
     0,
@@ -83,20 +86,22 @@ export default function ClientProgresoPage() {
               <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-neutral-200">
-                  Día {(s.dayIndex ?? 0) + 1}
+                  {s.isFreeWorkout
+                    ? "Entrenamiento libre"
+                    : `Día ${(s.dayIndex ?? 0) + 1}`}
                 </p>
                 <p className="text-xs text-neutral-500">
                   {s.completedAt ? formatDate(s.completedAt) : "—"}
                 </p>
               </div>
               <div className="flex items-center gap-3 text-xs text-neutral-500">
-                {s.totalDurationSec && (
+                {s.totalDurationSec !== null && (
                   <span className="inline-flex items-center gap-1">
                     <Timer className="h-3 w-3" />
                     {Math.round(s.totalDurationSec / 60)} min
                   </span>
                 )}
-                <span>{s.setsJson.length} sets</span>
+                <span>{s._count.performedSets} sets</span>
               </div>
             </div>
           ))}
@@ -106,14 +111,14 @@ export default function ClientProgresoPage() {
   );
 }
 
-function formatDate(iso: string): string {
+function formatDate(value: Date | string): string {
   try {
-    return new Date(iso).toLocaleDateString("es-CR", {
+    return new Date(value).toLocaleDateString("es-CR", {
       weekday: "short",
       day: "numeric",
       month: "short",
     });
   } catch {
-    return iso;
+    return String(value);
   }
 }

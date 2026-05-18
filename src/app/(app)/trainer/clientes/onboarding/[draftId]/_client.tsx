@@ -10,7 +10,8 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { getOnboardingDraft } from "@/app/actions/onboarding";
 import { WizardShell } from "../_components/wizard-shell";
-import type { OnboardingDraftDTO, OnboardingPayload } from "@/types/onboarding";
+import { useAuth } from "@/components/providers/auth-provider";
+import type { OnboardingDraftDTO } from "@/types/onboarding";
 
 // ── Inner content (rendered once draft is loaded) ─────────────────────────────
 
@@ -20,6 +21,7 @@ interface ContentProps {
 
 export function OnboardingClientPage({ draftId }: ContentProps) {
   const router = useRouter();
+  const { user } = useAuth();
   const [draft, setDraft] = React.useState<OnboardingDraftDTO | null>(null);
   const [loading, setLoading] = React.useState(true);
 
@@ -30,20 +32,7 @@ export function OnboardingClientPage({ draftId }: ContentProps) {
         router.replace("/trainer/clientes");
         return;
       }
-      const detail = result.value;
-      // Map OnboardingDraftDetail (server shape) → OnboardingDraftDTO (UI shape)
-      const dto: OnboardingDraftDTO = {
-        id: detail.id,
-        mode: detail.mode,
-        currentStep: detail.currentStep,
-        data: (detail.dataJson ?? {}) as Partial<OnboardingPayload>,
-        aiConsentGranted: detail.aiConsentGranted,
-        cedulaExtractionCount: detail.cedulaExtractionCount,
-        workoutPhotoExtractionCount: detail.workoutPhotoExtractionCount,
-        expiresAt: detail.expiresAt instanceof Date ? detail.expiresAt.toISOString() : String(detail.expiresAt),
-        completedAt: detail.completedAt instanceof Date ? detail.completedAt.toISOString() : (detail.completedAt ?? null),
-      };
-      setDraft(dto);
+      setDraft(result.value);
       setLoading(false);
     });
   }, [draftId, router]);
@@ -63,5 +52,5 @@ export function OnboardingClientPage({ draftId }: ContentProps) {
 
   if (!draft) return null;
 
-  return <WizardShell draft={draft} trainerId="trainer-demo-001" />;
+  return <WizardShell draft={draft} trainerId={user?.id ?? ""} />;
 }

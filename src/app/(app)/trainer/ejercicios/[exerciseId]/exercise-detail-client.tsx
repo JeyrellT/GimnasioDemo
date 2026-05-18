@@ -7,8 +7,7 @@ import { getExerciseDetail } from "@/app/actions/exercises";
 import { ExerciseBodyMapView } from "./_components/exercise-body-map-view";
 import { ExerciseMediaGallery } from "./_components/exercise-media-gallery";
 import { useAuth } from "@/components/providers/auth-provider";
-import type { DemoExerciseRow } from "@/lib/offline/db";
-import type { MuscleGroup, ExerciseEquipment, ExerciseDifficulty } from "@prisma/client";
+import type { Exercise, MuscleGroup } from "@prisma/client";
 import { MUSCLE_LABELS, MUSCLE_COLORS, EQUIPMENT_LABELS, DIFFICULTY_META } from "@/lib/constants/exercise-display";
 
 // ---------------------------------------------------------------------------
@@ -66,7 +65,7 @@ interface Props {
 
 export default function ExerciseDetailClient({ exerciseId }: Props) {
   const { user } = useAuth();
-  const [exercise, setExercise] = useState<DemoExerciseRow | null>(null);
+  const [exercise, setExercise] = useState<Exercise | null>(null);
   const [loading, setLoading] = useState(true);
   const [missing, setMissing] = useState(false);
 

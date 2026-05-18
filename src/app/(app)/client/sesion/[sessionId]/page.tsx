@@ -1,8 +1,6 @@
 import { SessionDetailClient } from "./session-detail-client";
 
-export function generateStaticParams() {
-  return [{ sessionId: "demo-stub" }];
-}
+// Production: dynamically rendered. Demo uses generateStaticParams in its branch.
 
 export default function ActiveSessionPage() {
   return <SessionDetailClient />;

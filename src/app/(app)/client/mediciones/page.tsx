@@ -3,23 +3,23 @@
 import { useEffect, useState } from "react";
 import { Loader2, Scale, TrendingDown, TrendingUp, Minus, Plus } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
-import { listMetricsForClient } from "@/lib/demo/store";
-import type { DemoMetricRow } from "@/lib/offline/db";
+import { getMyMetrics } from "@/app/actions/client-portal";
+import type { MyBodyMetric } from "@/server/actions/client-portal.actions";
 import { MeasurementSheet } from "@/components/forms/measurement-sheet";
 
 export default function ClientMedicionesPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState<DemoMetricRow[]>([]);
+  const [metrics, setMetrics] = useState<MyBodyMetric[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   function loadMetrics() {
     if (!user) { setLoading(false); return; }
-    listMetricsForClient(user.id).then((all) => {
-      const sorted = [...all].sort(
-        (a, b) => b.recordedAt.localeCompare(a.recordedAt),
-      );
-      setMetrics(sorted);
+    getMyMetrics().then((result) => {
+      if (result.ok) {
+        // Server returns ordered by recordedAt DESC already; no re-sort needed.
+        setMetrics(result.value);
+      }
       setLoading(false);
     });
   }
@@ -80,7 +80,7 @@ export default function ClientMedicionesPage() {
           {metrics.map((m, idx) => {
             const prev = metrics[idx + 1];
             const weightDiff =
-              prev && m.weightKg && prev.weightKg
+              prev && m.weightKg !== null && prev.weightKg !== null
                 ? m.weightKg - prev.weightKg
                 : null;
 
@@ -103,26 +103,26 @@ export default function ClientMedicionesPage() {
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {m.weightKg && (
+                  {m.weightKg !== null && (
                     <MetricCell
                       label="Peso"
                       value={`${m.weightKg} kg`}
                       diff={weightDiff}
                     />
                   )}
-                  {m.bodyFatPct && (
+                  {m.bodyFatPct !== null && (
                     <MetricCell
                       label="Grasa corporal"
                       value={`${m.bodyFatPct}%`}
                     />
                   )}
-                  {m.muscleMassKg && (
+                  {m.muscleMassKg !== null && (
                     <MetricCell
                       label="Masa muscular"
                       value={`${m.muscleMassKg} kg`}
                     />
                   )}
-                  {m.waistCm && (
+                  {m.waistCm !== null && (
                     <MetricCell label="Cintura" value={`${m.waistCm} cm`} />
                   )}
                 </div>
@@ -183,14 +183,14 @@ function MetricCell({
   );
 }
 
-function formatDate(iso: string): string {
+function formatDate(value: Date | string): string {
   try {
-    return new Date(iso).toLocaleDateString("es-CR", {
+    return new Date(value).toLocaleDateString("es-CR", {
       day: "numeric",
       month: "long",
       year: "numeric",
     });
   } catch {
-    return iso;
+    return String(value);
   }
 }

@@ -1,10 +1,6 @@
 import RoutineDetailClient from "./routine-detail-client";
 
-export function generateStaticParams() {
-  return [
-    { routineId: "routine-programa-macho" },
-  ];
-}
+// Production: dynamically rendered. Demo uses generateStaticParams in its branch.
 
 export default async function RoutinePage({
   params,

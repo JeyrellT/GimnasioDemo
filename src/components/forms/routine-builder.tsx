@@ -497,7 +497,7 @@ function ExerciseSearchPanel({
     if (query.length === 0) {
       // Empty query: show first 12 exercises (browse mode)
       setSearching(true);
-      searchExercises({ limit: 12 }).then((res) => {
+      searchExercises("", undefined, 1, 12).then((res) => {
         if (cancelled) return;
         setResults(res.ok ? res.value.exercises : []);
         setSearching(false);
@@ -512,7 +512,7 @@ function ExerciseSearchPanel({
     }
 
     setSearching(true);
-    searchExercises({ query, limit: 12 }).then((res) => {
+    searchExercises(query, undefined, 1, 12).then((res) => {
       if (cancelled) return;
       setResults(res.ok ? res.value.exercises : []);
       setSearching(false);

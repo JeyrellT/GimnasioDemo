@@ -120,7 +120,7 @@ export function Step9Review({ draftId, trainerId }: Step9ReviewProps) {
       }
       reset();
       toast.success("Cliente creado exitosamente.");
-      router.push(`/trainer/clientes/${result.value.userId}`);
+      router.push(`/trainer/clientes/${result.value.clientUserId}`);
     } finally {
       setCreating(false);
     }

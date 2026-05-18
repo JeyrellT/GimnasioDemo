@@ -37,7 +37,7 @@ export default function RoutineDetailClient({ routineId }: Props) {
     async function load() {
       const [routineResult] = await Promise.all([
         getRoutine(routineId),
-        searchExercises({}),
+        searchExercises("", undefined, 1, 100),
       ]);
 
       if (!routineResult.ok) {

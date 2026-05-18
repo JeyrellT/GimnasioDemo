@@ -158,18 +158,15 @@ export default function EjerciciosPage() {
 
   const loadExercises = useCallback(async () => {
     setLoading(true);
-    const result = await searchExercises({
-      query: q,
-      primaryMuscle: muscle,
-      equipment,
-      limit: 40,
-    });
+    const result = await searchExercises(
+      q ?? "",
+      { muscle, equipment },
+      1,
+      40,
+    );
 
     if (result.ok) {
-      // searchExercises returns { exercises, total } — extract the array
-      const exercises = result.value.exercises;
-      // Apply ownership filter client-side (ExerciseSearchResult lacks createdById, so show all as fallback)
-      setExercises(exercises);
+      setExercises(result.value.exercises);
     } else {
       setExercises([]);
     }
