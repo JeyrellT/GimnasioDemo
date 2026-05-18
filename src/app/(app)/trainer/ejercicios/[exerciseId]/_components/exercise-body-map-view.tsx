@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import type { MuscleGroup } from "@prisma/client";
+import { MUSCLE_LABELS } from "@/lib/constants/exercise-display";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -52,6 +54,18 @@ const MUSCLE_TO_ZONES: Record<MuscleGroup, BodyZone[]> = {
   NECK: ["neck"],
   FULL_BODY: ["chest", "abdomen", "quadLeft", "quadRight", "shoulderLeft", "shoulderRight"],
 };
+
+// Reverse map: zone → muscle enum key (first match wins)
+const ZONE_TO_MUSCLE: Partial<Record<BodyZone, MuscleGroup>> = {} as Partial<
+  Record<BodyZone, MuscleGroup>
+>;
+(Object.entries(MUSCLE_TO_ZONES) as [MuscleGroup, BodyZone[]][]).forEach(([muscle, zones]) => {
+  zones.forEach((zone) => {
+    if (!(zone in ZONE_TO_MUSCLE)) {
+      ZONE_TO_MUSCLE[zone] = muscle;
+    }
+  });
+});
 
 // ---------------------------------------------------------------------------
 // SVG path data (copied from src/components/charts/body-map.tsx)
@@ -195,19 +209,22 @@ const TORSO_D =
 
 type ZoneRole = "primary" | "secondary" | "other";
 
-function getZoneFill(role: ZoneRole): { fill: string; fillOpacity: number; filter?: string } {
+function getZoneFill(
+  role: ZoneRole,
+  hovered: boolean,
+): { fill: string; fillOpacity: number; filter?: string } {
   switch (role) {
     case "primary":
-      return { fill: "#FF6A1A", fillOpacity: 0.6, filter: "url(#glow-primary)" };
+      return { fill: "#FF6A1A", fillOpacity: hovered ? 0.8 : 0.6, filter: "url(#glow-primary)" };
     case "secondary":
-      return { fill: "#F59E0B", fillOpacity: 0.35 };
+      return { fill: "#F59E0B", fillOpacity: hovered ? 0.55 : 0.35 };
     default:
       return { fill: "#FAFAFA", fillOpacity: 0.05 };
   }
 }
 
 // ---------------------------------------------------------------------------
-// Single SVG body view (read-only)
+// Single SVG body view (with hover interactivity)
 // ---------------------------------------------------------------------------
 
 interface BodySvgProps {
@@ -215,14 +232,25 @@ interface BodySvgProps {
   primaryZones: Set<BodyZone>;
   secondaryZones: Set<BodyZone>;
   label: string;
+  hoveredZone: BodyZone | null;
+  onZoneEnter: (zone: BodyZone) => void;
+  onZoneLeave: () => void;
 }
 
-function BodySvg({ paths, primaryZones, secondaryZones, label }: BodySvgProps) {
+function BodySvg({
+  paths,
+  primaryZones,
+  secondaryZones,
+  label,
+  hoveredZone,
+  onZoneEnter,
+  onZoneLeave,
+}: BodySvgProps) {
   return (
     <svg
       viewBox="0 0 360 480"
-      width="200"
-      height="267"
+      width="160"
+      height="213"
       role="img"
       aria-label={label}
       style={{ display: "block", flexShrink: 0 }}
@@ -257,14 +285,16 @@ function BodySvg({ paths, primaryZones, secondaryZones, label }: BodySvgProps) {
         />
       </g>
 
-      {/* Zone fills — no interactivity */}
+      {/* Zone fills — interactive for primary/secondary */}
       {paths.map((p) => {
         const role: ZoneRole = primaryZones.has(p.zone)
           ? "primary"
           : secondaryZones.has(p.zone)
             ? "secondary"
             : "other";
-        const { fill, fillOpacity, filter } = getZoneFill(role);
+        const isHovered = hoveredZone === p.zone;
+        const { fill, fillOpacity, filter } = getZoneFill(role, isHovered);
+        const isInteractive = role !== "other";
         return (
           <path
             key={p.zone + p.view}
@@ -275,7 +305,12 @@ function BodySvg({ paths, primaryZones, secondaryZones, label }: BodySvgProps) {
             strokeWidth={role !== "other" ? 1 : 0}
             strokeOpacity={role === "primary" ? 0.8 : 0.5}
             filter={filter}
-            aria-hidden="true"
+            style={{
+              cursor: isInteractive ? "pointer" : undefined,
+              transition: "fill-opacity 0.15s ease",
+            }}
+            onMouseEnter={isInteractive ? () => onZoneEnter(p.zone) : undefined}
+            onMouseLeave={isInteractive ? onZoneLeave : undefined}
           />
         );
       })}
@@ -298,10 +333,16 @@ export function ExerciseBodyMapView({ primaryMuscle, secondaryMuscles }: Exercis
     secondaryMuscles.flatMap((m) => MUSCLE_TO_ZONES[m] ?? []),
   );
 
+  const [hoveredZone, setHoveredZone] = useState<BodyZone | null>(null);
+
+  // Resolve the muscle label for the hovered zone
+  const hoveredMuscle = hoveredZone ? ZONE_TO_MUSCLE[hoveredZone] : null;
+  const tooltipLabel = hoveredMuscle ? (MUSCLE_LABELS[hoveredMuscle] ?? hoveredMuscle) : null;
+
   return (
     <motion.div {...fadeIn} className="flex flex-col items-center gap-4">
       {/* Dual view: front + back */}
-      <div className="flex items-start justify-center gap-4">
+      <div className="relative flex items-start justify-center gap-4">
         <div className="flex flex-col items-center gap-1.5">
           <span className="text-[10px] font-medium uppercase tracking-widest text-[#71717A]">
             Frente
@@ -311,6 +352,9 @@ export function ExerciseBodyMapView({ primaryMuscle, secondaryMuscles }: Exercis
             primaryZones={primaryZones}
             secondaryZones={secondaryZones}
             label="Vista frontal del cuerpo con músculos marcados"
+            hoveredZone={hoveredZone}
+            onZoneEnter={setHoveredZone}
+            onZoneLeave={() => setHoveredZone(null)}
           />
         </div>
 
@@ -323,8 +367,25 @@ export function ExerciseBodyMapView({ primaryMuscle, secondaryMuscles }: Exercis
             primaryZones={primaryZones}
             secondaryZones={secondaryZones}
             label="Vista dorsal del cuerpo con músculos marcados"
+            hoveredZone={hoveredZone}
+            onZoneEnter={setHoveredZone}
+            onZoneLeave={() => setHoveredZone(null)}
           />
         </div>
+
+        {/* Floating tooltip */}
+        {tooltipLabel && (
+          <div
+            className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
+            aria-hidden="true"
+          >
+            <div className="rounded-md border border-[#3F3F46] bg-[#09090B]/95 px-2.5 py-1 shadow-lg">
+              <span className="text-xs font-semibold text-[#FAFAFA] whitespace-nowrap">
+                {tooltipLabel}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Legend */}

@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Pencil, Dumbbell, Loader2 } from "lucide-react";
-import { getExerciseDetail } from "@/app/actions/exercises";
+import { toast } from "sonner";
+import { getExerciseDetail, updateExercise } from "@/app/actions/exercises";
 import { ExerciseBodyMapView } from "./_components/exercise-body-map-view";
 import { ExerciseMediaGallery } from "./_components/exercise-media-gallery";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -69,6 +70,11 @@ export default function ExerciseDetailClient({ exerciseId }: Props) {
   const [loading, setLoading] = useState(true);
   const [missing, setMissing] = useState(false);
 
+  // Inline instructions edit state
+  const [editingInstructions, setEditingInstructions] = useState(false);
+  const [instructionsDraft, setInstructionsDraft] = useState("");
+  const [savingInstructions, setSavingInstructions] = useState(false);
+
   useEffect(() => {
     getExerciseDetail({ id: exerciseId }).then((result) => {
       if (result.ok) {
@@ -110,10 +116,40 @@ export default function ExerciseDetailClient({ exerciseId }: Props) {
 
   const isOwner =
     user !== null && exercise.createdById !== null && exercise.createdById === user.id;
-  const hasMedia = !!(exercise.thumbnailUrl ?? exercise.gifUrl);
+  const hasMedia = !!(exercise.thumbnailUrl ?? exercise.gifUrl ?? exercise.mediaUrl);
+
+  function handleEditInstructions() {
+    setInstructionsDraft(exercise?.instructionsEs ?? "");
+    setEditingInstructions(true);
+  }
+
+  function handleCancelInstructions() {
+    setEditingInstructions(false);
+    setInstructionsDraft("");
+  }
+
+  async function handleSaveInstructions() {
+    if (!exercise) return;
+    setSavingInstructions(true);
+    try {
+      const result = await updateExercise({ id: exercise.id, instructionsEs: instructionsDraft });
+      if (result.ok) {
+        setExercise((prev) => prev ? { ...prev, instructionsEs: instructionsDraft } : prev);
+        setEditingInstructions(false);
+        setInstructionsDraft("");
+        toast.success("Instrucciones actualizadas");
+      } else {
+        toast.error("No se pudo guardar. Intenta de nuevo.");
+      }
+    } catch {
+      toast.error("Error inesperado al guardar.");
+    } finally {
+      setSavingInstructions(false);
+    }
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Back navigation */}
       <Link
         href="/trainer/ejercicios"
@@ -124,11 +160,11 @@ export default function ExerciseDetailClient({ exerciseId }: Props) {
       </Link>
 
       {/* Hero card */}
-      <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
         {/* Name row + owner badge + edit button */}
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-bold text-[#FAFAFA] leading-tight">
+            <h1 className="text-lg font-bold text-[#FAFAFA] leading-tight">
               {exercise.nameEs}
             </h1>
             {isOwner && (
@@ -184,10 +220,10 @@ export default function ExerciseDetailClient({ exerciseId }: Props) {
       </div>
 
       {/* Two-column body */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         {/* Left column: body map */}
-        <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-          <h2 className="mb-4 text-sm font-semibold text-[#FAFAFA]">Músculos trabajados</h2>
+        <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+          <h2 className="mb-3 text-sm font-semibold text-[#FAFAFA]">Músculos trabajados</h2>
           <ExerciseBodyMapView
             primaryMuscle={exercise.primaryMuscle as MuscleGroup}
             secondaryMuscles={exercise.secondaryMuscles as MuscleGroup[]}
@@ -195,25 +231,71 @@ export default function ExerciseDetailClient({ exerciseId }: Props) {
         </div>
 
         {/* Right column: media + instructions */}
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-4">
           {/* Media gallery */}
           {hasMedia && (
-            <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-              <h2 className="mb-4 text-sm font-semibold text-[#FAFAFA]">Multimedia</h2>
+            <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+              <h2 className="mb-2 text-sm font-semibold text-[#FAFAFA]">Multimedia</h2>
               <ExerciseMediaGallery
                 thumbnailUrl={exercise.thumbnailUrl}
                 gifUrl={exercise.gifUrl}
-                mediaUrl={null}
+                mediaUrl={exercise.mediaUrl}
               />
             </div>
           )}
 
           {/* Instructions */}
-          <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-            <h2 className="mb-3 text-sm font-semibold text-[#FAFAFA]">Instrucciones</h2>
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#A1A1AA]">
-              {exercise.instructionsEs}
-            </p>
+          <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <div className="mb-2 flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-[#FAFAFA]">Instrucciones</h2>
+              {isOwner && !editingInstructions && (
+                <button
+                  type="button"
+                  onClick={handleEditInstructions}
+                  aria-label="Editar instrucciones"
+                  className="rounded p-0.5 text-[#52525B] transition-colors hover:text-[#A1A1AA] focus:outline-none focus:ring-1 focus:ring-[#FF6A1A]"
+                >
+                  <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+              )}
+            </div>
+
+            {editingInstructions ? (
+              <div className="flex flex-col gap-2">
+                <textarea
+                  value={instructionsDraft}
+                  onChange={(e) => setInstructionsDraft(e.target.value)}
+                  className="w-full rounded-lg border border-[#3F3F46] bg-[#09090B] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-[#FF6A1A] focus:outline-none focus:ring-1 focus:ring-[#FF6A1A] resize-y min-h-[120px]"
+                  placeholder="Describe los pasos del ejercicio..."
+                  autoFocus
+                />
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSaveInstructions}
+                    disabled={savingInstructions}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#16A34A] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#15803D] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {savingInstructions && (
+                      <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                    )}
+                    Guardar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelInstructions}
+                    disabled={savingInstructions}
+                    className="inline-flex items-center rounded-lg border border-[#3F3F46] bg-transparent px-3 py-1.5 text-xs font-medium text-[#A1A1AA] transition-colors hover:border-[#52525B] hover:text-[#FAFAFA] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#A1A1AA]">
+                {exercise.instructionsEs}
+              </p>
+            )}
           </div>
         </div>
       </div>
