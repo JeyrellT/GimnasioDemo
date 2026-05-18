@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Dumbbell, User, ArrowRight, Loader2 } from "lucide-react";
+import { Dumbbell, Eye, EyeOff, User, ArrowRight, Loader2 } from "lucide-react";
 import { SignInForm } from "@/components/forms/sign-in-form";
 import {
   Dialog,
@@ -119,6 +119,34 @@ const registerFormSchema = z
 type RegisterFormValues = z.infer<typeof registerFormSchema>;
 
 // ---------------------------------------------------------------------------
+// Password strength logic
+// ---------------------------------------------------------------------------
+
+interface PasswordStrength {
+  score: number; // 0–5
+  label: string;
+  labelColor: string;
+  segmentColor: string;
+}
+
+function getPasswordStrength(password: string): PasswordStrength {
+  if (!password) return { score: 0, label: "", labelColor: "", segmentColor: "" };
+
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[a-z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+
+  if (score <= 1) return { score, label: "Muy débil",  labelColor: "text-red-400",    segmentColor: "bg-red-500"    };
+  if (score === 2) return { score, label: "Débil",      labelColor: "text-orange-400", segmentColor: "bg-orange-500" };
+  if (score === 3) return { score, label: "Aceptable",  labelColor: "text-yellow-400", segmentColor: "bg-yellow-500" };
+  if (score === 4) return { score, label: "Fuerte",     labelColor: "text-green-400",  segmentColor: "bg-green-500"  };
+  return              { score, label: "Muy fuerte",  labelColor: "text-emerald-400", segmentColor: "bg-emerald-500" };
+}
+
+// ---------------------------------------------------------------------------
 // Estilos de input reutilizables (oscuros, con foco naranja)
 // ---------------------------------------------------------------------------
 
@@ -187,10 +215,16 @@ function RegisterDialog({
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerFormSchema),
   });
+
+  const watchedPassword = watch("password", "");
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Cuando el dialog se cierra, reseteamos el form
   function handleOpenChange(isOpen: boolean) {
@@ -275,6 +309,7 @@ function RegisterDialog({
                   id="reg-name"
                   type="text"
                   autoComplete="name"
+                  autoFocus
                   placeholder="Tu nombre"
                   className={inputClassName}
                   aria-invalid={!!errors.name}
@@ -316,18 +351,53 @@ function RegisterDialog({
                 >
                   Contraseña
                 </label>
-                <input
-                  id="reg-password"
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="Mínimo 8 caracteres"
-                  className={inputClassName}
-                  aria-invalid={!!errors.password}
-                  {...register("password")}
-                />
+                <div className="relative">
+                  <input
+                    id="reg-password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    placeholder="Mínimo 8 caracteres"
+                    className={`${inputClassName} pr-10`}
+                    aria-invalid={!!errors.password}
+                    {...register("password")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#71717A] hover:text-[#FAFAFA] transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" aria-hidden="true" />
+                    ) : (
+                      <Eye className="h-4 w-4" aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
                 {errors.password && (
                   <p className="text-xs text-red-400">{errors.password.message}</p>
                 )}
+                {/* Strength meter */}
+                {watchedPassword.length > 0 && (() => {
+                  const strength = getPasswordStrength(watchedPassword);
+                  return (
+                    <div className="space-y-1.5 pt-0.5">
+                      <div className="flex gap-1">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <div
+                            key={i}
+                            className={`h-1 flex-1 rounded-full transition-colors duration-200 ${
+                              i < strength.score ? strength.segmentColor : "bg-zinc-700"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <p className={`text-xs font-medium ${strength.labelColor}`}>
+                        {strength.label}
+                      </p>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Confirmar contraseña */}
@@ -338,15 +408,29 @@ function RegisterDialog({
                 >
                   Confirmar contraseña
                 </label>
-                <input
-                  id="reg-confirm-password"
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="Repetí tu contraseña"
-                  className={inputClassName}
-                  aria-invalid={!!errors.confirmPassword}
-                  {...register("confirmPassword")}
-                />
+                <div className="relative">
+                  <input
+                    id="reg-confirm-password"
+                    type={showConfirmPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    placeholder="Repetí tu contraseña"
+                    className={`${inputClassName} pr-10`}
+                    aria-invalid={!!errors.confirmPassword}
+                    {...register("confirmPassword")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#71717A] hover:text-[#FAFAFA] transition-colors"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" aria-hidden="true" />
+                    ) : (
+                      <Eye className="h-4 w-4" aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
                 {errors.confirmPassword && (
                   <p className="text-xs text-red-400">
                     {errors.confirmPassword.message}

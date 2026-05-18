@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { signIn } from "next-auth/react";
-import { Loader2, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -41,6 +41,7 @@ interface SignInFormProps {
 export function SignInForm({ callbackUrl = "/inicio", onSuccess }: SignInFormProps) {
   const router = useRouter();
   const [mode, setMode] = useState<"password" | "magic">("password");
+  const [showPassword, setShowPassword] = useState(false);
 
   const passwordForm = useForm<PasswordValues>({
     resolver: zodResolver(passwordSchema),
@@ -101,6 +102,7 @@ export function SignInForm({ callbackUrl = "/inicio", onSuccess }: SignInFormPro
                       placeholder="vos@ejemplo.com"
                       autoComplete="email"
                       inputMode="email"
+                      autoFocus
                       {...field}
                     />
                   </FormControl>
@@ -115,12 +117,27 @@ export function SignInForm({ callbackUrl = "/inicio", onSuccess }: SignInFormPro
                 <FormItem>
                   <FormLabel>Contraseña</FormLabel>
                   <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="••••••••"
-                      autoComplete="current-password"
-                      {...field}
-                    />
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        autoComplete="current-password"
+                        className="pr-10"
+                        {...field}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#71717A] hover:text-[#FAFAFA] transition-colors"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" aria-hidden="true" />
+                        ) : (
+                          <Eye className="h-4 w-4" aria-hidden="true" />
+                        )}
+                      </button>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
