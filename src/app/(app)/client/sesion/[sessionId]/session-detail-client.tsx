@@ -4,23 +4,23 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Loader2, Dumbbell } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
-import { getSession } from "@/lib/demo/store";
-import type { DemoSessionRow } from "@/lib/offline/db";
+import { getSessionDetail } from "@/app/actions/client-portal";
+import type { MySessionDetail } from "@/server/actions/client-portal.actions";
 import Link from "next/link";
 
 export function SessionDetailClient() {
   const { user } = useAuth();
   const params = useParams<{ sessionId: string }>();
   const [loading, setLoading] = useState(true);
-  const [session, setSession] = useState<DemoSessionRow | null>(null);
+  const [session, setSession] = useState<MySessionDetail | null>(null);
 
   useEffect(() => {
     if (!params.sessionId) {
       setLoading(false);
       return;
     }
-    getSession(params.sessionId).then((s) => {
-      setSession(s ?? null);
+    getSessionDetail(params.sessionId).then((result) => {
+      if (result.ok) setSession(result.value);
       setLoading(false);
     });
   }, [params.sessionId]);
@@ -56,21 +56,23 @@ export function SessionDetailClient() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-neutral-50">
-          Sesión — Día {(session.dayIndex ?? 0) + 1}
+          {session.isFreeWorkout
+            ? "Entrenamiento libre"
+            : `Sesión — Día ${(session.dayIndex ?? 0) + 1}`}
         </h1>
         <p className="text-sm text-neutral-500 mt-1">
           {session.completedAt ? formatDate(session.completedAt) : "En progreso"}
-          {session.totalDurationSec
+          {session.totalDurationSec !== null
             ? ` · ${Math.round(session.totalDurationSec / 60)} min`
             : ""}
         </p>
       </div>
 
-      {session.setsJson.length === 0 ? (
+      {session.performedSets.length === 0 ? (
         <p className="text-sm text-neutral-500">No hay sets registrados.</p>
       ) : (
         <div className="space-y-2">
-          {session.setsJson.map((set) => (
+          {session.performedSets.map((set) => (
             <div
               key={set.id}
               className="flex items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-900 px-4 py-3"
@@ -80,12 +82,12 @@ export function SessionDetailClient() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-neutral-200 truncate">
-                  {set.exerciseId}
+                  {set.exercise.nameEs}
                 </p>
                 <p className="text-xs text-neutral-500">
-                  {set.weightKg ? `${set.weightKg} kg` : "—"} ·{" "}
-                  {set.reps ? `${set.reps} reps` : "—"}
-                  {set.rpe ? ` · RPE ${set.rpe}` : ""}
+                  {set.weightKg !== null ? `${set.weightKg} kg` : "—"} ·{" "}
+                  {set.reps !== null ? `${set.reps} reps` : "—"}
+                  {set.rpe !== null ? ` · RPE ${set.rpe}` : ""}
                 </p>
               </div>
               {set.isPr && (
@@ -101,14 +103,14 @@ export function SessionDetailClient() {
   );
 }
 
-function formatDate(iso: string): string {
+function formatDate(value: Date | string): string {
   try {
-    return new Date(iso).toLocaleDateString("es-CR", {
+    return new Date(value).toLocaleDateString("es-CR", {
       weekday: "long",
       day: "numeric",
       month: "long",
     });
   } catch {
-    return iso;
+    return String(value);
   }
 }
