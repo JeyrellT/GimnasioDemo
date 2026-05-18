@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Dumbbell, User, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
+import { Dumbbell, User, ArrowRight, Loader2 } from "lucide-react";
 import { SignInForm } from "@/components/forms/sign-in-form";
 import {
   Dialog,
@@ -178,8 +180,7 @@ function RegisterDialog({
   onClose,
   onGoToLogin,
 }: RegisterDialogProps) {
-  // Estado de éxito: mostramos confirmación en lugar del form
-  const [registered, setRegistered] = useState(false);
+  const router = useRouter();
 
   const {
     register,
@@ -190,20 +191,20 @@ function RegisterDialog({
     resolver: zodResolver(registerFormSchema),
   });
 
-  // Cuando el dialog se cierra, reseteamos el form y el estado de éxito
+  // Cuando el dialog se cierra, reseteamos el form
   function handleOpenChange(isOpen: boolean) {
     if (!isOpen) {
       reset();
-      setRegistered(false);
       onClose();
     }
   }
 
   async function onSubmit(data: RegisterFormValues) {
     // Construimos FormData: registerUser() espera FormData, no un objeto plano
+    const email = data.email.trim().toLowerCase();
     const fd = new FormData();
-    fd.set("name", data.name);
-    fd.set("email", data.email);
+    fd.set("name", data.name.trim());
+    fd.set("email", email);
     fd.set("password", data.password);
     fd.set("role", selectedRole);
 
@@ -214,7 +215,28 @@ function RegisterDialog({
       return;
     }
 
-    setRegistered(true);
+    // Auto-login con las credenciales recién creadas — entra directo a la app
+    // sin esperar el link mágico de verificación.
+    const signInResult = await signIn("credentials", {
+      email,
+      password: data.password,
+      redirect: false,
+    });
+
+    if (!signInResult || signInResult.error) {
+      // Fallback: cuenta creada pero auto-login falló. Cerramos el dialog
+      // y dejamos que el usuario ingrese manualmente.
+      toast.success("Cuenta creada. Ingresá con tu email y contraseña.");
+      reset();
+      onClose();
+      return;
+    }
+
+    toast.success("¡Bienvenido a Vizion!");
+    reset();
+    onClose();
+    router.push(selectedRole === "TRAINER" ? "/trainer/inicio" : "/client/inicio");
+    router.refresh();
   }
 
   const roleLabel = selectedRole === "TRAINER" ? "Entrenador/a" : "Cliente";
@@ -222,19 +244,7 @@ function RegisterDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-sm">
-        {/* Pantalla de confirmación post-registro */}
-        {registered ? (
-          <div className="flex flex-col items-center gap-4 py-4 text-center">
-            <CheckCircle2 className="h-12 w-12 text-[#FF6A1A]" aria-hidden="true" />
-            <DialogTitle>Revisá tu correo</DialogTitle>
-            <DialogDescription>
-              Te enviamos un link mágico para activar tu cuenta. Si no lo ves,
-              chequeá la carpeta de spam.
-            </DialogDescription>
-          </div>
-        ) : (
-          <>
-            <DialogHeader>
+          <DialogHeader>
               {/* Badge del rol seleccionado */}
               <div className="mb-1">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-[#FF6A1A]/30 bg-[#FF6A1A]/10 px-2.5 py-0.5 text-xs font-medium text-[#FF6A1A]">
@@ -373,8 +383,6 @@ function RegisterDialog({
                 Ingresá
               </button>
             </p>
-          </>
-        )}
       </DialogContent>
     </Dialog>
   );
