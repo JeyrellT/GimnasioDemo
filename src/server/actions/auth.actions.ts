@@ -269,8 +269,9 @@ export async function registerUser(
 
     logInfo("user.registered", { userId: user.id, role });
 
-    // -- Send magic-link for email verification (fire-and-forget) --
-    await sendMagicLinkForUser(user.id, email, name);
+    // No verification email — registration is open and the client auto-signs in
+    // with the credentials it just submitted. Email verification can be wired
+    // back in later via a dedicated "verify email" CTA inside the app.
 
     return { sent: true, email };
   });
