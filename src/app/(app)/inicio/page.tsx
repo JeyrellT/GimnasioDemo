@@ -22,5 +22,5 @@ export default function InicioPage() {
     return <ClientDashboardClient userId={user.id} name={user.name} />;
   }
 
-  return <TrainerDashboardClient />;
+  return <TrainerDashboardClient trainerName={user.name} />;
 }

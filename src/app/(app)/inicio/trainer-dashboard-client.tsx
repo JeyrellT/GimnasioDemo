@@ -36,7 +36,11 @@ interface DashboardState {
   alerts: DashboardAlert[] | null;
 }
 
-export function TrainerDashboardClient() {
+interface TrainerDashboardClientProps {
+  trainerName: string;
+}
+
+export function TrainerDashboardClient({ trainerName }: TrainerDashboardClientProps) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<DashboardState>({
     kpis: null,
@@ -78,7 +82,7 @@ export function TrainerDashboardClient() {
 
   return (
     <TrainerDashboard
-      trainerName="Demo Trainer"
+      trainerName={trainerName}
       filters={filters}
       kpis={data.kpis}
       calendar={data.calendar}
