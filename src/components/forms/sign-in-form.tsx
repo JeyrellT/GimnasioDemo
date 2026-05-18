@@ -19,6 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { requestMagicLink } from "@/app/actions/auth";
+import { safeRedirect } from "@/lib/safe-redirect";
 
 const passwordSchema = z.object({
   email: z.string().email("Ingresá un correo válido"),
@@ -65,7 +66,7 @@ export function SignInForm({ callbackUrl = "/inicio", onSuccess }: SignInFormPro
 
     toast.success("Bienvenido a Vizion.");
     onSuccess?.();
-    router.push(callbackUrl);
+    router.push(safeRedirect(callbackUrl, "/inicio"));
     router.refresh();
   };
 

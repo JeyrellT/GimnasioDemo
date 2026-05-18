@@ -5,6 +5,7 @@
 
 import { z } from "zod";
 import { emailSchema, idSchema } from "./shared.schema";
+import { safeRedirect } from "@/lib/safe-redirect";
 
 // ── Sign up ───────────────────────────────────────────────────────────────────
 
@@ -35,18 +36,17 @@ export type SignUpInput = z.infer<typeof signUpSchema>;
 
 export const requestMagicLinkSchema = z.object({
   email: emailSchema,
-  /** Optional URL to redirect to after authentication. Must be same-origin. */
+  /**
+   * Optional URL to redirect to after authentication. Must be same-origin.
+   * Validated via safeRedirect — relative paths starting with "/" (not "//")
+   * are allowed; absolute URLs must match APP_URL / NEXTAUTH_URL origin.
+   * Any unsafe value is silently replaced with "/" rather than rejected, so
+   * the magic-link request still succeeds even if an attacker injects a bad URL.
+   */
   callbackUrl: z
     .string()
-    .url()
-    .optional()
-    .refine(
-      (v) =>
-        v === undefined ||
-        v.startsWith("/") ||
-        new URL(v).origin === process.env.APP_URL,
-      "callbackUrl must be a same-origin URL",
-    ),
+    .transform((v) => safeRedirect(v, "/"))
+    .optional(),
 });
 
 export type RequestMagicLinkInput = z.infer<typeof requestMagicLinkSchema>;

@@ -23,6 +23,7 @@ import type { AdapterUser } from "@auth/core/adapters";
 import { authConfig } from "./auth.config";
 import { prisma, prismaRaw } from "@/server/db";
 import { serverEnv } from "@/server/env";
+import { safeNextAuthRedirect } from "@/lib/safe-redirect";
 import { verifyPassword } from "@/lib/crypto/passwords";
 import { sendEmail } from "@/lib/email/client";
 import { logInfo, logWarn, logError } from "@/lib/logger";
@@ -171,6 +172,16 @@ export const fullAuthConfig: NextAuthConfig = {
 
   callbacks: {
     ...authConfig.callbacks,
+
+    /**
+     * redirect callback — guards every post-auth redirect URL.
+     * NextAuth calls this with the URL the user was trying to reach (which can
+     * originate from the `callbackUrl` query param — user-controlled input).
+     * Returning an external URL here would be an open redirect.
+     */
+    redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
+      return safeNextAuthRedirect(url, baseUrl);
+    },
 
     /**
      * signIn callback — runs after any provider successfully authenticates.

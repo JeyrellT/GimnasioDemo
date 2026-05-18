@@ -1,6 +1,32 @@
 import type { NextConfig } from "next";
 
+// ---------------------------------------------------------------------------
+// Env guard — fail fast at build/start if required vars are missing.
+// Only runs in server/Node.js context (not during static export builds).
+// ---------------------------------------------------------------------------
 const isGithubPages = process.env.GITHUB_PAGES === "true";
+
+if (!isGithubPages && process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+  // Dynamic import keeps next.config.ts edge-safe; the actual validation
+  // runs synchronously inside server/env.ts when the module is first loaded.
+  // We use a top-level require because next.config.ts is evaluated by Node.js
+  // (not bundled by Webpack) and ESM dynamic import returns a Promise that
+  // cannot be awaited at module top-level here.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { validateEnv } = require("./src/server/env") as { validateEnv: () => void };
+    validateEnv();
+  } catch (err) {
+    // Surface a clear error message — Next.js sometimes swallows thrown errors
+    // from next.config.ts without printing the cause.
+    const message = err instanceof Error ? err.message : String(err);
+    // biome-ignore lint/suspicious/noConsole: intentional startup failure log
+    console.error("\n[next.config] " + message + "\n");
+    // Re-throw so the build/start process exits non-zero.
+    throw err;
+  }
+}
+
 const isProduction = process.env.NODE_ENV === "production" && !isGithubPages;
 
 const basePath = isGithubPages ? "/GimnasioDemo" : "";
@@ -44,13 +70,6 @@ const nextConfig: NextConfig = {
       },
     },
   }),
-
-  // TODO: Remove after fixing component-level type mismatches (object → FormData).
-  // Prisma 6 $use() → Client Extensions migration complete (2026-05-17).
-  // Remaining TS errors: ~40 component files passing objects where server actions expect FormData.
-  typescript: {
-    ignoreBuildErrors: true,
-  },
 
   // --- Security headers (production only) ------------------------------------
   ...(isProduction && {
