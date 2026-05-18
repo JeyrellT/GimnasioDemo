@@ -33,10 +33,17 @@ if [ "$migrate_ok" = false ]; then
   echo ">>> All $MAX_RETRIES migrate attempts failed — resetting DB schema..."
   echo ">>> WARNING: This will drop all tables and recreate them!"
   pnpm exec prisma db push --force-reset --accept-data-loss --skip-generate
-  echo ">>> Marking migrations as applied..."
-  pnpm exec prisma migrate resolve --applied 20260506000000_init
-  pnpm exec prisma migrate resolve --applied 20260506175122_add_password_hash
-  pnpm exec prisma migrate resolve --applied 20260507185543_add_finance_onboarding
+  echo ">>> Marking ALL migrations as applied to keep _prisma_migrations in sync..."
+  # Iterate over every migration directory under prisma/migrations and mark it
+  # applied. This way the next deploy does NOT try to re-apply migrations whose
+  # schema is already live via db push (which would error and trigger another
+  # destructive reset on each deploy).
+  for dir in prisma/migrations/*/; do
+    name=$(basename "$dir")
+    if [ "$name" != "migration_lock.toml" ]; then
+      pnpm exec prisma migrate resolve --applied "$name" || true
+    fi
+  done
   echo ">>> DB reset complete"
 fi
 

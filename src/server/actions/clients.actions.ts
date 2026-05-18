@@ -1169,7 +1169,16 @@ const quickAddClientSchema = z.object({
 export async function quickAddClient(input: {
   email: string;
   name?: string;
-}): Promise<ActionResult<{ clientId: string; invitationId: string }>> {
+}): Promise<
+  ActionResult<{
+    clientId: string;
+    invitationId: string;
+    /** True if the welcome email was successfully sent via Gmail SMTP. */
+    emailSent: boolean;
+    /** The auto-login URL — give it to the client manually if `emailSent` is false. */
+    welcomeUrl: string;
+  }>
+> {
   return tryCatch(async () => {
     const trainer = await requireTrainer();
 
@@ -1277,13 +1286,16 @@ export async function quickAddClient(input: {
       return { clientId: newUser.id, invitationId: inv.id };
     });
 
-    // -- Send welcome email (outside transaction) --
+    // -- Send welcome email (outside transaction, with a hard timeout) --
+    // The SMTP transport already has its own connect/socket timeouts, but we
+    // wrap with a defensive 20s race so a stuck send never holds the request.
+    let emailSent = false;
     try {
       const trainerName =
         (trainer as { trainerProfile?: { tradeName?: string }; name: string })
           .trainerProfile?.tradeName ?? trainer.name;
 
-      await sendEmail({
+      const sendPromise = sendEmail({
         to: email,
         subject: `${trainerName} creó tu cuenta en Vizion`,
         react: React.createElement(ClientWelcomeEmail, {
@@ -1291,22 +1303,35 @@ export async function quickAddClient(input: {
           welcomeUrl,
         }),
       });
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(
+          () => reject(new Error("EMAIL_SEND_TIMEOUT_20S")),
+          20_000,
+        );
+      });
+
+      await Promise.race([sendPromise, timeoutPromise]);
+      emailSent = true;
     } catch (e) {
       logError(e, {
         action: "quickAddClient.sendEmail",
         invitationId,
         clientId,
       });
-      // Email failure does NOT roll back the created account.
+      // Email failure does NOT roll back the created account — the trainer can
+      // share the welcomeUrl manually and the link still works for 7 days.
+      emailSent = false;
     }
 
     logInfo("client.quick_added", {
       trainerId: trainer.id,
       clientId,
       invitationId,
+      emailSent,
     });
 
-    return { clientId, invitationId };
+    return { clientId, invitationId, emailSent, welcomeUrl };
   });
 }
 

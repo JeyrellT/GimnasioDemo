@@ -41,6 +41,10 @@ function getTransporter(): nodemailer.Transporter {
       user: env.GMAIL_USER,
       pass: env.GMAIL_APP_PASSWORD,
     },
+    // Hard timeouts so a stuck SMTP handshake never hangs a server action.
+    connectionTimeout: 10_000, // 10s to open the TCP connection
+    greetingTimeout: 10_000,   // 10s to receive the server greeting
+    socketTimeout: 15_000,     // 15s of inactivity on an open socket
   });
 
   return cachedTransporter;
