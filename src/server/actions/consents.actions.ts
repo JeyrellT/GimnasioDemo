@@ -1,7 +1,7 @@
 "use server";
 
 // =============================================================================
-// VIZION — Consent Server Actions
+// BLACKLINE FITNESS — Consent Server Actions
 // Owner: backend-api.
 //
 // Ley 8968 (LPDP) requires granular, versioned, revocable consents for:

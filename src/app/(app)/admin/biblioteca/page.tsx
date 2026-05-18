@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — /admin/biblioteca — Demo stub
+// BLACKLINE FITNESS — /admin/biblioteca — Demo stub
 // =============================================================================
 
 import { UnavailableInDemo } from "@/components/shared/unavailable-in-demo";

@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Real auth guard functions
+// BLACKLINE FITNESS — Real auth guard functions
 // Owner: backend-api.
 //
 // All guards use auth() from ./auth.ts to read the JWT session, then query

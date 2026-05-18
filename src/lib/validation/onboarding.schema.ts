@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Onboarding Zod validation schemas
+// BLACKLINE FITNESS — Onboarding Zod validation schemas
 // Owner: backend-api.
 // =============================================================================
 

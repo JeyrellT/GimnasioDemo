@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Measurement sheet store
+// BLACKLINE FITNESS — Measurement sheet store
 // Owner: frontend-react.
 //
 // Coordinates the "+ Nueva medición" sheet between two Client Components that

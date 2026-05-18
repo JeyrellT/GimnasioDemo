@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — KpiHeroCard
+// BLACKLINE FITNESS — KpiHeroCard
 // Owner: frontend-react.
 // Muestra un KPI individual: label, valor, delta semantizado, sparkline mini.
 // =============================================================================

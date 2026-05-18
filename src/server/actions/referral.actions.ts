@@ -1,6 +1,6 @@
 "use server";
 // =============================================================================
-// VIZION — Referral system server actions
+// BLACKLINE FITNESS — Referral system server actions
 // Owner: backend-api.
 //
 // Surface:

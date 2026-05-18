@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Production Next.js configuration
+// BLACKLINE FITNESS — Production Next.js configuration
 // Owner: devops-deploy.
 //
 // IMPORTANT: This file shows what next.config.ts should look like for
@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
       {
         // R2 public-bucket custom domain (if configured)
         protocol: "https",
-        hostname: "**.vizion.app",
+        hostname: "**.blacklinefitness.app",
       },
     ],
   },
@@ -72,8 +72,8 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/:path*",
-        has: [{ type: "host", value: "www.vizion.app" }],
-        destination: "https://vizion.app/:path*",
+        has: [{ type: "host", value: "www.blacklinefitness.app" }],
+        destination: "https://blacklinefitness.app/:path*",
         permanent: true,
       },
     ];

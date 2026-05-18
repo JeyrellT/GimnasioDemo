@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — MovimientosTipoFilter
+// BLACKLINE FITNESS — MovimientosTipoFilter
 // Chip filter: Todos / Gastos / Ventas — updates URL ?tipo= param.
 // =============================================================================
 

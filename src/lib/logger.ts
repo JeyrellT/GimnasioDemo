@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Pino logger
+// BLACKLINE FITNESS — Pino logger
 // Owner: backend-api.
 //
 // Pretty-prints in development, emits structured JSON in production.

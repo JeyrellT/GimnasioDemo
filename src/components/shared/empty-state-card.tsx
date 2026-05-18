@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — EmptyStateCard
+// BLACKLINE FITNESS — EmptyStateCard
 // Owner: frontend-react.
 // Componente genérico de empty state con ícono, título, descripción y acción
 // opcional. Usalo en cualquier sección del app que pueda estar vacía.

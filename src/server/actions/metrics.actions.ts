@@ -1,6 +1,6 @@
 "use server";
 // =============================================================================
-// VIZION — Metrics & Progress Photos server actions
+// BLACKLINE FITNESS — Metrics & Progress Photos server actions
 // Owner: backend-api.
 //
 // All functions are wrapped in tryCatch() so the caller always receives

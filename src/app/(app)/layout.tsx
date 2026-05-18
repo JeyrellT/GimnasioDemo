@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — (app) layout — Server Component
+// BLACKLINE FITNESS — (app) layout — Server Component
 // Renders the ImpersonationBanner (server component, zero-cost when inactive)
 // above the client AppShell.
 //

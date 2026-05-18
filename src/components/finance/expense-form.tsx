@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — ExpenseForm
+// BLACKLINE FITNESS — ExpenseForm
 // Calls createExpense server action. Works inside Dialog or standalone.
 // =============================================================================
 

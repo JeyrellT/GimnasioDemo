@@ -108,7 +108,7 @@ export function BodyMapPopover({
         style={
           reducedMotion
             ? undefined
-            : { animation: "vizion-popover-in 0.16s ease-out" }
+            : { animation: "blackline-fitness-popover-in 0.16s ease-out" }
         }
         aria-label={`Detalle de ${label}`}
       >
@@ -175,7 +175,7 @@ export function BodyMapPopover({
 // ---------------------------------------------------------------------------
 
 export const POPOVER_KEYFRAMES = `
-@keyframes vizion-popover-in {
+@keyframes blackline-fitness-popover-in {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }

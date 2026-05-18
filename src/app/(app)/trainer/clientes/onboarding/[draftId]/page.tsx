@@ -1,5 +1,5 @@
-// =============================================================================
-// VIZION — Onboarding wizard page
+﻿// =============================================================================
+// BLACKLINE FITNESS — Onboarding wizard page
 // Owner: frontend-react.
 // Server component wrapper — satisfies static export + generateStaticParams.
 // The actual interactive shell is rendered by OnboardingClientPage.

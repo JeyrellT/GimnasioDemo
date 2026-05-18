@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Client profile validation schemas
+// BLACKLINE FITNESS — Client profile validation schemas
 // Owner: backend-api.
 // =============================================================================
 

@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — NextAuth v5 edge-compatible configuration
+// BLACKLINE FITNESS — NextAuth v5 edge-compatible configuration
 // Owner: backend-api.
 //
 // This file contains ONLY the auth settings that are safe to import in

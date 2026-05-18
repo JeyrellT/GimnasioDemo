@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Routine validation schemas
+// BLACKLINE FITNESS — Routine validation schemas
 // Owner: backend-api.
 // =============================================================================
 

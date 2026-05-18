@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — DashboardSkeleton (and section-level variants)
+// BLACKLINE FITNESS — DashboardSkeleton (and section-level variants)
 // Phase 3, Agent 7 (data-viz).
 // Loading fallbacks for Suspense boundaries. Mirrors the real page layout to
 // prevent layout shift. Uses ShimmerSkeleton for animated placeholders.

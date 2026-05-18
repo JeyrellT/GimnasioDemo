@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { VizionLogo } from "@/components/shared/vizion-logo";
+import { BlacklineFitnessLogo } from "@/components/shared/blackline-fitness-logo";
 
-const BASE = process.env.GITHUB_PAGES === "true" ? "/GimnasioDemo" : "";
+const BASE = process.env.GITHUB_PAGES === "true" ? "/BlacklineFitness" : "";
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -35,10 +35,10 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       {/* Logo */}
       <Link
         href="/"
-        aria-label="Vizion — inicio"
+        aria-label="Blackline Fitness — inicio"
         className="relative z-10 mb-6 flex items-center"
       >
-        <VizionLogo variant="full" size={36} />
+        <BlacklineFitnessLogo variant="full" size={36} />
       </Link>
 
       {/* Glassmorphism card */}

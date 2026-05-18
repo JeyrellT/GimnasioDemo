@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Demo actions: clients
+// BLACKLINE FITNESS — Demo actions: clients
 // Mirrors all signatures from src/app/actions/clients.ts
 // =============================================================================
 

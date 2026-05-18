@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Puppeteer browser singleton
+// BLACKLINE FITNESS — Puppeteer browser singleton
 // Owner: document-automation-architect.
 //
 // Manages a single warm browser instance across the process lifetime.
@@ -230,10 +230,10 @@ export async function closeBrowser(): Promise<void> {
 // Register once; guard against double-registration in hot-reload scenarios.
 // We attach a sentinel to the global object (not process directly) to avoid
 // TypeScript's "expression always truthy" warning on process existence checks.
-const _global = globalThis as typeof globalThis & { _vizionPdfSigterm?: boolean };
+const _global = globalThis as typeof globalThis & { _blackline-fitnessPdfSigterm?: boolean };
 
-if (!_global._vizionPdfSigterm) {
-  _global._vizionPdfSigterm = true;
+if (!_global._blackline-fitnessPdfSigterm) {
+  _global._blackline-fitnessPdfSigterm = true;
 
   process.on("SIGTERM", () => {
     closeBrowser().catch((e) => logError(e, { signal: "SIGTERM" }));

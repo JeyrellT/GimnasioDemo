@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Demo mode auth guards
+// BLACKLINE FITNESS — Demo mode auth guards
 // All functions return the hardcoded demo trainer immediately.
 // No DB, no session checks, no redirects (except role-mismatch).
 // =============================================================================
@@ -9,7 +9,7 @@ import { redirect } from "next/navigation";
 const DEMO_TRAINER = {
   id: "trainer-demo-001",
   name: "Coach Demo",
-  email: "demo@vizion.app",
+  email: "demo@blacklinefitness.app",
   role: "TRAINER" as const,
   emailVerified: new Date("2024-01-01"),
   pushOptIn: false,
@@ -22,7 +22,7 @@ const DEMO_TRAINER = {
   trainerProfile: {
     id: "trainer-profile-demo",
     userId: "trainer-demo-001",
-    tradeName: "Vizion Demo Gym",
+    tradeName: "Blackline Fitness Demo Gym",
     specialty: "Hipertrofia y pérdida de grasa",
     bio: "Cuenta demo para presentación.",
     defaultMonthlyPriceCRC: { toString: () => "60000" },

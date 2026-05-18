@@ -82,7 +82,7 @@ export default function EntrenadorPricingPage() {
       </div>
 
       <p className="text-xs text-[#71717A] leading-relaxed">
-        Vizion no cobra comisión sobre tus cobros en el MVP. Registramos la
+        Blackline Fitness no cobra comisión sobre tus cobros en el MVP. Registramos la
         factura entre vos y tu cliente. El procesamiento de pagos en línea se
         activa cuando decidís.
       </p>

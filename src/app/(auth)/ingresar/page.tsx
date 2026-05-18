@@ -33,7 +33,7 @@ interface DemoProfile {
 }
 
 const DEMO_PROFILES: DemoProfile[] = [
-  { id: "trainer-demo-001", name: "Coach Demo", email: "demo@vizion.app", role: "TRAINER", avatarInitials: "CD" },
+  { id: "trainer-demo-001", name: "Coach Demo", email: "demo@blacklinefitness.app", role: "TRAINER", avatarInitials: "CD" },
   { id: "client-ana", name: "Ana Solis Mora", email: "ana.solis@demo.local", role: "CLIENT", avatarInitials: "AS" },
   { id: "client-bruno", name: "Bruno Jimenez Rojas", email: "bruno.jimenez@demo.local", role: "CLIENT", avatarInitials: "BJ" },
   { id: "client-diana", name: "Diana Mora Quesada", email: "diana.mora@demo.local", role: "CLIENT", avatarInitials: "DM" },
@@ -41,14 +41,14 @@ const DEMO_PROFILES: DemoProfile[] = [
 
 function DemoProfileSelector() {
   function handleSelect(profile: DemoProfile) {
-    localStorage.setItem("vizion-demo-profile", JSON.stringify(profile.id));
+    localStorage.setItem("blackline-fitness-demo-profile", JSON.stringify(profile.id));
     window.location.href = profile.role === "TRAINER" ? "/inicio" : "/client/rutinas";
   }
 
   return (
     <div className="space-y-8">
       <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-bold text-[#FAFAFA]">Vizion Demo</h1>
+        <h1 className="text-2xl font-bold text-[#FAFAFA]">Blackline Fitness Demo</h1>
         <p className="text-sm text-[#71717A]">
           Elegí un perfil para explorar la demo. Tus datos se guardan solo en
           este navegador.
@@ -268,7 +268,7 @@ function RegisterDialog({
       return;
     }
 
-    toast.success("¡Bienvenido a Vizion!");
+    toast.success("¡Bienvenido a Blackline Fitness!");
     reset();
     onClose();
     router.push("/inicio");
@@ -533,7 +533,7 @@ function ProdHub() {
       {/* ------------------------------------------------------------------ */}
       <div className="space-y-6">
         <div className="space-y-1.5 text-center">
-          <h1 className="text-2xl font-bold text-[#FAFAFA]">Bienvenido a Vizion</h1>
+          <h1 className="text-2xl font-bold text-[#FAFAFA]">Bienvenido a Blackline Fitness</h1>
           <p className="text-sm text-[#71717A]">
             Seleccioná tu perfil para empezar
           </p>

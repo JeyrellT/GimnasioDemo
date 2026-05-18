@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — PDF generation barrel
+// BLACKLINE FITNESS — PDF generation barrel
 // Owner: document-automation-architect.
 //
 // Public API for the PDF layer.  Backend-api calls generateRoutinePdf() from
@@ -179,8 +179,8 @@ function buildHtmlDocument(innerHtml: string, css: string): string {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="generator" content="Vizion PDF v1" />
-  <title>Rutina Vizion</title>
+  <meta name="generator" content="Blackline Fitness PDF v1" />
+  <title>Rutina Blackline Fitness</title>
   <style>${css}</style>
 </head>
 <body>

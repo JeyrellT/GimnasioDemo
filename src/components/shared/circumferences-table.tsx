@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — CircumferencesTable
+// BLACKLINE FITNESS — CircumferencesTable
 // Owner: frontend-react.
 // Tabla de circunferencias agrupadas con valor + delta. Navegable por teclado.
 // Alternativa accesible al body map SVG.

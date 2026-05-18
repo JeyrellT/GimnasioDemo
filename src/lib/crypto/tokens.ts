@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Cryptographic token utilities
+// BLACKLINE FITNESS — Cryptographic token utilities
 // Owner: backend-api (spec from cybersecurity-auditor).
 //
 // Design decisions:
@@ -12,7 +12,7 @@
 //     mismatch behaviour; wrapped in try/catch as belt-and-suspenders.
 //   - signDownloadToken / verifyDownloadToken: JOSE compact JWS (HS256) using
 //     jose library already in the dependency tree via next-auth.
-//     Audience is narrowed to "vizion-lpdp-download" so a token issued for
+//     Audience is narrowed to "blackline-fitness-lpdp-download" so a token issued for
 //     downloads can never be used as an auth token or vice-versa.
 // =============================================================================
 
@@ -44,8 +44,8 @@ const ALPHABET_CEIL = Math.floor(256 / ALPHABET_LEN) * ALPHABET_LEN; // 220
 const BYTES_PER_CHAR_POOL = 2;
 
 // JWT constants
-const JWT_ISSUER = "vizion";
-const JWT_AUDIENCE = "vizion-lpdp-download";
+const JWT_ISSUER = "blackline-fitness";
+const JWT_AUDIENCE = "blackline-fitness-lpdp-download";
 const JWT_ALGORITHM = "HS256";
 
 // -----------------------------------------------------------------------------
@@ -153,8 +153,8 @@ export interface DownloadTokenPayload {
  * Sign a compact JWS (HS256) download token using NEXTAUTH_SECRET.
  *
  * Claims set:
- *   iss  "vizion"
- *   aud  "vizion-lpdp-download"
+ *   iss  "blackline-fitness"
+ *   aud  "blackline-fitness-lpdp-download"
  *   iat  current Unix time (setIssuedAt)
  *   exp  expiresAt (Unix seconds)
  *   userId, requestId (custom claims)

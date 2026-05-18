@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Result<T, E> type and helpers
+// BLACKLINE FITNESS — Result<T, E> type and helpers
 // Owner: backend-api.
 //
 // All Server Actions and Route Handler boundaries return Result<T, AppError>.

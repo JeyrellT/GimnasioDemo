@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { VizionLogo } from "@/components/shared/vizion-logo";
+import { BlacklineFitnessLogo } from "@/components/shared/blackline-fitness-logo";
 
 interface OnboardingLayoutProps {
   children: ReactNode;
@@ -22,8 +22,8 @@ export default function OnboardingLayout({ children }: OnboardingLayoutProps) {
     <div className="flex min-h-dvh flex-col bg-[#09090B]">
       {/* Top bar */}
       <header className="flex h-14 items-center justify-between border-b border-[#3F3F46] px-4">
-        <Link href="/" aria-label="Vizion — inicio">
-          <VizionLogo variant="mark" size={28} />
+        <Link href="/" aria-label="Blackline Fitness — inicio">
+          <BlacklineFitnessLogo variant="mark" size={28} />
         </Link>
         <p className="text-xs text-[#71717A]">Configuración inicial</p>
         {/* Spacer */}

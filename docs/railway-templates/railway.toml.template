@@ -20,7 +20,7 @@ buildCommand = "NODE_ENV=development pnpm install --frozen-lockfile && pnpm exec
 startCommand = "sh scripts/start.sh"
 
 # Endpoint que Railway pinguea para saber si está vivo.
-# Devolver 200 + JSON simple. Ver `/api/health/route.ts` de Vizion como referencia.
+# Devolver 200 + JSON simple. Ver `/api/health/route.ts` de Blackline Fitness como referencia.
 healthcheckPath = "/api/health"
 
 # Cuánto esperar la primera respuesta exitosa antes de marcar el deploy como fallido.

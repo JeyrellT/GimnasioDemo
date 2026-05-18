@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Body metric validation schemas
+// BLACKLINE FITNESS — Body metric validation schemas
 // Owner: backend-api.
 // =============================================================================
 

@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — AnimatedCounter
+// BLACKLINE FITNESS — AnimatedCounter
 // Owner: frontend-react.
 // Counts from 0 → value using a spring when the element enters the viewport.
 // Respects prefers-reduced-motion: renders the final value immediately if true.

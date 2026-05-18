@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Feature flags wrapper
+// BLACKLINE FITNESS — Feature flags wrapper
 // Owner: backend-api.
 //
 // Reads from env.ts by default. Structured so that migrating to

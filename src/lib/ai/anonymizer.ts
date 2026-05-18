@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Anonymization helpers (defense in depth before sending to Gemini)
+// BLACKLINE FITNESS — Anonymization helpers (defense in depth before sending to Gemini)
 // Owner: ai-orchestrator.
 //
 // Authoritative EXIF stripping is performed by backend-api in

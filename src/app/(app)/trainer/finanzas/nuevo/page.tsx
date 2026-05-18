@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — /trainer/finanzas/nuevo
+// BLACKLINE FITNESS — /trainer/finanzas/nuevo
 // Quick-entry form: register a gasto or a venta one-off.
 // Owner: frontend-react.
 // =============================================================================

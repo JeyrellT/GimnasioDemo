@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Workout-log photo extraction
+// BLACKLINE FITNESS — Workout-log photo extraction
 // Owner: ai-orchestrator.
 //
 // Public API:

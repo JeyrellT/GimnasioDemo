@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — /trainer/finanzas loading skeleton
+// BLACKLINE FITNESS — /trainer/finanzas loading skeleton
 // Owner: frontend-react.
 // =============================================================================
 

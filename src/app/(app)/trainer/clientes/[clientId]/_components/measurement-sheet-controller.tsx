@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 // =============================================================================
-// VIZION — MeasurementSheetMount
+// BLACKLINE FITNESS — MeasurementSheetMount
 // Owner: frontend-react.
 //
 // Mounted once per profile page. Reads open/close state from the global

@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — ClientHeroCard
+// BLACKLINE FITNESS — ClientHeroCard
 // Owner: frontend-react.
 // Hero del perfil: avatar, nombre, meta-line con chips, botones primarios.
 // =============================================================================

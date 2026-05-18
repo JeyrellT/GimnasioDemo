@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — ExerciseMediaUpload
+// BLACKLINE FITNESS — ExerciseMediaUpload
 // Owner: frontend-react.
 //
 // Drag-and-drop thumbnail uploader for exercises.

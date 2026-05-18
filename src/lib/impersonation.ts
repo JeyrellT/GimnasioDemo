@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — HMAC-signed impersonation cookie helpers
+// BLACKLINE FITNESS — HMAC-signed impersonation cookie helpers
 // Owner: backend-api.
 //
 // SERVER-ONLY — imports node:crypto. Never import from client components or

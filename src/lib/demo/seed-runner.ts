@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Demo seed runner
+// BLACKLINE FITNESS — Demo seed runner
 // Idempotent: checks KV flag before seeding. Call from layout or provider.
 // =============================================================================
 
@@ -57,7 +57,7 @@ export async function ensureDemoSeeded(): Promise<void> {
     },
   );
 
-  console.info("[vizion-demo] seed v8 completed");
+  console.info("[blackline-fitness-demo] seed v8 completed");
 }
 
 export async function resetDemoData(): Promise<void> {
@@ -96,5 +96,5 @@ export async function resetDemoData(): Promise<void> {
   );
 
   await ensureDemoSeeded();
-  console.info("[vizion-demo] data reset and re-seeded");
+  console.info("[blackline-fitness-demo] data reset and re-seeded");
 }

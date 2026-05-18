@@ -78,7 +78,7 @@ export function Step8Consents({ draftId, aiWasUsed }: Step8ConsentsProps) {
             onCheckedChange={setTerms}
             required
             version={CONSENT_VERSION}
-            label="El cliente acepta los Terminos de Servicio y la Politica de Privacidad de Vizion."
+            label="El cliente acepta los Terminos de Servicio y la Politica de Privacidad de Blackline Fitness."
             policyHref="/legal/terminos"
             policyLabel="Ver terminos"
           />
@@ -90,7 +90,7 @@ export function Step8Consents({ draftId, aiWasUsed }: Step8ConsentsProps) {
             onCheckedChange={setHealth}
             required
             version={CONSENT_VERSION}
-            label="El cliente autoriza el tratamiento de datos sensibles de salud (PAR-Q, mediciones antropometricas, fotos de progreso) por Vizion y el entrenador, segun la Ley 8968."
+            label="El cliente autoriza el tratamiento de datos sensibles de salud (PAR-Q, mediciones antropometricas, fotos de progreso) por Blackline Fitness y el entrenador, segun la Ley 8968."
             policyHref="/legal/privacidad"
             policyLabel="Ver politica"
           />
@@ -120,7 +120,7 @@ export function Step8Consents({ draftId, aiWasUsed }: Step8ConsentsProps) {
             onCheckedChange={setMarketing}
             required={false}
             version={CONSENT_VERSION}
-            label="El cliente acepta recibir novedades, consejos y ofertas de Vizion por correo electronico."
+            label="El cliente acepta recibir novedades, consejos y ofertas de Blackline Fitness por correo electronico."
           />
         </div>
       </div>

@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — LPDP data export ready email template (React Email)
+// BLACKLINE FITNESS — LPDP data export ready email template (React Email)
 // Owner: backend-api.
 //
 // Sent after generateLpdpExport() completes and the ZIP is ready in R2.
@@ -104,7 +104,7 @@ export default function LpdpExportReadyEmail({
           {/* Footer */}
           <Section style={styles.footer}>
             <Text style={styles.footer_text}>
-              Responsable del tratamiento: Vizion Technologies S.R.L. — DPO:{" "}
+              Responsable del tratamiento: Blackline Fitness S.R.L. — DPO:{" "}
               <Link href={`mailto:${EMAIL_DPO}`} style={styles.footer_link}>
                 {EMAIL_DPO}
               </Link>

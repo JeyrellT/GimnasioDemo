@@ -1,6 +1,6 @@
 "use server";
 // =============================================================================
-// VIZION — Super Admin server actions
+// BLACKLINE FITNESS — Super Admin server actions
 // Owner: backend-api.
 //
 // ALL actions in this file are gated behind requireSuperAdmin(). They are

@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — FinancePeriodSelector
+// BLACKLINE FITNESS — FinancePeriodSelector
 // Owner: frontend-react.
 // Month picker dropdown — updates URL search param ?month=YYYY-MM.
 // =============================================================================

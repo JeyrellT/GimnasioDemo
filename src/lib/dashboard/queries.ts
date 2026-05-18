@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Dashboard private query helpers (DEMO STUB)
+// BLACKLINE FITNESS — Dashboard private query helpers (DEMO STUB)
 // Owner: backend-api.
 //
 // In demo mode, all Prisma queries are replaced with empty stubs.

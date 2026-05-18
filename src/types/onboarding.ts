@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Onboarding domain types
+// BLACKLINE FITNESS — Onboarding domain types
 // Owner: backend-api.
 // =============================================================================
 

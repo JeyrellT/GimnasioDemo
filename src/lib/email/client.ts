@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Gmail SMTP email client (via nodemailer)
+// BLACKLINE FITNESS — Gmail SMTP email client (via nodemailer)
 // Owner: backend-api.
 //
 // Thin wrapper around nodemailer's Gmail SMTP transport with explicit host/port
@@ -12,7 +12,7 @@
 // Auth: requires a Gmail account with 2FA + App Password.
 //   GMAIL_USER          — full Gmail address (e.g. gerencia@jcanalytic.com)
 //   GMAIL_APP_PASSWORD  — 16-char app password from myaccount.google.com/apppasswords
-//   GMAIL_FROM_NAME     — display name shown to recipients (e.g. "Vizion")
+//   GMAIL_FROM_NAME     — display name shown to recipients (e.g. "Blackline Fitness")
 //
 // Limits: Gmail free caps ~500 emails/day; Google Workspace caps ~2000/day.
 //
@@ -207,7 +207,7 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
     finalText = await render(react, { plainText: true });
   }
 
-  const fromName = env.GMAIL_FROM_NAME ?? "Vizion";
+  const fromName = env.GMAIL_FROM_NAME ?? "Blackline Fitness";
   const fromAddress = env.GMAIL_USER ?? "";
   const from = `${fromName} <${fromAddress}>`;
 

@@ -2,17 +2,17 @@
 
 import { cn } from "@/lib/utils";
 
-interface VizionLogoProps {
+interface BlacklineFitnessLogoProps {
   variant?: "mark" | "wordmark" | "full";
   className?: string;
   size?: number;
 }
 
-export function VizionLogo({ variant = "mark", className, size }: VizionLogoProps) {
+export function BlacklineFitnessLogo({ variant = "mark", className, size }: BlacklineFitnessLogoProps) {
   if (variant === "wordmark" || variant === "full") {
     return (
       <div className={cn("flex items-center gap-2", className)}>
-        {variant === "full" && <VizionMark size={size ?? 32} />}
+        {variant === "full" && <BlacklineFitnessMark size={size ?? 32} />}
         <span
           className="font-bold tracking-[0.08em] uppercase"
           style={{
@@ -23,15 +23,15 @@ export function VizionLogo({ variant = "mark", className, size }: VizionLogoProp
             backgroundClip: "text",
           }}
         >
-          VIZION
+          BLACKLINE FITNESS
         </span>
       </div>
     );
   }
-  return <VizionMark size={size ?? 32} className={className} />;
+  return <BlacklineFitnessMark size={size ?? 32} className={className} />;
 }
 
-function VizionMark({ size = 32, className }: { size?: number; className?: string }) {
+function BlacklineFitnessMark({ size = 32, className }: { size?: number; className?: string }) {
   return (
     <svg
       width={size}
@@ -43,12 +43,12 @@ function VizionMark({ size = 32, className }: { size?: number; className?: strin
       aria-hidden="true"
     >
       <defs>
-        <linearGradient id="vizion-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id="blackline-fitness-grad" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#FF8C42" />
           <stop offset="50%" stopColor="#FF6A1A" />
           <stop offset="100%" stopColor="#C04A00" />
         </linearGradient>
-        <linearGradient id="vizion-inner" x1="50%" y1="0%" x2="50%" y2="100%">
+        <linearGradient id="blackline-fitness-inner" x1="50%" y1="0%" x2="50%" y2="100%">
           <stop offset="0%" stopColor="#FFB374" />
           <stop offset="100%" stopColor="#FF6A1A" />
         </linearGradient>
@@ -56,12 +56,12 @@ function VizionMark({ size = 32, className }: { size?: number; className?: strin
       {/* Outer V shape — angular, sharp, arrowhead pointing down */}
       <path
         d="M5 5 L20 36 L35 5 L27 5 L20 22 L13 5 Z"
-        fill="url(#vizion-grad)"
+        fill="url(#blackline-fitness-grad)"
       />
       {/* Inner highlight facet for depth — metallic/faceted feel */}
       <path
         d="M10 7 L20 30 L30 7 L25 7 L20 19 L15 7 Z"
-        fill="url(#vizion-inner)"
+        fill="url(#blackline-fitness-inner)"
         opacity="0.3"
       />
     </svg>

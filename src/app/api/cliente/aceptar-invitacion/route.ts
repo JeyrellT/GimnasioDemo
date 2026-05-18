@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Auto-login route for quick-add client flow
+// BLACKLINE FITNESS — Auto-login route for quick-add client flow
 // Owner: backend-api.
 //
 // GET /api/cliente/aceptar-invitacion?token=<invitation-token>

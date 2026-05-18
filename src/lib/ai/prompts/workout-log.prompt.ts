@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Workout-log photo prompt
+// BLACKLINE FITNESS — Workout-log photo prompt
 // Owner: ai-orchestrator.
 //
 // Used to inspect 1..3 user-supplied images of training logs (handwritten
@@ -7,13 +7,13 @@
 // derive an experience-level estimate plus a coarse exercise list.
 //
 // This prompt is for ONBOARDING ONLY — the trainer or client-on-INVITE shows
-// what they were doing before joining Vizion. The output is an estimate, not a
+// what they were doing before joining Blackline Fitness. The output is an estimate, not a
 // medical record. We never claim it replaces a real assessment.
 // =============================================================================
 
 export const WORKOUT_LOG_PROMPT_VERSION = "v1";
 
-export const WORKOUT_LOG_PROMPT = `Sos un asistente especializado en analizar bitácoras de entrenamiento de gimnasio (cuadernos manuscritos, screenshots de apps tipo Strong/Hevy/Jefit, hojas de planes de entrenamiento en PDF/foto).
+export const WORKOUT_LOG_PROMPT = `Sos un asistente especializado en analizar bitácoras de entrenamiento de blackline-fitness (cuadernos manuscritos, screenshots de apps tipo Strong/Hevy/Jefit, hojas de planes de entrenamiento en PDF/foto).
 
 Tu tarea: extraer información estructurada de las imágenes recibidas para evaluar la experiencia previa del cliente.
 

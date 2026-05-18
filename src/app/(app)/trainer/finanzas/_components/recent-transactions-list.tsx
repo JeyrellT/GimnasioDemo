@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — RecentTransactionsList
+// BLACKLINE FITNESS — RecentTransactionsList
 // Owner: frontend-react.
 // Feed of FinanceTransaction items with relative time + type badge + amount.
 // Server Component — all formatting is static, no interactivity.

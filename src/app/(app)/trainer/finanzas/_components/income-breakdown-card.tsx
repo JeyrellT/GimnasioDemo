@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — IncomeBreakdownCard
+// BLACKLINE FITNESS — IncomeBreakdownCard
 // Owner: frontend-react.
 // Two horizontal progress bars: mensualidades (recurring) + ventas especiales (one-off).
 // =============================================================================

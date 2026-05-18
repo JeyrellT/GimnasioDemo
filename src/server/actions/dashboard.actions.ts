@@ -1,6 +1,6 @@
 "use server";
 // =============================================================================
-// VIZION — Dashboard & Notifications server actions
+// BLACKLINE FITNESS — Dashboard & Notifications server actions
 // Owner: backend-api.
 //
 // Trainer dashboard aggregates active clients, sessions, pending charges and

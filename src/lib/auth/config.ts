@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Demo mode Auth.js config stub
+// BLACKLINE FITNESS — Demo mode Auth.js config stub
 // Replaces the real NextAuth setup. No real providers, no DB adapter.
 // Exports the same names so callsites do not break.
 // =============================================================================
@@ -16,7 +16,7 @@ export async function auth() {
   return {
     user: {
       id: "trainer-demo-001",
-      email: "demo@vizion.app",
+      email: "demo@blacklinefitness.app",
       name: "Coach Demo",
       role: "TRAINER",
     },

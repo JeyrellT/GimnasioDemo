@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Safe redirect helper
+// BLACKLINE FITNESS — Safe redirect helper
 // Owner: backend-api.
 //
 // Prevents open redirect vulnerabilities by ensuring any URL that originated

@@ -1,6 +1,6 @@
 "use server";
 // =============================================================================
-// VIZION — Billing server actions (public surface for UI)
+// BLACKLINE FITNESS — Billing server actions (public surface for UI)
 // Owner: frontend-react / backend-api.
 //
 // Re-exports from the canonical implementation in src/server/actions/billing.actions.ts

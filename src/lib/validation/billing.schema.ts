@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Billing validation schemas
+// BLACKLINE FITNESS — Billing validation schemas
 // Owner: backend-api.
 // =============================================================================
 

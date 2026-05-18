@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — /admin/referrals
+// BLACKLINE FITNESS — /admin/referrals
 // Server component. Lists all trainer referrals with stats, filters, table
 // and per-row approve/reject actions.
 // Owner: frontend-react.

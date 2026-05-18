@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Consent validation schemas
+// BLACKLINE FITNESS — Consent validation schemas
 // Owner: backend-api.
 // =============================================================================
 

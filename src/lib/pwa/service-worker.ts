@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Serwist Service Worker
+// BLACKLINE FITNESS — Serwist Service Worker
 // Owner: frontend-react.
 //
 // Caching strategies per ARCHITECTURE §10.
@@ -23,7 +23,7 @@ declare const self: ServiceWorkerGlobalScope & {
 
 // ── Offline mutation queue ─────────────────────────────────────────────────────
 
-const mutationQueue = new BackgroundSyncPlugin("vizion-mutations", {
+const mutationQueue = new BackgroundSyncPlugin("blackline-fitness-mutations", {
   maxRetentionTime: 24 * 60, // 24 hours in minutes
 });
 
@@ -52,7 +52,7 @@ const serwist = new Serwist({
         return marketing.some((p) => url.pathname === p || url.pathname.startsWith(p + "/"));
       },
       handler: new StaleWhileRevalidate({
-        cacheName: "vizion-marketing",
+        cacheName: "blackline-fitness-marketing",
         plugins: [
           new CacheableResponsePlugin({ statuses: [0, 200] }),
           new ExpirationPlugin({ maxEntries: 30, maxAgeSeconds: 7 * 24 * 60 * 60 }),
@@ -67,7 +67,7 @@ const serwist = new Serwist({
         return appRoutes.some((p) => url.pathname === p || url.pathname.startsWith(p + "/"));
       },
       handler: new NetworkFirst({
-        cacheName: "vizion-app",
+        cacheName: "blackline-fitness-app",
         networkTimeoutSeconds: 3,
         plugins: [
           new CacheableResponsePlugin({ statuses: [0, 200] }),
@@ -80,7 +80,7 @@ const serwist = new Serwist({
     {
       matcher: ({ url }) => url.pathname.startsWith("/client/rutinas"),
       handler: new NetworkFirst({
-        cacheName: "vizion-session",
+        cacheName: "blackline-fitness-session",
         networkTimeoutSeconds: 2,
         plugins: [
           new CacheableResponsePlugin({ statuses: [0, 200] }),
@@ -95,9 +95,9 @@ const serwist = new Serwist({
         request.destination === "image" &&
         (url.hostname === "raw.githubusercontent.com" ||
           url.hostname.endsWith(".r2.dev") ||
-          url.hostname === "media.vizion.app"),
+          url.hostname === "media.blacklinefitness.app"),
       handler: new CacheFirst({
-        cacheName: "vizion-exercise-images",
+        cacheName: "blackline-fitness-exercise-images",
         plugins: [
           new CacheableResponsePlugin({ statuses: [0, 200] }),
           new ExpirationPlugin({
@@ -126,7 +126,7 @@ const serwist = new Serwist({
         request.destination === "style" ||
         request.destination === "font",
       handler: new CacheFirst({
-        cacheName: "vizion-static",
+        cacheName: "blackline-fitness-static",
         plugins: [
           new CacheableResponsePlugin({ statuses: [0, 200] }),
           new ExpirationPlugin({

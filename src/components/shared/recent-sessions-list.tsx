@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — RecentSessionsList
+// BLACKLINE FITNESS — RecentSessionsList
 // Owner: frontend-react.
 // Lista de últimas 5 sesiones con fecha relativa, duración, ejercicios y badge PR.
 // =============================================================================

@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Demo seed data (static, hardcoded)
+// BLACKLINE FITNESS — Demo seed data (static, hardcoded)
 // All IDs are deterministic strings — never use crypto.randomUUID() here.
 // Dates are relative to 2026-05-15 (project date), expressed as ISO strings.
 // =============================================================================
@@ -1315,7 +1315,7 @@ export const DEMO_LOCATIONS: DemoLocationRow[] = [
     costPerKmCRC: null,
     defaultKm: null,
     monthlyRentCRC: 45000,
-    notes: "Gimnasio principal donde entreno la mayoría de clientes.",
+    notes: "Blackline Fitness principal donde entreno la mayoría de clientes.",
   },
   {
     id: "loc-home",
@@ -1372,7 +1372,7 @@ export const DEMO_EXPENSES: DemoExpenseRow[] = [
     amountCRC: 18500,
     category: "SOFTWARE",
     locationId: null,
-    description: "Suscripción Vizion Pro — abril 2026",
+    description: "Suscripción Blackline Fitness Pro — abril 2026",
     source: "MANUAL",
     visitId: null,
   },
@@ -1461,7 +1461,7 @@ export const DEMO_EXPENSES: DemoExpenseRow[] = [
     amountCRC: 18500,
     category: "SOFTWARE",
     locationId: null,
-    description: "Suscripción Vizion Pro — mayo 2026",
+    description: "Suscripción Blackline Fitness Pro — mayo 2026",
     source: "MANUAL",
     visitId: null,
   },

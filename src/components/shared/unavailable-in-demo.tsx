@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — UnavailableInDemo
+// BLACKLINE FITNESS — UnavailableInDemo
 // Shared stub component for pages not available in the demo build.
 // =============================================================================
 

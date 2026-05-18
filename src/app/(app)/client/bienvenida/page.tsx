@@ -71,7 +71,7 @@ export default function BienvenidaPage() {
       // Refresh the JWT so the middleware stops redirecting back here.
       // The jwt callback re-reads mustChangePassword from the DB on trigger=update.
       await refreshSession();
-      toast.success("¡Todo listo! Bienvenido a Vizion.");
+      toast.success("¡Todo listo! Bienvenido a Blackline Fitness.");
       router.push("/client/rutinas");
     } else {
       toast.error(result.error?.message ?? "Ocurrió un error. Reintentá.");
@@ -94,7 +94,7 @@ export default function BienvenidaPage() {
           <div className="mb-8 space-y-2 text-center">
             <h1 className="text-2xl font-bold text-[#FAFAFA]">
               ¡Bienvenido a{" "}
-              <span className="text-[#FF6A1A]">Vizion</span>!
+              <span className="text-[#FF6A1A]">Blackline Fitness</span>!
             </h1>
             <p className="text-sm text-[#71717A]">
               Configurá tu contraseña personal para empezar

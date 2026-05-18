@@ -29,7 +29,7 @@ if (!isGithubPages && process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
 
 const isProduction = process.env.NODE_ENV === "production" && !isGithubPages;
 
-const basePath = isGithubPages ? "/GimnasioDemo" : "";
+const basePath = isGithubPages ? "/BlacklineFitness" : "";
 
 const nextConfig: NextConfig = {
   // --- Demo mode (GitHub Pages): static export, no server features ----------

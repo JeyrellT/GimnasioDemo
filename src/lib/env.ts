@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Environment guard (public re-export)
+// BLACKLINE FITNESS — Environment guard (public re-export)
 // Owner: backend-api.
 //
 // Re-exports the validated server environment from src/server/env.ts.

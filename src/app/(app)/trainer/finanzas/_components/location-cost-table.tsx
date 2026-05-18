@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — LocationCostTable
+// BLACKLINE FITNESS — LocationCostTable
 // Owner: frontend-react.
 // Sortable table: Ubicación, Visitas, Costo/visita, Total, Clientes.
 // =============================================================================

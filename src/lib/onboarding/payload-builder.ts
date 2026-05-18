@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Onboarding atomic client creation payload builder
+// BLACKLINE FITNESS — Onboarding atomic client creation payload builder
 // Owner: backend-api.
 //
 // Called exclusively inside createClientFromOnboarding, which wraps everything

@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — ReferralActions
+// BLACKLINE FITNESS — ReferralActions
 // Approve / Reject buttons for a single referral row (PENDING only).
 // Owner: frontend-react.
 // =============================================================================

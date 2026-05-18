@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — FinanceShell
+// BLACKLINE FITNESS — FinanceShell
 // Owner: frontend-react.
 // Layout wrapper: page header + period selector + "Nueva entrada" CTA.
 // Accepts children (server-rendered sections) plus currentMonth/trainerName

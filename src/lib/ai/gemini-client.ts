@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Demo mode Gemini client shim
+// BLACKLINE FITNESS — Demo mode Gemini client shim
 // All AI calls go through the browser-direct client that reads the API key
 // from localStorage. The original server-side gemini-client is unused in the
 // static export build; this re-export keeps the existing call sites

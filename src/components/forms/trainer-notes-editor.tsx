@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — TrainerNotesEditor
+// BLACKLINE FITNESS — TrainerNotesEditor
 // Owner: frontend-react.
 // Textarea privada con autosave debounced 1.5s. Solo el entrenador la ve.
 // =============================================================================

@@ -1,7 +1,7 @@
 "use server";
 
 // =============================================================================
-// VIZION — Server Actions: Exercise Library
+// BLACKLINE FITNESS — Server Actions: Exercise Library
 // Owner: backend-api.
 //
 // All functions are "use server" boundaries. Every async operation is wrapped

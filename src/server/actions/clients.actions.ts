@@ -1,7 +1,7 @@
 "use server";
 
 // =============================================================================
-// VIZION — Clients Server Actions (trainer-facing)
+// BLACKLINE FITNESS — Clients Server Actions (trainer-facing)
 // Owner: backend-api.
 //
 // All mutating operations:
@@ -318,7 +318,7 @@ export async function createInvitation(
       Date.now() + INVITATION_EXPIRY_DAYS * 24 * 60 * 60 * 1000,
     );
 
-    const appUrl = process.env.APP_URL ?? "https://vizion.app";
+    const appUrl = process.env.APP_URL ?? "https://blacklinefitness.app";
     const invitationUrl = `${appUrl}/invitacion?token=${token}`;
 
     const { ipAddress, userAgent } = await getRequestMeta();
@@ -357,7 +357,7 @@ export async function createInvitation(
 
       await sendEmail({
         to: email,
-        subject: `${trainerName} te invitó a Vizion`,
+        subject: `${trainerName} te invitó a Blackline Fitness`,
         react: React.createElement(InvitationEmail, {
           trainerName,
           invitationUrl,
@@ -575,7 +575,7 @@ export async function acceptInvitation(
         data: {
           userUserId: invitation.trainerId,
           type: "CLIENT_JOINED",
-          title: "Nuevo cliente en Vizion",
+          title: "Nuevo cliente en Blackline Fitness",
           body: `Un cliente aceptó tu invitación y ya está activo.`,
           data: { trainerClientId, clientUserId: userId },
           sentVia: [],
@@ -1219,7 +1219,7 @@ export async function quickAddClient(input: {
       Date.now() + INVITATION_EXPIRY_DAYS * 24 * 60 * 60 * 1000,
     );
 
-    const appUrl = process.env.APP_URL ?? "https://vizion.app";
+    const appUrl = process.env.APP_URL ?? "https://blacklinefitness.app";
     // Link goes through the auto-login API which validates the token, sets the
     // session cookie, and redirects to /client/bienvenida.
     const welcomeUrl = `${appUrl}/api/cliente/aceptar-invitacion?token=${token}`;
@@ -1297,7 +1297,7 @@ export async function quickAddClient(input: {
 
       const sendPromise = sendEmail({
         to: email,
-        subject: `${trainerName} creó tu cuenta en Vizion`,
+        subject: `${trainerName} creó tu cuenta en Blackline Fitness`,
         react: React.createElement(ClientWelcomeEmail, {
           trainerName,
           welcomeUrl,

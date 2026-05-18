@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — NextAuth v5 full configuration (Node.js runtime only)
+// BLACKLINE FITNESS — NextAuth v5 full configuration (Node.js runtime only)
 // Owner: backend-api.
 //
 // Extends the edge-compatible base config (auth.config.ts) with:
@@ -92,7 +92,7 @@ export const fullAuthConfig: NextAuthConfig = {
         try {
           await sendEmail({
             to: email,
-            subject: "Tu acceso a Vizion",
+            subject: "Tu acceso a Blackline Fitness",
             react: MagicLinkEmail({
               url,
               email,

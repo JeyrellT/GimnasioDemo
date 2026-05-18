@@ -1,7 +1,7 @@
 "use server";
 
 // =============================================================================
-// VIZION — Auth Server Actions
+// BLACKLINE FITNESS — Auth Server Actions
 // Owner: backend-api.
 //
 // All functions:
@@ -96,7 +96,7 @@ async function sendMagicLinkForUser(
 ): Promise<void> {
   const token = generateOpaqueToken(32);
   const expires = new Date(Date.now() + MAGIC_LINK_EXPIRY_MIN * 60 * 1000);
-  const appUrl = process.env.APP_URL ?? "https://vizion.app";
+  const appUrl = process.env.APP_URL ?? "https://blacklinefitness.app";
 
   try {
     // Delete any existing tokens for this email before creating a fresh one.
@@ -116,7 +116,7 @@ async function sendMagicLinkForUser(
 
     await sendEmail({
       to: email,
-      subject: "Tu link de acceso a Vizion",
+      subject: "Tu link de acceso a Blackline Fitness",
       react: React.createElement(MagicLinkEmail, {
         url,
         email,

@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Domain types
+// BLACKLINE FITNESS — Domain types
 // Owner: backend-api. Read by frontend-react, data-viz, data-app-builder.
 //
 // Single source of truth for Prisma-derived types and composite shapes used

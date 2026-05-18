@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Onboarding wizard Zustand store
+// BLACKLINE FITNESS — Onboarding wizard Zustand store
 // Owner: frontend-react.
 // =============================================================================
 

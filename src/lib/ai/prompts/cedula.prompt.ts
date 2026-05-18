@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Cedula CR OCR prompt
+// BLACKLINE FITNESS — Cedula CR OCR prompt
 // Owner: ai-orchestrator.
 //
 // Costa Rica national ID (cedula de identidad), post-October-2025 format:

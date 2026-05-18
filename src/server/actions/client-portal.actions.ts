@@ -1,7 +1,7 @@
 "use server";
 
 // =============================================================================
-// VIZION — Server Actions: Client Portal (client-facing reads + metric write)
+// BLACKLINE FITNESS — Server Actions: Client Portal (client-facing reads + metric write)
 // Owner: backend-api.
 //
 // All actions use requireClient() — only authenticated users with a CLIENT role

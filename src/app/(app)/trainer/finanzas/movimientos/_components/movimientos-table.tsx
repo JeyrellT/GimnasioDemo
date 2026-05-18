@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — MovimientosTable
+// BLACKLINE FITNESS — MovimientosTable
 // Client component: renders rows, handles delete (with confirm) + pagination.
 // =============================================================================
 

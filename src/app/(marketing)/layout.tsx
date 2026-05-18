@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { VizionLogo } from "@/components/shared/vizion-logo";
+import { BlacklineFitnessLogo } from "@/components/shared/blackline-fitness-logo";
 
 interface MarketingLayoutProps {
   children: ReactNode;
@@ -12,8 +12,8 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-[#3F3F46] bg-[#09090B]/95 backdrop-blur supports-[backdrop-filter]:bg-[#09090B]/80">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-          <Link href="/" aria-label="Vizion — inicio">
-            <VizionLogo variant="full" size={32} />
+          <Link href="/" aria-label="Blackline Fitness — inicio">
+            <BlacklineFitnessLogo variant="full" size={32} />
           </Link>
 
           <nav aria-label="Navegación marketing" className="flex items-center gap-2">
@@ -47,7 +47,7 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
         <div className="mx-auto max-w-6xl px-4">
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
             <p className="text-sm text-[#71717A]">
-              &copy; {new Date().getFullYear()} Vizion. Hecho en Costa Rica.
+              &copy; {new Date().getFullYear()} Blackline Fitness. Hecho en Costa Rica.
             </p>
             <nav aria-label="Links legales" className="flex gap-4">
               <Link

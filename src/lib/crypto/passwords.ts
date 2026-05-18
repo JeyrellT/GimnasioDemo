@@ -1,5 +1,5 @@
 /**
- * Password hashing — Vizion
+ * Password hashing — Blackline Fitness
  * ────────────────────────────────────────────────────────────────────────────
  * Uses Web Crypto API (PBKDF2-SHA-256) — works in both Node 18+ and Edge
  * runtime without any `node:` imports. PBKDF2 is FIPS-approved and widely
@@ -22,7 +22,7 @@ const SALT_LEN = 16;
 
 function getCrypto(): Crypto {
   // Both modern Node (>=20) and Edge runtime expose `crypto` as a global.
-  // Older Node versions need the `node:crypto` webcrypto export, but Vizion
+  // Older Node versions need the `node:crypto` webcrypto export, but Blackline Fitness
   // targets Node 22+.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const c: Crypto | undefined = (globalThis as any).crypto;

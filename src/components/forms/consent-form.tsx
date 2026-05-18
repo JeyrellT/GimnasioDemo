@@ -66,7 +66,7 @@ export function ConsentForm({ onSuccess, role = "CLIENT" }: ConsentFormProps) {
     <div className="space-y-6">
       <p className="text-sm text-[#A1A1AA]">
         {role === "CLIENT"
-          ? "Para usar Vizion, necesitamos tu consentimiento sobre cómo tratamos tus datos. Los dos primeros son obligatorios."
+          ? "Para usar Blackline Fitness, necesitamos tu consentimiento sobre cómo tratamos tus datos. Los dos primeros son obligatorios."
           : "Como entrenador procesarás datos sensibles de salud de tus clientes. Estas aceptaciones son obligatorias para operar en la plataforma."}
       </p>
 
@@ -78,7 +78,7 @@ export function ConsentForm({ onSuccess, role = "CLIENT" }: ConsentFormProps) {
           onCheckedChange={setTermsAccepted}
           required
           version={CONSENT_VERSION}
-          label="Acepto los Términos de Servicio y la Política de Privacidad de Vizion."
+          label="Acepto los Términos de Servicio y la Política de Privacidad de Blackline Fitness."
           policyHref="/legal/terminos"
           policyLabel="Ver términos"
         />
@@ -90,7 +90,7 @@ export function ConsentForm({ onSuccess, role = "CLIENT" }: ConsentFormProps) {
           onCheckedChange={setSensitiveDataAccepted}
           required
           version={CONSENT_VERSION}
-          label="Autorizo el tratamiento de mis datos sensibles de salud (PAR-Q, mediciones antropométricas, fotos de progreso) por parte de Vizion y mi entrenador vinculado, según lo establece la Ley 8968."
+          label="Autorizo el tratamiento de mis datos sensibles de salud (PAR-Q, mediciones antropométricas, fotos de progreso) por parte de Blackline Fitness y mi entrenador vinculado, según lo establece la Ley 8968."
           policyHref="/legal/privacidad"
           policyLabel="Ver política"
         />
@@ -114,7 +114,7 @@ export function ConsentForm({ onSuccess, role = "CLIENT" }: ConsentFormProps) {
           onCheckedChange={setMarketingAccepted}
           required={false}
           version={CONSENT_VERSION}
-          label="Quiero recibir novedades, consejos y ofertas de Vizion por correo electrónico. Podés cancelar en cualquier momento."
+          label="Quiero recibir novedades, consejos y ofertas de Blackline Fitness por correo electrónico. Podés cancelar en cualquier momento."
         />
       </div>
 

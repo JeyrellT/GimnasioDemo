@@ -11,21 +11,21 @@ const consents = [
     id: "TERMS_AND_PRIVACY" as const,
     label: "Términos y Política de Privacidad",
     description:
-      "Aceptás los Términos y Condiciones y la Política de Privacidad de Vizion como proveedor de servicios profesional.",
+      "Aceptás los Términos y Condiciones y la Política de Privacidad de Blackline Fitness como proveedor de servicios profesional.",
     required: true,
   },
   {
     id: "HEALTH_DATA" as const,
     label: "Tratamiento de datos sensibles de salud",
     description:
-      "Como entrenador, sos procesador de datos sensibles de tus clientes bajo la Ley 8968. Aceptás las obligaciones correspondientes y el uso de Vizion como plataforma para ese tratamiento.",
+      "Como entrenador, sos procesador de datos sensibles de tus clientes bajo la Ley 8968. Aceptás las obligaciones correspondientes y el uso de Blackline Fitness como plataforma para ese tratamiento.",
     required: true,
   },
   {
     id: "MARKETING" as const,
     label: "Comunicaciones sobre nuevas funciones (opcional)",
     description:
-      "Recibís emails con novedades de Vizion, tips profesionales y anuncios de nuevas funciones.",
+      "Recibís emails con novedades de Blackline Fitness, tips profesionales y anuncios de nuevas funciones.",
     required: false,
   },
 ];

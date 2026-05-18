@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — ClientProfileDetail types
+// BLACKLINE FITNESS — ClientProfileDetail types
 // Owner: frontend-react (stub). backend-api owns the authoritative version in
 // src/types/api.ts once getClientProfileDetail is implemented.
 // =============================================================================

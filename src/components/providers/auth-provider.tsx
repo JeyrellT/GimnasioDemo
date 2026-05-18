@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — Unified Auth Provider (dual-mode: demo / production)
+// BLACKLINE FITNESS — Unified Auth Provider (dual-mode: demo / production)
 //
 // Wraps the entire (app) layout. In demo mode (GitHub Pages) it renders
 // DemoAuthProvider backed by localStorage; in production (Railway) it renders

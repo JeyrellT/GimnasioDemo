@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Hacienda CR 4.4 invoice numbering
+// BLACKLINE FITNESS — Hacienda CR 4.4 invoice numbering
 // Owner: backend-api.
 //
 // Implements:

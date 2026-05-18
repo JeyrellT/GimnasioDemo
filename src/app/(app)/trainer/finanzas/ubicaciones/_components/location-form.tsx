@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — LocationForm
+// BLACKLINE FITNESS — LocationForm
 // Creates or updates a TrainerLocation. Handles FLAT / PER_KM cost model toggle.
 // =============================================================================
 
@@ -39,7 +39,7 @@ import type { TrainerLocationDTO } from "@/types/finance";
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const LOCATION_KINDS = [
-  { value: "GYM",         label: "Gimnasio" },
+  { value: "GYM",         label: "Blackline Fitness" },
   { value: "STUDIO",      label: "Estudio" },
   { value: "CLIENT_HOME", label: "Casa del cliente" },
   { value: "OUTDOOR",     label: "Exteriores" },

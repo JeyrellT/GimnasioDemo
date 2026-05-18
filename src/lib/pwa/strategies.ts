@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — PWA strategy re-exports
+// BLACKLINE FITNESS — PWA strategy re-exports
 // Owner: frontend-react.
 // =============================================================================
 

@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — KPIHeroRow
+// BLACKLINE FITNESS — KPIHeroRow
 // Phase 3, Agent 7 (data-viz).
 // Server Component: maps DashboardKPIBand → 5 KpiHeroCard instances.
 // Layout: 1-col mobile → 3-col tablet → 5-col desktop.

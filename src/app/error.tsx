@@ -22,13 +22,13 @@ export default function RootError({ error, reset }: ErrorProps) {
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-bold text-[#FAFAFA]">Algo se rompió</h1>
         <p className="text-[#A1A1AA] text-base max-w-sm text-balance">
-          Algo se rompió de nuestro lado. Equipo Vizion ya fue notificado. Si
+          Algo se rompió de nuestro lado. Equipo Blackline Fitness ya fue notificado. Si
           urge, escribí a{" "}
           <a
-            href="mailto:soporte@vizion.app"
+            href="mailto:soporte@blacklinefitness.app"
             className="text-[#FF6A1A] underline underline-offset-4"
           >
-            soporte@vizion.app
+            soporte@blacklinefitness.app
           </a>
           .
         </p>

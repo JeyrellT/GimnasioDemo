@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { LogOut, User, ArrowLeftRight } from "lucide-react";
-import { VizionLogo } from "@/components/shared/vizion-logo";
+import { BlacklineFitnessLogo } from "@/components/shared/blackline-fitness-logo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -48,7 +48,7 @@ export function Topbar({ user, userName, userAvatarUrl }: TopbarProps) {
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#FF6A1A]/50 to-transparent" />
 
       <Link href="/inicio" aria-label="Ir al inicio">
-        <VizionLogo variant="full" size={28} />
+        <BlacklineFitnessLogo variant="full" size={28} />
       </Link>
 
       <DropdownMenu>

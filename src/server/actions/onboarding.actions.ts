@@ -1,6 +1,6 @@
 "use server";
 // =============================================================================
-// VIZION — Onboarding wizard server actions
+// BLACKLINE FITNESS — Onboarding wizard server actions
 // Owner: backend-api.
 //
 // The onboarding wizard has two modes:

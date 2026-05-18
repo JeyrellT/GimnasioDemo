@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Health check endpoint for Railway
+// BLACKLINE FITNESS — Health check endpoint for Railway
 // Returns 200 if the app is alive. Used by Railway's healthcheck probe.
 // =============================================================================
 

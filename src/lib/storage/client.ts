@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — S3 / R2 / MinIO client
+// BLACKLINE FITNESS — S3 / R2 / MinIO client
 // Owner: backend-api.
 //
 // Uses @aws-sdk/client-s3 (S3-compatible API).

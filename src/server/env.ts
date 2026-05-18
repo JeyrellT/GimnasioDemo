@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Server-side validated environment configuration
+// BLACKLINE FITNESS — Server-side validated environment configuration
 // Owner: backend-api.
 //
 // All environment variables consumed by the server layer are validated here via
@@ -66,7 +66,7 @@ const envSchema = z.object({
   // Generate at: https://myaccount.google.com/apppasswords
   GMAIL_USER: z.string().email().optional(),
   GMAIL_APP_PASSWORD: z.string().min(1).optional(),
-  GMAIL_FROM_NAME: z.string().default("Vizion"),
+  GMAIL_FROM_NAME: z.string().default("Blackline Fitness"),
 
   // ── Email — Resend (legacy, kept for backward compat) ─────────────────────
   RESEND_API_KEY: z.string().optional(),
@@ -81,8 +81,8 @@ const envSchema = z.object({
   R2_ACCOUNT_ID: z.string().optional(),
   R2_ACCESS_KEY_ID: z.string().optional(),
   R2_SECRET_ACCESS_KEY: z.string().optional(),
-  R2_BUCKET_PHOTOS: z.string().default("vizion-photos"),
-  R2_BUCKET_DOCUMENTS: z.string().default("vizion-documents"),
+  R2_BUCKET_PHOTOS: z.string().default("blackline-fitness-photos"),
+  R2_BUCKET_DOCUMENTS: z.string().default("blackline-fitness-documents"),
   R2_PUBLIC_URL: z.string().url().optional(),
   R2_ENDPOINT: z.string().url().optional(),
 
@@ -157,8 +157,8 @@ function parseEnv(): ServerEnv {
       MEDIAPIPE_POSTURE_BETA: false,
       GEMINI_MODEL_OCR: "gemini-2.0-flash-lite",
       GEMINI_MODEL_REASONING: "gemini-2.0-flash",
-      R2_BUCKET_PHOTOS: "vizion-photos",
-      R2_BUCKET_DOCUMENTS: "vizion-documents",
+      R2_BUCKET_PHOTOS: "blackline-fitness-photos",
+      R2_BUCKET_DOCUMENTS: "blackline-fitness-documents",
     } as ServerEnv;
   }
 

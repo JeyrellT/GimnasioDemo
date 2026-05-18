@@ -3,7 +3,7 @@ import { ArrowRight, BarChart2, ClipboardList, Timer } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Vizion — Tu visión, tu evolución",
+  title: "Blackline Fitness — Tu visión, tu evolución",
   description:
     "Tu visión, tu evolución. Plataforma de entrenamiento personal para entrenadores y clientes en Costa Rica.",
 };

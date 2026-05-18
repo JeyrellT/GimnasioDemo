@@ -1,6 +1,6 @@
 "use server";
 // =============================================================================
-// VIZION — Billing server actions
+// BLACKLINE FITNESS — Billing server actions
 // Owner: backend-api.
 //
 // Handles: manual charges, bulk monthly generation, waive/cancel,

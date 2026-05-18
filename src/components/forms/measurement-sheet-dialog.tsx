@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — MeasurementSheet: Dialog shell (tablet+)
+// BLACKLINE FITNESS — MeasurementSheet: Dialog shell (tablet+)
 // Isolated so that @radix-ui/react-dialog is only loaded when the sheet opens.
 // =============================================================================
 

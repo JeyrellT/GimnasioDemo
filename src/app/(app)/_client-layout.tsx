@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — App Shell (client component)
+// BLACKLINE FITNESS — App Shell (client component)
 // Formerly the full (app)/layout.tsx client component.
 // Now called by the server layout.tsx which handles the ImpersonationBanner.
 // =============================================================================

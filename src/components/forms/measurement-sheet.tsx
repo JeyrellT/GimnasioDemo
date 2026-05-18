@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — MeasurementSheet
+// BLACKLINE FITNESS — MeasurementSheet
 // Owner: frontend-react.
 // Sheet (slideout) con 3 tabs: Foto báscula / Antropometría / Composición.
 // Mobile: vaul Drawer. Tablet+: Radix Dialog.

@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Demo actions: sessions
+// BLACKLINE FITNESS — Demo actions: sessions
 // =============================================================================
 
 import { db } from "@/lib/offline/db";

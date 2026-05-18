@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Trainer invitation email template (React Email)
+// BLACKLINE FITNESS — Trainer invitation email template (React Email)
 // Owner: backend-api.
 //
 // Sent when a trainer invites a client via createInvitation().
@@ -58,7 +58,7 @@ export default function InvitationEmail({
           {/* Content */}
           <Section style={styles.content}>
             <Heading as="h2" style={styles.title}>
-              {trainerName} te invitó a Vizion
+              {trainerName} te invitó a Blackline Fitness
             </Heading>
 
             <Text style={styles.body_text}>
@@ -101,7 +101,7 @@ export default function InvitationEmail({
             <Text style={styles.footer_text}>
               {APP_NAME} protege tus datos conforme a la{" "}
               <Link
-                href="https://vizion.app/legal/privacidad"
+                href="https://blacklinefitness.app/legal/privacidad"
                 style={styles.footer_link}
               >
                 Ley 8968 (LPDP) de Costa Rica

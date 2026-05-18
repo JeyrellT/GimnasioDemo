@@ -12,7 +12,7 @@ Railway tiene 3 niveles de jerarquía:
 
 ```
 Workspace (= tu cuenta Pro $20/mes, incluye $20 de uso)
-└── Project   (= un dominio de negocio: Vizion, JC Analytics, BarberCR...)
+└── Project   (= un dominio de negocio: Blackline Fitness, JC Analytics, BarberCR...)
     └── Service (= un proceso: web app, DB, worker, cron job)
 ```
 
@@ -37,8 +37,8 @@ Cada **Project** comparte:
 | Tu app web Next.js | 1 Service en el Project del producto |
 | Necesitás Postgres para esa app | Otro Service (template "PostgreSQL") en el mismo Project |
 | Querés un cron job que limpia datos viejos | Otro Service en el mismo Project (mismo repo, distinto Dockerfile/start command) |
-| Otro producto totalmente distinto (BarberCR vs Vizion) | **Project separado** |
-| Versión staging del producto | **Project separado** (vizion-staging) o un Environment en el mismo Project |
+| Otro producto totalmente distinto (BarberCR vs Blackline Fitness) | **Project separado** |
+| Versión staging del producto | **Project separado** (blackline-fitness-staging) o un Environment en el mismo Project |
 | API interna que sirve a varios productos | **Project separado** "shared-services" |
 
 **Regla simple:** un Project por dominio de negocio. Services dentro = piezas que colaboran en ese dominio.
@@ -52,11 +52,11 @@ Patrón: `<proyecto>-<rol>`
 ```
 Workspace: JC Analytics
 
-Project: vizion
-├── vizion-web          (Next.js app)
-├── vizion-postgres     (DB principal)
-├── vizion-cron         (jobs programados)
-└── vizion-worker       (procesamiento async, si hace falta)
+Project: blackline-fitness
+├── blackline-fitness-web          (Next.js app)
+├── blackline-fitness-postgres     (DB principal)
+├── blackline-fitness-cron         (jobs programados)
+└── blackline-fitness-worker       (procesamiento async, si hace falta)
 
 Project: jc-analytics
 ├── jc-api              (FastAPI/Express API)
@@ -85,21 +85,21 @@ Railway te deja definir variables en 3 niveles:
 
 ### Patrón recomendado: shared variables por proyecto
 
-En el Project "vizion":
+En el Project "blackline-fitness":
 
 ```
 SHARED:
-  DATABASE_URL (from vizion-postgres plugin)
+  DATABASE_URL (from blackline-fitness-postgres plugin)
   RESEND_API_KEY
   R2_ACCESS_KEY_ID
   R2_SECRET_ACCESS_KEY
 
-vizion-web SERVICE-SCOPED:
+blackline-fitness-web SERVICE-SCOPED:
   NEXTAUTH_SECRET
   GMAIL_APP_PASSWORD
   PORT=3000
 
-vizion-cron SERVICE-SCOPED:
+blackline-fitness-cron SERVICE-SCOPED:
   CRON_SECRET
 ```
 
@@ -111,8 +111,8 @@ Cuando cambiás `DATABASE_URL`, se actualiza para todos los services del project
 
 | Caso | ¿Compartir DB? |
 |---|---|
-| Múltiples services del MISMO producto | Sí (vizion-web + vizion-cron usan vizion-postgres) |
-| Productos diferentes (Vizion vs JC Analytics) | **No** — cada uno su propia DB |
+| Múltiples services del MISMO producto | Sí (blackline-fitness-web + blackline-fitness-cron usan blackline-fitness-postgres) |
+| Productos diferentes (Blackline Fitness vs JC Analytics) | **No** — cada uno su propia DB |
 | Microservicios del mismo dominio | Generalmente sí (con buenas políticas de schema) |
 | Necesitás aislamiento estricto (clientes B2B distintos) | No, una DB por cliente |
 
@@ -124,20 +124,20 @@ Cuando cambiás `DATABASE_URL`, se actualiza para todos los services del project
 
 Cada service en Railway recibe un dominio auto-generado:
 ```
-vizion-web-production-XXXX.up.railway.app
+blackline-fitness-web-production-XXXX.up.railway.app
 ```
 
 Para producción querés custom:
 
-1. **Service Settings → Networking → Custom Domains** → poné `app.vizion.io`
+1. **Service Settings → Networking → Custom Domains** → poné `app.blacklinefitness.io`
 2. Railway te da un CNAME → lo apuntás en tu DNS (Cloudflare, Namecheap, etc.)
 3. Railway emite cert SSL automático (Let's Encrypt)
 4. ~5 min después está activo
 
 Para multi-proyecto típico:
 ```
-vizion.io           → vizion-web
-app.vizion.io       → vizion-web (subdomain)
+blacklinefitness.io           → blackline-fitness-web
+app.blacklinefitness.io       → blackline-fitness-web (subdomain)
 api.jcanalytics.com → jc-api
 barbercr.com        → barber-web
 ```
@@ -151,13 +151,13 @@ Railway lo más común: **auto-deploy on push** a una branch.
 ### Setup recomendado por service
 
 ```
-vizion-web:
+blackline-fitness-web:
   Watch path: main branch
   Build: pnpm install && pnpm exec prisma generate && pnpm build
   Start: sh scripts/start.sh
   Healthcheck: /api/health (200 OK)
 
-vizion-cron:
+blackline-fitness-cron:
   Watch path: main branch
   Build: pnpm install
   Start: node scripts/cron.js
@@ -258,7 +258,7 @@ Stack base por proyecto:
 - start.sh con prisma migrate deploy + retries
 ```
 
-Esto es lo que ya tenés en Vizion. Replicarlo en otros proyectos = ramp-up cero.
+Esto es lo que ya tenés en blackline-fitness. Replicarlo en otros proyectos = ramp-up cero.
 
 ---
 
@@ -270,11 +270,11 @@ Esto es lo que ya tenés en Vizion. Replicarlo en otros proyectos = ramp-up cero
 3. Crear alerta de uso a $18 en Workspace settings
 
 ### Próximas 2 semanas
-4. Agregar `staging` environment al proyecto Vizion
+4. Agregar `staging` environment al proyecto blackline-fitness
 5. Documentar tu propio runbook de deploys (qué hacer si algo falla)
 
 ### Cuando agregues el próximo proyecto
-6. Crear Project nuevo (no Service nuevo en Vizion)
+6. Crear Project nuevo (no Service nuevo en blackline-fitness)
 7. Seguir el naming convention de arriba
 8. Cuenta de Resend = la misma (verificás dominio nuevo para el remitente)
 9. Postgres = uno nuevo por proyecto

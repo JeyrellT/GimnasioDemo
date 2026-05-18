@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — ExpenseBreakdownChart
+// BLACKLINE FITNESS — ExpenseBreakdownChart
 // Owner: frontend-react.
 // Recharts donut PieChart showing expense categories.
 // =============================================================================

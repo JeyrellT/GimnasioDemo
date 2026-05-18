@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Dexie offline database schema
+// BLACKLINE FITNESS — Dexie offline database schema
 // Owner: data-app-builder.
 //
 // IndexedDB schema for full offline-first gym session execution.
@@ -377,10 +377,10 @@ export const KV_KEYS = {
 } as const;
 
 // -----------------------------------------------------------------------------
-// VizionDB class
+// Blackline FitnessDB class
 // -----------------------------------------------------------------------------
 
-export class VizionDB extends Dexie {
+export class Blackline FitnessDB extends Dexie {
   // Existing version-1 tables
   localSessions!: Table<LocalSession, string>;
   localSets!: Table<LocalSet, string>;
@@ -405,7 +405,7 @@ export class VizionDB extends Dexie {
   demoExercises!: Table<DemoExerciseRow, string>;
 
   constructor() {
-    super("vizion-offline-v1");
+    super("blackline-fitness-offline-v1");
 
     this.version(1).stores({
       // localSessions: primary key=id, indices on syncStatus, assignedRoutineId
@@ -471,8 +471,8 @@ export class VizionDB extends Dexie {
 }
 
 // -----------------------------------------------------------------------------
-// Singleton — import this everywhere, never instantiate VizionDB directly.
+// Singleton — import this everywhere, never instantiate Blackline FitnessDB directly.
 // Safe to import in both client components and service workers.
 // -----------------------------------------------------------------------------
 
-export const db = new VizionDB();
+export const db = new Blackline FitnessDB();

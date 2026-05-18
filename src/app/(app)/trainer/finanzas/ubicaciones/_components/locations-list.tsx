@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — LocationsList
+// BLACKLINE FITNESS — LocationsList
 // Grid of location cards with edit + delete (Dialog confirm). Client Component.
 // =============================================================================
 
@@ -26,7 +26,7 @@ import type { TrainerLocationDTO } from "@/types/finance";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const KIND_LABELS: Record<string, string> = {
-  GYM:         "Gimnasio",
+  GYM:         "Blackline Fitness",
   STUDIO:      "Estudio",
   CLIENT_HOME: "Casa del cliente",
   OUTDOOR:     "Exteriores",

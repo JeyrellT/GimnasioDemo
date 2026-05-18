@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Transaction helpers
+// BLACKLINE FITNESS — Transaction helpers
 // Owner: database-architect.
 //
 // API:

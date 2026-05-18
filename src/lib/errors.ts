@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Error hierarchy
+// BLACKLINE FITNESS — Error hierarchy
 // Owner: backend-api.
 //
 // All errors extend AppError, which extends the native Error so that:
@@ -116,7 +116,7 @@ export function errorToResult<T>(e: unknown): Result<T, AppError> {
   }
 
   const message =
-    e instanceof Error ? e.message : "Error interno. Equipo Vizion fue notificado.";
+    e instanceof Error ? e.message : "Error interno. Equipo Blackline Fitness fue notificado.";
 
   return {
     ok: false,

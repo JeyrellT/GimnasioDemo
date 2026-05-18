@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Demo actions: onboarding lifecycle + AI extraction
+// BLACKLINE FITNESS — Demo actions: onboarding lifecycle + AI extraction
 //
 // AI calls (extractCedulaForOnboarding, extractWorkoutPhotosForOnboarding) hit
 // Gemini directly from the browser via the demo gemini-browser client. They

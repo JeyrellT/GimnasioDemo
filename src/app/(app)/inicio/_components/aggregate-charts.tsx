@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — AggregateCharts
+// BLACKLINE FITNESS — AggregateCharts
 // Phase 3, Agent 7 (data-viz).
 // Client Component: 3 aggregate charts in a responsive grid.
 //   1. Adherencia por cliente  — horizontal BarChart

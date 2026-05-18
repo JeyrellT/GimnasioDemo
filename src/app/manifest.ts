@@ -1,12 +1,12 @@
 export const dynamic = "force-static";
 import type { MetadataRoute } from "next";
 
-const base = process.env.GITHUB_PAGES === "true" ? "/GimnasioDemo" : "";
+const base = process.env.GITHUB_PAGES === "true" ? "/BlacklineFitness" : "";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Vizion",
-    short_name: "Vizion",
+    name: "Blackline Fitness",
+    short_name: "Blackline Fitness",
     description: "Entrenamiento personal hecho en Costa Rica.",
     start_url: `${base}/`,
     scope: `${base}/`,

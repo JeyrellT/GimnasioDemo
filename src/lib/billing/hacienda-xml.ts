@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Hacienda CR 4.4 electronic invoice XML generator
+// BLACKLINE FITNESS — Hacienda CR 4.4 electronic invoice XML generator
 // Owner: backend-api.
 //
 // Generates a valid FacturaElectronica XML string per spec 4.4.

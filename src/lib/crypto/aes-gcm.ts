@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — AES-256-GCM symmetric encryption
+// BLACKLINE FITNESS — AES-256-GCM symmetric encryption
 // Owner: backend-api (spec from cybersecurity-auditor).
 //
 // Wire format:  version(1B)=0x01 || iv(12B) || ciphertext(N) || tag(16B)

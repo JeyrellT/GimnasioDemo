@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Tilopay payment gateway client
+// BLACKLINE FITNESS — Tilopay payment gateway client
 // Owner: backend-api.
 //
 // PAYMENT_PROVIDER_LIVE=false (default): All operations return fake/sandbox

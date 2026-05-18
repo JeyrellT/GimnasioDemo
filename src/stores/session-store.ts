@@ -165,7 +165,7 @@ export const useSessionStore = create<SessionState>()(
         },
       }),
       {
-        name: "vizion-session",
+        name: "blackline-fitness-session",
         partialize: (state) => ({
           currentSession: state.currentSession,
           currentExerciseIndex: state.currentExerciseIndex,

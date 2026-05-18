@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — API request / response types
+// BLACKLINE FITNESS — API request / response types
 // Owner: backend-api.
 //
 // Shapes used by Server Actions (returning Result<T>) and Route Handlers

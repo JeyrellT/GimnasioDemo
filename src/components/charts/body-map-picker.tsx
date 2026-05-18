@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — BodyMapPicker
+// BLACKLINE FITNESS — BodyMapPicker
 // Interactive SVG body map for selecting primary + secondary muscles on
 // exercise create/edit form.
 //

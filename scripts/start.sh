@@ -1,6 +1,6 @@
 #!/bin/sh
 # =============================================================================
-# VIZION — Railway startup script
+# BLACKLINE FITNESS — Railway startup script
 # Self-healing: tries migrate deploy first. If DB state is corrupted,
 # resets with db push --force-reset and marks all migrations as applied.
 # =============================================================================

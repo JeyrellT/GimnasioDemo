@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Demo actions: body metrics
+// BLACKLINE FITNESS — Demo actions: body metrics
 // =============================================================================
 
 import { db } from "@/lib/offline/db";

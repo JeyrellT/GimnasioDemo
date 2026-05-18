@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — VisitForm (location visit)
+// BLACKLINE FITNESS — VisitForm (location visit)
 // Calls createLocationVisit. Shows live cost preview based on costModel.
 // =============================================================================
 

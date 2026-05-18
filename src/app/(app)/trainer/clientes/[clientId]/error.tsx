@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 // =============================================================================
-// VIZION — Error boundary: perfil de cliente
+// BLACKLINE FITNESS — Error boundary: perfil de cliente
 // Owner: frontend-react.
 // =============================================================================
 

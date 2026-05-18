@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Demo mode browser-direct Gemini client
+// BLACKLINE FITNESS — Demo mode browser-direct Gemini client
 // Owner: ai-orchestrator (Phase 3, Agent 4).
 //
 // Replaces the server-side gemini-client.ts for the static export build.

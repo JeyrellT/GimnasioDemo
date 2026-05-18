@@ -65,7 +65,7 @@ export function SignInForm({ callbackUrl = "/inicio", onSuccess }: SignInFormPro
       return;
     }
 
-    toast.success("Bienvenido a Vizion.");
+    toast.success("Bienvenido a Blackline Fitness.");
     onSuccess?.();
     router.push(safeRedirect(callbackUrl, "/inicio"));
     router.refresh();

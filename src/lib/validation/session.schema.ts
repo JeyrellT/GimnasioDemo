@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Workout session validation schemas
+// BLACKLINE FITNESS — Workout session validation schemas
 // Owner: backend-api.
 // =============================================================================
 

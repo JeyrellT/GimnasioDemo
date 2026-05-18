@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Shared primitive Zod schemas
+// BLACKLINE FITNESS — Shared primitive Zod schemas
 // Owner: backend-api.
 //
 // Reusable building blocks imported by every domain schema.

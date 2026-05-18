@@ -1,9 +1,9 @@
 // =============================================================================
-// VIZION — Demo settings: localStorage helpers (Gemini key + demo prefs)
+// BLACKLINE FITNESS — Demo settings: localStorage helpers (Gemini key + demo prefs)
 // =============================================================================
 
-const GEMINI_KEY = "vizion_demo_gemini_key";
-const DEMO_ACTIVE_KEY = "vizion_demo_active";
+const GEMINI_KEY = "blackline-fitness_demo_gemini_key";
+const DEMO_ACTIVE_KEY = "blackline-fitness_demo_active";
 
 // ── Gemini API key ─────────────────────────────────────────────────────────────
 

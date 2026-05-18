@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — /trainer/finanzas/movimientos
+// BLACKLINE FITNESS — /trainer/finanzas/movimientos
 // Merged paginated list of expenses + one-off sales, sorted desc by date.
 // URL: /trainer/finanzas/movimientos?month=2026-05&tipo=todos&page=1
 // =============================================================================

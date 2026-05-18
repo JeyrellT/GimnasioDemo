@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — SaleForm (One-off sales)
+// BLACKLINE FITNESS — SaleForm (One-off sales)
 // Calls createOneOffSale server action.
 // =============================================================================
 

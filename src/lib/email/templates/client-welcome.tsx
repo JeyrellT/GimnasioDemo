@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Client welcome email (quick-add flow)
+// BLACKLINE FITNESS — Client welcome email (quick-add flow)
 // Owner: backend-api.
 //
 // Enviado cuando un entrenador crea la cuenta del cliente con contraseña
@@ -52,7 +52,7 @@ export default function ClientWelcomeEmail({
           {/* Content */}
           <Section style={styles.content}>
             <Heading as="h2" style={styles.title}>
-              ¡Bienvenido a Vizion!
+              ¡Bienvenido a Blackline Fitness!
             </Heading>
 
             <Text style={styles.body_text}>
@@ -95,7 +95,7 @@ export default function ClientWelcomeEmail({
             <Text style={styles.footer_text}>
               {APP_NAME} protege tus datos conforme a la{" "}
               <Link
-                href="https://vizion.app/legal/privacidad"
+                href="https://blacklinefitness.app/legal/privacidad"
                 style={styles.footer_link}
               >
                 Ley 8968 (LPDP) de Costa Rica

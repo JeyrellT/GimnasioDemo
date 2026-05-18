@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Storage upload helpers
+// BLACKLINE FITNESS — Storage upload helpers
 // Owner: backend-api.
 //
 // All functions use the singleton s3 client from ./client.ts.

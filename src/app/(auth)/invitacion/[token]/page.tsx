@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { UserPlus, AlertTriangle } from "lucide-react";
 import { validateInvitationToken } from "@/app/actions/clients";
 import type { Metadata } from "next";
@@ -10,7 +10,7 @@ interface InvitacionPageProps {
 }
 
 export const metadata: Metadata = {
-  title: "Invitación a Vizion",
+  title: "Invitación a Blackline Fitness",
 };
 
 export default async function InvitacionPage({ params }: InvitacionPageProps) {
@@ -54,7 +54,7 @@ export default async function InvitacionPage({ params }: InvitacionPageProps) {
           Te invitó {trainerName}
         </h1>
         <p className="mt-2 text-sm text-[#A1A1AA]">
-          Aceptá la invitación para unirte a Vizion y empezar a trabajar con tu
+          Aceptá la invitación para unirte a Blackline Fitness y empezar a trabajar con tu
           entrenador.
         </p>
       </div>

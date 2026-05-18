@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Bioimpedance scale OCR prompt
+// BLACKLINE FITNESS — Bioimpedance scale OCR prompt
 // Owner: ai-orchestrator.
 //
 // Targets common bathroom-scale displays available in Costa Rica:

@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — In-process rate limiter (sliding-window, per-IP)
+// BLACKLINE FITNESS — In-process rate limiter (sliding-window, per-IP)
 // Owner: backend-api.
 //
 // LIMITATION: This implementation stores counters in a single-process Map.

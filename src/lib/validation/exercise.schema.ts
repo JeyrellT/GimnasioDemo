@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Exercise library validation schemas
+// BLACKLINE FITNESS — Exercise library validation schemas
 // Owner: backend-api.
 // =============================================================================
 

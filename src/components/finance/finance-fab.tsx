@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — FinanceFAB
+// BLACKLINE FITNESS — FinanceFAB
 // Mobile-only floating action button (sm:hidden) for quick-add of expense,
 // sale, or visit. Opens a Dialog with the corresponding form inside.
 // Data is passed in from the layout to avoid re-fetching on each open.

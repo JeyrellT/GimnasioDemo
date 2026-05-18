@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — FinanceFABLoader
+// BLACKLINE FITNESS — FinanceFABLoader
 // Client component. Lazily fetches locations + clients when the FAB menu is
 // first opened. Shows spinner on the FAB while loading, then renders FinanceFAB.
 // =============================================================================

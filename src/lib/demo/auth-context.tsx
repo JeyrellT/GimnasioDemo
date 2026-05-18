@@ -24,7 +24,7 @@ export const DEMO_PROFILES: DemoUser[] = [
   {
     id: "trainer-demo-001",
     name: "Coach Demo",
-    email: "demo@vizion.app",
+    email: "demo@blacklinefitness.app",
     role: "TRAINER",
     avatarInitials: "CD",
   },
@@ -51,7 +51,7 @@ export const DEMO_PROFILES: DemoUser[] = [
   },
 ];
 
-const STORAGE_KEY = "vizion-demo-profile";
+const STORAGE_KEY = "blackline-fitness-demo-profile";
 
 function avatarKey(userId: string) {
   return `avatar-${userId}`;

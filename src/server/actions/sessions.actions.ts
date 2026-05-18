@@ -1,7 +1,7 @@
 "use server";
 
 // =============================================================================
-// VIZION — Server Actions: Workout Sessions + Sets
+// BLACKLINE FITNESS — Server Actions: Workout Sessions + Sets
 // Owner: backend-api.
 //
 // Auth model:

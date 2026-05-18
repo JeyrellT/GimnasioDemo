@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — OCR scale display (bioimpedance bathroom scales)
+// BLACKLINE FITNESS — OCR scale display (bioimpedance bathroom scales)
 // Owner: ai-orchestrator.
 //
 // Public API:

@@ -2,7 +2,7 @@
 @import "tailwindcss";
 
 /* =============================================================================
-   VIZION — Design tokens (Tailwind v4 @theme block)
+   BLACKLINE FITNESS — Design tokens (Tailwind v4 @theme block)
    Dark mode DEFAULT. .light class inverts surfaces (next-themes opt-in).
    ============================================================================= */
 
@@ -171,7 +171,7 @@ body {
   line-height: 1.5;
 }
 
-/* Focus visible ring — Vizion Orange */
+/* Focus visible ring — Blackline Fitness Orange */
 :focus-visible {
   outline: 2px solid var(--brand-primary);
   outline-offset: 2px;

@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Demo store: typed read API over Dexie demo tables
+// BLACKLINE FITNESS — Demo store: typed read API over Dexie demo tables
 // =============================================================================
 
 import { db } from "@/lib/offline/db";

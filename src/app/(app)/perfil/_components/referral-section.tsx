@@ -117,7 +117,7 @@ export default function ReferralSection() {
       </div>
 
       <p className="text-xs text-[#71717A]">
-        Referí a un colega entrenador. Tu referencia será revisada por el equipo de Vizion.
+        Referí a un colega entrenador. Tu referencia será revisada por el equipo de Blackline Fitness.
       </p>
 
       <form onSubmit={handleSubmit} noValidate className="space-y-4">

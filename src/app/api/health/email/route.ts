@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Email transport health check
+// BLACKLINE FITNESS — Email transport health check
 // Owner: backend-api.
 //
 // GET /api/health/email

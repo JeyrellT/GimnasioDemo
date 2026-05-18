@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — /trainer/finanzas — Finance Dashboard
+// BLACKLINE FITNESS — /trainer/finanzas — Finance Dashboard
 // Owner: frontend-react.
 // =============================================================================
 

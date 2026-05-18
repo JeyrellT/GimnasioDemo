@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — AI module barrel
+// BLACKLINE FITNESS — AI module barrel
 // Owner: ai-orchestrator.
 //
 // Public surface for backend-api consumers. Internals (gemini-client retry,

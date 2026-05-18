@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — MeasurementSheet: Drawer shell (mobile)
+// BLACKLINE FITNESS — MeasurementSheet: Drawer shell (mobile)
 // Isolated so that vaul is only loaded when the sheet opens.
 // =============================================================================
 

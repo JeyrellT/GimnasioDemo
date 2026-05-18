@@ -6,30 +6,30 @@ import "@/app/globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Vizion",
-    template: "%s — Vizion",
+    default: "Blackline Fitness",
+    template: "%s — Blackline Fitness",
   },
   description: "Tu visión, tu evolución. Plataforma de entrenamiento personal para Costa Rica.",
-  metadataBase: new URL(process.env.APP_URL ?? "https://vizion.app"),
+  metadataBase: new URL(process.env.APP_URL ?? "https://blacklinefitness.app"),
   openGraph: {
     type: "website",
     locale: "es_CR",
-    url: "https://vizion.app",
-    siteName: "Vizion",
-    title: "Vizion — Tu visión, tu evolución",
+    url: "https://blacklinefitness.app",
+    siteName: "Blackline Fitness",
+    title: "Blackline Fitness — Tu visión, tu evolución",
     description: "Plataforma de entrenamiento personal para entrenadores y clientes en Costa Rica.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Vizion — Entrenamiento personal profesional",
+        alt: "Blackline Fitness — Entrenamiento personal profesional",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Vizion — Tu visión, tu evolución",
+    title: "Blackline Fitness — Tu visión, tu evolución",
     description: "Plataforma de entrenamiento personal para Costa Rica.",
     images: ["/og-image.png"],
   },
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Vizion",
+    title: "Blackline Fitness",
   },
   icons: {
     icon: "/icons/icon-192.svg",

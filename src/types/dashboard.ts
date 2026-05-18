@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Dashboard-specific TypeScript interfaces
+// BLACKLINE FITNESS — Dashboard-specific TypeScript interfaces
 // Owner: backend-api.
 //
 // Consumed by:

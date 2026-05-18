@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 // =============================================================================
-// VIZION — ClientProfileTabsClient
+// BLACKLINE FITNESS — ClientProfileTabsClient
 // Owner: frontend-react.
 // Tabs de contexto histórico: Histórico / Rutina / Sesiones / Notas.
 // =============================================================================

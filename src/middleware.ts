@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Next.js Edge Middleware (auth protection + rate limiting)
+// BLACKLINE FITNESS — Next.js Edge Middleware (auth protection + rate limiting)
 // Owner: backend-api.
 //
 // Guards all routes under /(app)/* — the authenticated shell of the app.

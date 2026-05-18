@@ -1,2 +1,2 @@
-// Backward compat shim — canonical implementation moved to vizion-logo.tsx
-export { VizionLogo } from "./vizion-logo";
+// Backward compat shim — canonical implementation moved to blackline-fitness-logo.tsx
+export { BlacklineFitnessLogo } from "./blackline-fitness-logo";

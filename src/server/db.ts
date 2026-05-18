@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Real Prisma client singleton
+// BLACKLINE FITNESS — Real Prisma client singleton
 // Owner: backend-api.
 //
 // Two exports:

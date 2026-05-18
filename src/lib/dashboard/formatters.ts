@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Dashboard pure transformation utilities
+// BLACKLINE FITNESS — Dashboard pure transformation utilities
 // Owner: backend-api.
 //
 // All functions here are pure (no side effects, no I/O, no Prisma).

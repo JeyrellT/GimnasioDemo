@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Demo actions: trainer dashboard
+// BLACKLINE FITNESS — Demo actions: trainer dashboard
 // Mirrors all signatures from src/app/actions/trainer-dashboard.ts
 // =============================================================================
 

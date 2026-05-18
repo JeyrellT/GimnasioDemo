@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 // =============================================================================
-// VIZION — Onboarding wizard client page
+// BLACKLINE FITNESS — Onboarding wizard client page
 // Owner: frontend-react.
 // Interactive shell that resolves the draftId param and passes it into WizardShell.
 // =============================================================================

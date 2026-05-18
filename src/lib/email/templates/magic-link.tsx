@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Magic link email template (React Email)
+// BLACKLINE FITNESS — Magic link email template (React Email)
 // Owner: backend-api.
 //
 // Tono: voseo CR, dark theme, brand orange #FF6A1A.
@@ -87,7 +87,7 @@ export default function MagicLinkEmail({
           <Section style={styles.footer}>
             <Text style={styles.footer_text}>
               {APP_NAME} respeta tu privacidad conforme a la{" "}
-              <Link href="https://vizion.app/legal/privacidad" style={styles.footer_link}>
+              <Link href="https://blacklinefitness.app/legal/privacidad" style={styles.footer_link}>
                 Ley 8968 (LPDP) de Costa Rica
               </Link>
               . No vendemos ni compartimos tu información personal.

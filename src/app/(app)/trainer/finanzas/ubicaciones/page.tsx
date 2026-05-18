@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// VIZION — /trainer/finanzas/ubicaciones
+// BLACKLINE FITNESS — /trainer/finanzas/ubicaciones
 // Fetches trainer's locations + renders LocationsList (client).
 // =============================================================================
 

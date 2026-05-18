@@ -1,6 +1,6 @@
 "use server";
 // =============================================================================
-// VIZION — Finance server actions
+// BLACKLINE FITNESS — Finance server actions
 // Owner: backend-api.
 //
 // Covers: trainer locations, location visits (with auto-expense), expenses,

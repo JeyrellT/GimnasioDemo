@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Offline module barrel + React hooks
+// BLACKLINE FITNESS — Offline module barrel + React hooks
 // Owner: data-app-builder.
 //
 // Public surface for the rest of the app. Import from "@/lib/offline" — never
@@ -30,7 +30,7 @@ export type {
   AssignedRoutineCache,
   ExerciseCache,
   KvEntry,
-  VizionDB,
+  Blackline FitnessDB,
 } from "./db";
 
 // Re-export queue operations

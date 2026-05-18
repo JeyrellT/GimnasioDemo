@@ -1,7 +1,7 @@
 "use server";
 
 // =============================================================================
-// VIZION — Server Actions: Routine Templates + Assignment
+// BLACKLINE FITNESS — Server Actions: Routine Templates + Assignment
 // Owner: backend-api.
 //
 // Auth model:

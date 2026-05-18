@@ -1,5 +1,5 @@
 // =============================================================================
-// VIZION — Finance Zod validation schemas
+// BLACKLINE FITNESS — Finance Zod validation schemas
 // Owner: backend-api.
 // =============================================================================
 
