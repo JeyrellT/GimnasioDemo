@@ -271,7 +271,7 @@ function RegisterDialog({
     toast.success("¡Bienvenido a Vizion!");
     reset();
     onClose();
-    router.push(selectedRole === "TRAINER" ? "/trainer/inicio" : "/client/inicio");
+    router.push("/inicio");
     router.refresh();
   }
 
