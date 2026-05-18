@@ -89,7 +89,7 @@ function createClient(label: string): PrismaClient {
 // -----------------------------------------------------------------------------
 
 // Models WITHOUT deletedAt — skip soft-delete injection for these.
-const NO_SOFT_DELETE = new Set(["Account", "Session", "VerificationToken"]);
+const NO_SOFT_DELETE = new Set(["Account", "Session", "VerificationToken", "Referral"]);
 
 /**
  * Helper: injects `deletedAt: null` into the where clause if applicable.
