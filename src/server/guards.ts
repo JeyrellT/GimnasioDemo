@@ -82,12 +82,77 @@ const USER_WITH_PROFILES_SELECT = {
   clientProfile: true,
 } as const;
 
+// Legacy select used as fallback when the deployed database has not yet had
+// the SUPER_ADMIN migration (20260517190000_add_super_admin_role) applied —
+// i.e. the `suspendedAt` / `suspendedReason` columns are missing. We detect
+// that case at runtime and re-query without those fields so the app keeps
+// working until `pnpm db:migrate` is run on the target DB.
+const USER_WITHOUT_SUSPENSION_SELECT = {
+  id: true,
+  email: true,
+  emailVerified: true,
+  passwordHash: true,
+  name: true,
+  dateOfBirth: true,
+  gender: true,
+  role: true,
+  locale: true,
+  theme: true,
+  pushOptIn: true,
+  avatarUrl: true,
+  lastLoginAt: true,
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true,
+  trainerProfile: true,
+  clientProfile: true,
+} as const;
+
+/**
+ * Returns true when the Prisma error indicates the suspension columns are
+ * missing from the live database (migration not applied yet).
+ * PostgreSQL error code 42703 = "undefined_column".
+ */
+function isSuspensionColumnMissing(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const e = err as { code?: string; message?: string };
+  if (e.code === "42703") return true;
+  return (
+    typeof e.message === "string" &&
+    /column .*(suspendedAt|suspendedReason)/i.test(e.message)
+  );
+}
+
 async function fetchUserById(id: string): Promise<UserWithProfile | null> {
   // prisma (not prismaRaw) — soft-delete filter automatically applied.
-  return prisma.user.findUnique({
-    where: { id },
-    select: USER_WITH_PROFILES_SELECT,
-  });
+  try {
+    return await prisma.user.findUnique({
+      where: { id },
+      select: USER_WITH_PROFILES_SELECT,
+    });
+  } catch (err) {
+    if (!isSuspensionColumnMissing(err)) throw err;
+
+    // Migration 20260517190000_add_super_admin_role has not been applied on
+    // this database. Log once and fall back to the legacy select so the app
+    // continues to function for non-suspended users.
+    logWarn("guards.fetchUserById: suspension columns missing, falling back", {
+      hint: "Run `pnpm db:migrate` to apply 20260517190000_add_super_admin_role",
+    });
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: USER_WITHOUT_SUSPENSION_SELECT,
+    });
+    if (!user) return null;
+    // Synthesise the missing fields so the rest of the code can treat the
+    // user as "never suspended".
+    return {
+      ...user,
+      suspendedAt: null,
+      suspendedReason: null,
+    } as UserWithProfile;
+  }
 }
 
 // -----------------------------------------------------------------------------
