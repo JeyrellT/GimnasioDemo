@@ -559,19 +559,12 @@ function ProdHub() {
           </button>
         </div>
 
-        {/* Info para clientes */}
-        <p className="text-center text-sm text-[#71717A]">
-          ¿Sos cliente? Pedile a tu coach que te agregue. Si ya tenés cuenta,{" "}
-          <button
-            type="button"
-            onClick={openLogin}
-            className="font-medium text-[#FF6A1A] hover:text-[#E55A0E] transition-colors underline-offset-4 hover:underline"
-          >
-            Ingresá
-          </button>
+        {/* Info para clientes nuevos (sin link — solo informativo) */}
+        <p className="text-center text-xs text-[#71717A]">
+          ¿Sos cliente nuevo? Pedile a tu coach que te agregue.
         </p>
 
-        {/* Enlace al login para usuarios existentes */}
+        {/* Único enlace al login — sirve para coach y cliente con cuenta */}
         <p className="text-center text-sm text-[#71717A]">
           ¿Ya tenés cuenta?{" "}
           <button
