@@ -12,6 +12,8 @@ import { AuthProvider, useAuth } from "@/components/providers/auth-provider";
 import { Topbar } from "@/components/layout/topbar";
 import { TrainerBottomNav, TrainerSidebar } from "@/components/layout/trainer-nav";
 import { ClientBottomNav, ClientSidebar } from "@/components/layout/client-nav";
+import { AdminSuperNav } from "@/app/(app)/admin/_components/admin-super-nav";
+import { AdminBottomNav } from "@/components/layout/admin-bottom-nav";
 import { OfflineBanner } from "@/components/shared/offline-banner";
 
 const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
@@ -35,7 +37,11 @@ function AppShell({ children }: { children: ReactNode }) {
     );
   }
 
+  const isAdmin = user.role === "SUPER_ADMIN" || user.role === "ADMIN";
   const isTrainer = user.role === "TRAINER";
+
+  const Sidebar = isAdmin ? AdminSuperNav : isTrainer ? TrainerSidebar : ClientSidebar;
+  const BottomNav = isAdmin ? AdminBottomNav : isTrainer ? TrainerBottomNav : ClientBottomNav;
 
   return (
     <div className="flex min-h-dvh flex-col bg-canvas">
@@ -52,7 +58,7 @@ function AppShell({ children }: { children: ReactNode }) {
 
       {/* Body: sidebar + content */}
       <div className="flex flex-1 overflow-hidden">
-        {isTrainer ? <TrainerSidebar /> : <ClientSidebar />}
+        <Sidebar />
 
         <main
           id="main-content"
@@ -62,7 +68,7 @@ function AppShell({ children }: { children: ReactNode }) {
         </main>
       </div>
 
-      {isTrainer ? <TrainerBottomNav /> : <ClientBottomNav />}
+      <BottomNav />
     </div>
   );
 }

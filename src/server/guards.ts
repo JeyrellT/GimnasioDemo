@@ -78,6 +78,7 @@ const USER_WITH_PROFILES_SELECT = {
   deletedAt: true,
   suspendedAt: true,
   suspendedReason: true,
+  referredByCode: true,
   trainerProfile: true,
   clientProfile: true,
 } as const;

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Users, CreditCard, Shield } from "lucide-react";
+import { BarChart3, Users, CreditCard, Shield, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -12,6 +12,12 @@ const navItems = [
     href: "/admin/subscriptions",
     label: "Suscripciones",
     icon: CreditCard,
+    exact: false,
+  },
+  {
+    href: "/admin/referrals",
+    label: "Referidos",
+    icon: UserPlus,
     exact: false,
   },
 ] as const;

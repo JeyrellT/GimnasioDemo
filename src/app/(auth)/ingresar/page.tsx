@@ -109,6 +109,7 @@ const registerFormSchema = z
     email: z.string().trim().email("Email inválido"),
     password: z.string().min(8, "Mínimo 8 caracteres"),
     confirmPassword: z.string().min(1, "Confirmá tu contraseña"),
+    referredByCode: z.string().trim().max(100).optional(),
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: "Las contraseñas no coinciden",
@@ -207,6 +208,7 @@ function RegisterDialog({
     fd.set("email", email);
     fd.set("password", data.password);
     fd.set("role", selectedRole);
+    if (data.referredByCode) fd.set("referredByCode", data.referredByCode);
 
     const result = await registerUser(fd);
 
@@ -351,6 +353,25 @@ function RegisterDialog({
                   </p>
                 )}
               </div>
+
+              {/* Código de referencia (solo trainers) */}
+              {selectedRole === "TRAINER" && (
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="reg-referral"
+                    className="block text-sm font-medium text-[#FAFAFA]"
+                  >
+                    ¿Quién te refirió? <span className="text-[#71717A] font-normal">(opcional)</span>
+                  </label>
+                  <input
+                    id="reg-referral"
+                    type="text"
+                    placeholder="Nombre o código de quien te refirió"
+                    className={inputClassName}
+                    {...register("referredByCode")}
+                  />
+                </div>
+              )}
 
               {/* Botón de submit */}
               <button

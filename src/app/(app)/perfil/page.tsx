@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, lazy, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { LogOut, ArrowLeftRight, Camera, Trash2, Sparkles, Eye, EyeOff, ExternalLink } from "lucide-react";
@@ -14,7 +14,12 @@ import {
 
 const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
+const ReferralSection = lazy(
+  () => import("@/app/(app)/perfil/_components/referral-section"),
+);
+
 function roleLabel(role: string): string {
+  if (role === "SUPER_ADMIN") return "Super Admin";
   if (role === "TRAINER") return "Entrenador";
   if (role === "ADMIN") return "Administrador";
   return "Cliente";
@@ -181,6 +186,13 @@ export default function PerfilPage() {
             <ExternalLink className="h-3 w-3" aria-hidden="true" />
           </a>
         </div>
+      )}
+
+      {/* Referral section — trainers only, production only */}
+      {!IS_DEMO && user.role === "TRAINER" && (
+        <Suspense fallback={null}>
+          <ReferralSection />
+        </Suspense>
       )}
 
       {/* Actions */}

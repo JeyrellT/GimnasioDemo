@@ -179,6 +179,13 @@ enum LpdpRequestStatus {
   REJECTED
 }
 
+enum ReferralStatus {
+  PENDING
+  APPROVED
+  REGISTERED
+  REJECTED
+}
+
 enum AuditAction {
   CREATE
   UPDATE
@@ -329,6 +336,13 @@ model User {
   clientOneOffSales       OneOffSale[]      @relation("ClientOneOffSales")
   // Trainer-only onboarding drafts
   trainerOnboardingDrafts OnboardingDraft[] @relation("TrainerOnboardingDrafts")
+
+  // Referral system — who referred this user (optional, set at registration)
+  referredByCode String?
+  // Referrals this user has created (as referrer)
+  referralsMade    Referral[] @relation("ReferralReferrer")
+  // Referrals where this user is the referred person (linked after signup)
+  referralsReceived Referral[] @relation("ReferralReferred")
 
   @@index([role])
   @@index([deletedAt])
@@ -1141,4 +1155,30 @@ model OnboardingDraft {
 
   @@index([trainerId, completedAt])
   @@index([expiresAt])
+}
+
+// =============================================================================
+// Referral — trainer-to-trainer referral requests reviewed by SUPER_ADMIN
+// =============================================================================
+
+model Referral {
+  id             String         @id @default(cuid())
+  referrerUserId String
+  referredName   String
+  referredEmail  String
+  referredPhone  String?
+  status         ReferralStatus @default(PENDING)
+  referredUserId String?
+  note           String?
+  adminNote      String?
+  reviewedAt     DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  referrer     User  @relation("ReferralReferrer", fields: [referrerUserId], references: [id])
+  referredUser User? @relation("ReferralReferred", fields: [referredUserId], references: [id])
+
+  @@index([referrerUserId])
+  @@index([status])
+  @@index([referredEmail])
 }

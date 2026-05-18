@@ -63,6 +63,7 @@ const registerSchema = signUpSchema.extend({
     .min(8, "La contraseña debe tener al menos 8 caracteres")
     .max(1024, "La contraseña es demasiado larga"),
   role: z.enum(["TRAINER", "CLIENT"]).default("CLIENT"),
+  referredByCode: z.string().trim().max(100).optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -165,6 +166,7 @@ export async function registerUser(
           dateOfBirth: input.get("dateOfBirth") ?? undefined,
           password: input.get("password"),
           role: input.get("role") ?? "CLIENT",
+          referredByCode: input.get("referredByCode") || undefined,
         }
       : {
           email: input.email,
@@ -172,6 +174,7 @@ export async function registerUser(
           dateOfBirth: input.dateOfBirth ?? undefined,
           password: input.password ?? "",
           role: input.role ?? "CLIENT",
+          referredByCode: undefined,
         };
     const parsed = registerSchema.safeParse(raw);
 
@@ -183,7 +186,7 @@ export async function registerUser(
       );
     }
 
-    const { email, name, password, role, dateOfBirth } = parsed.data;
+    const { email, name, password, role, dateOfBirth, referredByCode } = parsed.data;
     const { ipAddress, userAgent } = await getRequestMeta();
 
     // -- Uniqueness check --
@@ -215,6 +218,7 @@ export async function registerUser(
           passwordHash,
           role,
           ...(dateOfBirth ? { dateOfBirth: new Date(dateOfBirth) } : {}),
+          ...(referredByCode ? { referredByCode } : {}),
         },
         select: { id: true, email: true, name: true, role: true },
       });
