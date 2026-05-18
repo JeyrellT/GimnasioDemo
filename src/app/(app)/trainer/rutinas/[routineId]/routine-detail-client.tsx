@@ -6,19 +6,22 @@ import { Loader2, UserCheck, CalendarDays, Dumbbell, Clock, Target } from "lucid
 import { getRoutine } from "@/app/actions/routines";
 import { searchExercises } from "@/app/actions/exercises";
 import { RoutineBuilderClient } from "./routine-builder-client";
+import { useRoutineBuilderStore } from "@/stores/routine-builder-store";
 import type { RoutineDetail } from "@/server/actions/routines.actions";
 import type { RoutineWithDays } from "@/types/domain";
-import type { RoutineGoal } from "@/types/domain";
-
 // ── Goal config ───────────────────────────────────────────────────────────────
 
-const GOAL_META: Record<RoutineGoal, { label: string; color: string; bg: string }> = {
+const GOAL_META: Record<string, { label: string; color: string; bg: string }> = {
   HYPERTROPHY: { label: "Hipertrofia",              color: "#FF6A1A", bg: "rgba(255,106,26,0.12)" },
   STRENGTH:    { label: "Fuerza",                   color: "#3B82F6", bg: "rgba(59,130,246,0.12)"  },
   ENDURANCE:   { label: "Resistencia",              color: "#22C55E", bg: "rgba(34,197,94,0.12)"   },
   FAT_LOSS:    { label: "Pérdida de grasa",         color: "#F59E0B", bg: "rgba(245,158,11,0.12)"  },
   GENERAL:     { label: "General / Mantenimiento",  color: "#A855F7", bg: "rgba(168,85,247,0.12)"  },
 };
+
+function getGoalMeta(goal: string) {
+  return GOAL_META[goal] ?? { label: goal, color: "#A1A1AA", bg: "rgba(161,161,170,0.12)" };
+}
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
@@ -65,11 +68,11 @@ export default function RoutineDetailClient({ routineId }: Props) {
     return <NotFoundView />;
   }
 
-  const goal = GOAL_META[routine.goal];
-  const totalExercises = routine.days.reduce(
-    (sum, d) => sum + d.exercises.length,
-    0,
-  );
+  const goal = getGoalMeta(routine.goal);
+  const storeDays = useRoutineBuilderStore((s) => s.days);
+  const totalExercises = storeDays.length > 0
+    ? storeDays.reduce((sum, d) => sum + d.exercises.length, 0)
+    : routine.days.reduce((sum, d) => sum + d.exercises.length, 0);
 
   const summaryItems = [
     {

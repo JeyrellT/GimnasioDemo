@@ -18,6 +18,9 @@ export const env = {
   // Email (unused)
   RESEND_API_KEY: "demo",
   RESEND_FROM_EMAIL: "demo@vizion.app",
+  GMAIL_USER: "demo@vizion.app",
+  GMAIL_APP_PASSWORD: "demo",
+  GMAIL_FROM_NAME: "Vizion",
 
   // AI — placeholder; real key comes from localStorage in browser
   GEMINI_API_KEY: "",

@@ -38,7 +38,6 @@ import type {
   RoutineSummary,
 } from "@/types/domain";
 import { Prisma } from "@prisma/client";
-import type { RoutineGoal } from "@prisma/client";
 
 // =============================================================================
 // Local helper types
@@ -49,7 +48,7 @@ export interface RoutineDetail {
   trainerId: string;
   name: string;
   description: string | null;
-  goal: RoutineGoal;
+  goal: string;
   splitDays: number;
   durationWeeks: number;
   isArchived: boolean;
@@ -93,12 +92,10 @@ export interface RoutineDetail {
 // Helpers
 // =============================================================================
 
-/** Validate and cast a RoutineGoal string. */
-function parseGoal(raw: string | undefined | null): RoutineGoal {
-  const valid: RoutineGoal[] = [
-    "HYPERTROPHY", "STRENGTH", "ENDURANCE", "FAT_LOSS", "GENERAL",
-  ];
-  if (raw && valid.includes(raw as RoutineGoal)) return raw as RoutineGoal;
+/** Validate a goal string (built-in or custom). */
+function parseGoal(raw: string | undefined | null): string {
+  const trimmed = raw?.trim();
+  if (trimmed && trimmed.length > 0) return trimmed;
   throw new ValidationError("INVALID_GOAL", "Objetivo de rutina inválido.");
 }
 
@@ -1192,6 +1189,55 @@ export async function getClientRoutines(
     }));
 
     return { routines };
+  });
+}
+
+// =============================================================================
+// Custom Goals
+// =============================================================================
+
+export async function createCustomGoal(
+  name: string,
+): Promise<ActionResult<{ id: string; name: string }>> {
+  return tryCatch(async () => {
+    const user = await requireTrainer();
+    const trimmed = name.trim();
+
+    if (!trimmed || trimmed.length > 50) {
+      throw new ValidationError(
+        "INVALID_GOAL_NAME",
+        "El nombre del objetivo debe tener entre 1 y 50 caracteres.",
+      );
+    }
+
+    const existing = await prisma.customGoal.findUnique({
+      where: { trainerId_name: { trainerId: user.id, name: trimmed } },
+      select: { id: true, name: true },
+    });
+
+    if (existing) return existing;
+
+    const goal = await prisma.customGoal.create({
+      data: { name: trimmed, trainerId: user.id },
+      select: { id: true, name: true },
+    });
+
+    logInfo("routines.createCustomGoal", { userId: user.id, goalId: goal.id });
+    return goal;
+  });
+}
+
+export async function listCustomGoals(): Promise<
+  ActionResult<Array<{ id: string; name: string }>>
+> {
+  return tryCatch(async () => {
+    const user = await requireTrainer();
+
+    return prisma.customGoal.findMany({
+      where: { trainerId: user.id },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    });
   });
 }
 

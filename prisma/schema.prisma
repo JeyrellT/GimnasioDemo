@@ -110,12 +110,18 @@ enum MuscleGroup {
   FULL_BODY
 }
 
-enum RoutineGoal {
-  HYPERTROPHY
-  STRENGTH
-  ENDURANCE
-  FAT_LOSS
-  GENERAL
+/// Custom training goals created by trainers. Allows extending the built-in
+/// RoutineGoal enum with user-defined objectives.
+model CustomGoal {
+  id        String   @id @default(cuid())
+  name      String
+  trainerId String
+  createdAt DateTime @default(now())
+
+  trainer User @relation("TrainerCustomGoals", fields: [trainerId], references: [id], onDelete: Cascade)
+
+  @@unique([trainerId, name])
+  @@index([trainerId])
 }
 
 enum AssignedRoutineStatus {
@@ -270,6 +276,9 @@ model User {
   // Optional scrypt password hash for Credentials provider sign-in.
   // Format: scrypt|N|r|p|saltHex|hashHex. NULL = magic-link only.
   passwordHash  String?
+  // When true, the user must change their password before accessing the app.
+  // Set when a trainer provisions a client account with a temporary password.
+  mustChangePassword Boolean @default(false)
   name          String
   dateOfBirth   DateTime?
   gender        Gender?
@@ -323,6 +332,9 @@ model User {
 
   // Comments authored on assigned routines (trainer or client)
   routineComments RoutineComment[]
+
+  // Custom training goals
+  customGoals CustomGoal[] @relation("TrainerCustomGoals")
 
   // Notifications received
   notifications Notification[]
@@ -670,7 +682,7 @@ model RoutineTemplate {
   trainerId     String
   name          String
   description   String?     @db.Text
-  goal          RoutineGoal
+  goal          String      @default("HYPERTROPHY")
   splitDays     Int
   durationWeeks Int         @default(8)
   isArchived    Boolean     @default(false)

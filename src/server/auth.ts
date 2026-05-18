@@ -74,12 +74,12 @@ export const fullAuthConfig: NextAuthConfig = {
   providers: [
     // ── 1. Magic link (email) ────────────────────────────────────────────────
     // next-auth v5 uses `nodemailer` provider for email; we override sendVerificationRequest
-    // to use our own Resend-backed sendEmail() instead of an SMTP server.
+    // to use our own Gmail-backed sendEmail() instead of an SMTP server.
     EmailProvider({
       // `server` and `from` are required by the provider typings but we bypass
       // the built-in nodemailer transport entirely via sendVerificationRequest.
       server: "smtp://localhost:25",
-      from: serverEnv.RESEND_FROM_EMAIL,
+      from: serverEnv.GMAIL_USER ?? serverEnv.RESEND_FROM_EMAIL,
 
       // TTL: MAGIC_LINK_EXPIRY_MIN minutes (15 by default, see consts.ts).
       maxAge: MAGIC_LINK_EXPIRY_MIN * 60,
@@ -226,22 +226,44 @@ export const fullAuthConfig: NextAuthConfig = {
      * Stamps role and name into the token from the DB on first sign-in,
      * then passes through on subsequent requests (token already has the fields).
      */
-    async jwt({ token, user }: { token: JWT; user?: User | AdapterUser }) {
+    async jwt({
+      token,
+      user,
+      trigger,
+    }: {
+      token: JWT;
+      user?: User | AdapterUser;
+      trigger?: "signIn" | "signUp" | "update";
+    }) {
       // `user` is only present on the initial sign-in — not on subsequent
       // token refreshes.
       if (user?.id) {
         token.id = user.id;
 
-        // Fetch the authoritative role and name from the DB on first sign-in.
-        // Subsequent refreshes use the cached token values; role changes take
-        // effect on the next sign-in or when the token is explicitly rotated.
+        // Fetch the authoritative role, name, and mustChangePassword from DB
+        // on first sign-in. Subsequent refreshes use the cached token values;
+        // role changes take effect on the next sign-in or explicit rotation.
         const dbUser = await prisma.user.findUnique({
           where: { id: user.id },
-          select: { role: true, name: true },
+          select: { role: true, name: true, mustChangePassword: true },
         });
 
         token.role = dbUser?.role ?? ("CLIENT" as UserRole);
         token.name = dbUser?.name ?? (user.name ?? "");
+        token.mustChangePassword = dbUser?.mustChangePassword ?? false;
+      } else if (trigger === "update" && token.id) {
+        // Explicit session refresh (e.g. after the client completes the forced
+        // password change). Re-read mustChangePassword from DB so the middleware
+        // stops redirecting them to /client/bienvenida.
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true, name: true, mustChangePassword: true },
+        });
+        if (dbUser) {
+          token.role = dbUser.role;
+          token.name = dbUser.name;
+          token.mustChangePassword = dbUser.mustChangePassword;
+        }
       }
 
       return token;
@@ -257,6 +279,7 @@ export const fullAuthConfig: NextAuthConfig = {
         email: token.email ?? "",
         name: token.name,
         role: token.role,
+        mustChangePassword: token.mustChangePassword ?? false,
       };
       return session;
     },
