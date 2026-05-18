@@ -22,6 +22,10 @@ const roleConfig: Record<
     label: "Admin",
     className: "bg-[#052E16] text-[#22C55E] border border-[#22C55E]/20",
   },
+  SUPER_ADMIN: {
+    label: "Super Admin",
+    className: "bg-[#FF6A1A]/10 text-[#FF6A1A] border border-[#FF6A1A]/30",
+  },
 };
 
 export function RoleBadge({ role, className }: RoleBadgeProps) {

@@ -30,7 +30,7 @@ export interface AuthUser {
   id: string;
   name: string;
   email: string;
-  role: "TRAINER" | "CLIENT" | "ADMIN";
+  role: "TRAINER" | "CLIENT" | "ADMIN" | "SUPER_ADMIN";
 }
 
 export interface AuthContextValue {

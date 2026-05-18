@@ -9,9 +9,11 @@ import {
   Library,
   Wallet,
   Settings,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/components/providers/auth-provider";
 
 const navItems = [
   { href: "/inicio", label: "Inicio", icon: LayoutDashboard },
@@ -112,6 +114,8 @@ export function TrainerBottomNav() {
 
 export function TrainerSidebar() {
   const pathname = usePathname();
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === "SUPER_ADMIN";
   const isActive = (href: string) =>
     href === "/inicio" ? pathname === href : pathname.startsWith(href);
 
@@ -169,8 +173,44 @@ export function TrainerSidebar() {
         })}
       </nav>
 
-      {/* Bottom section — Settings */}
-      <div className="shrink-0 border-t border-[#3F3F46]/60 p-3">
+      {/* Bottom section — Admin + Settings */}
+      <div className="shrink-0 border-t border-[#3F3F46]/60 p-3 space-y-0.5">
+        {isSuperAdmin && (
+          <Link
+            href="/admin"
+            className={cn(
+              "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 min-h-[44px] group overflow-hidden",
+              isActive("/admin")
+                ? "text-[#FF6A1A]"
+                : "text-[#A1A1AA] hover:bg-[#18181B] hover:text-[#FAFAFA]",
+            )}
+            aria-current={isActive("/admin") ? "page" : undefined}
+          >
+            {isActive("/admin") && (
+              <>
+                <motion.div
+                  layoutId="sidebar-active-bg"
+                  className="absolute inset-0 rounded-lg bg-[#FF6A1A]/10"
+                  transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                />
+                <motion.div
+                  layoutId="sidebar-indicator"
+                  className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-[#FF6A1A]"
+                  transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                />
+              </>
+            )}
+            <div
+              className={cn(
+                "relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors duration-200",
+                isActive("/admin") ? "bg-[#FF6A1A]/20" : "group-hover:bg-[#27272A]",
+              )}
+            >
+              <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
+            </div>
+            <span className="relative z-10">Admin</span>
+          </Link>
+        )}
         <Link
           href={settingsItem.href}
           className={cn(
