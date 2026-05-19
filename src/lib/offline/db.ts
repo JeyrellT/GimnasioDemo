@@ -377,10 +377,10 @@ export const KV_KEYS = {
 } as const;
 
 // -----------------------------------------------------------------------------
-// Blackline FitnessDB class
+// BlacklineFitnessDB class
 // -----------------------------------------------------------------------------
 
-export class Blackline FitnessDB extends Dexie {
+export class BlacklineFitnessDB extends Dexie {
   // Existing version-1 tables
   localSessions!: Table<LocalSession, string>;
   localSets!: Table<LocalSet, string>;
@@ -471,8 +471,8 @@ export class Blackline FitnessDB extends Dexie {
 }
 
 // -----------------------------------------------------------------------------
-// Singleton — import this everywhere, never instantiate Blackline FitnessDB directly.
+// Singleton — import this everywhere, never instantiate BlacklineFitnessDB directly.
 // Safe to import in both client components and service workers.
 // -----------------------------------------------------------------------------
 
-export const db = new Blackline FitnessDB();
+export const db = new BlacklineFitnessDB();

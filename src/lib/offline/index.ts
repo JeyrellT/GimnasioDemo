@@ -30,7 +30,7 @@ export type {
   AssignedRoutineCache,
   ExerciseCache,
   KvEntry,
-  Blackline FitnessDB,
+  BlacklineFitnessDB,
 } from "./db";
 
 // Re-export queue operations
