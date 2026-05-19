@@ -11,9 +11,10 @@ import type { Exercise, MuscleGroup, ExerciseEquipment, ExerciseDifficulty, Exer
 
 interface Props {
   exerciseId: string;
+  basePath?: string;
 }
 
-export default function EditarEjercicioClient({ exerciseId }: Props) {
+export default function EditarEjercicioClient({ exerciseId, basePath = "/trainer/ejercicios" }: Props) {
   const { user } = useAuth();
   const [exercise, setExercise] = useState<Exercise | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,7 +72,7 @@ export default function EditarEjercicioClient({ exerciseId }: Props) {
           </p>
         </div>
         <Link
-          href="/trainer/ejercicios"
+          href={basePath}
           className="text-xs text-[#3B82F6] hover:text-[#2563EB] transition-colors"
         >
           Volver a la biblioteca
@@ -94,7 +95,7 @@ export default function EditarEjercicioClient({ exerciseId }: Props) {
           </p>
         </div>
         <Link
-          href={`/trainer/ejercicios/${exerciseId}`}
+          href={`${basePath}/${exerciseId}`}
           className="text-xs text-[#3B82F6] hover:text-[#2563EB] transition-colors"
         >
           Ver ejercicio
@@ -116,7 +117,7 @@ export default function EditarEjercicioClient({ exerciseId }: Props) {
           </p>
         </div>
         <Link
-          href="/trainer/ejercicios"
+          href={basePath}
           className="text-xs text-[#3B82F6] hover:text-[#2563EB] transition-colors"
         >
           Volver a la biblioteca
@@ -147,7 +148,7 @@ export default function EditarEjercicioClient({ exerciseId }: Props) {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Link
-          href={`/trainer/ejercicios/${exerciseId}`}
+          href={`${basePath}/${exerciseId}`}
           className="flex items-center gap-1.5 text-sm text-[#71717A] hover:text-[#A1A1AA] transition-colors"
           aria-label="Volver al detalle del ejercicio"
         >
@@ -162,7 +163,7 @@ export default function EditarEjercicioClient({ exerciseId }: Props) {
       />
 
       <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-6 shadow-sm">
-        <ExerciseForm exercise={exerciseData} />
+        <ExerciseForm exercise={exerciseData} basePath={basePath} />
       </div>
     </div>
   );

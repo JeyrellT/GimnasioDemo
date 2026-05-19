@@ -58,13 +58,14 @@ function MuscleBadge({ muscle }: { muscle: string }) {
 
 interface Props {
   exerciseId: string;
+  basePath?: string;
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-export default function ExerciseDetailClient({ exerciseId }: Props) {
+export default function ExerciseDetailClient({ exerciseId, basePath = "/trainer/ejercicios" }: Props) {
   const { user } = useAuth();
   const [exercise, setExercise] = useState<Exercise | null>(null);
   const [loading, setLoading] = useState(true);
@@ -105,7 +106,7 @@ export default function ExerciseDetailClient({ exerciseId }: Props) {
           </p>
         </div>
         <Link
-          href="/trainer/ejercicios"
+          href={basePath}
           className="text-xs text-[#3B82F6] hover:text-[#2563EB] transition-colors"
         >
           Volver a la biblioteca
@@ -150,7 +151,7 @@ export default function ExerciseDetailClient({ exerciseId }: Props) {
     <div className="space-y-4">
       {/* Back navigation */}
       <Link
-        href="/trainer/ejercicios"
+        href={basePath}
         className="inline-flex items-center gap-1.5 text-sm text-[#71717A] transition-colors hover:text-[#FAFAFA]"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -174,7 +175,7 @@ export default function ExerciseDetailClient({ exerciseId }: Props) {
 
           {isOwner && (
             <Link
-              href={`/trainer/ejercicios/${exerciseId}/editar`}
+              href={`${basePath}/${exerciseId}/editar`}
               className="inline-flex items-center gap-1.5 rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-1.5 text-xs font-medium text-[#FAFAFA] transition-colors hover:border-[#3B82F6]/40 hover:bg-[#3F3F46]"
             >
               <Pencil className="h-3.5 w-3.5 text-[#3B82F6]" aria-hidden="true" />

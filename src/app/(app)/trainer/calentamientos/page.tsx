@@ -323,7 +323,7 @@ export default function CalentamientosPage() {
               return (
                 <li key={ex.id}>
                   <Link
-                    href={`/trainer/ejercicios/${ex.id}`}
+                    href={`/trainer/calentamientos/${ex.id}`}
                     className="group relative flex flex-col overflow-hidden rounded-xl border border-[#3F3F46] bg-[#18181B]/80 backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:scale-[1.02] hover:border-brand-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/60 cursor-pointer"
                   >
                     <div className="relative aspect-video w-full overflow-hidden bg-[#27272A]">
