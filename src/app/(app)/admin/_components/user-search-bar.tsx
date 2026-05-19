@@ -77,7 +77,7 @@ export function UserSearchBar({
           placeholder="Buscar por email o nombre..."
           defaultValue={currentSearch}
           onChange={handleSearch}
-          className="h-10 w-full rounded-lg border border-[#3F3F46] bg-[#18181B] pl-9 pr-3 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6]"
+          className="h-10 w-full rounded-lg border border-[#3F3F46] bg-[#18181B] pl-9 pr-3 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
         />
       </div>
 
@@ -85,7 +85,7 @@ export function UserSearchBar({
       <select
         value={currentRole}
         onChange={(e) => updateParam("role", e.target.value)}
-        className="h-10 rounded-lg border border-[#3F3F46] bg-[#18181B] px-3 text-sm text-[#FAFAFA] focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6]"
+        className="h-10 rounded-lg border border-[#3F3F46] bg-[#18181B] px-3 text-sm text-[#FAFAFA] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
         aria-label="Filtrar por rol"
       >
         {ROLES.map((r) => (
@@ -99,7 +99,7 @@ export function UserSearchBar({
       <select
         value={currentSuspended}
         onChange={(e) => updateParam("suspended", e.target.value)}
-        className="h-10 rounded-lg border border-[#3F3F46] bg-[#18181B] px-3 text-sm text-[#FAFAFA] focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6]"
+        className="h-10 rounded-lg border border-[#3F3F46] bg-[#18181B] px-3 text-sm text-[#FAFAFA] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
         aria-label="Filtrar por estado"
       >
         {SUSPENDED_OPTIONS.map((o) => (

@@ -61,8 +61,8 @@ function StatusBadge({ status }: { status: string }) {
   }
   if (status === "COMPLETED") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-[#3B82F6]/15 px-2.5 py-0.5 text-[10px] font-semibold text-[#3B82F6]">
-        <span className="h-1.5 w-1.5 rounded-full bg-[#3B82F6]" />
+      <span className="inline-flex items-center gap-1 rounded-full bg-brand-primary/15 px-2.5 py-0.5 text-[10px] font-semibold text-brand-primary">
+        <span className="h-1.5 w-1.5 rounded-full bg-brand-primary" />
         Completada
       </span>
     );
@@ -88,11 +88,11 @@ function ProgressBar({ pct }: { pct: number }) {
     <div className="mt-3">
       <div className="mb-1 flex items-center justify-between">
         <span className="text-[10px] text-[#71717A]">Progreso estimado</span>
-        <span className="text-[10px] font-semibold text-[#3B82F6]">{pct}%</span>
+        <span className="text-[10px] font-semibold text-brand-primary">{pct}%</span>
       </div>
       <div className="h-1.5 w-full rounded-full bg-[#27272A] overflow-hidden">
         <div
-          className="h-full rounded-full bg-[#3B82F6] transition-all"
+          className="h-full rounded-full bg-brand-primary transition-all"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -144,7 +144,7 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
   if (loading) {
     return (
       <div className="flex min-h-[300px] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-[#3B82F6]" />
+        <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
       </div>
     );
   }
@@ -158,7 +158,7 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
       <div className="flex items-center gap-3">
         <Link
           href={`/trainer/clientes/${clientId}`}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#3F3F46] bg-[#18181B] text-[#71717A] transition-colors hover:border-[#3B82F6]/40 hover:text-[#FAFAFA]"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#3F3F46] bg-[#18181B] text-[#71717A] transition-colors hover:border-brand-primary/40 hover:text-[#FAFAFA]"
           aria-label="Volver al cliente"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -204,7 +204,7 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
                 key={r.id}
                 className={[
                   "rounded-xl border bg-[#18181B]/80 backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] px-4 py-4 transition-all duration-200",
-                  r.status === "ACTIVE" ? "border-[#3B82F6]/30" : "border-[#3F3F46] opacity-70",
+                  r.status === "ACTIVE" ? "border-brand-primary/30" : "border-[#3F3F46] opacity-70",
                 ].join(" ")}
               >
                 {/* Top row: name + status + actions */}

@@ -88,7 +88,7 @@ export default async function AdminSubscriptionsPage({
                 href={href}
                 className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                   isActive
-                    ? "bg-[#3B82F6] text-white"
+                    ? "bg-brand-primary text-white"
                     : "bg-[#27272A] text-[#A1A1AA] hover:bg-[#3F3F46] hover:text-[#FAFAFA]"
                 }`}
               >
@@ -153,7 +153,7 @@ export default async function AdminSubscriptionsPage({
                     <td className="px-4 py-3">
                       <Link
                         href={`/admin/users/${sub.trainerUserId}`}
-                        className="text-sm text-[#FAFAFA] hover:text-[#3B82F6] transition-colors"
+                        className="text-sm text-[#FAFAFA] hover:text-brand-primary transition-colors"
                       >
                         {sub.trainerEmail ?? sub.trainerUserId}
                       </Link>

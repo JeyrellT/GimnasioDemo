@@ -269,9 +269,9 @@ function MeasurementContent({
             aria-controls={`tabpanel-${tab.id}`}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "flex-1 px-3 py-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-[-2px]",
+              "flex-1 px-3 py-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-[-2px]",
               activeTab === tab.id
-                ? "border-b-2 border-[#3B82F6] text-[#FAFAFA]"
+                ? "border-b-2 border-brand-primary text-[#FAFAFA]"
                 : "text-[#71717A] hover:text-[#A1A1AA]",
             )}
           >
@@ -289,7 +289,7 @@ function MeasurementContent({
           aria-labelledby="tab-bascula"
           hidden={activeTab !== "bascula"}
         >
-          <React.Suspense fallback={<div className="flex h-32 items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-[#3B82F6]" /></div>}>
+          <React.Suspense fallback={<div className="flex h-32 items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-brand-primary" /></div>}>
             <LazyScaleOcrUploader
               onExtracted={handleOcrExtracted}
               onError={(msg) => setErrorMsg(msg)}
@@ -322,7 +322,7 @@ function MeasurementContent({
                 aria-controls={`subtabpanel-${t.id}`}
                 onClick={() => setAnthroTab(t.id)}
                 className={cn(
-                  "flex-1 rounded-lg py-2 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-[#3B82F6]",
+                  "flex-1 rounded-lg py-2 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-brand-primary",
                   anthroTab === t.id
                     ? "bg-[#3F3F46] text-[#FAFAFA]"
                     : "text-[#71717A] hover:text-[#A1A1AA]",
@@ -434,10 +434,10 @@ function MeasurementContent({
           disabled={saveState === "saving" || saveState === "success"}
           className={cn(
             "inline-flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-colors",
-            "focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2",
+            "focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-2",
             saveState === "success"
               ? "bg-[#22C55E] text-[#09090B]"
-              : "bg-[#3B82F6] text-[#09090B] hover:bg-[#2563EB] disabled:opacity-60 disabled:cursor-not-allowed",
+              : "bg-brand-primary text-[#09090B] hover:bg-brand-primary-hover disabled:opacity-60 disabled:cursor-not-allowed",
           )}
           aria-busy={saveState === "saving"}
         >
@@ -496,7 +496,7 @@ function AnthroFieldGrid({ fields, form, setField }: AnthroFieldGridProps) {
                 className={cn(
                   "min-h-[44px] w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA]",
                   "placeholder:text-[#52525B]",
-                  "focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6]",
+                  "focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary",
                   unit && "pr-10",
                 )}
                 aria-label={`${label}${unit ? `, en ${unit}` : ""}`}
@@ -629,16 +629,16 @@ function MeasurementOcrZone({ onExtracted }: MeasurementOcrZoneProps) {
             }}
             className={cn(
               "flex min-h-[72px] cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed px-4 py-3 transition-all duration-150",
-              "focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2",
+              "focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-2",
               state.phase === "processing" && "cursor-default opacity-70",
               dragging
-                ? "border-[#3B82F6] bg-[#27272A]"
-                : "border-[#3F3F46] bg-[#18181B] hover:border-[#3B82F6] hover:bg-[#27272A]",
+                ? "border-brand-primary bg-[#27272A]"
+                : "border-[#3F3F46] bg-[#18181B] hover:border-brand-primary hover:bg-[#27272A]",
             )}
           >
             {state.phase === "processing" ? (
               <>
-                <Loader2 className="h-5 w-5 shrink-0 animate-spin text-[#3B82F6]" aria-hidden="true" />
+                <Loader2 className="h-5 w-5 shrink-0 animate-spin text-brand-primary" aria-hidden="true" />
                 <span className="text-xs text-[#A1A1AA]">Detectando medidas...</span>
               </>
             ) : (

@@ -29,7 +29,7 @@ export function Avatar({ src, name, size = "md", className }: AvatarProps) {
   return (
     <RadixAvatar.Root
       className={cn(
-        "relative inline-flex shrink-0 select-none items-center justify-center overflow-hidden rounded-full bg-[#1E2A38]",
+        "relative inline-flex shrink-0 select-none items-center justify-center overflow-hidden rounded-full bg-brand-secondary",
         sizeClasses[size],
         className,
       )}
@@ -40,7 +40,7 @@ export function Avatar({ src, name, size = "md", className }: AvatarProps) {
         className="h-full w-full object-cover"
       />
       <RadixAvatar.Fallback
-        className="flex h-full w-full items-center justify-center bg-[#1E2A38] font-semibold text-[#60A5FA]"
+        className="flex h-full w-full items-center justify-center bg-brand-secondary font-semibold text-brand-accent"
         delayMs={600}
       >
         {initials}

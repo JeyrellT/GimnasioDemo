@@ -15,7 +15,7 @@ export function DashboardShell({ children, className }: DashboardShellProps) {
     <div className={cn("space-y-6", className)}>
       {/* blue accent line — mirrors the routine detail page top treatment */}
       <div
-        className="h-[2px] w-full bg-gradient-to-r from-[#3B82F6] via-[#2563EB]/60 to-transparent rounded-full"
+        className="h-[2px] w-full bg-gradient-to-r from-brand-primary via-brand-primary-hover/60 to-transparent rounded-full"
         aria-hidden="true"
       />
 

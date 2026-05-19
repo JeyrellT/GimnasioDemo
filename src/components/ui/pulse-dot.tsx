@@ -24,8 +24,8 @@ const colorMap: Record<DotColor, { ring: string; dot: string }> = {
     dot: "bg-[#22c55e]",
   },
   orange: {
-    ring: "bg-[#3B82F6]",
-    dot: "bg-[#3B82F6]",
+    ring: "bg-brand-primary",
+    dot: "bg-brand-primary",
   },
   red: {
     ring: "bg-[#ef4444]",

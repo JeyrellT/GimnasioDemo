@@ -99,7 +99,7 @@ export function AlertsFeed({ alerts, className }: AlertsFeedProps) {
             {overflow > 0 && (
               <Link
                 href="/trainer/clientes"
-                className="mt-1 text-center text-xs text-[#3B82F6] hover:text-[#2563EB] transition-colors"
+                className="mt-1 text-center text-xs text-brand-primary hover:text-brand-primary-hover transition-colors"
               >
                 + {overflow} {overflow === 1 ? "alerta más" : "alertas más"}
               </Link>
@@ -147,7 +147,7 @@ function AlertCard({
       <div className="flex items-center gap-2 mt-0.5">
         <Link
           href={profileUrl}
-          className="text-xs font-medium text-[#3B82F6] hover:text-[#2563EB] transition-colors"
+          className="text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors"
         >
           Ver perfil
         </Link>

@@ -83,20 +83,20 @@ export default function ObjetivoPage() {
             className={cn(
               "flex flex-col gap-2 rounded-2xl border p-4 text-left transition-all",
               selected === id
-                ? "border-[#3B82F6] bg-[#3B82F6]/5"
+                ? "border-brand-primary bg-brand-primary/5"
                 : "border-[#3F3F46] bg-[#18181B] hover:border-[#71717A]",
             )}
           >
             <div
               className={cn(
                 "flex h-10 w-10 items-center justify-center rounded-xl",
-                selected === id ? "bg-[#3B82F6]/20" : "bg-[#27272A]",
+                selected === id ? "bg-brand-primary/20" : "bg-[#27272A]",
               )}
             >
               <Icon
                 className={cn(
                   "h-5 w-5",
-                  selected === id ? "text-[#3B82F6]" : "text-[#A1A1AA]",
+                  selected === id ? "text-brand-primary" : "text-[#A1A1AA]",
                 )}
                 aria-hidden="true"
               />
@@ -123,7 +123,7 @@ export default function ObjetivoPage() {
           rows={3}
           maxLength={500}
           placeholder="Lesiones previas, metas específicas, preferencias..."
-          className="w-full resize-none rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6] transition-colors"
+          className="w-full resize-none rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary transition-colors"
         />
         <p className="text-right text-xs text-[#71717A]">{notes.length}/500</p>
       </div>
@@ -132,7 +132,7 @@ export default function ObjetivoPage() {
         type="button"
         onClick={handleContinue}
         disabled={!selected || submitting}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#3B82F6] py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-[#2563EB] disabled:opacity-50 transition-colors"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-primary py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-brand-primary-hover disabled:opacity-50 transition-colors"
       >
         {submitting ? "Guardando..." : "Continuar"}
         {!submitting && <ArrowRight className="h-4 w-4" aria-hidden="true" />}

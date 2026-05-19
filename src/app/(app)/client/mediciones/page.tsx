@@ -51,7 +51,7 @@ export default function ClientMedicionesPage() {
         <button
           type="button"
           onClick={() => setSheetOpen(true)}
-          className="inline-flex items-center gap-2 rounded-xl bg-[#3B82F6] px-4 py-2.5 text-sm font-semibold text-[#09090B] transition-colors hover:bg-[#2563EB] focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2 min-h-[44px]"
+          className="inline-flex items-center gap-2 rounded-xl bg-brand-primary px-4 py-2.5 text-sm font-semibold text-[#09090B] transition-colors hover:bg-brand-primary-hover focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-2 min-h-[44px]"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
           Nueva medición

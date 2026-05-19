@@ -103,7 +103,7 @@ export default function ResumenPage() {
       <button
         type="button"
         onClick={() => router.push("/inicio")}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#3B82F6] py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-[#2563EB] transition-colors"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-primary py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-brand-primary-hover transition-colors"
       >
         Ir al inicio
         <ArrowRight className="h-4 w-4" aria-hidden="true" />

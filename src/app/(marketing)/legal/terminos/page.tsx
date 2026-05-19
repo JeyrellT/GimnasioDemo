@@ -34,7 +34,7 @@ export default function TerminosPage() {
           </p>
           <p>
             La versión vigente siempre está disponible en{" "}
-            <span className="text-[#3B82F6]">blacklinefitness.app/legal/terminos</span>.
+            <span className="text-brand-primary">blacklinefitness.app/legal/terminos</span>.
             Los cambios materiales se notifican por email con 14 días de
             anticipación.
           </p>
@@ -60,7 +60,7 @@ export default function TerminosPage() {
             Para usar Blackline Fitness necesitás crear una cuenta. Sos responsable de
             mantener la seguridad de tu cuenta y de todas las actividades que
             ocurran bajo tu acceso. Debés notificar a{" "}
-            <a href="mailto:soporte@blacklinefitness.app" className="text-[#3B82F6]">
+            <a href="mailto:soporte@blacklinefitness.app" className="text-brand-primary">
               soporte@blacklinefitness.app
             </a>{" "}
             ante cualquier uso no autorizado.
@@ -160,12 +160,12 @@ export default function TerminosPage() {
         <Section title="11. Contacto">
           <p>
             Consultas legales:{" "}
-            <a href="mailto:dpo@blacklinefitness.app" className="text-[#3B82F6]">
+            <a href="mailto:dpo@blacklinefitness.app" className="text-brand-primary">
               dpo@blacklinefitness.app
             </a>
             <br />
             Soporte:{" "}
-            <a href="mailto:soporte@blacklinefitness.app" className="text-[#3B82F6]">
+            <a href="mailto:soporte@blacklinefitness.app" className="text-brand-primary">
               soporte@blacklinefitness.app
             </a>
           </p>

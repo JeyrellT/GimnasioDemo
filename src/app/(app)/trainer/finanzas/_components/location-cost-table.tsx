@@ -69,7 +69,7 @@ function Th({ children, sortKey, currentKey, dir, onSort, className }: ThProps) 
         onClick={() => onSort(sortKey)}
         className={cn(
           "flex items-center gap-1 transition-colors duration-100 hover:text-[#FAFAFA]",
-          active && "text-[#3B82F6]",
+          active && "text-brand-primary",
         )}
         aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : "none"}
       >
@@ -188,7 +188,7 @@ export function LocationCostTable({ rows }: LocationCostTableProps) {
         <div className="border-t border-[#27272A]/60 px-4 py-2.5">
           <Link
             href="/trainer/finanzas/ubicaciones"
-            className="flex items-center gap-1.5 text-xs font-medium text-[#3B82F6] transition-opacity duration-100 hover:opacity-80"
+            className="flex items-center gap-1.5 text-xs font-medium text-brand-primary transition-opacity duration-100 hover:opacity-80"
           >
             Gestionar ubicaciones
             <ExternalLink className="h-3 w-3" aria-hidden="true" />

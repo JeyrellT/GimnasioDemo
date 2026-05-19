@@ -111,8 +111,8 @@ export function IncomeBreakdownCard({ breakdown }: IncomeBreakdownCardProps) {
               label="Mensualidades"
               amount={breakdown.recurringCRC}
               pct={recurringPct}
-              color="bg-[#3B82F6]"
-              bgColor="bg-[#3B82F6]/15"
+              color="bg-brand-primary"
+              bgColor="bg-brand-primary/15"
             />
             <IncomeBar
               label="Ventas especiales"

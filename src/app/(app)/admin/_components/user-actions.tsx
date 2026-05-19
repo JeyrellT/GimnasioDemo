@@ -155,7 +155,7 @@ export function UserActions({
           disabled={isPending}
           className="w-full flex items-center gap-2.5 rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm font-medium text-[#FAFAFA] hover:bg-[#3F3F46] transition-colors disabled:opacity-50 min-h-[44px]"
         >
-          <ShieldCheck className="h-4 w-4 text-[#3B82F6]" aria-hidden="true" />
+          <ShieldCheck className="h-4 w-4 text-brand-primary" aria-hidden="true" />
           Cambiar rol
         </button>
 
@@ -237,7 +237,7 @@ export function UserActions({
               id="promote-role"
               value={targetRole}
               onChange={(e) => { const v = e.target.value as UserRole; setTargetRole(v); }}
-              className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6]"
+              className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
             >
               {PROMOTABLE_ROLES.map((r) => (
                 <option key={r.value} value={r.value} className="bg-[#27272A]">
@@ -264,7 +264,7 @@ export function UserActions({
               type="button"
               onClick={handlePromote}
               disabled={isPending}
-              className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2563EB] transition-colors disabled:opacity-50 min-h-[44px]"
+              className="flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white hover:bg-brand-primary-hover transition-colors disabled:opacity-50 min-h-[44px]"
             >
               {isPending && (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -302,7 +302,7 @@ export function UserActions({
               onChange={(e) => setSuspendReason(e.target.value)}
               placeholder="Describí el motivo de la suspensión..."
               rows={4}
-              className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] resize-none"
+              className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary resize-none"
             />
 
             {fieldError && (

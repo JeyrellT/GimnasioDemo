@@ -110,7 +110,7 @@ export function AnthropometryForm({ ageYears, onSuccess }: AnthropometryFormProp
 
         {/* Opcionales */}
         <details className="group">
-          <summary className="cursor-pointer text-sm text-[#3B82F6] hover:text-[#2563EB] list-none flex items-center gap-1">
+          <summary className="cursor-pointer text-sm text-brand-primary hover:text-brand-primary-hover list-none flex items-center gap-1">
             <span>+ Medidas adicionales (opcional)</span>
           </summary>
           <div className="mt-4 grid grid-cols-2 gap-4">

@@ -211,7 +211,7 @@ export function Step2Cedula({
               aria-label="Subir frente de cédula"
             >
               {uploading === "frente" ? (
-                <Loader2 className="h-6 w-6 animate-spin text-[#3B82F6]" />
+                <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
               ) : frente ? (
                 <div className="flex flex-col items-center gap-1">
                   <CheckCircle2 className="h-6 w-6 text-[#22C55E]" />
@@ -262,7 +262,7 @@ export function Step2Cedula({
               aria-label="Subir dorso de cédula"
             >
               {uploading === "dorso" ? (
-                <Loader2 className="h-6 w-6 animate-spin text-[#3B82F6]" />
+                <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
               ) : dorso ? (
                 <div className="flex flex-col items-center gap-1">
                   <CheckCircle2 className="h-6 w-6 text-[#22C55E]" />
@@ -307,8 +307,8 @@ export function Step2Cedula({
 
         {/* Extraction result */}
         {hasExtraction && (
-          <div className="rounded-xl border border-[#3B82F6]/30 bg-[rgba(255,106,26,0.05)] p-4 space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#3B82F6]">
+          <div className="rounded-xl border border-brand-primary/30 bg-brand-primary/5 p-4 space-y-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-primary">
               Datos extraídos — revisá y confirmá
             </p>
             <div className="space-y-3">

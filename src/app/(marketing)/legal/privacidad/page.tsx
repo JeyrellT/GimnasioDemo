@@ -33,7 +33,7 @@ export default function PrivacidadPage() {
           </p>
           <p>
             Delegado de Protección de Datos (DPO):{" "}
-            <a href="mailto:dpo@blacklinefitness.app" className="text-[#3B82F6]">
+            <a href="mailto:dpo@blacklinefitness.app" className="text-brand-primary">
               dpo@blacklinefitness.app
             </a>
           </p>
@@ -166,7 +166,7 @@ export default function PrivacidadPage() {
           </ul>
           <p>
             Para ejercer estos derechos o presentar una queja:{" "}
-            <a href="mailto:dpo@blacklinefitness.app" className="text-[#3B82F6]">
+            <a href="mailto:dpo@blacklinefitness.app" className="text-brand-primary">
               dpo@blacklinefitness.app
             </a>
             . Respondemos en máximo 20 días hábiles.

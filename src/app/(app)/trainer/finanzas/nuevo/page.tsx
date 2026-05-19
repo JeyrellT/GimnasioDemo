@@ -57,7 +57,7 @@ function todayLocal(): string {
 }
 
 const inputCls =
-  "w-full rounded-lg border border-[#3F3F46] bg-[#09090B] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder:text-[#52525B] focus:border-[#3B82F6]/60 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/20 transition-colors";
+  "w-full rounded-lg border border-[#3F3F46] bg-[#09090B] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder:text-[#52525B] focus:border-brand-primary/60 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-colors";
 
 const labelCls = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#A1A1AA]";
 
@@ -257,7 +257,7 @@ export default function NuevaEntradaPage() {
           <button
             type="submit"
             disabled={saving}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#3B82F6] py-3 text-sm font-bold text-white shadow-md shadow-[#3B82F6]/20 transition-colors hover:bg-[#E55D0F] disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-primary py-3 text-sm font-bold text-white shadow-md shadow-brand-primary/20 transition-colors hover:bg-brand-primary-hover disabled:opacity-60"
           >
             {saving ? (
               <>

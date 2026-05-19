@@ -48,7 +48,7 @@ export function DashboardSection({
         <div className="flex items-center gap-2">
           {icon !== undefined && (
             <div
-              className="flex h-6 w-6 items-center justify-center rounded-md bg-[#3B82F6]/15 text-[#3B82F6]"
+              className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-primary/15 text-brand-primary"
               aria-hidden="true"
             >
               {icon}

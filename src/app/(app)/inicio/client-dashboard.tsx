@@ -54,7 +54,7 @@ export function ClientDashboard({ userId: _userId, name }: ClientDashboardProps)
           className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 hover:bg-[#27272A] transition-colors"
         >
           <Scale className="h-4 w-4 text-[#A1A1AA] mb-2" aria-hidden="true" />
-          <p className="text-xl font-bold text-[#3B82F6]">Pesarme</p>
+          <p className="text-xl font-bold text-brand-primary">Pesarme</p>
           <p className="text-xs text-[#71717A]">Registrar medición</p>
         </Link>
       </div>
