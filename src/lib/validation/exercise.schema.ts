@@ -179,18 +179,20 @@ export const updateExerciseSchema = z.object({
     ])
     .optional(),
   difficulty: z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]).optional(),
-  // Media URL fields — accept "" and treat as null (clearing the field)
+  // Media URL fields — accept "" and treat as null (clearing the field).
+  // Accept absolute URLs (http/https), relative paths (e.g. "/exercises/x.jpg"),
+  // and data: URLs (for inline uploaded images).
   thumbnailUrl: z.preprocess(
     (v) => (v === "" ? null : v),
-    z.string().url().nullable().optional(),
+    z.string().min(1).max(2_000_000).nullable().optional(),
   ),
   gifUrl: z.preprocess(
     (v) => (v === "" ? null : v),
-    z.string().url().nullable().optional(),
+    z.string().min(1).max(2_000_000).nullable().optional(),
   ),
   mediaUrl: z.preprocess(
     (v) => (v === "" ? null : v),
-    z.string().url().nullable().optional(),
+    z.string().min(1).max(2_000_000).nullable().optional(),
   ),
 });
 
