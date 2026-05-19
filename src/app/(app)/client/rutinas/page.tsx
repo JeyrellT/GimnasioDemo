@@ -10,6 +10,7 @@ import {
   ChevronUp,
   CalendarDays,
 } from "lucide-react";
+import { ExerciseThumbnail } from "@/components/shared/exercise-thumbnail";
 import { useAuth } from "@/components/providers/auth-provider";
 import { getMyAssignedRoutines } from "@/app/actions/client-portal";
 import type { MyAssignedRoutine } from "@/server/actions/client-portal.actions";
@@ -228,8 +229,16 @@ export default function ClientRutinasPage() {
                             {day.exercises.map((ex: RoutineSnapshotExercise) => (
                               <div
                                 key={ex.exerciseId}
-                                className="flex w-full items-center justify-between px-3 py-2.5"
+                                className="flex w-full items-center gap-3 px-3 py-2.5"
                               >
+                                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-[#27272A]">
+                                  <ExerciseThumbnail
+                                    thumbnailUrl={ex.thumbnailUrl}
+                                    slug={ex.slug}
+                                    alt={ex.nameEs}
+                                    iconSize="sm"
+                                  />
+                                </div>
                                 <div className="min-w-0 flex-1">
                                   <p className="text-sm font-medium text-[#E4E4E7]">
                                     {ex.nameEs}

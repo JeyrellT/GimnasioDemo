@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Timer, CheckCircle, X, ChevronLeft, ChevronRight, Trophy } from "lucide-react";
+import { ExerciseThumbnail } from "@/components/shared/exercise-thumbnail";
 import { useSessionStore } from "@/stores/session-store";
 import { useRestTimer } from "@/hooks/use-rest-timer";
 import { useWakeLock } from "@/hooks/use-wake-lock";
@@ -59,6 +60,8 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
       targetRepsMax: number;
       targetRpe: number | null;
       restSeconds: number;
+      slug?: string | null;
+      thumbnailUrl?: string | null;
     }>;
   };
   const snapshot = session.assignedRoutine?.snapshotJson as { days?: SnapshotDay[] } | null;
@@ -181,15 +184,26 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
             <ChevronLeft className="h-4 w-4" aria-hidden="true" />
           </button>
 
-          <div className="flex-1 text-center">
-            <p className="text-xl font-bold text-[#FAFAFA]">
-              {currentExercise?.nameEs ?? "—"}
-            </p>
-            <p className="text-xs text-[#71717A]">
-              {currentExercise
-                ? `${currentExercise.targetSets} sets · ${currentExercise.targetRepsMin}-${currentExercise.targetRepsMax} reps`
-                : ""}
-            </p>
+          <div className="flex-1 text-center space-y-3">
+            {currentExercise && (
+              <div className="mx-auto h-28 w-28 overflow-hidden rounded-xl bg-[#27272A]">
+                <ExerciseThumbnail
+                  thumbnailUrl={currentExercise.thumbnailUrl}
+                  slug={currentExercise.slug}
+                  alt={currentExercise.nameEs}
+                />
+              </div>
+            )}
+            <div>
+              <p className="text-xl font-bold text-[#FAFAFA]">
+                {currentExercise?.nameEs ?? "—"}
+              </p>
+              <p className="text-xs text-[#71717A]">
+                {currentExercise
+                  ? `${currentExercise.targetSets} sets · ${currentExercise.targetRepsMin}-${currentExercise.targetRepsMax} reps`
+                  : ""}
+              </p>
+            </div>
           </div>
 
           <button

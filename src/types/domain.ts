@@ -193,6 +193,8 @@ export interface RoutineSnapshotExercise {
   tempo: string | null;
   supersetGroup: number | null;
   notes: string | null;
+  slug?: string | null;
+  thumbnailUrl?: string | null;
 }
 
 export interface RoutineSnapshotDay {

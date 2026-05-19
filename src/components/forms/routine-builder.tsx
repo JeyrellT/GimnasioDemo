@@ -56,6 +56,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ExerciseThumbnail } from "@/components/shared/exercise-thumbnail";
 import { useRoutineBuilderStore } from "@/stores/routine-builder-store";
 import type { DraftExercise, DraftDay } from "@/stores/routine-builder-store";
 import {
@@ -176,9 +177,16 @@ function SortableExerciseRow({
       </button>
 
       <div className="flex-1 space-y-2.5">
-        {/* Exercise name + muscle badge */}
+        {/* Exercise name + thumbnail */}
         <div className="flex items-center gap-2">
-          <Dumbbell className="h-3.5 w-3.5 text-[#3B82F6] shrink-0" aria-hidden="true" />
+          <div className="h-8 w-8 shrink-0 overflow-hidden rounded-md bg-[#27272A]">
+            <ExerciseThumbnail
+              thumbnailUrl={exercise.thumbnailUrl}
+              slug={exercise.slug}
+              alt={exercise.nameEs}
+              iconSize="sm"
+            />
+          </div>
           <p className="text-sm font-semibold text-[#FAFAFA] leading-tight">{exercise.nameEs}</p>
         </div>
 
@@ -554,9 +562,11 @@ function ExerciseSearchPanel({
     // Update local store with the real DB ID
     const draft: DraftExercise = {
       id: "local-" + Math.random().toString(36).slice(2),
-      routineExerciseId: result.value.routineExerciseId, // server ID for the routineExercise
+      routineExerciseId: result.value.routineExerciseId,
       exerciseId: ex.id,
       nameEs: ex.nameEs,
+      slug: ex.slug ?? null,
+      thumbnailUrl: ex.thumbnailUrl ?? null,
       targetSets: 4,
       targetRepsMin: 8,
       targetRepsMax: 12,
@@ -639,6 +649,14 @@ function ExerciseSearchPanel({
               disabled={isAdding || adding !== null}
               className="w-full text-left rounded-lg border border-[#3F3F46] bg-[#09090B] p-2.5 hover:border-[#3B82F6] hover:bg-[#3B82F6]/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 group"
             >
+              <div className="h-9 w-9 shrink-0 overflow-hidden rounded-md bg-[#27272A]">
+                <ExerciseThumbnail
+                  thumbnailUrl={ex.thumbnailUrl}
+                  slug={ex.slug}
+                  alt={ex.nameEs}
+                  iconSize="sm"
+                />
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-[#FAFAFA] truncate group-hover:text-[#3B82F6] transition-colors">
                   {ex.nameEs}
