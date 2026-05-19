@@ -3,12 +3,12 @@ import { test, expect } from '@playwright/test'
 test.describe('Landing Page', () => {
   test('carga landing page sin errores', async ({ page }) => {
     await page.goto('/')
-    await expect(page).toHaveTitle(/Forja|forja/)
+    await expect(page).toHaveTitle(/Blackline Fitness|blackline-fitness/)
   })
 
-  test('muestra tagline de Forja', async ({ page }) => {
+  test('muestra tagline de Blackline Fitness', async ({ page }) => {
     await page.goto('/')
-    const tagline = page.getByText(/Cada repetición te forja/i)
+    const tagline = page.getByText(/Cada repetición te blackline-fitness/i)
     await expect(tagline).toBeVisible()
   })
 
@@ -18,9 +18,9 @@ test.describe('Landing Page', () => {
     await expect(cta).toBeVisible()
   })
 
-  test('muestra logo de Forja', async ({ page }) => {
+  test('muestra logo de Blackline Fitness', async ({ page }) => {
     await page.goto('/')
-    const logo = page.getByRole('img', { name: /forja|logo/i })
+    const logo = page.getByRole('img', { name: /blackline-fitness|logo/i })
     await expect(logo).toBeVisible()
   })
 
@@ -55,14 +55,14 @@ test.describe('Landing Page', () => {
   test('página es responsive (mobile)', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 })
     await page.goto('/')
-    const tagline = page.getByText(/Cada repetición te forja/i)
+    const tagline = page.getByText(/Cada repetición te blackline-fitness/i)
     await expect(tagline).toBeVisible()
   })
 
   test('página es responsive (tablet)', async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 1024 })
     await page.goto('/')
-    const tagline = page.getByText(/Cada repetición te forja/i)
+    const tagline = page.getByText(/Cada repetición te blackline-fitness/i)
     await expect(tagline).toBeVisible()
   })
 })

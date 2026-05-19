@@ -14,7 +14,7 @@ import { serverEnv } from "@/server/env";
 // Constants (exported so guards.ts can set/clear the cookie by name)
 // -----------------------------------------------------------------------------
 
-export const IMPERSONATION_COOKIE_NAME = "__forja_impersonate";
+export const IMPERSONATION_COOKIE_NAME = "__blackline_impersonate";
 export const IMPERSONATION_MAX_AGE_SEC = 30 * 60; // 30 minutes
 
 // -----------------------------------------------------------------------------

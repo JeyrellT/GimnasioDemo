@@ -1,7 +1,7 @@
 "use client";
 
 // =============================================================================
-// FORJA — ScaleOcrUploader
+// BLACKLINE FITNESS — ScaleOcrUploader
 // Owner: frontend-react.
 // Drop zone para foto de báscula, OCR via /api/ocr/bascula, campos editables.
 // =============================================================================

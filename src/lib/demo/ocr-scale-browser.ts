@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Browser-compatible scale OCR (demo mode)
+// BLACKLINE FITNESS — Browser-compatible scale OCR (demo mode)
 // Owner: frontend-react.
 //
 // Browser wrapper around the server-side extractScale pipeline.

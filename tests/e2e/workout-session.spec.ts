@@ -68,7 +68,7 @@ test.describe('Workout Session Flow', () => {
     const classes = await html.getAttribute('class')
     const style = await html.getAttribute('style')
     
-    // Forja usa dark mode por default, debería tener indicador
+    // Blackline Fitness usa dark mode por default, debería tener indicador
     const isDark = classes?.includes('dark') || style?.includes('dark')
     // Aceptamos ambos: con dark mode explícito o simplemente cargado
     expect(typeof isDark).toBe('boolean')

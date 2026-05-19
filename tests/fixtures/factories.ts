@@ -12,7 +12,7 @@ export function makeUser(overrides?: Partial<UserFixture>): UserFixture {
   const id = cuid()
   return {
     id,
-    email: `user-${id}@forja.app`,
+    email: `user-${id}@blacklinefitness.app`,
     name: 'Test User',
     role: 'CLIENT',
     locale: 'es-CR',

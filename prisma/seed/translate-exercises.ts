@@ -1,5 +1,5 @@
 /**
- * Script de traducción batch — Forja
+ * Script de traducción batch — Blackline Fitness
  *
  * Lee el JSON de Free Exercise DB y genera/actualiza exercises-es-cr.json
  * llamando a Gemini Flash-Lite para traducir los ejercicios faltantes.

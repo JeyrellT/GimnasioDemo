@@ -1,5 +1,5 @@
 /**
- * Seed de ejercicios — Forja
+ * Seed de ejercicios — Blackline Fitness
  *
  * Carga el stub de Free Exercise DB (prisma/seed/data/free-exercise-db.json)
  * junto con sus traducciones ES-CR (prisma/seed/data/exercises-es-cr.json)
