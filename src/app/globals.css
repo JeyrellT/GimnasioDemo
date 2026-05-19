@@ -8,12 +8,15 @@
 
 @theme {
   /* ── Brand ─────────────────────────────────────────────────────────────── */
-  --color-brand-primary: #3b82f6;
-  --color-brand-primary-hover: #2563eb;
-  --color-brand-secondary: #1e2a38;
-  --color-brand-accent: #60a5fa;
-  --color-brand-deep: #1e40af;
-  --color-brand-glow: #60a5fa;
+  /* These reference the runtime CSS variables set on :root so utilities like
+     bg-brand-primary, text-brand-primary, etc. honor per-trainer color picks
+     instead of being baked to the build-time literal. */
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-hover: var(--brand-primary-hover);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-deep: var(--brand-deep, #1e40af);
+  --color-brand-glow: var(--brand-glow, #60a5fa);
 
   /* ── Semantic ───────────────────────────────────────────────────────────── */
   --color-success: #22c55e;
