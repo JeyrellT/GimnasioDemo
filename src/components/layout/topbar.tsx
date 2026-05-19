@@ -58,29 +58,35 @@ export function Topbar({ user, userName, userAvatarUrl }: TopbarProps) {
 
       <Link href="/inicio" aria-label="Ir al inicio" className="flex items-center gap-2">
         {/* Mobile: mark or custom mark */}
-        <span className="sm:hidden">
+        <span className="sm:hidden flex items-center gap-1.5">
           {branding.logoMark ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={branding.logoMark} alt="Logo" className="h-7 w-7 object-contain" />
           ) : (
             <BlacklineFitnessLogo variant="mark" size={26} />
           )}
+          {/* Business name on mobile — short truncated */}
+          {branding.businessName && (
+            <span className="text-xs font-bold text-text-primary truncate max-w-[100px]">
+              {branding.businessName}
+            </span>
+          )}
         </span>
-        {/* Desktop: full logo or custom full */}
+        {/* Desktop: logo + name */}
         <span className="hidden sm:inline-flex items-center gap-2">
           {branding.logoFull ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={branding.logoFull} alt="Logo" className="h-8 max-w-[160px] object-contain" />
           ) : (
-            <BlacklineFitnessLogo variant="full" size={28} />
+            <BlacklineFitnessLogo variant={branding.businessName ? "mark" : "full"} size={28} />
+          )}
+          {/* Business name always visible on desktop when set */}
+          {branding.businessName && (
+            <span className="text-sm font-bold text-text-primary tracking-wide truncate max-w-[180px]">
+              {branding.businessName}
+            </span>
           )}
         </span>
-        {/* Show business name if set and no custom full logo */}
-        {branding.businessName && !branding.logoFull && (
-          <span className="hidden sm:block text-sm font-bold text-[#FAFAFA] tracking-wide">
-            {branding.businessName}
-          </span>
-        )}
       </Link>
 
       <DropdownMenu>

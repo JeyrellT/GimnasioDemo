@@ -5,7 +5,7 @@
 // Palette picker + logo uploads (full + mark)
 // =============================================================================
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Palette, ImagePlus, Trash2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -163,17 +163,30 @@ function LogoUploadSlot({
 export function BrandingSection() {
   const { branding, update, reset } = useBranding();
   const [localName, setLocalName] = useState(branding.businessName);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync localName when branding changes externally (e.g. reset)
-  // We use a controlled input with debounced save
-  const handleNameBlur = () => {
-    if (localName !== branding.businessName) {
-      update({ businessName: localName.trim() });
-      if (localName.trim()) {
-        toast.success("Nombre actualizado.");
-      }
-    }
+  useEffect(() => {
+    setLocalName(branding.businessName);
+  }, [branding.businessName]);
+
+  // Debounced real-time update: pushes to context (and topbar) ~300ms after typing stops
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLocalName(value);
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      update({ businessName: value.trim() });
+    }, 300);
   };
+
+  // Clean up debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   return (
     <>
@@ -257,14 +270,13 @@ export function BrandingSection() {
             id="biz-name"
             type="text"
             value={localName}
-            onChange={(e) => setLocalName(e.target.value)}
-            onBlur={handleNameBlur}
+            onChange={handleNameChange}
             placeholder="Ej: FitZone CR"
             maxLength={40}
             className="bg-[#09090B] border-[#3F3F46] text-sm max-w-xs"
           />
           <p className="text-[11px] text-[#52525B]">
-            Se muestra junto al logo en la versión escritorio.
+            Se muestra junto al logo en el header (móvil y escritorio).
           </p>
         </div>
 
