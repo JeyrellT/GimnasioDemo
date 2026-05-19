@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Blackline Fitness — Tu línea, tu fuerza",
   description:
-    "Tu línea, tu fuerza. Plataforma de entrenamiento personal para entrenadores y clientes en Costa Rica.",
+    "Rutinas, métricas, sesiones en vivo y finanzas — en una app que funciona sin señal. Para entrenadores que quieren escalar sin perder el toque personal.",
 };
 
 const features = [
@@ -61,9 +61,9 @@ export default function LandingPage() {
         </h1>
 
         <p className="mt-6 max-w-xl text-base text-[#A1A1AA] sm:text-lg text-balance">
-          La plataforma que reemplaza la libreta, el WhatsApp interminable y los
-          Excel rotos. Para entrenadores que viven de su oficio y clientes que
-          entrenan con propósito.
+          Rutinas, métricas, sesiones en vivo y finanzas de tu negocio — en
+          una app que funciona hasta sin señal. Para entrenadores que quieren
+          escalar sin perder el toque personal.
         </p>
 
         <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:gap-4">
