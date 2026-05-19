@@ -25,7 +25,7 @@ import {
 } from "@/lib/errors";
 import { logInfo } from "@/lib/logger";
 import type { ActionResult, ExerciseSearchResult } from "@/types/api";
-import type { Exercise, MuscleGroup, ExerciseEquipment, ExerciseDifficulty } from "@prisma/client";
+import type { Exercise, MuscleGroup, ExerciseEquipment, ExerciseDifficulty, ExerciseCategory } from "@prisma/client";
 import { Prisma } from "@prisma/client";
 
 // -----------------------------------------------------------------------------
@@ -52,6 +52,7 @@ function toSearchResult(ex: Exercise): ExerciseSearchResult {
     primaryMuscle: ex.primaryMuscle,
     equipment: ex.equipment,
     difficulty: ex.difficulty,
+    category: ex.category,
     gifUrl: ex.gifUrl,
     thumbnailUrl: ex.thumbnailUrl,
   };
@@ -88,6 +89,14 @@ function parseDifficulty(value: string | undefined): ExerciseDifficulty | undefi
     : undefined;
 }
 
+/** Ensure a category filter value is a valid ExerciseCategory enum member. */
+function parseCategory(value: string | undefined): ExerciseCategory | undefined {
+  const valid: ExerciseCategory[] = ["STRENGTH", "WARMUP"];
+  return valid.includes(value as ExerciseCategory)
+    ? (value as ExerciseCategory)
+    : undefined;
+}
+
 // -----------------------------------------------------------------------------
 // searchExercises
 // -----------------------------------------------------------------------------
@@ -97,6 +106,7 @@ export interface SearchExercisesInput {
   primaryMuscle?: string;
   equipment?: string;
   difficulty?: string;
+  category?: string;
   muscle?: string;
   page?: number;
   limit?: number;
@@ -119,6 +129,7 @@ export async function searchExercises(
     muscle?: string;
     equipment?: string;
     difficulty?: string;
+    category?: string;
   },
   page = 1,
   limit = 20,
@@ -128,7 +139,7 @@ export async function searchExercises(
     const inp = queryOrInput;
     return searchExercises(
       inp.query ?? "",
-      { muscle: inp.primaryMuscle ?? inp.muscle, equipment: inp.equipment, difficulty: inp.difficulty },
+      { muscle: inp.primaryMuscle ?? inp.muscle, equipment: inp.equipment, difficulty: inp.difficulty, category: inp.category },
       inp.page ?? 1,
       inp.limit ?? 20,
     );
@@ -141,6 +152,7 @@ export async function searchExercises(
     const muscle = parseMuscle(filters?.muscle);
     const equipment = parseEquipment(filters?.equipment);
     const difficulty = parseDifficulty(filters?.difficulty);
+    const category = parseCategory(filters?.category);
 
     if (query.trim().length > 0) {
       // Sanitize query: replace non-alphanumeric/space with space, join tokens
@@ -162,6 +174,7 @@ export async function searchExercises(
         primaryMuscle: MuscleGroup;
         equipment: ExerciseEquipment;
         difficulty: ExerciseDifficulty;
+        category: ExerciseCategory;
         gifUrl: string | null;
         thumbnailUrl: string | null;
         count: bigint;
@@ -179,6 +192,9 @@ export async function searchExercises(
       const difficultySql = difficulty
         ? Prisma.sql`AND e."difficulty" = ${difficulty}::"ExerciseDifficulty"`
         : Prisma.empty;
+      const categorySql = category
+        ? Prisma.sql`AND e."category" = ${category}::"ExerciseCategory"`
+        : Prisma.empty;
 
       const rows = await prisma.$queryRaw<RawRow[]>`
         SELECT
@@ -188,6 +204,7 @@ export async function searchExercises(
           e."primaryMuscle",
           e.equipment,
           e.difficulty,
+          e.category,
           e."gifUrl",
           e."thumbnailUrl",
           COUNT(*) OVER () AS count
@@ -198,6 +215,7 @@ export async function searchExercises(
           ${muscleSql}
           ${equipmentSql}
           ${difficultySql}
+          ${categorySql}
         ORDER BY ts_rank(e."searchVector", to_tsquery('spanish', ${sanitized})) DESC
         LIMIT ${limit} OFFSET ${offset}
       `;
@@ -219,6 +237,7 @@ export async function searchExercises(
           primaryMuscle: r.primaryMuscle,
           equipment: r.equipment,
           difficulty: r.difficulty,
+          category: r.category,
           gifUrl: r.gifUrl,
           thumbnailUrl: r.thumbnailUrl,
         })),
@@ -233,6 +252,7 @@ export async function searchExercises(
       ...(muscle && { primaryMuscle: muscle }),
       ...(equipment && { equipment }),
       ...(difficulty && { difficulty }),
+      ...(category && { category }),
     };
 
     const [exercises, total] = await Promise.all([
@@ -245,6 +265,7 @@ export async function searchExercises(
           primaryMuscle: true,
           equipment: true,
           difficulty: true,
+          category: true,
           gifUrl: true,
           thumbnailUrl: true,
         },
@@ -312,6 +333,7 @@ export interface CreateExerciseInput {
   secondaryMuscles?: string | string[];
   equipment: string;
   difficulty: string;
+  category?: string;
   mediaUrl?: string;
   gifUrl?: string;
   thumbnailUrl?: string;
@@ -342,6 +364,7 @@ export async function createExercise(
       : formData!.get("secondaryMuscles")?.toString();
     const equipmentRaw = typed ? typed.equipment : formData!.get("equipment")?.toString();
     const difficultyRaw = typed ? typed.difficulty : formData!.get("difficulty")?.toString();
+    const categoryRaw = typed ? typed.category : formData!.get("category")?.toString();
     const mediaUrl = typed ? (typed.mediaUrl ?? undefined) : (formData!.get("mediaUrl")?.toString() ?? undefined);
     const gifUrl = typed ? (typed.gifUrl ?? undefined) : (formData!.get("gifUrl")?.toString() ?? undefined);
     const thumbnailUrl = typed ? (typed.thumbnailUrl ?? undefined) : (formData!.get("thumbnailUrl")?.toString() ?? undefined);
@@ -382,6 +405,8 @@ export async function createExercise(
       slug = `${slug}-${Date.now()}`;
     }
 
+    const exerciseCategory = parseCategory(categoryRaw) ?? "STRENGTH";
+
     const exercise = await prisma.exercise.create({
       data: {
         slug,
@@ -393,6 +418,7 @@ export async function createExercise(
         secondaryMuscles,
         equipment,
         difficulty,
+        category: exerciseCategory,
         mediaUrl,
         gifUrl,
         thumbnailUrl,
@@ -426,6 +452,7 @@ export interface UpdateExerciseInput {
   secondaryMuscles?: string | string[];
   equipment?: string;
   difficulty?: string;
+  category?: string;
   mediaUrl?: string | null;
   gifUrl?: string | null;
   thumbnailUrl?: string | null;
@@ -503,6 +530,10 @@ export async function updateExercise(
     const difficultyRaw = typed ? typed.difficulty : fd?.get("difficulty")?.toString();
     const difficulty = parseDifficulty(difficultyRaw);
     if (difficulty) patch.difficulty = difficulty;
+
+    const categoryRaw = typed ? typed.category : fd?.get("category")?.toString();
+    const cat = parseCategory(categoryRaw);
+    if (cat) patch.category = cat;
 
     const mediaUrl = typed ? typed.mediaUrl : fd?.get("mediaUrl")?.toString();
     if (mediaUrl !== undefined) patch.mediaUrl = mediaUrl || null;
@@ -598,6 +629,7 @@ export async function createPrivateExercise(
     secondaryMuscles?: string[];
     equipment: string;
     difficulty: string;
+    category?: string;
     thumbnailUrl?: string;
     gifUrl?: string;
     mediaUrl?: string;
@@ -613,6 +645,7 @@ export async function createPrivateExercise(
   }
   fd.set("equipment", input.equipment);
   fd.set("difficulty", input.difficulty);
+  if (input.category) fd.set("category", input.category);
   if (input.thumbnailUrl) fd.set("thumbnailUrl", input.thumbnailUrl);
   if (input.gifUrl) fd.set("gifUrl", input.gifUrl);
   if (input.mediaUrl) fd.set("mediaUrl", input.mediaUrl);
@@ -634,6 +667,7 @@ export async function updateExerciseFromForm(
     secondaryMuscles?: string[];
     equipment?: string;
     difficulty?: string;
+    category?: string;
     thumbnailUrl?: string;
     gifUrl?: string;
     mediaUrl?: string;
@@ -647,6 +681,7 @@ export async function updateExerciseFromForm(
   if (input.secondaryMuscles) fd.set("secondaryMuscles", input.secondaryMuscles.join(","));
   if (input.equipment) fd.set("equipment", input.equipment);
   if (input.difficulty) fd.set("difficulty", input.difficulty);
+  if (input.category) fd.set("category", input.category);
   if (input.thumbnailUrl !== undefined) fd.set("thumbnailUrl", input.thumbnailUrl);
   if (input.gifUrl !== undefined) fd.set("gifUrl", input.gifUrl);
   if (input.mediaUrl !== undefined) fd.set("mediaUrl", input.mediaUrl);

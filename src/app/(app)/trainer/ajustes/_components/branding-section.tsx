@@ -350,7 +350,7 @@ export function BrandingSection() {
         {/* Business name */}
         <div className="space-y-2">
           <Label htmlFor="biz-name" className="text-xs text-[#A1A1AA]">
-            Nombre del negocio
+            Nombre del negocio <span className="text-[#52525B] font-normal">(opcional)</span>
           </Label>
           <Input
             id="biz-name"
@@ -362,7 +362,7 @@ export function BrandingSection() {
             className="bg-[#09090B] border-[#3F3F46] text-sm max-w-xs"
           />
           <p className="text-[11px] text-[#52525B]">
-            Se muestra junto al logo en el header (móvil y escritorio).
+            Si lo dejás vacío, solo se verá el logo en el header.
           </p>
         </div>
 

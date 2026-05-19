@@ -82,6 +82,11 @@ enum ExerciseDifficulty {
   ADVANCED
 }
 
+enum ExerciseCategory {
+  STRENGTH
+  WARMUP
+}
+
 enum ExerciseEquipment {
   BODYWEIGHT
   BARBELL
@@ -657,6 +662,7 @@ model Exercise {
   secondaryMuscles MuscleGroup[]
   equipment        ExerciseEquipment
   difficulty       ExerciseDifficulty
+  category         ExerciseCategory             @default(STRENGTH)
   mediaUrl         String?
   gifUrl           String?
   thumbnailUrl     String?
@@ -673,6 +679,7 @@ model Exercise {
 
   @@index([primaryMuscle])
   @@index([equipment])
+  @@index([category])
   @@index([isPublic])
   @@index([createdById])
 }

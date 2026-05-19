@@ -183,6 +183,7 @@ export interface ExerciseSearchResult {
   primaryMuscle: import("@prisma/client").MuscleGroup;
   equipment: import("@prisma/client").ExerciseEquipment;
   difficulty: import("@prisma/client").ExerciseDifficulty;
+  category: import("@prisma/client").ExerciseCategory;
   gifUrl: string | null;
   thumbnailUrl: string | null;
 }

@@ -7,6 +7,7 @@ import {
   Users,
   Dumbbell,
   Library,
+  Flame,
   Wallet,
   Settings,
   ShieldCheck,
@@ -20,12 +21,14 @@ const navItems = [
   { href: "/trainer/clientes", label: "Clientes", icon: Users },
   { href: "/trainer/rutinas", label: "Rutinas", icon: Dumbbell },
   { href: "/trainer/ejercicios", label: "Ejercicios", icon: Library },
+  { href: "/trainer/calentamientos", label: "Calentamientos", icon: Flame },
   { href: "/trainer/finanzas", label: "Finanzas", icon: Wallet },
   { href: "/trainer/ajustes", label: "Ajustes", icon: Settings },
 ] as const;
 
-const mainNavItems = navItems.slice(0, 5) as typeof navItems[number][];
-const settingsItem = navItems[5] as typeof navItems[number];
+const mainNavItems = navItems.slice(0, -1) as typeof navItems[number][];
+const settingsItem = navItems[navItems.length - 1] as typeof navItems[number];
+const bottomNavItems = mainNavItems.filter(i => i.href !== "/trainer/calentamientos");
 
 /** @deprecated use TrainerBottomNav + TrainerSidebar separately */
 export function TrainerNav() {
@@ -53,7 +56,7 @@ export function TrainerBottomNav() {
       <div className="pointer-events-none absolute inset-x-0 -top-6 h-6 bg-gradient-to-t from-[#09090B]/80 to-transparent" />
 
       <div className="flex h-16 items-center border-t border-[#3F3F46]/80 bg-[#09090B]/90 backdrop-blur-md px-1">
-        {mainNavItems.map(({ href, label, icon: Icon }) => {
+        {bottomNavItems.map(({ href, label, icon: Icon }) => {
           const active = isActive(href);
           return (
             <Link

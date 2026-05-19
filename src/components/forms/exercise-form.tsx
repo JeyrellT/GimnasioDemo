@@ -18,7 +18,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import type { MuscleGroup, ExerciseEquipment, ExerciseDifficulty } from "@prisma/client";
+import type { MuscleGroup, ExerciseEquipment, ExerciseDifficulty, ExerciseCategory } from "@prisma/client";
 
 import { createPrivateExercise, updateExercise } from "@/app/actions/exercises";
 import { BodyMapPicker } from "@/components/charts/body-map-picker";
@@ -84,6 +84,16 @@ const DIFFICULTY_VALUES = [
   "ADVANCED",
 ] as const satisfies readonly ExerciseDifficulty[];
 
+const CATEGORY_VALUES = [
+  "STRENGTH",
+  "WARMUP",
+] as const satisfies readonly ExerciseCategory[];
+
+export const CATEGORY_LABELS: Record<ExerciseCategory, string> = {
+  STRENGTH: "Ejercicio",
+  WARMUP: "Calentamiento",
+};
+
 export const EQUIPMENT_LABELS: Record<ExerciseEquipment, string> = {
   BODYWEIGHT: "Peso corporal",
   BARBELL: "Barra",
@@ -122,6 +132,7 @@ const exerciseFormSchema = z.object({
   difficulty: z.enum(DIFFICULTY_VALUES, {
     required_error: "Seleccioná la dificultad",
   }),
+  category: z.enum(CATEGORY_VALUES).default("STRENGTH"),
   thumbnailUrl: z.string().url("URL inválida").optional().or(z.literal("")),
   gifUrl: z.string().url("URL inválida").optional().or(z.literal("")),
   mediaUrl: z.string().url("URL inválida").optional().or(z.literal("")),
@@ -142,6 +153,7 @@ interface ExerciseData {
   secondaryMuscles: MuscleGroup[];
   equipment: ExerciseEquipment;
   difficulty: ExerciseDifficulty;
+  category: ExerciseCategory;
   thumbnailUrl: string | null;
   gifUrl: string | null;
   mediaUrl: string | null;
@@ -149,13 +161,14 @@ interface ExerciseData {
 
 export interface ExerciseFormProps {
   exercise: ExerciseData | null;
+  defaultCategory?: ExerciseCategory;
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-export function ExerciseForm({ exercise }: ExerciseFormProps) {
+export function ExerciseForm({ exercise, defaultCategory }: ExerciseFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -169,6 +182,7 @@ export function ExerciseForm({ exercise }: ExerciseFormProps) {
           secondaryMuscles: exercise.secondaryMuscles,
           equipment: exercise.equipment,
           difficulty: exercise.difficulty,
+          category: exercise.category,
           thumbnailUrl: exercise.thumbnailUrl ?? "",
           gifUrl: exercise.gifUrl ?? "",
           mediaUrl: exercise.mediaUrl ?? "",
@@ -177,6 +191,7 @@ export function ExerciseForm({ exercise }: ExerciseFormProps) {
           nameEs: "",
           instructionsEs: "",
           secondaryMuscles: [],
+          category: defaultCategory ?? ("STRENGTH" as const),
           thumbnailUrl: "",
           gifUrl: "",
           mediaUrl: "",
@@ -192,6 +207,7 @@ export function ExerciseForm({ exercise }: ExerciseFormProps) {
         secondaryMuscles: values.secondaryMuscles,
         equipment: values.equipment,
         difficulty: values.difficulty,
+        category: values.category,
         // Normalize empty string → undefined so actions see clean optionals
         thumbnailUrl: values.thumbnailUrl || undefined,
         gifUrl: values.gifUrl || undefined,
@@ -243,6 +259,37 @@ export function ExerciseForm({ exercise }: ExerciseFormProps) {
                       autoComplete="off"
                       {...field}
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Categoría */}
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex gap-6"
+                    >
+                      {CATEGORY_VALUES.map((c) => (
+                        <div key={c} className="flex items-center gap-2">
+                          <RadioGroupItem value={c} id={`category-${c}`} />
+                          <Label
+                            htmlFor={`category-${c}`}
+                            className="cursor-pointer text-sm text-[#A1A1AA] font-normal"
+                          >
+                            {CATEGORY_LABELS[c]}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
