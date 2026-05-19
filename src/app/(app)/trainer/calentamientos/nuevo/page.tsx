@@ -25,7 +25,7 @@ export default function NuevoCalentamientoPage() {
       />
 
       <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-6 shadow-sm">
-        <ExerciseForm exercise={null} defaultCategory="WARMUP" />
+        <ExerciseForm exercise={null} defaultCategory="WARMUP" basePath="/trainer/calentamientos" />
       </div>
     </div>
   );

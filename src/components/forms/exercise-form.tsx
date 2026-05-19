@@ -162,13 +162,14 @@ interface ExerciseData {
 export interface ExerciseFormProps {
   exercise: ExerciseData | null;
   defaultCategory?: ExerciseCategory;
+  basePath?: string;
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-export function ExerciseForm({ exercise, defaultCategory }: ExerciseFormProps) {
+export function ExerciseForm({ exercise, defaultCategory, basePath = "/trainer/ejercicios" }: ExerciseFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -222,7 +223,7 @@ export function ExerciseForm({ exercise, defaultCategory }: ExerciseFormProps) {
           return;
         }
         toast.success("Ejercicio actualizado.");
-        router.push(`/trainer/ejercicios/${exercise.id}`);
+        router.push(`${basePath}/${exercise.id}`);
       } else {
         // Create path
         const result = await createPrivateExercise(payload);
@@ -231,7 +232,7 @@ export function ExerciseForm({ exercise, defaultCategory }: ExerciseFormProps) {
           return;
         }
         toast.success("Ejercicio creado.");
-        router.push(`/trainer/ejercicios/${result.value.exerciseId}`);
+        router.push(`${basePath}/${result.value.exerciseId}`);
       }
     });
   }
