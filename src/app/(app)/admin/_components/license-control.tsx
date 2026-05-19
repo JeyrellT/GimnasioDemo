@@ -380,7 +380,7 @@ export function LicenseControl({
                 onChange={(e) =>
                   setActivatePlan(e.target.value as SubscriptionTier)
                 }
-                className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6]"
+                className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
               >
                 <option value="SOLO">Solo</option>
                 <option value="PRO">Pro</option>
@@ -400,7 +400,7 @@ export function LicenseControl({
                 onChange={(e) =>
                   setActivateMonths(parseInt(e.target.value, 10) || 1)
                 }
-                className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6]"
+                className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
               />
             </div>
 
@@ -413,7 +413,7 @@ export function LicenseControl({
                 onChange={(e) => setActivateReason(e.target.value)}
                 placeholder="Pago manual, compensación, alta de prueba interna..."
                 rows={2}
-                className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] resize-none"
+                className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary resize-none"
               />
             </div>
 
@@ -512,7 +512,7 @@ export function LicenseControl({
                 onChange={(e) => setDeactivateReason(e.target.value)}
                 placeholder="Falta de pago, solicitud del trainer, fraude detectado..."
                 rows={2}
-                className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] resize-none"
+                className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary resize-none"
               />
             </div>
 
@@ -570,7 +570,7 @@ export function LicenseControl({
                 onChange={(e) =>
                   setChangeTier(e.target.value as SubscriptionTier)
                 }
-                className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6]"
+                className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
               >
                 <option value="SOLO">Solo</option>
                 <option value="PRO">Pro</option>
@@ -587,7 +587,7 @@ export function LicenseControl({
                 onChange={(e) => setChangeReason(e.target.value)}
                 placeholder="Upgrade tras venta, downgrade solicitado, ajuste comercial..."
                 rows={2}
-                className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] resize-none"
+                className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary resize-none"
               />
             </div>
 
@@ -608,7 +608,7 @@ export function LicenseControl({
               type="button"
               onClick={handleChangePlan}
               disabled={isPending}
-              className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2563EB] transition-colors disabled:opacity-50 min-h-[44px]"
+              className="flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white hover:bg-brand-primary-hover transition-colors disabled:opacity-50 min-h-[44px]"
             >
               {isPending && (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -643,7 +643,7 @@ export function LicenseControl({
               max={365}
               value={extendDays}
               onChange={(e) => setExtendDays(parseInt(e.target.value, 10) || 1)}
-              className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6]"
+              className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
             />
             {fieldError && (
               <p className="text-xs text-[#EF4444]">{fieldError}</p>
@@ -662,7 +662,7 @@ export function LicenseControl({
               type="button"
               onClick={handleExtend}
               disabled={isPending}
-              className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2563EB] transition-colors disabled:opacity-50 min-h-[44px]"
+              className="flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white hover:bg-brand-primary-hover transition-colors disabled:opacity-50 min-h-[44px]"
             >
               {isPending && (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />

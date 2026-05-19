@@ -29,7 +29,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       {/* Subtle radial glow behind card */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#3B82F6]/[0.06] blur-[120px]"
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-primary/[0.06] blur-[120px]"
       />
 
       {/* Logo */}

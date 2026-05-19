@@ -51,7 +51,7 @@ export default function VolumeByMuscle({ data }: VolumeByMuscleProps) {
           itemStyle={{ color: "#FAFAFA", fontSize: 12 }}
           formatter={(v: number) => [v + " sets", "Volumen"]}
         />
-        <Bar dataKey="volume" fill="#3B82F6" radius={[0, 4, 4, 0]} />
+        <Bar dataKey="volume" fill="var(--brand-primary)" radius={[0, 4, 4, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

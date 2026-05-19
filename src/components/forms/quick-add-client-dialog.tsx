@@ -22,7 +22,7 @@ type FormValues = z.infer<typeof schema>;
 const inputCls =
   "w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] " +
   "placeholder-[#71717A] transition-[border-color,box-shadow] duration-150 " +
-  "focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6]/30";
+  "focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/30";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -165,7 +165,7 @@ export function QuickAddClientDialog({
                   htmlFor="qac-email"
                   className="block text-sm font-medium text-[#FAFAFA]"
                 >
-                  Correo electrónico <span className="text-[#3B82F6]">*</span>
+                  Correo electrónico <span className="text-brand-primary">*</span>
                 </label>
                 <input
                   id="qac-email"
@@ -221,7 +221,7 @@ export function QuickAddClientDialog({
                 </button>
                 <button
                   type="submit"
-                  className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#2563EB]"
+                  className="flex items-center gap-1.5 rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-primary-hover"
                 >
                   Crear y enviar invitación
                 </button>
@@ -233,9 +233,9 @@ export function QuickAddClientDialog({
         {/* ── Loading state ───────────────────────────────────────────────── */}
         {isSubmitting && (
           <div className="flex flex-col items-center justify-center py-8 text-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#3B82F6]/10">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-primary/10">
               <Loader2
-                className="h-7 w-7 animate-spin text-[#3B82F6]"
+                className="h-7 w-7 animate-spin text-brand-primary"
                 aria-hidden="true"
               />
             </div>
@@ -288,7 +288,7 @@ export function QuickAddClientDialog({
                 <>
                   <p className="mb-2 text-sm text-[#FAFAFA]">
                     Le mandamos un correo a{" "}
-                    <strong className="text-[#3B82F6]">{success.email}</strong>
+                    <strong className="text-brand-primary">{success.email}</strong>
                   </p>
                   <p className="mb-5 max-w-[300px] text-xs leading-relaxed text-[#A1A1AA]">
                     Pedile que revise su bandeja de entrada (también la carpeta
@@ -307,7 +307,7 @@ export function QuickAddClientDialog({
                     Es de un solo uso y dura 7 días.
                   </p>
                   <div className="mb-2 w-full rounded-lg border border-[#3F3F46] bg-[#27272A] p-2.5">
-                    <p className="break-all text-left text-[11px] text-[#3B82F6] font-mono">
+                    <p className="break-all text-left text-[11px] text-brand-primary font-mono">
                       {success.welcomeUrl}
                     </p>
                   </div>
@@ -325,7 +325,7 @@ export function QuickAddClientDialog({
               <button
                 type="button"
                 onClick={handleClose}
-                className="mt-2 w-full rounded-lg bg-[#3B82F6] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#2563EB]"
+                className="mt-2 w-full rounded-lg bg-brand-primary px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-primary-hover"
               >
                 Listo
               </button>

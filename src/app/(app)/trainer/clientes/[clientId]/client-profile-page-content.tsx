@@ -375,7 +375,7 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#3B82F6]" aria-label="Cargando perfil" />
+        <Loader2 className="h-8 w-8 animate-spin text-brand-primary" aria-label="Cargando perfil" />
       </div>
     );
   }
@@ -462,7 +462,7 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
       >
         <Link
           href="/trainer/clientes"
-          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-[#A1A1AA] transition-colors hover:text-[#FAFAFA] focus-visible:outline-2 focus-visible:outline-[#3B82F6]"
+          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-[#A1A1AA] transition-colors hover:text-[#FAFAFA] focus-visible:outline-2 focus-visible:outline-brand-primary"
           aria-label="Volver al listado de clientes"
         >
           <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -471,7 +471,7 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
 
         <Link
           href={`/trainer/clientes/${clientId}/ajustes`}
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-[#71717A] transition-colors hover:bg-[#27272A] hover:text-[#FAFAFA] focus-visible:outline-2 focus-visible:outline-[#3B82F6]"
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-[#71717A] transition-colors hover:bg-[#27272A] hover:text-[#FAFAFA] focus-visible:outline-2 focus-visible:outline-brand-primary"
           aria-label="Más acciones para este cliente"
         >
           <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
@@ -506,7 +506,7 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
           </p>
           <Link
             href={`/trainer/clientes/${clientId}/metricas`}
-            className="shrink-0 rounded-lg bg-[#F59E0B] px-3 py-1.5 text-xs font-semibold text-[#09090B] transition-colors hover:bg-[#D97706] focus-visible:outline-2 focus-visible:outline-[#3B82F6]"
+            className="shrink-0 rounded-lg bg-[#F59E0B] px-3 py-1.5 text-xs font-semibold text-[#09090B] transition-colors hover:bg-[#D97706] focus-visible:outline-2 focus-visible:outline-brand-primary"
           >
             + Nueva medición
           </Link>
@@ -546,7 +546,7 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
       <section aria-label="Composición corporal">
         <div className="mb-5 flex items-center gap-2.5">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[rgba(255,106,26,0.12)] border border-[rgba(255,106,26,0.2)]">
-            <Dumbbell className="h-3.5 w-3.5 text-[#3B82F6]" aria-hidden="true" />
+            <Dumbbell className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
           </div>
           <h2 className="text-sm font-bold uppercase tracking-[0.1em] text-[#A1A1AA]">
             Composición corporal

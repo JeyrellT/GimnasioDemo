@@ -64,7 +64,7 @@ export default function EntrenadorPerfilPage() {
         <button
           type="button"
           aria-label="Subir foto de perfil"
-          className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-dashed border-[#3F3F46] bg-[#18181B] hover:border-[#3B82F6] transition-colors"
+          className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-dashed border-[#3F3F46] bg-[#18181B] hover:border-brand-primary transition-colors"
         >
           <Camera className="h-8 w-8 text-[#71717A]" aria-hidden="true" />
         </button>
@@ -83,7 +83,7 @@ export default function EntrenadorPerfilPage() {
             placeholder="Laura Mora Fitness"
             {...register("tradeName")}
             aria-describedby={errors.tradeName ? "tradeName-error" : undefined}
-            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6]"
+            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary"
           />
           {errors.tradeName && (
             <p id="tradeName-error" role="alert" className="text-xs text-[#EF4444]">
@@ -100,7 +100,7 @@ export default function EntrenadorPerfilPage() {
           <select
             id="specialty"
             {...register("specialty")}
-            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6]"
+            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary"
           >
             <option value="" className="text-[#71717A]">
               Seleccioná...
@@ -130,7 +130,7 @@ export default function EntrenadorPerfilPage() {
             maxLength={280}
             placeholder="Tu experiencia, filosofía de entrenamiento..."
             {...register("bio")}
-            className="w-full resize-none rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6]"
+            className="w-full resize-none rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary"
           />
           <p className="text-right text-xs text-[#71717A]">
             {bioValue.length}/280
@@ -140,7 +140,7 @@ export default function EntrenadorPerfilPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#3B82F6] py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-[#2563EB] disabled:opacity-60 transition-colors"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-primary py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-brand-primary-hover disabled:opacity-60 transition-colors"
         >
           {isSubmitting ? "Guardando..." : "Continuar"}
           {!isSubmitting && <ArrowRight className="h-4 w-4" aria-hidden="true" />}

@@ -39,7 +39,7 @@ export default function OnboardingLayout({ children }: OnboardingLayoutProps) {
         aria-valuemax={STEPS.length}
       >
         <div
-          className="h-full bg-[#3B82F6] transition-all duration-500"
+          className="h-full bg-brand-primary transition-all duration-500"
           style={{ width: "14.28%" }}
         />
       </div>

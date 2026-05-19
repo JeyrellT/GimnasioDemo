@@ -54,7 +54,7 @@ export default function EditarEjercicioClient({ exerciseId, basePath = "/trainer
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-[#3B82F6]" aria-label="Cargando ejercicio" />
+        <Loader2 className="h-6 w-6 animate-spin text-brand-primary" aria-label="Cargando ejercicio" />
       </div>
     );
   }
@@ -73,7 +73,7 @@ export default function EditarEjercicioClient({ exerciseId, basePath = "/trainer
         </div>
         <Link
           href={basePath}
-          className="text-xs text-[#3B82F6] hover:text-[#2563EB] transition-colors"
+          className="text-xs text-brand-primary hover:text-brand-primary-hover transition-colors"
         >
           Volver a la biblioteca
         </Link>
@@ -96,7 +96,7 @@ export default function EditarEjercicioClient({ exerciseId, basePath = "/trainer
         </div>
         <Link
           href={`${basePath}/${exerciseId}`}
-          className="text-xs text-[#3B82F6] hover:text-[#2563EB] transition-colors"
+          className="text-xs text-brand-primary hover:text-brand-primary-hover transition-colors"
         >
           Ver ejercicio
         </Link>
@@ -118,7 +118,7 @@ export default function EditarEjercicioClient({ exerciseId, basePath = "/trainer
         </div>
         <Link
           href={basePath}
-          className="text-xs text-[#3B82F6] hover:text-[#2563EB] transition-colors"
+          className="text-xs text-brand-primary hover:text-brand-primary-hover transition-colors"
         >
           Volver a la biblioteca
         </Link>

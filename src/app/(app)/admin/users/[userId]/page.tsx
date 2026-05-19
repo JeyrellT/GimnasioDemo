@@ -21,10 +21,10 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const ROLE_COLORS: Record<string, string> = {
-  TRAINER: "bg-[#3B82F6]/10 text-[#3B82F6] border-[#3B82F6]/20",
+  TRAINER: "bg-brand-primary/10 text-brand-primary border-brand-primary/20",
   CLIENT: "bg-[#22C55E]/10 text-[#22C55E] border-[#22C55E]/20",
   ADMIN: "bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20",
-  SUPER_ADMIN: "bg-[#3B82F6]/10 text-[#3B82F6] border-[#3B82F6]/20",
+  SUPER_ADMIN: "bg-brand-primary/10 text-brand-primary border-brand-primary/20",
 };
 
 function Row({ label, value }: { label: string; value?: string | null }) {

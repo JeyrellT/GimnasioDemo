@@ -212,7 +212,7 @@ export function Step1Basic({ draftId }: Step1BasicProps) {
                       onClick={() => field.onChange(value)}
                       className={`rounded-lg border py-2.5 text-xs font-semibold transition-colors min-h-[44px] ${
                         field.value === value
-                          ? "border-[#3B82F6] bg-[rgba(255,106,26,0.15)] text-[#3B82F6]"
+                          ? "border-brand-primary bg-[rgba(255,106,26,0.15)] text-brand-primary"
                           : "border-[#3F3F46] bg-[#27272A] text-[#A1A1AA] hover:border-[#52525B]"
                       }`}
                       aria-pressed={field.value === value}
@@ -241,7 +241,7 @@ export function Step1Basic({ draftId }: Step1BasicProps) {
                 <FormLabel>Canton</FormLabel>
                 <FormControl>
                   <select
-                    className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6]"
+                    className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary"
                     {...field}
                     value={field.value ?? ""}
                   >

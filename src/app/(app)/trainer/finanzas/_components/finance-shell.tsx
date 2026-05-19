@@ -44,11 +44,11 @@ export function FinanceShell({ trainerName, currentMonth, children }: FinanceShe
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#3B82F6]/15">
-              <TrendingUp className="h-4 w-4 text-[#3B82F6]" aria-hidden="true" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-primary/15">
+              <TrendingUp className="h-4 w-4 text-brand-primary" aria-hidden="true" />
             </div>
             <h1 className="text-xl font-bold capitalize text-[#FAFAFA]">
-              Finanzas — <span className="text-[#3B82F6]">{heading}</span>
+              Finanzas — <span className="text-brand-primary">{heading}</span>
             </h1>
           </div>
           {trainerName && (
@@ -60,7 +60,7 @@ export function FinanceShell({ trainerName, currentMonth, children }: FinanceShe
           <FinancePeriodSelector currentMonth={currentMonth} />
           <Link
             href="/trainer/finanzas/nuevo"
-            className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-3 py-2 text-sm font-semibold text-white shadow-md shadow-[#3B82F6]/20 transition-colors duration-150 hover:bg-[#E55D0F]"
+            className="flex items-center gap-1.5 rounded-lg bg-brand-primary px-3 py-2 text-sm font-semibold text-white shadow-md shadow-brand-primary/20 transition-colors duration-150 hover:bg-brand-primary-hover"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             <span>Nueva entrada</span>

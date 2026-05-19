@@ -61,7 +61,7 @@ export function FinanceFABLoader() {
       <button
         type="button"
         onClick={load}
-        className="fixed bottom-20 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#3B82F6] text-white shadow-lg shadow-[#3B82F6]/40 hover:bg-[#2563EB] active:scale-95 transition-colors sm:hidden"
+        className="fixed bottom-20 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-brand-primary text-white shadow-lg shadow-brand-primary/40 hover:bg-brand-primary-hover active:scale-95 transition-colors sm:hidden"
         aria-label="Abrir menú de acciones financieras"
       >
         <Plus className="h-6 w-6" aria-hidden="true" />
@@ -71,7 +71,7 @@ export function FinanceFABLoader() {
 
   if (state.status === "loading") {
     return (
-      <div className="fixed bottom-20 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#3B82F6] text-white shadow-lg shadow-[#3B82F6]/40 sm:hidden">
+      <div className="fixed bottom-20 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-brand-primary text-white shadow-lg shadow-brand-primary/40 sm:hidden">
         <Loader2 className="h-6 w-6 animate-spin" aria-label="Cargando..." />
       </div>
     );

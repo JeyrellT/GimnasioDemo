@@ -38,7 +38,7 @@ export default function InvitarPage() {
 
       <div className="rounded-2xl border border-[#3F3F46] bg-[#18181B] p-8 flex flex-col items-center gap-6 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[rgba(255,106,26,0.12)] border border-[rgba(255,106,26,0.2)]">
-          <UserPlus className="h-8 w-8 text-[#3B82F6]" aria-hidden="true" />
+          <UserPlus className="h-8 w-8 text-brand-primary" aria-hidden="true" />
         </div>
 
         <div className="space-y-2">
@@ -61,7 +61,7 @@ export default function InvitarPage() {
           ].map((item) => (
             <li key={item} className="flex items-center gap-2 text-sm text-[#A1A1AA]">
               <span
-                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[rgba(255,106,26,0.15)] text-[10px] font-bold text-[#3B82F6]"
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[rgba(255,106,26,0.15)] text-[10px] font-bold text-brand-primary"
                 aria-hidden="true"
               >
                 ✓

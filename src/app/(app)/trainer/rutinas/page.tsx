@@ -46,11 +46,11 @@ const GOAL_CONFIG: Record<GoalKey, GoalConfig> = {
   HYPERTROPHY: {
     label: "Hipertrofia",
     icon: Flame,
-    borderColor: "border-l-[#3B82F6]",
-    iconBg: "bg-[#3B82F6]/10",
-    iconColor: "text-[#3B82F6]",
-    gradientFrom: "from-[#3B82F6]/8",
-    labelColor: "text-[#3B82F6]",
+    borderColor: "border-l-brand-primary",
+    iconBg: "bg-brand-primary/10",
+    iconColor: "text-brand-primary",
+    gradientFrom: "from-brand-primary/8",
+    labelColor: "text-brand-primary",
   },
   STRENGTH: {
     label: "Fuerza",
@@ -73,11 +73,11 @@ const GOAL_CONFIG: Record<GoalKey, GoalConfig> = {
   ENDURANCE: {
     label: "Resistencia",
     icon: Wind,
-    borderColor: "border-l-[#3B82F6]",
-    iconBg: "bg-[#3B82F6]/10",
-    iconColor: "text-[#3B82F6]",
-    gradientFrom: "from-[#3B82F6]/8",
-    labelColor: "text-[#3B82F6]",
+    borderColor: "border-l-brand-primary",
+    iconBg: "bg-brand-primary/10",
+    iconColor: "text-brand-primary",
+    gradientFrom: "from-brand-primary/8",
+    labelColor: "text-brand-primary",
   },
   GENERAL: {
     label: "General",
@@ -164,7 +164,7 @@ export default function RutinasPage() {
         actions={
           <Link
             href="/trainer/rutinas/nueva"
-            className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2 text-sm font-semibold text-white min-h-[44px] hover:bg-[#2563EB] transition-colors shadow-[0_0_16px_rgba(255,106,26,0.25)]"
+            className="flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white min-h-[44px] hover:bg-brand-primary-hover transition-colors shadow-[0_0_16px_rgba(255,106,26,0.25)]"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             Nueva rutina
@@ -200,7 +200,7 @@ export default function RutinasPage() {
               className={[
                 "rounded-lg px-4 py-1.5 text-sm font-medium transition-all",
                 isActive
-                  ? "bg-[#3B82F6] text-white shadow-sm"
+                  ? "bg-brand-primary text-white shadow-sm"
                   : "text-[#71717A] hover:text-[#FAFAFA] hover:bg-[#27272A]",
               ].join(" ")}
             >
@@ -213,7 +213,7 @@ export default function RutinasPage() {
       {/* Loading state */}
       {loading ? (
         <div className="flex justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-[#3B82F6]" aria-label="Cargando rutinas" />
+          <Loader2 className="h-6 w-6 animate-spin text-brand-primary" aria-label="Cargando rutinas" />
         </div>
       ) : filtered.length === 0 ? (
         /* Empty state */
@@ -223,7 +223,7 @@ export default function RutinasPage() {
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 flex items-center justify-center"
           >
-            <div className="h-48 w-48 rounded-full bg-[#3B82F6]/5 blur-3xl" />
+            <div className="h-48 w-48 rounded-full bg-brand-primary/5 blur-3xl" />
           </div>
 
           <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl border border-[#3F3F46] bg-[#27272A] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
@@ -248,7 +248,7 @@ export default function RutinasPage() {
           {activeFilter === "todas" && (
             <Link
               href="/trainer/rutinas/nueva"
-              className="relative mt-2 inline-flex items-center gap-2 rounded-lg bg-[#3B82F6] px-5 py-2.5 text-sm font-semibold text-white min-h-[44px] hover:bg-[#2563EB] transition-colors"
+              className="relative mt-2 inline-flex items-center gap-2 rounded-lg bg-brand-primary px-5 py-2.5 text-sm font-semibold text-white min-h-[44px] hover:bg-brand-primary-hover transition-colors"
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
               Nueva rutina
@@ -340,7 +340,7 @@ export default function RutinasPage() {
                   <Link
                     href={`/trainer/rutinas/${r.id}/asignar`}
                     onClick={(e) => e.stopPropagation()}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#27272A]/80 border border-[#3F3F46] text-[#71717A] hover:text-[#3B82F6] hover:border-[#3B82F6]/40 hover:bg-[#3B82F6]/10 transition-colors"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#27272A]/80 border border-[#3F3F46] text-[#71717A] hover:text-brand-primary hover:border-brand-primary/40 hover:bg-brand-primary/10 transition-colors"
                     aria-label={`Asignar ${r.name}`}
                   >
                     <Users className="h-3.5 w-3.5" strokeWidth={1.75} />

@@ -88,8 +88,8 @@ export function CircumferencesTable({
   const groups: CircGroup[] = [
     {
       title: "Tronco",
-      accentClass: "border-l-2 border-l-[rgba(59,130,246,0.6)]",
-      headerBg: "bg-[rgba(59,130,246,0.06)]",
+      accentClass: "border-l-2 border-l-brand-primary/60",
+      headerBg: "bg-brand-primary/[0.06]",
       rows: [
         { zone: "neck", label: "Cuello", value: c.neckCm },
         { zone: "shoulderL", label: "Hombro izq.", value: c.shoulderLeftCm },
@@ -164,7 +164,7 @@ export function CircumferencesTable({
                         "flex items-center justify-between py-3 transition-all duration-150",
                         // Selection overrides accent border and background
                         isSelected
-                          ? "border-l-2 border-l-[#3B82F6] bg-[rgba(255,106,26,0.10)] pl-3 pr-4"
+                          ? "border-l-2 border-l-brand-primary bg-[rgba(255,106,26,0.10)] pl-3 pr-4"
                           : hasValue
                             ? cn("pl-3 pr-4", group.accentClass)
                             : "px-4",

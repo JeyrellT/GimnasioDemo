@@ -22,7 +22,7 @@ import {
 // Constants
 // -----------------------------------------------------------------------------
 
-const LINE_COLOR = "#3B82F6";
+const LINE_COLOR = "var(--brand-primary)";
 const GRADIENT_ID = "muscleMassGradient";
 
 // -----------------------------------------------------------------------------
@@ -112,7 +112,7 @@ function CustomTooltip({ active, payload, label, startMass }: TooltipProps) {
       <p
         className="text-xs"
         style={{
-          color: delta >= 0 ? "#3B82F6" : "#F87171",
+          color: delta >= 0 ? "var(--brand-primary)" : "#F87171",
           fontFeatureSettings: "'tnum' 1",
         }}
       >

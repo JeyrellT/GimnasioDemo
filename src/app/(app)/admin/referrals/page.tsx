@@ -60,9 +60,9 @@ function StatCard({
 }) {
   const colors: Record<string, { bg: string; icon: string; border: string }> = {
     blue: {
-      bg: "bg-[#3B82F6]/10",
-      icon: "text-[#3B82F6]",
-      border: "border-[#3B82F6]/20",
+      bg: "bg-brand-primary/10",
+      icon: "text-brand-primary",
+      border: "border-brand-primary/20",
     },
     green: {
       bg: "bg-[#22C55E]/10",
@@ -124,7 +124,7 @@ const STATUS_META: Record<
   },
   REGISTERED: {
     label: "Registrado",
-    className: "bg-[#3B82F6]/15 text-[#3B82F6]",
+    className: "bg-brand-primary/15 text-brand-primary",
   },
   REJECTED: {
     label: "Rechazada",
@@ -283,7 +283,7 @@ export default async function AdminReferralsPage({ searchParams }: Props) {
             className={[
               "rounded-md px-3 py-1 text-sm font-medium transition-colors duration-150",
               currentFilter === opt.value
-                ? "bg-[#3B82F6] text-white shadow-sm"
+                ? "bg-brand-primary text-white shadow-sm"
                 : "text-[#71717A] hover:text-[#FAFAFA] hover:bg-[#27272A]",
             ].join(" ")}
           >
@@ -413,7 +413,7 @@ export default async function AdminReferralsPage({ searchParams }: Props) {
                   "inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors",
                   page <= 1
                     ? "pointer-events-none border-[#27272A] text-[#3F3F46] opacity-40"
-                    : "border-[#3F3F46] text-[#A1A1AA] hover:border-[#3B82F6] hover:text-[#FAFAFA]",
+                    : "border-[#3F3F46] text-[#A1A1AA] hover:border-brand-primary hover:text-[#FAFAFA]",
                 ].join(" ")}
               >
                 <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -429,7 +429,7 @@ export default async function AdminReferralsPage({ searchParams }: Props) {
                   "inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors",
                   page >= totalPages
                     ? "pointer-events-none border-[#27272A] text-[#3F3F46] opacity-40"
-                    : "border-[#3F3F46] text-[#A1A1AA] hover:border-[#3B82F6] hover:text-[#FAFAFA]",
+                    : "border-[#3F3F46] text-[#A1A1AA] hover:border-brand-primary hover:text-[#FAFAFA]",
                 ].join(" ")}
               >
                 Siguiente

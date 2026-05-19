@@ -86,7 +86,7 @@ export default function EntrenadorConsentimientosPage() {
                     [consent.id]: e.target.checked,
                   }))
                 }
-                className="mt-0.5 h-4 w-4 cursor-pointer rounded border-[#3F3F46] bg-[#27272A] accent-[#3B82F6]"
+                className="mt-0.5 h-4 w-4 cursor-pointer rounded border-[#3F3F46] bg-[#27272A] accent-brand-primary"
               />
               <div className="flex-1">
                 <label
@@ -135,7 +135,7 @@ export default function EntrenadorConsentimientosPage() {
         type="button"
         onClick={handleContinue}
         disabled={!requiredChecked || submitting}
-        className="flex w-full items-center justify-center rounded-xl bg-[#3B82F6] py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-[#2563EB] disabled:opacity-50 transition-colors"
+        className="flex w-full items-center justify-center rounded-xl bg-brand-primary py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-brand-primary-hover disabled:opacity-50 transition-colors"
       >
         {submitting ? "Guardando..." : "Continuar"}
       </button>

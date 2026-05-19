@@ -19,7 +19,7 @@ export const MUSCLE_LABELS: Record<string, string> = {
 // Muscle group colors (Tailwind classes)
 export const MUSCLE_COLORS: Record<string, { bg: string; text: string }> = {
   CHEST:      { bg: "bg-[#EF4444]/20", text: "text-[#EF4444]" },
-  BACK:       { bg: "bg-[#3B82F6]/20", text: "text-[#3B82F6]" },
+  BACK:       { bg: "bg-brand-primary/20", text: "text-brand-primary" },
   SHOULDERS:  { bg: "bg-[#F59E0B]/20", text: "text-[#F59E0B]" },
   BICEPS:     { bg: "bg-[#A855F7]/20", text: "text-[#A855F7]" },
   TRICEPS:    { bg: "bg-[#EC4899]/20", text: "text-[#EC4899]" },

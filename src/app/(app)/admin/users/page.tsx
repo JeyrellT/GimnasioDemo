@@ -27,10 +27,10 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const ROLE_COLORS: Record<string, string> = {
-  TRAINER: "bg-[#3B82F6]/10 text-[#3B82F6]",
+  TRAINER: "bg-brand-primary/10 text-brand-primary",
   CLIENT: "bg-[#22C55E]/10 text-[#22C55E]",
   ADMIN: "bg-[#F59E0B]/10 text-[#F59E0B]",
-  SUPER_ADMIN: "bg-[#3B82F6]/10 text-[#3B82F6]",
+  SUPER_ADMIN: "bg-brand-primary/10 text-brand-primary",
 };
 
 export default async function AdminUsersPage({
@@ -119,7 +119,7 @@ export default async function AdminUsersPage({
                         href={`/admin/users/${user.id}`}
                         className="group flex flex-col gap-0.5"
                       >
-                        <span className="font-medium text-[#FAFAFA] group-hover:text-[#3B82F6] transition-colors truncate max-w-[200px]">
+                        <span className="font-medium text-[#FAFAFA] group-hover:text-brand-primary transition-colors truncate max-w-[200px]">
                           {user.name ?? "(sin nombre)"}
                         </span>
                         <span className="text-xs text-[#71717A] truncate max-w-[200px]">
