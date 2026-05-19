@@ -445,6 +445,11 @@ model TrainerProfile {
   fiscalAddress          String?
   haciendaUsername       String?
   defaultMonthlyPriceCRC Decimal?  @db.Decimal(12, 2)
+  // -- Trainer branding (palette, logos, business name) --
+  brandPaletteId    String  @default("blue")
+  brandBusinessName String  @default("")
+  brandLogoFull     String? @db.Text
+  brandLogoMark     String? @db.Text
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
   deletedAt              DateTime?

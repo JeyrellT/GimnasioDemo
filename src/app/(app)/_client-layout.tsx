@@ -46,13 +46,8 @@ function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-dvh flex-col bg-canvas">
-      {/* Sticky header block: banner + topbar together */}
+      {/* Sticky header block: topbar + banners */}
       <div className="sticky top-0 z-40 bg-canvas">
-        {IS_DEMO && (
-          <div className="bg-brand-primary/10 border-b border-brand-primary/30 px-4 py-1.5 text-center text-xs text-brand-primary">
-            Modo demo &middot; Tus datos se guardan solo en este navegador
-          </div>
-        )}
         <OfflineBanner />
         <Topbar user={{ name: user.name, avatarUrl }} />
       </div>

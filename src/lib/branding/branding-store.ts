@@ -1,12 +1,11 @@
 // =============================================================================
-// BLACKLINE FITNESS — Trainer branding: localStorage persistence
-// Stores palette selection + custom logos (base64) per trainer.
-// In production this would sync to the database; in demo mode it's local-only.
+// BLACKLINE FITNESS — Trainer branding: types + defaults
+// The actual persistence is handled by server actions (branding.actions.ts).
+// This file defines the shared type, defaults, and a localStorage cache layer
+// for instant hydration before the DB response arrives.
 // =============================================================================
 
 import { DEFAULT_PALETTE_ID } from "./presets";
-
-const STORAGE_KEY = "blackline-fitness_trainer_branding";
 
 // -----------------------------------------------------------------------------
 // Types
@@ -35,14 +34,16 @@ export const DEFAULT_BRANDING: TrainerBranding = {
 };
 
 // -----------------------------------------------------------------------------
-// Read / Write
+// localStorage cache (instant hydration before DB responds)
 // -----------------------------------------------------------------------------
 
-export function getBranding(): TrainerBranding {
-  if (typeof window === "undefined") return DEFAULT_BRANDING;
+const CACHE_KEY = "blackline-fitness_branding_cache";
+
+export function getCachedBranding(): TrainerBranding | null {
+  if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_BRANDING;
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<TrainerBranding>;
     return {
       paletteId: parsed.paletteId ?? DEFAULT_BRANDING.paletteId,
@@ -51,16 +52,22 @@ export function getBranding(): TrainerBranding {
       businessName: parsed.businessName ?? DEFAULT_BRANDING.businessName,
     };
   } catch {
-    return DEFAULT_BRANDING;
+    return null;
   }
 }
 
-export function saveBranding(branding: TrainerBranding): void {
+export function setCachedBranding(branding: TrainerBranding): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(branding));
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(branding));
+  } catch {
+    // quota exceeded — ignore
+  }
 }
 
-export function clearBranding(): void {
+export function clearCachedBranding(): void {
   if (typeof window === "undefined") return;
-  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(CACHE_KEY);
+  // Also clean up legacy key from the old localStorage-only system
+  localStorage.removeItem("blackline-fitness_trainer_branding");
 }
