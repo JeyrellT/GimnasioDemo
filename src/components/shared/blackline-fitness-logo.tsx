@@ -35,8 +35,8 @@ export function BlacklineFitnessLogo({
             className="font-semibold tracking-[0.35em] uppercase"
             style={{
               fontSize: size ? size * 0.26 : 8,
-              color: "#3B82F6",
-              borderTop: "1.5px solid #3B82F6",
+              color: "var(--brand-primary)",
+              borderTop: "1.5px solid var(--brand-primary)",
               paddingTop: 2,
             }}
           >

@@ -57,7 +57,7 @@ interface RoutineBuilderState {
 }
 
 function newLocalId(): string {
-  return `local-${Math.random().toString(36).slice(2)}`;
+  return `local-${crypto.randomUUID()}`;
 }
 
 export const useRoutineBuilderStore = create<RoutineBuilderState>()((set) => ({

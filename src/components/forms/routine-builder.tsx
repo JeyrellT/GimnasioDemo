@@ -568,6 +568,11 @@ function ExerciseSearchPanel({
       return;
     }
 
+    if (!result.value.routineExerciseId) {
+      toast.error("Error interno: el servidor no devolvió un ID. Volvé a intentar.");
+      return;
+    }
+
     // Update local store with the real DB ID
     const draft: DraftExercise = {
       id: "local-" + Math.random().toString(36).slice(2),

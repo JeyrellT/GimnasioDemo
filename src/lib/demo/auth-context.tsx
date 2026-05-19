@@ -8,6 +8,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import { z } from "zod";
 import { db } from "@/lib/offline/db";
 
 export type DemoRole = "TRAINER" | "CLIENT";
@@ -57,15 +58,27 @@ function avatarKey(userId: string) {
   return `avatar-${userId}`;
 }
 
+const storedProfileSchema = z.object({ id: z.string() });
+
 function getStoredProfile(): DemoUser {
   if (typeof window === "undefined") return DEMO_PROFILES[0];
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const id = JSON.parse(stored) as string;
-      return DEMO_PROFILES.find((p) => p.id === id) ?? DEMO_PROFILES[0];
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw);
+      // Stored value may be a bare string (legacy) or an object { id }.
+      // Normalize to { id } before validating.
+      const normalized = typeof parsed === "string" ? { id: parsed } : parsed;
+      const result = storedProfileSchema.safeParse(normalized);
+      if (!result.success) {
+        localStorage.removeItem(STORAGE_KEY);
+        return DEMO_PROFILES[0];
+      }
+      return DEMO_PROFILES.find((p) => p.id === result.data.id) ?? DEMO_PROFILES[0];
     }
-  } catch {}
+  } catch {
+    localStorage.removeItem(STORAGE_KEY);
+  }
   return DEMO_PROFILES[0];
 }
 

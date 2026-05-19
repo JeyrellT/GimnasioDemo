@@ -105,7 +105,7 @@ export default function NuevaEntradaPage() {
     if (mode === "gasto") {
       result = await createExpense({ occurredAt, amountCRC: amountNum, category: category as ExpenseCategory, description: description || undefined });
     } else {
-      result = await createOneOffSale({ occurredAt, amountCRC: amountNum, category: category as IncomeCategory, description: description || undefined, paidStatus: "PAID" });
+      result = await createOneOffSale({ occurredAt, amountCRC: amountNum, category: category as IncomeCategory, description: description || undefined, paidStatus: "PAID", paymentMethod: paymentMethod || undefined });
     }
 
     setSaving(false);

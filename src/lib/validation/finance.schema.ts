@@ -8,8 +8,8 @@ import { idSchema, isoDateTimeSchema, longTextSchema } from "./shared.schema";
 
 // ── Shared primitives ─────────────────────────────────────────────────────────
 
-const crcPositiveSchema = z.coerce.number().positive().max(10_000_000);
-const crcNonNegSchema = z.coerce.number().nonnegative().max(10_000_000);
+const crcPositiveSchema = z.coerce.number().positive().max(50_000_000);
+const crcNonNegSchema = z.coerce.number().nonnegative().max(50_000_000);
 
 // ── Enums (mirror Prisma — avoids importing generated client in validation) ───
 
