@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { LogOut, User, ArrowLeftRight } from "lucide-react";
+import { LogOut, User, ArrowLeftRight, Settings } from "lucide-react";
 import { BlacklineFitnessLogo } from "@/components/shared/blackline-fitness-logo";
+import { useBranding } from "@/lib/branding/branding-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -41,30 +42,60 @@ export function Topbar({ user, userName, userAvatarUrl }: TopbarProps) {
   const router = useRouter();
   const displayName = user?.name ?? userName ?? null;
   const displayAvatar = user?.avatarUrl ?? userAvatarUrl ?? null;
+  const { branding } = useBranding();
+
   return (
     <header className="relative flex h-14 items-center justify-between bg-canvas px-4 sm:px-6">
-      {/* Bottom border: solid base + blue gradient overlay */}
+      {/* Bottom border: solid base + brand gradient overlay */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-[#3F3F46]/60" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#3B82F6]/50 to-transparent" />
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-px"
+        style={{
+          background: `linear-gradient(90deg, transparent, var(--brand-primary, #3B82F6) 50%, transparent)`,
+          opacity: 0.5,
+        }}
+      />
 
-      <Link href="/inicio" aria-label="Ir al inicio">
-        <BlacklineFitnessLogo variant="full" size={28} />
+      <Link href="/inicio" aria-label="Ir al inicio" className="flex items-center gap-2">
+        {/* Mobile: mark or custom mark */}
+        <span className="sm:hidden">
+          {branding.logoMark ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={branding.logoMark} alt="Logo" className="h-7 w-7 object-contain" />
+          ) : (
+            <BlacklineFitnessLogo variant="mark" size={26} />
+          )}
+        </span>
+        {/* Desktop: full logo or custom full */}
+        <span className="hidden sm:inline-flex items-center gap-2">
+          {branding.logoFull ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={branding.logoFull} alt="Logo" className="h-8 max-w-[160px] object-contain" />
+          ) : (
+            <BlacklineFitnessLogo variant="full" size={28} />
+          )}
+        </span>
+        {branding.businessName && !branding.logoFull && (
+          <span className="hidden sm:block text-sm font-bold text-[#FAFAFA] tracking-wide">
+            {branding.businessName}
+          </span>
+        )}
       </Link>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="flex items-center gap-2 rounded-lg px-2 py-1 transition-all duration-200 hover:bg-[#18181B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] min-h-[44px]"
+            className="flex items-center gap-2 rounded-lg px-2 py-1 transition-all duration-200 hover:bg-[#18181B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary min-h-[44px]"
             aria-label="Menú de usuario"
           >
             {/* Avatar with blue gradient ring */}
-            <div className="relative h-8 w-8 rounded-full bg-gradient-to-br from-[#3B82F6] to-[#1D4ED8] p-[1.5px]">
+            <div className="relative h-8 w-8 rounded-full bg-gradient-to-br from-brand-primary to-brand-deep p-[1.5px]">
               <Avatar className="h-full w-full">
                 {displayAvatar && (
                   <AvatarImage src={displayAvatar} alt={displayName ?? "Avatar"} />
                 )}
-                <AvatarFallback className="bg-[#1C1C1F] text-[#3B82F6] text-xs font-bold">
+                <AvatarFallback className="bg-[#1C1C1F] text-brand-primary text-xs font-bold">
                   {getInitials(displayName)}
                 </AvatarFallback>
               </Avatar>
@@ -90,6 +121,12 @@ export function Topbar({ user, userName, userAvatarUrl }: TopbarProps) {
             <Link href="/perfil" className="flex items-center gap-2">
               <User className="h-4 w-4" aria-hidden="true" />
               Perfil
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/trainer/ajustes" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" aria-hidden="true" />
+              Ajustes
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />

@@ -41,13 +41,13 @@ export function ClientBottomNav() {
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 className={cn(
                   "flex items-center justify-center rounded-full transition-colors duration-200",
-                  active ? "bg-[#3B82F6]/15 p-1.5" : "p-1.5",
+                  active ? "bg-brand-primary/15 p-1.5" : "p-1.5",
                 )}
               >
                 <Icon
                   className={cn(
                     "h-5 w-5 transition-colors duration-200",
-                    active ? "text-[#3B82F6]" : "text-[#71717A]",
+                    active ? "text-brand-primary" : "text-[#71717A]",
                   )}
                   aria-hidden="true"
                 />
@@ -55,7 +55,7 @@ export function ClientBottomNav() {
               <span
                 className={cn(
                   "text-[10px] font-medium transition-colors duration-200 leading-none",
-                  active ? "text-[#3B82F6]" : "text-[#71717A]",
+                  active ? "text-brand-primary" : "text-[#71717A]",
                 )}
               >
                 {label}
@@ -68,7 +68,7 @@ export function ClientBottomNav() {
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0, opacity: 0 }}
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                    className="absolute bottom-1 h-1 w-1 rounded-full bg-[#3B82F6]"
+                    className="absolute bottom-1 h-1 w-1 rounded-full bg-brand-primary"
                   />
                 )}
               </AnimatePresence>
@@ -102,7 +102,7 @@ export function ClientSidebar() {
               className={cn(
                 "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 min-h-[44px] group overflow-hidden",
                 active
-                  ? "text-[#3B82F6]"
+                  ? "text-brand-primary"
                   : "text-[#A1A1AA] hover:bg-[#18181B] hover:text-[#FAFAFA]",
               )}
               aria-current={active ? "page" : undefined}
@@ -110,21 +110,21 @@ export function ClientSidebar() {
               {active && (
                 <motion.div
                   layoutId="client-sidebar-active-bg"
-                  className="absolute inset-0 rounded-lg bg-[#3B82F6]/10"
+                  className="absolute inset-0 rounded-lg bg-brand-primary/10"
                   transition={{ type: "spring", stiffness: 400, damping: 35 }}
                 />
               )}
               {active && (
                 <motion.div
                   layoutId="client-sidebar-indicator"
-                  className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-[#3B82F6]"
+                  className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-brand-primary"
                   transition={{ type: "spring", stiffness: 400, damping: 35 }}
                 />
               )}
               <div
                 className={cn(
                   "relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors duration-200",
-                  active ? "bg-[#3B82F6]/20" : "group-hover:bg-[#27272A]",
+                  active ? "bg-brand-primary/20" : "group-hover:bg-[#27272A]",
                 )}
               >
                 <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
