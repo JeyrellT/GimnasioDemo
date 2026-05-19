@@ -7,7 +7,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Palette, ImagePlus, Trash2, RotateCcw } from "lucide-react";
+import { Palette, ImagePlus, Trash2, RotateCcw, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,10 +27,12 @@ const MAX_LOGO_SIZE = 500 * 1024;
 function SectionCard({
   icon: Icon,
   label,
+  action,
   children,
 }: {
   icon: React.ElementType;
   label: string;
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -42,6 +44,7 @@ function SectionCard({
         <h2 className="text-sm font-bold uppercase tracking-wider text-[#A1A1AA]">
           {label}
         </h2>
+        {action && <div className="ml-auto">{action}</div>}
       </div>
       {children}
     </section>
@@ -160,6 +163,8 @@ function LogoUploadSlot({
 export function BrandingSection() {
   const { branding, update, reset } = useBranding();
   const [localName, setLocalName] = useState(branding.businessName);
+  const [savingPalette, setSavingPalette] = useState(false);
+  const [savingLogo, setSavingLogo] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -185,7 +190,31 @@ export function BrandingSection() {
   return (
     <>
       {/* ── Color palette ─────────────────────────────────────────────────── */}
-      <SectionCard icon={Palette} label="Paleta de colores">
+      <SectionCard
+        icon={Palette}
+        label="Paleta de colores"
+        action={
+          <Button
+            size="sm"
+            onClick={() => {
+              setSavingPalette(true);
+              setTimeout(() => {
+                setSavingPalette(false);
+                toast.success("Paleta guardada.");
+              }, 400);
+            }}
+            disabled={savingPalette}
+            className="bg-[var(--brand-primary,#3B82F6)] hover:bg-[var(--brand-primary-hover,#2563EB)] text-white text-xs"
+          >
+            {savingPalette ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+            ) : (
+              <Check className="h-3.5 w-3.5 mr-1.5" />
+            )}
+            Guardar
+          </Button>
+        }
+      >
         <p className="text-xs text-[#71717A]">
           Elegí el color principal de tu app. Tus clientes asignados verán
           el mismo estilo cuando ingresen.
@@ -249,7 +278,31 @@ export function BrandingSection() {
       </SectionCard>
 
       {/* ── Logo personalizado ────────────────────────────────────────────── */}
-      <SectionCard icon={ImagePlus} label="Logo personalizado">
+      <SectionCard
+        icon={ImagePlus}
+        label="Logo personalizado"
+        action={
+          <Button
+            size="sm"
+            onClick={() => {
+              setSavingLogo(true);
+              setTimeout(() => {
+                setSavingLogo(false);
+                toast.success("Logo guardado.");
+              }, 400);
+            }}
+            disabled={savingLogo}
+            className="bg-[var(--brand-primary,#3B82F6)] hover:bg-[var(--brand-primary-hover,#2563EB)] text-white text-xs"
+          >
+            {savingLogo ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+            ) : (
+              <Check className="h-3.5 w-3.5 mr-1.5" />
+            )}
+            Guardar
+          </Button>
+        }
+      >
         <p className="text-xs text-[#71717A]">
           Subí tu logo para reemplazar el monograma BL. El logo aparecerá en
           el header de la app, tanto para vos como para tus clientes.
