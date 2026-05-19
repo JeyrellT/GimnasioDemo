@@ -48,10 +48,9 @@ const SINGLE = args.find((a) => a.startsWith("--slug="))?.slice(7);
 
 const WARMUP_CANDIDATES = {
   // ── CARDIO ────────────────────────────────────────────────────────────────
-  // "Cardio en máquina" no existe genérico — usamos Stationary_Bike como proxy
   "cardio-en-maquina": ["Stationary_Bike_Run_V._2", "Rowing_Stationary"],
-  "saltos-de-tijera": ["Rope_Jumping"], // mejor match en el repo
-  "rodillas-altas": ["Hip_Lift_With_Band", "Rope_Jumping"], // no hay high-knees, usar proxy
+  "saltos-de-tijera": ["Star_Jump"], // jumping jacks → Star Jump (similar movement)
+  "rodillas-altas": ["Quick_Leap", "Front_Cone_Hops_or_hurdle_hops"], // high knees → leap drill
   "talones-a-gluteos": ["Double_Leg_Butt_Kick", "Single_Leg_Butt_Kick"],
   "saltar-la-cuerda": ["Rope_Jumping"],
   "mountain-climbers": ["Mountain_Climbers"],
@@ -69,7 +68,7 @@ const WARMUP_CANDIDATES = {
   "sentadilla-con-peso-corporal": ["Bodyweight_Squat", "Chair_Squat"],
   "zancadas-caminando": ["Bodyweight_Walking_Lunge", "Dumbbell_Lunges"],
   "puente-de-gluteo": ["Single_Leg_Glute_Bridge", "Barbell_Glute_Bridge"],
-  "bird-dog": ["Alternate_Leg_Diagonal_Bound", "Plank"], // no hay bird-dog real, usar plank como activación core
+  "bird-dog": ["Downward_Facing_Balance", "Hip_Circles_prone"], // quadruped balance — closer to bird-dog
   "plancha-isometrica": ["Plank"],
   "push-ups-lentos": ["Pushups", "Push-Ups_With_Feet_On_An_Exercise_Ball"],
   "band-pull-aparts": ["Band_Pull_Apart"],
