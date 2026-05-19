@@ -52,7 +52,7 @@ export default function ClientWelcomeEmail({
             <Img
               src={`${appUrl}/images/logo-email.png`}
               alt="Blackline Fitness"
-              width="220"
+              width="340"
               style={styles.logo_img}
             />
             <Text style={styles.tagline}>Tu línea, tu fuerza.</Text>
@@ -148,7 +148,7 @@ const styles = {
   logo_img: {
     display: "block",
     margin: "0 auto 8px",
-    maxWidth: "220px",
+    maxWidth: "340px",
   },
   tagline: {
     color: "#A1A1AA",
