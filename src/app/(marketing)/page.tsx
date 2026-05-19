@@ -3,9 +3,9 @@ import { ArrowRight, BarChart2, ClipboardList, Timer } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Blackline Fitness — Tu visión, tu evolución",
+  title: "Blackline Fitness — Tu línea, tu fuerza",
   description:
-    "Tu visión, tu evolución. Plataforma de entrenamiento personal para entrenadores y clientes en Costa Rica.",
+    "Tu línea, tu fuerza. Plataforma de entrenamiento personal para entrenadores y clientes en Costa Rica.",
 };
 
 const features = [
@@ -55,9 +55,9 @@ export default function LandingPage() {
         </div>
 
         <h1 className="max-w-3xl text-4xl font-bold leading-tight text-[#FAFAFA] sm:text-5xl lg:text-6xl text-balance">
-          Tu visión,
+          Tu línea,
           <br />
-          <span className="text-[#3B82F6]">tu evolución.</span>
+          <span className="text-[#3B82F6]">tu fuerza.</span>
         </h1>
 
         <p className="mt-6 max-w-xl text-base text-[#A1A1AA] sm:text-lg text-balance">

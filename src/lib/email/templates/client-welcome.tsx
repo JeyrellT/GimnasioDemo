@@ -46,7 +46,7 @@ export default function ClientWelcomeEmail({
           {/* Header */}
           <Section style={styles.header}>
             <Heading style={styles.logo}>{APP_NAME}</Heading>
-            <Text style={styles.tagline}>Tu visión, tu evolución.</Text>
+            <Text style={styles.tagline}>Tu línea, tu fuerza.</Text>
           </Section>
 
           {/* Content */}
