@@ -7,6 +7,7 @@
 // =============================================================================
 
 import * as React from "react";
+import { useMemo } from "react";
 import {
   XAxis,
   YAxis,
@@ -65,14 +66,18 @@ function LastPointDot({ cx, cy, index, dataLength }: CustomDotProps) {
   if (index !== (dataLength ?? 0) - 1 || cx === undefined || cy === undefined) {
     return null;
   }
+  const color =
+    typeof window !== "undefined"
+      ? (getComputedStyle(document.documentElement).getPropertyValue("--brand-primary").trim() || "#3B82F6")
+      : "#3B82F6";
   return (
     <g>
       {/* Glow ring exterior */}
-      <circle cx={cx} cy={cy} r={9} fill="#3B82F6" fillOpacity={0.15} />
+      <circle cx={cx} cy={cy} r={9} fill={color} fillOpacity={0.15} />
       {/* Glow ring interior */}
-      <circle cx={cx} cy={cy} r={6} fill="#3B82F6" fillOpacity={0.3} />
+      <circle cx={cx} cy={cy} r={6} fill={color} fillOpacity={0.3} />
       {/* Dot sólido */}
-      <circle cx={cx} cy={cy} r={4} fill="#3B82F6" strokeWidth={0} />
+      <circle cx={cx} cy={cy} r={4} fill={color} strokeWidth={0} />
     </g>
   );
 }
@@ -123,6 +128,15 @@ function CustomTooltip({ active, payload, label, startWeight }: TooltipProps) {
 // -----------------------------------------------------------------------------
 
 export function WeightTrendChart({ data }: WeightTrendChartProps) {
+  const brandColor = useMemo(() => {
+    if (typeof window === "undefined") return "#3B82F6";
+    return (
+      getComputedStyle(document.documentElement)
+        .getPropertyValue("--brand-primary")
+        .trim() || "#3B82F6"
+    );
+  }, []);
+
   const chartData = buildChartData(data);
   const startWeight = data[0] ?? 0;
   const values = data.filter((v) => Number.isFinite(v));
@@ -143,8 +157,8 @@ export function WeightTrendChart({ data }: WeightTrendChartProps) {
         >
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.3} />
-              <stop offset="100%" stopColor="#3B82F6" stopOpacity={0} />
+              <stop offset="0%" stopColor={brandColor} stopOpacity={0.3} />
+              <stop offset="100%" stopColor={brandColor} stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid
@@ -192,7 +206,7 @@ export function WeightTrendChart({ data }: WeightTrendChartProps) {
           <Area
             type="monotone"
             dataKey="peso"
-            stroke="#3B82F6"
+            stroke={brandColor}
             strokeWidth={2}
             fill={`url(#${gradientId})`}
             dot={(props: CustomDotProps & { index: number }) => (
@@ -204,7 +218,7 @@ export function WeightTrendChart({ data }: WeightTrendChartProps) {
                 dataLength={chartData.length}
               />
             )}
-            activeDot={{ r: 4, fill: "#3B82F6", strokeWidth: 0 }}
+            activeDot={{ r: 4, fill: brandColor, strokeWidth: 0 }}
             isAnimationActive={false}
           />
         </AreaChart>

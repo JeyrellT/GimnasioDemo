@@ -100,7 +100,7 @@ export function KpiHeroCard({
         "bg-[rgba(24,24,27,0.8)] backdrop-blur-xl",
         "transition-all duration-200 hover:bg-[rgba(39,39,42,0.9)]",
         hoverGlowClass,
-        "focus-within:outline-2 focus-within:outline-[#3B82F6] focus-within:outline-offset-2",
+        "focus-within:outline-2 focus-within:outline-brand-primary focus-within:outline-offset-2",
         className,
       )}
       aria-label={`${label}: ${value}${unit ? ` ${unit}` : ""}${delta ? `, ${delta}` : ""}`}

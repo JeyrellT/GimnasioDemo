@@ -115,7 +115,7 @@ export default function ClientRutinasPage() {
               className={[
                 "rounded-xl border overflow-hidden transition-colors",
                 isActive
-                  ? "border-[#3B82F6]/40 bg-[#18181B]"
+                  ? "border-brand-primary/40 bg-[#18181B]"
                   : "border-[#3F3F46] bg-[#18181B]/60 opacity-70",
               ].join(" ")}
             >
@@ -131,13 +131,13 @@ export default function ClientRutinasPage() {
                   <div
                     className={[
                       "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
-                      isActive ? "bg-[#3B82F6]/15" : "bg-[#27272A]",
+                      isActive ? "bg-brand-primary/15" : "bg-[#27272A]",
                     ].join(" ")}
                   >
                     <Dumbbell
                       className={[
                         "h-5 w-5",
-                        isActive ? "text-[#3B82F6]" : "text-[#52525B]",
+                        isActive ? "text-brand-primary" : "text-[#52525B]",
                       ].join(" ")}
                     />
                   </div>
@@ -204,7 +204,7 @@ export default function ClientRutinasPage() {
                           className="flex w-full items-center justify-between px-3 py-2.5 text-left"
                         >
                           <div className="flex items-center gap-2.5">
-                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#3B82F6]/10 text-xs font-bold text-[#3B82F6]">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-primary/10 text-xs font-bold text-brand-primary">
                               {day.dayIndex + 1}
                             </div>
                             <div>

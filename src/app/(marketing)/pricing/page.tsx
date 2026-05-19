@@ -101,12 +101,12 @@ export default function PricingPage() {
             key={plan.tier}
             className={`relative flex flex-col rounded-2xl border p-6 ${
               plan.highlight
-                ? "border-[#3B82F6] bg-[#3B82F6]/5"
+                ? "border-brand-primary bg-brand-primary/5"
                 : "border-[#3F3F46] bg-[#18181B]"
             }`}
           >
             {plan.highlight && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#3B82F6] px-3 py-0.5 text-xs font-semibold text-white">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-primary px-3 py-0.5 text-xs font-semibold text-white">
                 Más popular
               </div>
             )}
@@ -129,7 +129,7 @@ export default function PricingPage() {
               href="/registrarse"
               className={`mt-6 block rounded-xl py-3 text-center text-sm font-semibold transition-colors min-h-[44px] flex items-center justify-center ${
                 plan.highlight
-                  ? "bg-[#3B82F6] text-white hover:bg-[#2563EB]"
+                  ? "bg-brand-primary text-white hover:bg-brand-primary-hover"
                   : "border border-[#3F3F46] text-[#FAFAFA] hover:bg-[#27272A]"
               }`}
             >
@@ -179,7 +179,7 @@ export default function PricingPage() {
             <div key={q} className="py-5">
               <div className="flex items-start gap-3">
                 <HelpCircle
-                  className="mt-0.5 h-4 w-4 shrink-0 text-[#3B82F6]"
+                  className="mt-0.5 h-4 w-4 shrink-0 text-brand-primary"
                   aria-hidden="true"
                 />
                 <div>

@@ -88,8 +88,8 @@ type MetaValues = z.infer<typeof metaSchema>;
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const GOALS: Array<{ value: string; label: string; color: string }> = [
-  { value: "HYPERTROPHY", label: "Hipertrofia",        color: "#3B82F6" },
-  { value: "STRENGTH",    label: "Fuerza",             color: "#3B82F6" },
+  { value: "HYPERTROPHY", label: "Hipertrofia",        color: "#A855F7" },
+  { value: "STRENGTH",    label: "Fuerza",             color: "#EF4444" },
   { value: "ENDURANCE",   label: "Resistencia",        color: "#22C55E" },
   { value: "FAT_LOSS",    label: "Pérdida de grasa",   color: "#F59E0B" },
   { value: "GENERAL",     label: "General / Mantenimiento", color: "#A855F7" },
@@ -161,7 +161,7 @@ function SortableExerciseRow({
       className={[
         "flex items-start gap-2 rounded-lg border border-[#3F3F46] p-3 transition-shadow",
         index % 2 === 0 ? "bg-[#18181B]" : "bg-[#1C1C1F]",
-        isDragging ? "shadow-xl shadow-black/50 ring-1 ring-[#3B82F6]/40" : "",
+        isDragging ? "shadow-xl shadow-black/50 ring-1 ring-brand-primary/40" : "",
       ].join(" ")}
     >
       {/* Drag handle */}
@@ -169,7 +169,7 @@ function SortableExerciseRow({
         type="button"
         {...attributes}
         {...listeners}
-        className="mt-1 text-[#3F3F46] hover:text-[#3B82F6] cursor-grab active:cursor-grabbing min-h-[24px] min-w-[24px] flex items-center transition-colors duration-150"
+        className="mt-1 text-[#3F3F46] hover:text-brand-primary cursor-grab active:cursor-grabbing min-h-[24px] min-w-[24px] flex items-center transition-colors duration-150"
         aria-label="Arrastrar para reordenar"
       >
         <GripVertical className="h-4 w-4" aria-hidden="true" />
@@ -178,13 +178,13 @@ function SortableExerciseRow({
       <div className="flex-1 space-y-2.5">
         {/* Exercise name + muscle badge */}
         <div className="flex items-center gap-2">
-          <Dumbbell className="h-3.5 w-3.5 text-[#3B82F6] shrink-0" aria-hidden="true" />
+          <Dumbbell className="h-3.5 w-3.5 text-brand-primary shrink-0" aria-hidden="true" />
           <p className="text-sm font-semibold text-[#FAFAFA] leading-tight">{exercise.nameEs}</p>
         </div>
 
         {/* Prescription summary pill */}
         <div className="inline-flex items-center gap-1.5 rounded-full bg-[#27272A] px-2.5 py-1 text-[11px] font-mono text-[#A1A1AA]">
-          <Target className="h-3 w-3 text-[#3B82F6]" aria-hidden="true" />
+          <Target className="h-3 w-3 text-brand-primary" aria-hidden="true" />
           {prescriptionSummary}
         </div>
 
@@ -203,7 +203,7 @@ function SortableExerciseRow({
               <Input
                 type="number"
                 inputMode="numeric"
-                className="h-7 text-xs px-2 bg-[#09090B] border-[#3F3F46] focus:border-[#3B82F6]"
+                className="h-7 text-xs px-2 bg-[#09090B] border-[#3F3F46] focus:border-brand-primary"
                 value={exercise[field] ?? ""}
                 onChange={(e) =>
                   updateExercise(dayId, exercise.id, {
@@ -429,7 +429,7 @@ function DayCard({
                 variant="outline"
                 size="sm"
                 onClick={() => onAddExercise(day.id)}
-                className="w-full gap-2 border-dashed border-[#3F3F46] text-[#71717A] hover:border-[#3B82F6] hover:text-[#3B82F6] transition-colors mt-1"
+                className="w-full gap-2 border-dashed border-[#3F3F46] text-[#71717A] hover:border-brand-primary hover:text-brand-primary transition-colors mt-1"
               >
                 <Plus className="h-3.5 w-3.5" aria-hidden="true" />
                 Agregar ejercicio
@@ -577,13 +577,13 @@ function ExerciseSearchPanel({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 8, scale: 0.98 }}
       transition={{ duration: 0.18 }}
-      className="rounded-xl border border-[#3B82F6]/30 bg-[#18181B] p-4 space-y-3 shadow-lg shadow-black/40"
+      className="rounded-xl border border-brand-primary/30 bg-[#18181B] p-4 space-y-3 shadow-lg shadow-black/40"
     >
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#3B82F6]/15">
-            <Search className="h-3.5 w-3.5 text-[#3B82F6]" aria-hidden="true" />
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-primary/15">
+            <Search className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
           </div>
           <p className="text-sm font-semibold text-[#FAFAFA]">Buscar ejercicio</p>
         </div>
@@ -605,10 +605,10 @@ function ExerciseSearchPanel({
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Ej: Press de banca, Sentadilla, Curl..."
           autoFocus
-          className="pl-9 h-11 bg-[#09090B] border-[#3F3F46] focus:border-[#3B82F6] text-sm placeholder:text-[#52525B]"
+          className="pl-9 h-11 bg-[#09090B] border-[#3F3F46] focus:border-brand-primary text-sm placeholder:text-[#52525B]"
         />
         {searching && (
-          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#3B82F6] animate-spin" aria-hidden="true" />
+          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-primary animate-spin" aria-hidden="true" />
         )}
       </div>
 
@@ -637,10 +637,10 @@ function ExerciseSearchPanel({
               type="button"
               onClick={() => handleSelect(ex)}
               disabled={isAdding || adding !== null}
-              className="w-full text-left rounded-lg border border-[#3F3F46] bg-[#09090B] p-2.5 hover:border-[#3B82F6] hover:bg-[#3B82F6]/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 group"
+              className="w-full text-left rounded-lg border border-[#3F3F46] bg-[#09090B] p-2.5 hover:border-brand-primary hover:bg-brand-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 group"
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[#FAFAFA] truncate group-hover:text-[#3B82F6] transition-colors">
+                <p className="text-sm font-medium text-[#FAFAFA] truncate group-hover:text-brand-primary transition-colors">
                   {ex.nameEs}
                 </p>
                 <div className="flex items-center gap-1.5 mt-1">
@@ -657,9 +657,9 @@ function ExerciseSearchPanel({
                 </div>
               </div>
               {isAdding ? (
-                <Loader2 className="h-4 w-4 text-[#3B82F6] animate-spin shrink-0" aria-hidden="true" />
+                <Loader2 className="h-4 w-4 text-brand-primary animate-spin shrink-0" aria-hidden="true" />
               ) : (
-                <Plus className="h-4 w-4 text-[#52525B] group-hover:text-[#3B82F6] transition-colors shrink-0" aria-hidden="true" />
+                <Plus className="h-4 w-4 text-[#52525B] group-hover:text-brand-primary transition-colors shrink-0" aria-hidden="true" />
               )}
             </button>
           );
@@ -690,8 +690,8 @@ function MetaForm({
     <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 space-y-4">
       {/* Section header */}
       <div className="flex items-center gap-2 pb-1 border-b border-[#27272A]">
-        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#3B82F6]/15">
-          <Dumbbell className="h-3.5 w-3.5 text-[#3B82F6]" aria-hidden="true" />
+        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-primary/15">
+          <Dumbbell className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
         </div>
         <p className="text-xs font-semibold uppercase tracking-widest text-[#71717A]">
           Configuración de la rutina
@@ -712,7 +712,7 @@ function MetaForm({
                 <FormControl>
                   <Input
                     placeholder="Full Body 4 días"
-                    className="bg-[#09090B] border-[#3F3F46] focus:border-[#3B82F6] h-11 text-sm"
+                    className="bg-[#09090B] border-[#3F3F46] focus:border-brand-primary h-11 text-sm"
                     {...field}
                   />
                 </FormControl>
@@ -728,7 +728,7 @@ function MetaForm({
             render={({ field }) => (
               <FormItem className="sm:col-span-2">
                 <FormLabel className="text-xs text-[#A1A1AA] uppercase tracking-wide flex items-center gap-1.5">
-                  <Target className="h-3 w-3 text-[#3B82F6]" aria-hidden="true" />
+                  <Target className="h-3 w-3 text-brand-primary" aria-hidden="true" />
                   Objetivo
                 </FormLabel>
                 <div className="flex gap-2">
@@ -770,7 +770,7 @@ function MetaForm({
                     size="icon"
                     onClick={onCreateGoal}
                     title="Crear objetivo"
-                    className="h-11 w-11 shrink-0 border-[#3F3F46] bg-[#09090B] text-[#A1A1AA] hover:border-[#3B82F6] hover:text-[#3B82F6]"
+                    className="h-11 w-11 shrink-0 border-[#3F3F46] bg-[#09090B] text-[#A1A1AA] hover:border-brand-primary hover:text-brand-primary"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -787,7 +787,7 @@ function MetaForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs text-[#A1A1AA] uppercase tracking-wide flex items-center gap-1.5">
-                  <Calendar className="h-3 w-3 text-[#3B82F6]" aria-hidden="true" />
+                  <Calendar className="h-3 w-3 text-brand-primary" aria-hidden="true" />
                   Días/semana
                 </FormLabel>
                 <FormControl>
@@ -796,7 +796,7 @@ function MetaForm({
                       type="number"
                       min={1}
                       max={7}
-                      className="bg-[#09090B] border-[#3F3F46] focus:border-[#3B82F6] h-11 text-sm pr-12"
+                      className="bg-[#09090B] border-[#3F3F46] focus:border-brand-primary h-11 text-sm pr-12"
                       {...field}
                       onChange={(e) => field.onChange(Number(e.target.value))}
                     />
@@ -817,7 +817,7 @@ function MetaForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs text-[#A1A1AA] uppercase tracking-wide flex items-center gap-1.5">
-                  <Clock className="h-3 w-3 text-[#3B82F6]" aria-hidden="true" />
+                  <Clock className="h-3 w-3 text-brand-primary" aria-hidden="true" />
                   Duración
                 </FormLabel>
                 <FormControl>
@@ -826,7 +826,7 @@ function MetaForm({
                       type="number"
                       min={1}
                       max={52}
-                      className="bg-[#09090B] border-[#3F3F46] focus:border-[#3B82F6] h-11 text-sm pr-16"
+                      className="bg-[#09090B] border-[#3F3F46] focus:border-brand-primary h-11 text-sm pr-16"
                       {...field}
                       onChange={(e) => field.onChange(Number(e.target.value))}
                     />
@@ -978,7 +978,7 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
               key={label}
               className="inline-flex items-center gap-1.5 rounded-full border border-[#3F3F46] bg-[#18181B] px-3 py-1 text-xs text-[#A1A1AA]"
             >
-              <Icon className="h-3 w-3 text-[#3B82F6]" aria-hidden="true" />
+              <Icon className="h-3 w-3 text-brand-primary" aria-hidden="true" />
               {label}
             </span>
           ))}
@@ -1025,7 +1025,7 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
             toast.success("Día agregado.");
             startTransition(() => router.refresh());
           }}
-          className="w-full gap-2 border-dashed border-[#3F3F46] text-[#71717A] hover:border-[#3B82F6] hover:text-[#3B82F6] transition-colors h-11 disabled:opacity-50"
+          className="w-full gap-2 border-dashed border-[#3F3F46] text-[#71717A] hover:border-brand-primary hover:text-brand-primary transition-colors h-11 disabled:opacity-50"
         >
           {addingDay
             ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -1054,7 +1054,7 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
         disabled={saving}
         className={[
           "relative w-full h-12 rounded-xl font-semibold text-white text-sm",
-          "bg-gradient-to-r from-[#3B82F6] to-[#2563EB]",
+          "bg-gradient-to-r from-brand-primary to-brand-primary-hover",
           "transition-all duration-200",
           "flex items-center justify-center gap-2.5",
           "disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none",
@@ -1152,7 +1152,7 @@ function CreateGoalInlineDialog({
             size="sm"
             onClick={handleSave}
             disabled={!name.trim() || saving}
-            className="bg-[#3B82F6] hover:bg-[#2563EB] text-white"
+            className="bg-brand-primary hover:bg-brand-primary-hover text-white"
           >
             {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
             Guardar

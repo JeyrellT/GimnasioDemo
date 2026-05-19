@@ -86,4 +86,40 @@ export const SLUG_IMAGE_MAP: Record<string, string> = {
 
   // Full body
   "clean-and-press-mancuernas": "dumbbell-clean-and-press.jpg",
+
+  // ── Warmup / Calentamiento slugs ──────────────────────────────────────────
+  // Cardio
+  "saltos-de-tijera": "barbell-back-squat.jpg",
+  "rodillas-altas": "barbell-back-squat.jpg",
+  "talones-a-gluteos": "lying-leg-curl.jpg",
+  "mountain-climbers": "plank.jpg",
+
+  // Movilidad
+  "circulos-de-hombros": "dumbbell-lateral-raise.jpg",
+  "circulos-de-brazos": "dumbbell-lateral-raise.jpg",
+  "circulos-de-cadera": "hip-thrust.jpg",
+  "circulos-de-tobillos": "standing-calf-raise.jpg",
+  "gato-camello": "plank.jpg",
+  "worlds-greatest-stretch": "barbell-lunge.jpg",
+  "inchworm": "plank.jpg",
+
+  // Activacion
+  "sentadilla-con-peso-corporal": "barbell-back-squat.jpg",
+  "zancadas-caminando": "barbell-lunge.jpg",
+  "puente-de-gluteo": "hip-thrust.jpg",
+  "bird-dog": "plank.jpg",
+  "push-ups-lentos": "dips.jpg",
+  "band-pull-aparts": "dumbbell-lateral-raise.jpg",
+  "face-pulls-con-banda": "dumbbell-lateral-raise.jpg",
+  "monster-walks-con-banda": "barbell-back-squat.jpg",
+
+  // Estiramientos
+  "estiramiento-cuadriceps-de-pie": "barbell-back-squat.jpg",
+  "estiramiento-isquiotibiales-sentado": "romanian-deadlift.jpg",
+  "estiramiento-gemelos-en-pared": "standing-calf-raise.jpg",
+  "figura-4-supino": "hip-thrust.jpg",
+  "estiramiento-flexor-de-cadera": "barbell-lunge.jpg",
+  "estiramiento-pecho-en-puerta": "dumbbell-fly.jpg",
+  "postura-del-nino": "plank.jpg",
+  "estiramiento-triceps-sobre-cabeza": "cable-pushdown.jpg",
 };

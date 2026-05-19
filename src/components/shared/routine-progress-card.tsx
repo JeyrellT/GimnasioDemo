@@ -80,7 +80,7 @@ export function RoutineProgressCard({
         </div>
         <Link
           href={`/trainer/clientes/${clientId}/rutinas`}
-          className="shrink-0 rounded-lg border border-[#3F3F46] bg-transparent px-3 py-1.5 text-xs font-semibold text-[#FAFAFA] transition-colors hover:bg-[#27272A] focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2"
+          className="shrink-0 rounded-lg border border-[#3F3F46] bg-transparent px-3 py-1.5 text-xs font-semibold text-[#FAFAFA] transition-colors hover:bg-[#27272A] focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-2"
           aria-label={`Ver rutina ${routine.name}`}
         >
           Ver rutina
@@ -109,7 +109,7 @@ export function RoutineProgressCard({
           aria-label={`Progreso de la rutina: ${pct}%`}
         >
           <div
-            className="h-full rounded-full bg-gradient-to-r from-[#3B82F6] to-[#60A5FA] transition-all duration-500"
+            className="h-full rounded-full bg-gradient-to-r from-brand-primary to-brand-accent transition-all duration-500"
             style={{ width: `${pct}%` }}
           />
         </div>

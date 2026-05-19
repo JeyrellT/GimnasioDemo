@@ -72,7 +72,7 @@ export default function AsignarClient({ routineId }: Props) {
           <select
             id="clientId"
             {...register("clientId")}
-            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6]"
+            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary"
           >
             <option value="">Seleccioná un cliente...</option>
             {clientsData?.map((c) => (
@@ -98,7 +98,7 @@ export default function AsignarClient({ routineId }: Props) {
               id="startsOn"
               type="date"
               {...register("startsOn")}
-              className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6]"
+              className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary"
             />
           </div>
           <div className="space-y-1.5">
@@ -110,7 +110,7 @@ export default function AsignarClient({ routineId }: Props) {
               id="endsOn"
               type="date"
               {...register("endsOn")}
-              className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6]"
+              className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary"
             />
           </div>
         </div>
@@ -118,7 +118,7 @@ export default function AsignarClient({ routineId }: Props) {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#3B82F6] py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-[#2563EB] disabled:opacity-60 transition-colors"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-primary py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-brand-primary-hover disabled:opacity-60 transition-colors"
         >
           {isSubmitting ? "Asignando..." : "Asignar rutina"}
           {!isSubmitting && <ArrowRight className="h-4 w-4" aria-hidden="true" />}

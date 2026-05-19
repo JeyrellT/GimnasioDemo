@@ -43,11 +43,11 @@ function StatCard({
       <div
         className={
           "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg " +
-          (accent ? "bg-[#3B82F6]/15" : "bg-[#27272A]")
+          (accent ? "bg-brand-primary/15" : "bg-[#27272A]")
         }
       >
         <Icon
-          className={"h-4 w-4 " + (accent ? "text-[#3B82F6]" : "text-[#71717A]")}
+          className={"h-4 w-4 " + (accent ? "text-brand-primary" : "text-[#71717A]")}
           aria-hidden
         />
       </div>
@@ -68,7 +68,7 @@ function DurationBar({ durationSec, maxSec }: { durationSec: number | null; maxS
     <div className="mt-2 flex items-center gap-2">
       <div className="flex-1 h-1 rounded-full bg-[#27272A] overflow-hidden">
         <div
-          className="h-full rounded-full bg-[#3B82F6]"
+          className="h-full rounded-full bg-brand-primary"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -151,7 +151,7 @@ export default function SesionesPageContent({ clientId }: { clientId: string }) 
   if (loading) {
     return (
       <div className="flex min-h-[300px] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-[#3B82F6]" />
+        <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
       </div>
     );
   }
@@ -178,7 +178,7 @@ export default function SesionesPageContent({ clientId }: { clientId: string }) 
       <div className="flex items-center gap-3">
         <Link
           href={"/trainer/clientes/" + clientId}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#3F3F46] bg-[#18181B] text-[#71717A] transition-colors hover:border-[#3B82F6]/40 hover:text-[#FAFAFA]"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#3F3F46] bg-[#18181B] text-[#71717A] transition-colors hover:border-brand-primary/40 hover:text-[#FAFAFA]"
           aria-label="Volver al cliente"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -230,7 +230,7 @@ export default function SesionesPageContent({ clientId }: { clientId: string }) 
             style={{
               bottom: "12px",
               background:
-                "linear-gradient(to bottom, #3B82F6 0%, #3B82F6 60%, transparent 100%)",
+                "linear-gradient(to bottom, var(--brand-primary, #3B82F6) 0%, var(--brand-primary, #3B82F6) 60%, transparent 100%)",
             }}
             aria-hidden="true"
           />

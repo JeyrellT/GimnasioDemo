@@ -8,8 +8,8 @@ export const metadata: Metadata = {
 export default function VerificarPage() {
   return (
     <div className="flex flex-col items-center gap-4 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#3B82F6]/10">
-        <Mail className="h-7 w-7 text-[#3B82F6]" aria-hidden="true" />
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-primary/10">
+        <Mail className="h-7 w-7 text-brand-primary" aria-hidden="true" />
       </div>
       <h1 className="text-xl font-bold text-[#FAFAFA]">Revisá tu correo</h1>
       <p className="text-sm text-[#A1A1AA] text-balance">

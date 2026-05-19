@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Library, Search, Plus, Dumbbell, Loader2 } from "lucide-react";
 import { searchExercises } from "@/app/actions/exercises";
 import { PageHeader } from "@/components/shared/page-header";
+import { SLUG_IMAGE_MAP } from "@/lib/constants/exercise-images";
 import { useAuth } from "@/components/providers/auth-provider";
 import type { ExerciseSearchResult } from "@/types/api";
 
@@ -108,12 +109,18 @@ function DifficultyDots({ level }: { level: string | null }) {
  *   4. Dumbbell placeholder
  */
 function CardThumbnail({ src, alt, slug }: { src: string; alt: string; slug: string }) {
-  const fallbacks = [`/exercises/${slug}.jpg`, `/exercises/${slug}.png`] as const;
-  const [step, setStep] = useState(0); // 0 = src, 1 = .jpg, 2 = .png, 3 = placeholder
+  const mapped = SLUG_IMAGE_MAP[slug];
+  const fallbacks = [
+    `/exercises/${slug}.jpg`,
+    `/exercises/${slug}.png`,
+    ...(mapped ? [`/exercises/${mapped}`] : []),
+  ];
+  const total = fallbacks.length + 1;
+  const [step, setStep] = useState(0);
 
   const currentSrc = step === 0 ? src : fallbacks[step - 1];
 
-  if (step >= 3) {
+  if (step >= total) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#27272A] to-[#18181B]">
         <Dumbbell className="h-8 w-8 text-[#3F3F46]" strokeWidth={1.5} aria-hidden="true" />

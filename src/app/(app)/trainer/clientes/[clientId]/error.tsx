@@ -39,7 +39,7 @@ export default function ClientProfileError({ error, reset }: ErrorPageProps) {
       <button
         type="button"
         onClick={reset}
-        className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-[#3B82F6] px-6 py-3 text-sm font-semibold text-[#09090B] transition-colors hover:bg-[#2563EB] focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2"
+        className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-brand-primary px-6 py-3 text-sm font-semibold text-[#09090B] transition-colors hover:bg-brand-primary-hover focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-2"
         aria-label="Reintentar carga del perfil"
       >
         <RotateCcw className="h-4 w-4" aria-hidden="true" />

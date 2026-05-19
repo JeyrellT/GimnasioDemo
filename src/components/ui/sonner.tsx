@@ -19,7 +19,7 @@ export function Toaster({ ...props }: ToasterProps) {
           error: "border-[#EF4444]",
           success: "border-[#22C55E]",
           warning: "border-[#F59E0B]",
-          info: "border-[#3B82F6]",
+          info: "border-brand-primary",
         },
       }}
       {...props}

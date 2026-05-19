@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Flame, Search, Plus, Dumbbell, Loader2 } from "lucide-react";
 import { searchExercises } from "@/app/actions/exercises";
 import { PageHeader } from "@/components/shared/page-header";
+import { SLUG_IMAGE_MAP } from "@/lib/constants/exercise-images";
 import { useAuth } from "@/components/providers/auth-provider";
 import type { ExerciseSearchResult } from "@/types/api";
 
@@ -96,24 +97,35 @@ function DifficultyDots({ level }: { level: string | null }) {
   );
 }
 
-// ── Card thumbnail ───────────────────────────────────────────────────────────
+// ── Card thumbnail with multi-step error fallback ─────────────────────────────
 
-function CardThumbnail({ src, alt }: { src: string; alt: string }) {
-  const [errored, setErrored] = useState(false);
-  if (errored) {
+function CardThumbnail({ src, alt, slug }: { src: string; alt: string; slug: string }) {
+  const mapped = SLUG_IMAGE_MAP[slug];
+  const fallbacks = [
+    `/exercises/${slug}.jpg`,
+    `/exercises/${slug}.png`,
+    ...(mapped ? [`/exercises/${mapped}`] : []),
+  ];
+  const total = fallbacks.length + 1; // +1 for initial src
+  const [step, setStep] = useState(0);
+
+  const currentSrc = step === 0 ? src : fallbacks[step - 1];
+
+  if (step >= total) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#27272A] to-[#18181B]">
         <Flame className="h-8 w-8 text-[#3F3F46]" strokeWidth={1.5} aria-hidden="true" />
       </div>
     );
   }
+
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={src}
+      src={currentSrc}
       alt={alt}
       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-      onError={() => setErrored(true)}
+      onError={() => setStep((s) => s + 1)}
     />
   );
 }
@@ -319,6 +331,7 @@ export default function CalentamientosPage() {
               const muscleLabel = MUSCLE_LABELS[ex.primaryMuscle ?? ""] ?? ex.primaryMuscle ?? "";
               const equipLabel = EQUIPMENT_LABELS[ex.equipment ?? ""] ?? ex.equipment ?? "";
               const thumbnail = ex.thumbnailUrl ?? ex.gifUrl;
+              const imgSrc = thumbnail || `/exercises/${ex.slug}.jpg`;
 
               return (
                 <li key={ex.id}>
@@ -327,17 +340,7 @@ export default function CalentamientosPage() {
                     className="group relative flex flex-col overflow-hidden rounded-xl border border-[#3F3F46] bg-[#18181B]/80 backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:scale-[1.02] hover:border-brand-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/60 cursor-pointer"
                   >
                     <div className="relative aspect-video w-full overflow-hidden bg-[#27272A]">
-                      {thumbnail ? (
-                        <CardThumbnail src={thumbnail} alt={ex.nameEs} />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#27272A] to-[#18181B]">
-                          <Flame
-                            className="h-8 w-8 text-[#3F3F46]"
-                            strokeWidth={1.5}
-                            aria-hidden="true"
-                          />
-                        </div>
-                      )}
+                      <CardThumbnail src={imgSrc} alt={ex.nameEs} slug={ex.slug} />
                     </div>
 
                     <div className="flex flex-col gap-3 p-4">

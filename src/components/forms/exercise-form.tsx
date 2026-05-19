@@ -495,7 +495,7 @@ export function ExerciseForm({ exercise, defaultCategory, basePath = "/trainer/e
           <Button
             type="submit"
             disabled={isPending}
-            className="min-w-[160px] bg-[#3B82F6] hover:bg-[#2563EB] text-white font-semibold disabled:opacity-60"
+            className="min-w-[160px] bg-brand-primary hover:bg-brand-primary-hover text-white font-semibold disabled:opacity-60"
           >
             {isPending
               ? exercise

@@ -61,7 +61,7 @@ export function ConsentCheckbox({
                 href={policyHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[#3B82F6] underline underline-offset-2 hover:text-[#2563EB]"
+                className="text-brand-primary underline underline-offset-2 hover:text-brand-primary-hover"
               >
                 {policyLabel ?? "Ver política"}
               </Link>

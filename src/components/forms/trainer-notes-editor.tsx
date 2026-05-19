@@ -118,7 +118,7 @@ export function TrainerNotesEditor({
           className={cn(
             "w-full resize-y rounded-xl border border-[#3F3F46] bg-[#09090B] px-4 py-3",
             "text-sm text-[#FAFAFA] placeholder:text-[#52525B]",
-            "focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6]",
+            "focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary",
             "transition-colors",
             saveState === "error" && "border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]",
           )}
