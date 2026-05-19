@@ -25,6 +25,7 @@ import {
 } from "recharts";
 import type { MuscleGroup } from "@prisma/client";
 import { cn } from "@/lib/utils";
+import { useBranding } from "@/lib/branding/branding-context";
 import type {
   DashboardAggregates,
   ClientAdherenceData,
@@ -49,8 +50,9 @@ const TOKEN = {
   canvas: "#09090B",
   card: "#18181B",
   hover: "#27272A",
-  primary: "var(--brand-primary)",
-  primaryBand: "rgba(255,106,26,0.15)",
+  // primary/primaryBand are derived per-render from the active palette via
+  // useBranding() — SVG attributes do not resolve CSS variables, so we must
+  // pass the literal hex from the trainer's chosen palette.
   text: "#FAFAFA",
   muted: "#71717A",
   mutedLight: "#A1A1AA",
@@ -351,6 +353,7 @@ function WeightTooltipContent({
 }
 
 function WeightTrendChart({ data }: { data: WeightTrendPoint[] }) {
+  const { palette } = useBranding();
   const [activeMetric, setActiveMetric] = useState<WeightMetric>("weight");
 
   const handleMetricChange = useCallback((metric: WeightMetric) => {
@@ -435,7 +438,7 @@ function WeightTrendChart({ data }: { data: WeightTrendPoint[] }) {
             type="monotone"
             dataKey="p75Kg"
             stroke="none"
-            fill={TOKEN.primaryBand}
+            fill={palette.tint}
             activeDot={false}
             legendType="none"
             isAnimationActive={false}
@@ -453,7 +456,7 @@ function WeightTrendChart({ data }: { data: WeightTrendPoint[] }) {
           <Line
             type="monotone"
             dataKey="avgKg"
-            stroke={TOKEN.primary}
+            stroke={palette.primary}
             strokeWidth={2.5}
             dot={(dotProps: {
               index?: number;
@@ -469,13 +472,13 @@ function WeightTrendChart({ data }: { data: WeightTrendPoint[] }) {
                   cx={dotProps.cx}
                   cy={dotProps.cy}
                   r={4}
-                  fill={TOKEN.primary}
+                  fill={palette.primary}
                   stroke={TOKEN.card}
                   strokeWidth={2}
                 />
               );
             }}
-            activeDot={{ r: 5, fill: TOKEN.primary, stroke: TOKEN.card, strokeWidth: 2 }}
+            activeDot={{ r: 5, fill: palette.primary, stroke: TOKEN.card, strokeWidth: 2 }}
             isAnimationActive={false}
           />
         </ComposedChart>
@@ -523,6 +526,7 @@ interface VolumeChartData extends VolumeByMuscleData {
 }
 
 function VolumeByMuscleChart({ data }: { data: VolumeByMuscleData[] }) {
+  const { palette } = useBranding();
   if (data.length === 0) {
     return (
       <EmptyState message="Sin sesiones registradas en el periodo." />
@@ -570,10 +574,10 @@ function VolumeByMuscleChart({ data }: { data: VolumeByMuscleData[] }) {
         />
         <Bar
           dataKey="totalSets"
-          fill={TOKEN.primary}
+          fill={palette.primary}
           radius={[4, 4, 0, 0]}
           maxBarSize={32}
-          activeBar={{ fill: "rgba(255,106,26,0.75)" }}
+          activeBar={{ fill: palette.primaryHover }}
         />
       </BarChart>
     </ResponsiveContainer>

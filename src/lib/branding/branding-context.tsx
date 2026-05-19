@@ -12,10 +12,17 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
+
+// useLayoutEffect fires synchronously after DOM mutations but before paint,
+// eliminating the blue-flash on first client render. It only warns in SSR
+// (where it can't run) — fall back to useEffect on the server.
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 import {
   getBranding,
   saveBranding,
@@ -49,20 +56,22 @@ const BrandingContext = createContext<BrandingContextValue>({
 // -----------------------------------------------------------------------------
 
 export function BrandingProvider({ children }: { children: ReactNode }) {
-  const [branding, setBranding] = useState<TrainerBranding>(DEFAULT_BRANDING);
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    setBranding(getBranding());
-  }, []);
+  // Lazy initializer reads localStorage on the very first client render so
+  // hydrated paint already has the trainer's chosen palette. Without this,
+  // the first render uses DEFAULT_BRANDING (blue) and a subsequent useEffect
+  // flips it — creating a visible blue-to-color flash on every navigation.
+  const [branding, setBranding] = useState<TrainerBranding>(() =>
+    typeof window !== "undefined" ? getBranding() : DEFAULT_BRANDING,
+  );
 
   const palette = useMemo(
     () => getPaletteById(branding.paletteId),
     [branding.paletteId],
   );
 
-  // Inject CSS custom properties onto :root whenever palette changes
-  useEffect(() => {
+  // Inject CSS custom properties onto :root whenever palette changes.
+  // useLayoutEffect ensures variables are set before browser paint.
+  useIsomorphicLayoutEffect(() => {
     const root = document.documentElement;
     root.style.setProperty("--brand-primary", palette.primary);
     root.style.setProperty("--brand-primary-hover", palette.primaryHover);

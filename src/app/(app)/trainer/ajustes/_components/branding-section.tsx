@@ -36,8 +36,8 @@ function SectionCard({
   return (
     <section className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-5 space-y-4">
       <div className="flex items-center gap-2">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--brand-primary,#3B82F6)]/15">
-          <Icon className="h-4 w-4 text-[var(--brand-primary,#3B82F6)]" />
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-brand-primary/15">
+          <Icon className="h-4 w-4 text-brand-primary" />
         </div>
         <h2 className="text-sm font-bold uppercase tracking-wider text-[#A1A1AA]">
           {label}
