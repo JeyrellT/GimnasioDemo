@@ -138,7 +138,7 @@ const BODY_OUTLINE_BACK =
 type Role = "primary" | "secondary" | "inactive";
 
 const COLORS = {
-  primary:   { base: "var(--brand-primary)", bright: "var(--brand-accent)", glow: "rgba(59,130,246,0.5)" },
+  primary:   { base: "var(--brand-primary)", bright: "var(--brand-accent)", glow: "var(--brand-tint)" },
   secondary: { base: "#F59E0B", bright: "#FBBF24", glow: "rgba(245,158,11,0.45)" },
   inactive:  { base: "#1E293B", bright: "#334155", glow: "none" },
 } as const;
@@ -448,8 +448,11 @@ export function ExerciseBodyMapView({ primaryMuscle, secondaryMuscles }: Exercis
       <div className="flex items-center gap-6" aria-label="Leyenda del mapa muscular">
         <span className="flex items-center gap-1.5 text-xs text-[#A1A1AA]">
           <span
-            className="inline-block h-2.5 w-2.5 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.6)]"
-            style={{ background: "var(--brand-primary)" }}
+            className="inline-block h-2.5 w-2.5 rounded-full"
+            style={{
+              background: "var(--brand-primary)",
+              boxShadow: "0 0 8px var(--brand-glow)",
+            }}
           />
           Primario
         </span>

@@ -43,7 +43,7 @@ export function Topbar({ user, userName, userAvatarUrl }: TopbarProps) {
       <div
         className="pointer-events-none absolute inset-x-0 bottom-0 h-px"
         style={{
-          background: `linear-gradient(90deg, transparent, var(--brand-primary, #3B82F6) 50%, transparent)`,
+          background: `linear-gradient(90deg, transparent, var(--brand-primary) 50%, transparent)`,
           opacity: 0.5,
         }}
       />
