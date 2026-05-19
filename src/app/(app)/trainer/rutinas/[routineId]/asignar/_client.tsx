@@ -50,7 +50,7 @@ export default function AsignarClient({ routineId }: Props) {
     const result = await assignRoutineToClient(payload);
     if (result.ok) {
       toast.success("Rutina asignada.");
-      router.push(`/trainer/clientes/${data.clientId}/rutinas`);
+      router.push("/trainer/rutinas");
     } else {
       toast.error(result.error.message ?? "No se pudo asignar la rutina.");
       console.error("[asignar]", result.error);
