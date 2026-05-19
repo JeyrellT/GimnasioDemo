@@ -16,15 +16,10 @@ import { motion, AnimatePresence } from "framer-motion";
 
 function buildOptions(): Array<{ label: string; value: string }> {
   const now = new Date();
-  return Array.from({ length: 4 }, (_, i) => {
+  return Array.from({ length: 13 }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    const label =
-      i === 0
-        ? "Mes actual"
-        : i === 1
-          ? "Mes anterior"
-          : `Hace ${i} meses`;
+    const label = d.toLocaleDateString("es-CR", { month: "short", year: "numeric" });
     return { label, value };
   });
 }

@@ -40,7 +40,10 @@ interface Step1BasicProps {
 }
 
 export function Step1Basic({ draftId }: Step1BasicProps) {
-  const { goNext, setStepData, payload } = useOnboardingStore();
+  // Bug 10: granular selectors — avoids re-render on unrelated store changes
+  const goNext = useOnboardingStore((s) => s.goNext);
+  const setStepData = useOnboardingStore((s) => s.setStepData);
+  const payload = useOnboardingStore((s) => s.payload);
   const emailCheckTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const existing = payload.step1;

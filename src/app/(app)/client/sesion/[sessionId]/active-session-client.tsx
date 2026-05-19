@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle, X, ChevronLeft, ChevronRight, Trophy } from "lucide-react";
+import { CheckCircle, X, ChevronLeft, ChevronRight, Trophy, Dumbbell } from "lucide-react";
+import Link from "next/link";
 import { ExerciseThumbnail } from "@/components/shared/exercise-thumbnail";
 import { useSessionStore } from "@/stores/session-store";
 import { useRestTimer } from "@/hooks/use-rest-timer";
@@ -92,6 +93,8 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
     snapshot?.days?.[0]?.exercises ??
     [];
 
+  const isFreeWorkout = session.isFreeWorkout === true;
+
   const currentExercise = exercises[currentExerciseIndex];
   const completedSets = currentExercise
     ? (setsByExerciseId[currentExercise.exerciseId] ?? []).length
@@ -160,7 +163,27 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
         markSetSyncedStore(currentExercise.exerciseId, localSetId);
 
         if (result.value.isPr) {
-          toast.success(`Nuevo PR en ${currentExercise.nameEs}`, {
+          // Update the local set record to show the Trophy icon immediately
+          // without waiting for a refetch.
+          useSessionStore.setState((state) => {
+            const sets = state.setsByExerciseId[currentExercise.exerciseId] ?? [];
+            return {
+              setsByExerciseId: {
+                ...state.setsByExerciseId,
+                [currentExercise.exerciseId]: sets.map((s) =>
+                  s.setId === localSetId ? { ...s, isPr: true } : s,
+                ),
+              },
+            };
+          });
+
+          const PR_LABEL: Record<string, string> = {
+            weight: "PR de peso",
+            volume: "PR de volumen",
+            reps_at_weight: "PR de reps al mismo peso",
+          };
+          const label = PR_LABEL[result.value.prType ?? "weight"] ?? "Nuevo PR";
+          toast.success(`${label} en ${currentExercise.nameEs}`, {
             icon: "🏆",
             duration: 4000,
           });
@@ -216,8 +239,29 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
 
       {/* Main content */}
       <div className="flex-1 px-4 py-5 space-y-5">
+        {/* Free workout: no exercises in snapshot — show picker shortcut */}
+        {isFreeWorkout && exercises.length === 0 && (
+          <div className="flex flex-col items-center gap-5 rounded-2xl border border-dashed border-[#3F3F46] p-8 text-center">
+            <Dumbbell className="h-12 w-12 text-[#52525B]" aria-hidden="true" />
+            <div className="space-y-1">
+              <p className="text-base font-semibold text-[#FAFAFA]">
+                Entrenamiento libre
+              </p>
+              <p className="text-sm text-[#71717A]">
+                Usá la búsqueda para agregar ejercicios a tu sesión.
+              </p>
+            </div>
+            <Link
+              href="/client/ejercicios?picker=true"
+              className="inline-flex min-h-[48px] items-center rounded-xl bg-brand-primary px-6 py-3 text-sm font-semibold text-white hover:bg-brand-primary-hover transition-colors"
+            >
+              Agregar ejercicio
+            </Link>
+          </div>
+        )}
+
         {/* Exercise navigation */}
-        <div className="flex items-center gap-2">
+        <div className={cn("flex items-center gap-2", isFreeWorkout && exercises.length === 0 ? "hidden" : "")}>
           <button
             type="button"
             onClick={() => currentExerciseIndex > 0 && setCurrentExerciseIndex(currentExerciseIndex - 1)}

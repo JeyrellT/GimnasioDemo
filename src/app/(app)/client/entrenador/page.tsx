@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { Loader2, Dumbbell, Mail } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { getMyTrainerInfo } from "@/app/actions/client-portal";
@@ -59,10 +60,12 @@ export default function ClientEntrenadorPage() {
       <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-6">
         <div className="flex items-center gap-4">
           {info.trainerAvatar ? (
-            <img
+            <Image
               src={info.trainerAvatar}
               alt={info.trainerName}
-              className="h-14 w-14 rounded-full object-cover"
+              width={56}
+              height={56}
+              className="rounded-full object-cover"
             />
           ) : (
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary to-brand-primary-hover text-xl font-bold text-white">

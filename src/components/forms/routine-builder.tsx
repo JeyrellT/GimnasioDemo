@@ -122,7 +122,8 @@ function SortableExerciseRow({
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: exercise.id });
-  const { removeExerciseFromDay, updateExercise } = useRoutineBuilderStore();
+  const removeExerciseFromDay = useRoutineBuilderStore((s) => s.removeExerciseFromDay);
+  const updateExercise = useRoutineBuilderStore((s) => s.updateExercise);
   const [removing, setRemoving] = useState(false);
 
   const style = {
@@ -252,7 +253,9 @@ function DayCard({
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [removingDay, setRemovingDay] = useState(false);
-  const { removeDay, updateDayName, reorderExercisesInDay } = useRoutineBuilderStore();
+  const removeDay = useRoutineBuilderStore((s) => s.removeDay);
+  const updateDayName = useRoutineBuilderStore((s) => s.updateDayName);
+  const reorderExercisesInDay = useRoutineBuilderStore((s) => s.reorderExercisesInDay);
   const accentColor = getDayColor(day.dayIndex);
 
   const handleRemoveDay = async () => {
@@ -288,6 +291,9 @@ function DayCard({
     if (!moved) return;
     reordered.splice(newIndex, 0, moved);
 
+    // Bug #4: save old order for rollback before optimistic update
+    const oldOrder = day.exercises.map((e) => e.id);
+
     // Optimistic update in store
     reorderExercisesInDay(day.id, reordered.map((e) => e.id));
 
@@ -301,6 +307,8 @@ function DayCard({
         orderedIds: serverIds,
       });
       if (!result.ok) {
+        // Bug #4: roll back local state on failure
+        reorderExercisesInDay(day.id, oldOrder);
         toast.error("No se pudo guardar el orden.");
       }
     }
@@ -875,7 +883,20 @@ interface RoutineBuilderProps {
 
 export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilderProps) {
   const router = useRouter();
-  const store = useRoutineBuilderStore();
+
+  // Bug #1: per-field selectors — never subscribe to the whole store
+  const routineId   = useRoutineBuilderStore((s) => s.routineId);
+  const storeName   = useRoutineBuilderStore((s) => s.name);
+  const storeGoal   = useRoutineBuilderStore((s) => s.goal);
+  const splitDays   = useRoutineBuilderStore((s) => s.splitDays);
+  const durationWeeks = useRoutineBuilderStore((s) => s.durationWeeks);
+  const days        = useRoutineBuilderStore((s) => s.days);
+  const isDirty     = useRoutineBuilderStore((s) => s.isDirty);
+  const setMeta     = useRoutineBuilderStore((s) => s.setMeta);
+  const markSaved   = useRoutineBuilderStore((s) => s.markSaved);
+  const addDay      = useRoutineBuilderStore((s) => s.addDay);
+  const addExerciseToDayStore = useRoutineBuilderStore((s) => s.addExerciseToDay);
+
   const [saving, setSaving] = useState(false);
   const [addingDay, setAddingDay] = useState(false);
   const [, startTransition] = useTransition();
@@ -883,13 +904,24 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
   const [customGoals, setCustomGoals] = useState<Array<{ id: string; name: string }>>([]);
   const [goalDialogOpen, setGoalDialogOpen] = useState(false);
 
+  // Bug #2: warn on unsaved changes before leaving
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isDirty]);
+
   const form = useForm<MetaValues>({
     resolver: zodResolver(metaSchema),
     defaultValues: {
-      name: store.name,
-      goal: store.goal,
-      splitDays: store.splitDays,
-      durationWeeks: store.durationWeeks,
+      name: storeName,
+      goal: storeGoal,
+      splitDays: splitDays,
+      durationWeeks: durationWeeks,
     },
   });
 
@@ -900,27 +932,27 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
   // Sync form defaults when store changes (e.g. on initFromExisting)
   useEffect(() => {
     form.reset({
-      name: store.name,
-      goal: store.goal,
-      splitDays: store.splitDays,
-      durationWeeks: store.durationWeeks,
+      name: storeName,
+      goal: storeGoal,
+      splitDays: splitDays,
+      durationWeeks: durationWeeks,
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store.routineId]);
+  }, [routineId]);
 
   const handleSave = async (values: MetaValues) => {
     setSaving(true);
     try {
-      store.setMeta(values);
+      setMeta(values);
 
-      if (!store.routineId) {
+      if (!routineId) {
         // New routine: create template only (exercises must be added after navigation)
         const result = await createRoutineTemplate(values);
         if (!result.ok) {
           toast.error("No se pudo crear la rutina. Reintentá.");
           return;
         }
-        store.markSaved();
+        markSaved();
         onSaved?.(result.value.routineId);
         toast.success("Rutina creada. Ya podés agregar ejercicios.");
         router.push(`/trainer/rutinas/${result.value.routineId}`);
@@ -929,7 +961,7 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
 
       // Existing routine: persist meta updates
       const updateResult = await updateRoutineTemplate({
-        routineId: store.routineId,
+        routineId: routineId,
         ...values,
       });
       if (!updateResult.ok) {
@@ -939,7 +971,7 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
 
       // Persist prescription edits for each existing exercise
       const updates: Promise<unknown>[] = [];
-      for (const day of store.days) {
+      for (const day of days) {
         for (const ex of day.exercises) {
           if (!ex.routineExerciseId) continue;
           updates.push(
@@ -959,7 +991,7 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
       }
       await Promise.all(updates);
 
-      store.markSaved();
+      markSaved();
       toast.success("Cambios guardados.");
       // Refresh server data so the page reflects the latest state
       startTransition(() => router.refresh());
@@ -969,8 +1001,8 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
   };
 
   const handleExerciseAdded = (dayId: string, exercise: DraftExercise) => {
-    store.addExerciseToDay(dayId, exercise);
-    store.markSaved(); // already persisted to DB
+    addExerciseToDayStore(dayId, exercise);
+    markSaved(); // already persisted to DB
     setAddExerciseDayId(null);
     startTransition(() => router.refresh());
   };
@@ -978,10 +1010,10 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
   // Find the routineDayId (server-side ID) for the day being added to
   const targetRoutineDayId =
     addExerciseDayId
-      ? store.days.find((d) => d.id === addExerciseDayId)?.routineDayId ?? null
+      ? days.find((d) => d.id === addExerciseDayId)?.routineDayId ?? null
       : null;
 
-  const totalExercises = store.days.reduce((sum, d) => sum + d.exercises.length, 0);
+  const totalExercises = days.reduce((sum, d) => sum + d.exercises.length, 0);
 
   return (
     <div className="space-y-5">
@@ -989,10 +1021,10 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
       <MetaForm form={form} customGoals={customGoals} onCreateGoal={() => setGoalDialogOpen(true)} />
 
       {/* Stats chips */}
-      {(store.days.length > 0 || totalExercises > 0) && (
+      {(days.length > 0 || totalExercises > 0) && (
         <div className="flex flex-wrap gap-2 px-1">
           {[
-            { icon: Calendar, label: `${store.days.length} ${store.days.length === 1 ? "día" : "días"}` },
+            { icon: Calendar, label: `${days.length} ${days.length === 1 ? "día" : "días"}` },
             { icon: Dumbbell, label: `${totalExercises} ejercicios` },
           ].map(({ icon: Icon, label }) => (
             <span
@@ -1016,7 +1048,7 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
         </div>
 
         <AnimatePresence initial={false}>
-          {store.days.map((day) => (
+          {days.map((day) => (
             <DayCard key={day.id} day={day} onAddExercise={setAddExerciseDayId} />
           ))}
         </AnimatePresence>
@@ -1024,17 +1056,17 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
         <Button
           type="button"
           variant="outline"
-          disabled={addingDay || !store.routineId}
+          disabled={addingDay || !routineId}
           onClick={async () => {
-            if (!store.routineId) {
+            if (!routineId) {
               toast.error("Guardá la rutina primero antes de agregar días.");
               return;
             }
             setAddingDay(true);
-            const dayName = "Día " + (store.days.length + 1);
+            const dayName = "Día " + (days.length + 1);
             const result = await addRoutineDay({
-              routineId: store.routineId,
-              dayIndex: store.days.length,
+              routineId: routineId,
+              dayIndex: days.length,
               name: dayName,
             });
             setAddingDay(false);
@@ -1042,7 +1074,7 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
               toast.error(result.error.message ?? "No se pudo crear el día.");
               return;
             }
-            store.addDay(dayName, result.value.dayId);
+            addDay(dayName, result.value.dayId);
             toast.success("Día agregado.");
             startTransition(() => router.refresh());
           }}

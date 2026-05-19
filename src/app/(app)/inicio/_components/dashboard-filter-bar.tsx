@@ -130,9 +130,14 @@ export function DashboardFilterBar({
     }) => {
       const params = new URLSearchParams(searchParams.toString());
 
+      // Read pending values directly from the store at call-time to avoid
+      // stale closure bugs on rapid successive chip clicks.
+      const { pendingGoals: freshGoals, pendingParqStatuses: freshParq } =
+        useDashboardFilterStore.getState();
+
       const range = overrides.range ?? currentRange;
-      const goals = overrides.goals ?? pendingGoals;
-      const parq = overrides.parqStatuses ?? pendingParqStatuses;
+      const goals = overrides.goals ?? freshGoals;
+      const parq = overrides.parqStatuses ?? freshParq;
 
       if (range === "30d") {
         params.delete("range");
@@ -154,7 +159,7 @@ export function DashboardFilterBar({
 
       router.replace(`?${params.toString()}`, { scroll: false });
     },
-    [router, searchParams, currentRange, pendingGoals, pendingParqStatuses],
+    [router, searchParams, currentRange],
   );
 
   function handleRangeChange(range: RangeChip) {

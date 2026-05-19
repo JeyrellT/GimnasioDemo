@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import type { MuscleGroup } from "@prisma/client";
 import { MUSCLE_LABELS } from "@/lib/constants/exercise-display";
+import { useBranding } from "@/lib/branding/branding-context";
 
 interface ZoneDef {
   id: string;
@@ -137,14 +138,20 @@ const BODY_OUTLINE_BACK =
 
 type Role = "primary" | "secondary" | "inactive";
 
-const COLORS = {
-  primary:   { base: "var(--brand-primary)", bright: "var(--brand-accent)", glow: "var(--brand-tint)" },
-  secondary: { base: "#F59E0B", bright: "#FBBF24", glow: "rgba(245,158,11,0.45)" },
-  inactive:  { base: "#1E293B", bright: "#334155", glow: "none" },
-} as const;
+function makeColors(primaryHex: string, accentHex: string, tintHex: string) {
+  return {
+    primary:   { base: primaryHex, bright: accentHex, glow: tintHex },
+    secondary: { base: "#F59E0B", bright: "#FBBF24", glow: "rgba(245,158,11,0.45)" },
+    inactive:  { base: "#1E293B", bright: "#334155", glow: "none" },
+  } as const;
+}
 
-function getZoneStyle(role: Role, hovered: boolean) {
-  const c = COLORS[role];
+function getZoneStyle(
+  role: Role,
+  hovered: boolean,
+  colors: ReturnType<typeof makeColors>,
+) {
+  const c = colors[role];
   if (role === "inactive") {
     return {
       fill: hovered ? "#334155" : "#1E293B",
@@ -176,6 +183,7 @@ interface BodyViewProps {
   label: string;
   viewLabel: string;
   hoveredId: string | null;
+  colors: ReturnType<typeof makeColors>;
   onZoneEnter: (zone: ZoneDef, e: React.MouseEvent) => void;
   onZoneLeave: () => void;
   onZoneMove: (e: React.MouseEvent) => void;
@@ -190,6 +198,7 @@ function BodyView({
   label,
   viewLabel,
   hoveredId,
+  colors,
   onZoneEnter,
   onZoneLeave,
   onZoneMove,
@@ -214,7 +223,9 @@ function BodyView({
         <defs>
           <filter id="glow-primary" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="6" result="blur" />
-            <feFlood floodColor="var(--brand-primary)" floodOpacity="0.4" result="color" />
+            {/* floodColor must be a literal hex — CSS vars don't resolve in SVG
+                filter primitives in Firefox/Safari */}
+            <feFlood floodColor={colors.primary.base} floodOpacity="0.4" result="color" />
             <feComposite in="color" in2="blur" operator="in" result="glow" />
             <feMerge>
               <feMergeNode in="glow" />
@@ -256,7 +267,7 @@ function BodyView({
         {zones.map((z) => {
           const role = roleOf(z);
           const isHovered = hoveredId === z.id;
-          const s = getZoneStyle(role, isHovered);
+          const s = getZoneStyle(role, isHovered, colors);
           return (
             <path
               key={z.id}
@@ -300,11 +311,12 @@ interface TooltipData {
   role: Role;
   x: number;
   y: number;
+  primaryHex: string;
 }
 
 function Tooltip({ data }: { data: TooltipData }) {
   const roleLabel = data.role === "primary" ? "Primario" : data.role === "secondary" ? "Secundario" : null;
-  const dotColor = data.role === "primary" ? "var(--brand-primary)" : data.role === "secondary" ? "#F59E0B" : null;
+  const dotColor = data.role === "primary" ? data.primaryHex : data.role === "secondary" ? "#F59E0B" : null;
 
   return (
     <div
@@ -346,6 +358,9 @@ const fadeIn = {
 };
 
 export function ExerciseBodyMapView({ primaryMuscle, secondaryMuscles }: ExerciseBodyMapViewProps) {
+  const { palette } = useBranding();
+  const colors = makeColors(palette.primary, palette.accent, palette.tint);
+
   const primarySet = new Set<MuscleGroup>([primaryMuscle]);
   const secondarySet = new Set<MuscleGroup>(secondaryMuscles ?? []);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -372,9 +387,10 @@ export function ExerciseBodyMapView({ primaryMuscle, secondaryMuscles }: Exercis
         role: getRole(zone.muscle),
         x: e.clientX - rect.left,
         y: e.clientY - rect.top,
+        primaryHex: palette.primary,
       });
     },
-    [getRole],
+    [getRole, palette.primary],
   );
 
   const handleZoneEnter = useCallback(
@@ -417,6 +433,7 @@ export function ExerciseBodyMapView({ primaryMuscle, secondaryMuscles }: Exercis
             label="Vista frontal del cuerpo con músculos marcados"
             viewLabel="Frente"
             hoveredId={hoveredId}
+            colors={colors}
             onZoneEnter={handleZoneEnter}
             onZoneLeave={handleZoneLeave}
             onZoneMove={handleZoneMove}
@@ -434,6 +451,7 @@ export function ExerciseBodyMapView({ primaryMuscle, secondaryMuscles }: Exercis
             label="Vista dorsal del cuerpo con músculos marcados"
             viewLabel="Espalda"
             hoveredId={hoveredId}
+            colors={colors}
             onZoneEnter={handleZoneEnter}
             onZoneLeave={handleZoneLeave}
             onZoneMove={handleZoneMove}
@@ -450,8 +468,8 @@ export function ExerciseBodyMapView({ primaryMuscle, secondaryMuscles }: Exercis
           <span
             className="inline-block h-2.5 w-2.5 rounded-full"
             style={{
-              background: "var(--brand-primary)",
-              boxShadow: "0 0 8px var(--brand-glow)",
+              background: palette.primary,
+              boxShadow: `0 0 8px ${palette.glow}`,
             }}
           />
           Primario

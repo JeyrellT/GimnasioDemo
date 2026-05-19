@@ -19,4 +19,5 @@ export {
   getClientRoutines,
   createCustomGoal,
   listCustomGoals,
+  getActiveRoutineForClient,
 } from "@/server/actions/routines.actions";

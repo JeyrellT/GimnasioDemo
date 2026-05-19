@@ -20,7 +20,11 @@ interface Step8ConsentsProps {
 }
 
 export function Step8Consents({ draftId, aiWasUsed }: Step8ConsentsProps) {
-  const { goNext, goBack, setStepData, payload } = useOnboardingStore();
+  // Bug 10: granular selectors
+  const goNext = useOnboardingStore((s) => s.goNext);
+  const goBack = useOnboardingStore((s) => s.goBack);
+  const setStepData = useOnboardingStore((s) => s.setStepData);
+  const payload = useOnboardingStore((s) => s.payload);
   const existing = payload.step8;
 
   const [terms, setTerms] = useState(existing?.consentTerms ?? false);

@@ -4,9 +4,11 @@
 // BLACKLINE FITNESS — ClientProfileTabsClient
 // Owner: frontend-react.
 // Tabs de contexto histórico: Histórico / Rutina / Sesiones / Notas.
+// Controlled via ?tab= search param — survives refresh and supports deep-linking.
 // =============================================================================
 
 import * as React from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Tabs,
   TabsContent,
@@ -41,6 +43,13 @@ interface ClientProfileTabsClientProps {
 // Component
 // -----------------------------------------------------------------------------
 
+const VALID_TABS = ["historico", "rutina", "sesiones", "notas"] as const;
+type TabValue = (typeof VALID_TABS)[number];
+
+function isValidTab(v: string | null): v is TabValue {
+  return VALID_TABS.includes(v as TabValue);
+}
+
 export function ClientProfileTabsClient({
   clientId,
   activeRoutine,
@@ -50,8 +59,19 @@ export function ClientProfileTabsClient({
   muscleMassHistory,
   initialNotes,
 }: ClientProfileTabsClientProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const rawTab = searchParams.get("tab");
+  const activeTab: TabValue = isValidTab(rawTab) ? rawTab : "historico";
+
+  function handleTabChange(value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", value);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }
+
   return (
-    <Tabs defaultValue="historico" className="rounded-2xl border border-[#3F3F46] bg-[#18181B]">
+    <Tabs value={activeTab} onValueChange={handleTabChange} className="rounded-2xl border border-[#3F3F46] bg-[#18181B]">
       {/* Tab list — scroll horizontal en mobile */}
       <TabsList className="flex w-full justify-start overflow-x-auto rounded-none rounded-t-2xl border-b border-[#3F3F46] bg-transparent px-2 py-0">
         <TabsTrigger

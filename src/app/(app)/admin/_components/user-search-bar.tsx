@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { useCallback, useTransition } from "react";
+import { useCallback, useRef, useTransition } from "react";
 import { Search, Loader2 } from "lucide-react";
 
 interface UserSearchBarProps {
@@ -32,6 +32,7 @@ export function UserSearchBar({
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const updateParam = useCallback(
     (key: string, value: string) => {
@@ -51,14 +52,17 @@ export function UserSearchBar({
   const handleSearch = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const v = e.target.value;
-      const params = new URLSearchParams();
-      if (v) params.set("search", v);
-      if (currentRole) params.set("role", currentRole);
-      if (currentSuspended) params.set("suspended", currentSuspended);
-      params.set("page", "1");
-      startTransition(() => {
-        router.push(`${pathname}?${params.toString()}`);
-      });
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+      searchTimeoutRef.current = setTimeout(() => {
+        const params = new URLSearchParams();
+        if (v) params.set("search", v);
+        if (currentRole) params.set("role", currentRole);
+        if (currentSuspended) params.set("suspended", currentSuspended);
+        params.set("page", "1");
+        startTransition(() => {
+          router.push(`${pathname}?${params.toString()}`);
+        });
+      }, 300);
     },
     [router, pathname, currentRole, currentSuspended],
   );

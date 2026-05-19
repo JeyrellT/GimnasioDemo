@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, CheckCircle2, Calendar, Timer } from "lucide-react";
+import { Loader2, CheckCircle2, Calendar, Timer, Trophy } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { getMySessionHistory } from "@/app/actions/client-portal";
 import type { MySessionSummary } from "@/server/actions/client-portal.actions";
@@ -41,28 +41,31 @@ export default function ClientProgresoPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-neutral-50">Progreso</h1>
-        <p className="text-sm text-neutral-500 mt-1">
-          Tu historial de entrenamiento
-        </p>
+      <div className="flex items-center gap-3">
+        <Trophy className="h-6 w-6 text-brand-primary" aria-hidden="true" />
+        <div>
+          <h1 className="text-2xl font-bold text-neutral-50">Progreso</h1>
+          <p className="text-sm text-neutral-500 mt-1">
+            Tu historial de entrenamiento
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
         <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-center">
-          <p className="text-2xl font-bold tabular-nums text-neutral-50">
+          <p className="text-2xl font-bold tabular-nums text-brand-primary">
             {sessions.length}
           </p>
           <p className="text-xs text-neutral-500 mt-1">Sesiones</p>
         </div>
         <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-center">
-          <p className="text-2xl font-bold tabular-nums text-neutral-50">
+          <p className="text-2xl font-bold tabular-nums text-brand-primary">
             {totalSets}
           </p>
           <p className="text-xs text-neutral-500 mt-1">Sets totales</p>
         </div>
         <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-center">
-          <p className="text-2xl font-bold tabular-nums text-neutral-50">
+          <p className="text-2xl font-bold tabular-nums text-brand-primary">
             {totalMinutes}
           </p>
           <p className="text-xs text-neutral-500 mt-1">Minutos</p>
@@ -83,7 +86,7 @@ export default function ClientProgresoPage() {
               key={s.id}
               className="flex items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-900 px-4 py-3"
             >
-              <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-brand-primary" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-neutral-200">
                   {s.isFreeWorkout

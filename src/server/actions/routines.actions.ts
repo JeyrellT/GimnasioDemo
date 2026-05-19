@@ -555,8 +555,19 @@ export async function removeDay(
       throw new ForbiddenError("ROUTINE_NOT_OWNED", "Esta rutina no te pertenece.");
     }
 
-    // Hard-delete the day — exercises will cascade-delete per schema definition
-    await prisma.routineDay.delete({ where: { id: dayId } });
+    // Bug #7: soft-delete the day (consistent with removeExerciseFromDay)
+    const now = new Date();
+    await prisma.$transaction([
+      prisma.routineDay.update({
+        where: { id: dayId },
+        data: { deletedAt: now },
+      }),
+      // Also soft-delete child exercises so they're excluded from reads
+      prisma.routineExercise.updateMany({
+        where: { routineDayId: dayId, deletedAt: null },
+        data: { deletedAt: now },
+      }),
+    ]);
 
     return { deleted: true as const };
   });
@@ -1278,4 +1289,37 @@ export async function reorderExercises(...args: Parameters<typeof reorderExercis
 }
 export async function assignRoutineToClient(...args: Parameters<typeof assignRoutine>) {
   return assignRoutine(...args);
+}
+
+/**
+ * Bug #5: Check if a client already has an active routine assigned.
+ * Returns the assigned routine name when status === ACTIVE, else null.
+ */
+export async function getActiveRoutineForClient(
+  clientId: string,
+): Promise<ActionResult<{ name: string; assignedRoutineId: string } | null>> {
+  return tryCatch(async () => {
+    const user = await requireTrainer();
+    await assertOwnsClient(user.id, clientId);
+
+    const active = await prisma.assignedRoutine.findFirst({
+      where: {
+        clientUserId: clientId,
+        status: "ACTIVE",
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        routineTemplate: { select: { name: true } },
+      },
+      orderBy: { assignedAt: "desc" },
+    });
+
+    if (!active) return null;
+
+    return {
+      name: active.routineTemplate.name,
+      assignedRoutineId: active.id,
+    };
+  });
 }

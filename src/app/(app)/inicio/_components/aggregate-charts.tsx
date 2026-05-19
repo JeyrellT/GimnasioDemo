@@ -9,7 +9,7 @@
 //   3. Volumen por grupo muscular — vertical BarChart
 // =============================================================================
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, memo } from "react";
 import {
   BarChart,
   Bar,
@@ -588,7 +588,7 @@ function VolumeByMuscleChart({ data }: { data: VolumeByMuscleData[] }) {
 // Main component
 // -----------------------------------------------------------------------------
 
-export function AggregateCharts({ aggregates, className }: AggregateChartsProps) {
+function AggregateChartsInner({ aggregates, className }: AggregateChartsProps) {
   return (
     <section
       aria-label="Gráficos agregados del periodo"
@@ -602,7 +602,7 @@ export function AggregateCharts({ aggregates, className }: AggregateChartsProps)
         title="Adherencia por cliente"
         subtitle="Top 10 · últimos 30 días"
       >
-        <ClientAdherenceChart data={aggregates.adherenceChart.data} />
+        <ClientAdherenceChart data={aggregates.adherenceChart?.data ?? []} />
       </ChartCard>
 
       {/* Chart 2 — Tendencia de peso */}
@@ -610,7 +610,7 @@ export function AggregateCharts({ aggregates, className }: AggregateChartsProps)
         title="Tendencia de peso"
         subtitle="Promedio del grupo, banda P25-P75"
       >
-        <WeightTrendChart data={aggregates.weightTrend.data} />
+        <WeightTrendChart data={aggregates.weightTrend?.data ?? []} />
       </ChartCard>
 
       {/* Chart 3 — Volumen por grupo muscular */}
@@ -618,8 +618,10 @@ export function AggregateCharts({ aggregates, className }: AggregateChartsProps)
         title="Volumen por grupo muscular"
         subtitle="Sets totales en últimos 30 días"
       >
-        <VolumeByMuscleChart data={aggregates.volumeByMuscle.data} />
+        <VolumeByMuscleChart data={aggregates.volumeByMuscle?.data ?? []} />
       </ChartCard>
     </section>
   );
 }
+
+export const AggregateCharts = memo(AggregateChartsInner);

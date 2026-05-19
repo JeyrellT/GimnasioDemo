@@ -4,6 +4,7 @@
 // In production this would sync to the database; in demo mode it's local-only.
 // =============================================================================
 
+import { toast } from "sonner";
 import { DEFAULT_PALETTE_ID } from "./presets";
 
 const STORAGE_KEY = "blackline-fitness_trainer_branding";
@@ -57,7 +58,16 @@ export function getBranding(): TrainerBranding {
 
 export function saveBranding(branding: TrainerBranding): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(branding));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(branding));
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "QuotaExceededError") {
+      toast.error("No hay espacio suficiente en el navegador. Probá con un logo más pequeño.");
+    } else {
+      toast.error("No se pudo guardar la configuración.");
+    }
+    throw err;
+  }
 }
 
 export function clearBranding(): void {

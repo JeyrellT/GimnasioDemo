@@ -102,6 +102,7 @@ export function LicenseControl({
 
   // Extend form state
   const [extendDays, setExtendDays] = useState(30);
+  const [extendReason, setExtendReason] = useState("");
 
   const hasSubscription = subscriptionId !== null && status !== null;
   const canActivate =
@@ -232,14 +233,20 @@ export function LicenseControl({
       setFieldError("Los días deben estar entre 1 y 365.");
       return;
     }
+    if (!extendReason.trim() || extendReason.trim().length < 5) {
+      setFieldError("Justificá la extensión (mínimo 5 caracteres).");
+      return;
+    }
     startTransition(async () => {
       const result = await extendSubscriptionPeriod({
         subscriptionId,
         days: extendDays,
+        reason: extendReason.trim(),
       });
       if (result.ok) {
         toast.success(`Período extendido ${extendDays} días.`);
         closeModal();
+        setExtendReason("");
         router.refresh();
       } else {
         setFieldError(result.error.message);
@@ -634,17 +641,33 @@ export function LicenseControl({
           </DialogHeader>
 
           <div className="space-y-3 py-2">
-            <label className="text-xs font-medium text-[#A1A1AA] uppercase tracking-widest block">
-              Días a extender (1–365)
-            </label>
-            <input
-              type="number"
-              min={1}
-              max={365}
-              value={extendDays}
-              onChange={(e) => setExtendDays(parseInt(e.target.value, 10) || 1)}
-              className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
-            />
+            <div>
+              <label className="text-xs font-medium text-[#A1A1AA] uppercase tracking-widest block mb-1.5">
+                Días a extender (1–365)
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={365}
+                value={extendDays}
+                onChange={(e) => setExtendDays(parseInt(e.target.value, 10) || 1)}
+                className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-medium text-[#A1A1AA] uppercase tracking-widest block mb-1.5">
+                Motivo
+              </label>
+              <textarea
+                value={extendReason}
+                onChange={(e) => setExtendReason(e.target.value)}
+                placeholder="Gracia por pago tardío, compensación, error de facturación..."
+                rows={2}
+                className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary resize-none"
+              />
+            </div>
+
             {fieldError && (
               <p className="text-xs text-[#EF4444]">{fieldError}</p>
             )}
@@ -661,7 +684,7 @@ export function LicenseControl({
             <button
               type="button"
               onClick={handleExtend}
-              disabled={isPending}
+              disabled={isPending || extendReason.trim().length < 5}
               className="flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white hover:bg-brand-primary-hover transition-colors disabled:opacity-50 min-h-[44px]"
             >
               {isPending && (

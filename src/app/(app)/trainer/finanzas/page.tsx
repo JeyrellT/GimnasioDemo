@@ -25,10 +25,10 @@ function currentMonthStr(): string {
 function monthToRange(monthStr: string): { fromDate: Date; toDate: Date } {
   const parts = monthStr.split("-");
   const year = parseInt(parts[0] ?? "2026", 10);
-  const month = parseInt(parts[1] ?? "01", 10);
+  const monthNum = parseInt(parts[1] ?? "01", 10);
   return {
-    fromDate: new Date(year, month - 1, 1),
-    toDate: new Date(year, month, 0, 23, 59, 59, 999),
+    fromDate: new Date(Date.UTC(year, monthNum - 1, 1, 0, 0, 0, 0)),
+    toDate: new Date(Date.UTC(year, monthNum, 1, 0, 0, 0, 0) - 1),
   };
 }
 

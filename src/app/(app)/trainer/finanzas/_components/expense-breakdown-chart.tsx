@@ -11,6 +11,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import type { FinanceExpenseBreakdown, ExpenseCategory } from "@/types/finance";
 import { DashboardSection } from "@/app/(app)/inicio/_components/dashboard-section";
 import { PieChart as PieChartIcon } from "lucide-react";
+import { useBranding } from "@/lib/branding/branding-context";
 
 // ── Category labels & colors ──────────────────────────────────────────────────
 
@@ -27,22 +28,22 @@ const CATEGORY_LABELS: Record<ExpenseCategory, string> = {
   OTROS: "Otros",
 };
 
-// Design-system-aligned palette — using distinct tokens, not random
-const CATEGORY_COLORS: Partial<Record<ExpenseCategory, string>> = {
-  TRANSPORTE: "var(--brand-primary)",
-  ALQUILER_ESPACIO: "#F59E0B",
-  EQUIPO: "#22C55E",
-  MARKETING: "var(--brand-primary)",
-  EDUCACION: "#8B5CF6",
-  SOFTWARE: "#06B6D4",
-  COMIDAS: "#EC4899",
-  IMPUESTOS: "#EF4444",
-  SERVICIOS_PROFESIONALES: "#A78BFA",
-  OTROS: "#71717A",
-};
-
-function colorFor(cat: ExpenseCategory): string {
-  return CATEGORY_COLORS[cat] ?? "#71717A";
+// Distinct per-category colors — literal hex so SVG fill resolves in all browsers.
+// ALQUILER_ESPACIO uses palette.primary (most prominent expense). CSS vars don't
+// work as SVG fill/stroke values in Firefox/Safari — always pass hex literals.
+function buildCategoryColors(primaryHex: string): Record<ExpenseCategory, string> {
+  return {
+    ALQUILER_ESPACIO: primaryHex,
+    MARKETING:        "#A855F7", // purple
+    TRANSPORTE:       "#F97316", // orange
+    EQUIPO:           "#06B6D4", // cyan
+    EDUCACION:        "#8B5CF6", // violet
+    SOFTWARE:         "#22C55E", // green
+    COMIDAS:          "#EC4899", // pink
+    IMPUESTOS:        "#EF4444", // red
+    SERVICIOS_PROFESIONALES: "#84CC16", // lime
+    OTROS:            "#71717A", // neutral gray
+  };
 }
 
 function formatCRCCompact(amount: number): string {
@@ -104,6 +105,13 @@ interface ExpenseBreakdownChartProps {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function ExpenseBreakdownChart({ data }: ExpenseBreakdownChartProps) {
+  const { palette } = useBranding();
+  const categoryColors = buildCategoryColors(palette.primary);
+
+  function colorFor(cat: ExpenseCategory): string {
+    return categoryColors[cat] ?? "#71717A";
+  }
+
   // Sort descending by amount for legend readability
   const sorted = [...data].sort((a, b) => b.amountCRC - a.amountCRC);
 

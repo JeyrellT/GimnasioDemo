@@ -8,6 +8,7 @@
 
 import * as React from "react";
 import { useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import { listExpenses, listOneOffSales } from "@/app/actions/finance";
 import type { ExpenseDTO, OneOffSaleDTO } from "@/types/finance";
 import { FinancePeriodSelector } from "../_components/finance-period-selector";
@@ -57,8 +58,8 @@ function monthToRange(month: string): { fromDate: Date; toDate: Date } {
   const y = parts[0] ?? new Date().getFullYear();
   const m = parts[1] ?? new Date().getMonth() + 1;
   return {
-    fromDate: new Date(y, m - 1, 1, 0, 0, 0),
-    toDate: new Date(y, m, 0, 23, 59, 59),
+    fromDate: new Date(Date.UTC(y, m - 1, 1, 0, 0, 0, 0)),
+    toDate: new Date(Date.UTC(y, m, 1, 0, 0, 0, 0) - 1),
   };
 }
 
@@ -167,6 +168,10 @@ export default function MovimientosPage() {
     ]).then(([expensesResult, salesResult]) => {
       const rawExpenses = expensesResult.ok && 'expenses' in expensesResult.value ? expensesResult.value.expenses : [];
       const rawSales = salesResult.ok && 'sales' in salesResult.value ? salesResult.value.sales : [];
+
+      if (rawExpenses.length === 1000 || rawSales.length === 1000) {
+        toast.warning("Mostrando solo los 1000 registros más recientes de cada tipo. Usá filtros para acotar el período.");
+      }
       // Map server types to DTO shapes (occurredAt → ISO string)
       const expenses = rawExpenses.map((e) => expenseToRow({ ...e, occurredAt: e.occurredAt instanceof Date ? e.occurredAt.toISOString() : String(e.occurredAt) } as import("@/types/finance").ExpenseDTO));
       const sales = rawSales.map((s) => saleToRow({ ...s, occurredAt: s.occurredAt instanceof Date ? s.occurredAt.toISOString() : String(s.occurredAt) } as import("@/types/finance").OneOffSaleDTO));

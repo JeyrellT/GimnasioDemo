@@ -23,12 +23,15 @@ export default function ResumenPage() {
   const router = useRouter();
   const [calc, setCalc] = useState<CalcResult | null>(null);
   const [loading, setLoading] = useState(true);
+  // Bug 7: track retry count so re-mounting the effect re-fetches
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
+    setLoading(true);
     fetchCalcSummary()
       .then(setCalc)
       .finally(() => setLoading(false));
-  }, []);
+  }, [retryCount]);
 
   return (
     <div className="space-y-6">
@@ -58,7 +61,18 @@ export default function ResumenPage() {
             ))}
           </div>
         </div>
-      ) : calc ? (
+      ) : !calc ? (
+        <div className="rounded-2xl border border-[#3F3F46] bg-[#18181B] p-6 text-center space-y-3">
+          <p className="text-sm text-[#71717A]">No se pudieron cargar tus métricas.</p>
+          <button
+            type="button"
+            onClick={() => setRetryCount((c) => c + 1)}
+            className="text-sm font-medium text-brand-primary hover:text-brand-primary-hover underline"
+          >
+            Reintentar
+          </button>
+        </div>
+      ) : (
         <div className="rounded-2xl border border-[#3F3F46] bg-[#18181B] p-6 space-y-4">
           <h2 className="text-sm font-semibold text-[#A1A1AA] uppercase tracking-wide">
             Tus métricas base
@@ -90,7 +104,7 @@ export default function ResumenPage() {
             no diagnóstico médico.
           </p>
         </div>
-      ) : null}
+      )}
 
       <div className="rounded-2xl border border-[#1E2A38] bg-[#1E2A38]/50 p-5">
         <p className="text-sm text-[#A1A1AA] leading-relaxed">

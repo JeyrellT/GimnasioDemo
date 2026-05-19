@@ -12,8 +12,9 @@ import type { RoutineWithDays } from "@/types/domain";
 // ── Goal config ───────────────────────────────────────────────────────────────
 
 const GOAL_META: Record<string, { label: string; color: string; bg: string }> = {
+  // Bug #6: STRENGTH gets a distinct red — was identical to HYPERTROPHY (both brand-primary)
   HYPERTROPHY: { label: "Hipertrofia",              color: "var(--brand-primary)", bg: "var(--brand-tint)" },
-  STRENGTH:    { label: "Fuerza",                   color: "var(--brand-primary)", bg: "var(--brand-tint)"  },
+  STRENGTH:    { label: "Fuerza",                   color: "#EF4444",              bg: "rgba(239,68,68,0.12)"  },
   ENDURANCE:   { label: "Resistencia",              color: "#22C55E", bg: "rgba(34,197,94,0.12)"   },
   FAT_LOSS:    { label: "Pérdida de grasa",         color: "#F59E0B", bg: "rgba(245,158,11,0.12)"  },
   GENERAL:     { label: "General / Mantenimiento",  color: "#A855F7", bg: "rgba(168,85,247,0.12)"  },
