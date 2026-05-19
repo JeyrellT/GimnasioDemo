@@ -230,10 +230,10 @@ export async function closeBrowser(): Promise<void> {
 // Register once; guard against double-registration in hot-reload scenarios.
 // We attach a sentinel to the global object (not process directly) to avoid
 // TypeScript's "expression always truthy" warning on process existence checks.
-const _global = globalThis as typeof globalThis & { _blackline-fitnessPdfSigterm?: boolean };
+const _global = globalThis as typeof globalThis & { _blacklineFitnessPdfSigterm?: boolean };
 
-if (!_global._blackline-fitnessPdfSigterm) {
-  _global._blackline-fitnessPdfSigterm = true;
+if (!_global._blacklineFitnessPdfSigterm) {
+  _global._blacklineFitnessPdfSigterm = true;
 
   process.on("SIGTERM", () => {
     closeBrowser().catch((e) => logError(e, { signal: "SIGTERM" }));
