@@ -4,6 +4,7 @@ import * as React from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ImageIcon, Film, PlayCircle } from "lucide-react";
+import { SLUG_IMAGE_MAP } from "@/lib/constants/exercise-images";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -104,68 +105,63 @@ const panelVariants = {
 // ---------------------------------------------------------------------------
 
 /**
- * Resolves the best photo URL, trying multiple sources in order:
+ * Builds a fallback chain of image URLs and advances on each load error:
  * 1. thumbnailUrl (direct or Google Drive converted)
- * 2. Static fallback: /exercises/{slug}.jpg then .png
+ * 2. /exercises/{slug}.jpg
+ * 3. /exercises/{slug}.png
+ * 4. /exercises/{SLUG_IMAGE_MAP[slug]}  (mapped alias)
  */
-function useResolvedPhotoSrc(
+function useImageFallbackChain(
   src: string | null,
   slug: string | null | undefined,
-): string | null {
-  const [currentSrc, setCurrentSrc] = React.useState<string | null>(null);
-  const [attempt, setAttempt] = React.useState(0);
+): { currentSrc: string | null; onError: () => void } {
+  const mapped = slug ? SLUG_IMAGE_MAP[slug] : undefined;
+
+  const chain = React.useMemo(() => {
+    const urls: string[] = [];
+    const seen = new Set<string>();
+    const add = (u: string) => {
+      if (!seen.has(u)) { seen.add(u); urls.push(u); }
+    };
+    if (src) {
+      add(isGoogleDriveUrl(src) ? (getGoogleDriveImageUrl(src) ?? src) : src);
+    }
+    if (slug) {
+      add(`/exercises/${slug}.jpg`);
+      add(`/exercises/${slug}.png`);
+    }
+    if (mapped) {
+      add(`/exercises/${mapped}`);
+    }
+    return urls;
+  }, [src, slug, mapped]);
+
+  const [index, setIndex] = React.useState(0);
 
   React.useEffect(() => {
-    setAttempt(0);
-    if (src) {
-      setCurrentSrc(isGoogleDriveUrl(src) ? (getGoogleDriveImageUrl(src) ?? src) : src);
-    } else if (slug) {
-      setCurrentSrc(`/exercises/${slug}.jpg`);
-    } else {
-      setCurrentSrc(null);
-    }
+    setIndex(0);
   }, [src, slug]);
 
-  const handleError = React.useCallback(() => {
-    if (attempt === 0 && slug) {
-      // First fail: try .jpg static
-      setCurrentSrc(`/exercises/${slug}.jpg`);
-      setAttempt(1);
-    } else if (attempt === 1 && slug) {
-      // Second fail: try .png static
-      setCurrentSrc(`/exercises/${slug}.png`);
-      setAttempt(2);
-    } else {
-      // All failed
-      setCurrentSrc(null);
-    }
-  }, [attempt, slug]);
+  const currentSrc = index < chain.length ? chain[index] : null;
+  const onError = React.useCallback(() => setIndex((i) => i + 1), []);
 
-  return currentSrc;
+  return { currentSrc, onError };
 }
 
 function PhotoPanel({ src, slug }: { src: string | null; slug?: string | null }) {
-  const resolvedSrc = useResolvedPhotoSrc(src, slug);
-  const [errored, setErrored] = React.useState(false);
-  const [imgKey, setImgKey] = React.useState(0);
+  const { currentSrc, onError } = useImageFallbackChain(src, slug);
 
-  // Reset error when resolvedSrc changes
-  React.useEffect(() => {
-    setErrored(false);
-    setImgKey((k) => k + 1);
-  }, [resolvedSrc]);
-
-  if (!resolvedSrc || errored) return <MediaPlaceholder label="Sin imagen disponible" />;
+  if (!currentSrc) return <MediaPlaceholder label="Sin imagen disponible" />;
   return (
     <div className="aspect-video w-full overflow-hidden rounded-xl border border-[#3F3F46] bg-[#09090B]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        key={imgKey}
-        src={resolvedSrc}
+        key={currentSrc}
+        src={currentSrc}
         alt="Foto del ejercicio"
         className="h-full w-full object-cover"
         loading="lazy"
-        onError={() => setErrored(true)}
+        onError={onError}
       />
     </div>
   );
