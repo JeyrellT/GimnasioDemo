@@ -239,6 +239,10 @@ export default function ExerciseDetailClient({ exerciseId, basePath = "/trainer/
               gifUrl={exercise.gifUrl}
               mediaUrl={exercise.mediaUrl}
               slug={exercise.slug}
+              nameEn={exercise.nameEn}
+              exerciseId={exercise.id}
+              canEdit={isOwner}
+              onPhotoUpdated={(url) => setExercise((prev) => prev ? { ...prev, thumbnailUrl: url } : prev)}
             />
           </div>
 
