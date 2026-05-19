@@ -40,7 +40,11 @@ export const metadata: Metadata = {
     title: "Blackline Fitness",
   },
   icons: {
-    icon: "/icons/icon-192.svg",
+    icon: [
+      { url: "/icons/favicon.svg", sizes: "32x32", type: "image/svg+xml" },
+      { url: "/icons/icon-192.svg", sizes: "192x192", type: "image/svg+xml" },
+      { url: "/icons/icon-512.svg", sizes: "512x512", type: "image/svg+xml" },
+    ],
     apple: "/icons/apple-touch-icon.svg",
   },
 };
