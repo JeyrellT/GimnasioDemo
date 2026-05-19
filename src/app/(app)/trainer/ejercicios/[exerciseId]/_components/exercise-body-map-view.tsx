@@ -391,10 +391,12 @@ export function ExerciseBodyMapView({ primaryMuscle, secondaryMuscles }: Exercis
           <span aria-hidden="true" className="inline-block h-2.5 w-2.5 rounded-full bg-[#3B82F6]" />
           Primario
         </span>
-        <span className="flex items-center gap-1.5 text-xs text-[#A1A1AA]">
-          <span aria-hidden="true" className="inline-block h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
-          Secundario
-        </span>
+        {secondaryMuscles.length > 0 && (
+          <span className="flex items-center gap-1.5 text-xs text-[#A1A1AA]">
+            <span aria-hidden="true" className="inline-block h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
+            Secundario
+          </span>
+        )}
       </div>
 
       {/* Muscle detail list */}
