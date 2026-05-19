@@ -48,6 +48,21 @@ enum ParqStatus {
   RED
 }
 
+enum MedicalConditionKind {
+  ALLERGY
+  INJURY
+  CHRONIC
+  MEDICATION
+  SURGERY
+  OTHER
+}
+
+enum ConditionSeverity {
+  MILD
+  MODERATE
+  SEVERE
+}
+
 enum Goal {
   FAT_LOSS
   MUSCLE_GAIN
@@ -328,12 +343,13 @@ model User {
   chargesIssued       ClientCharge[]       @relation("TrainerCharges")
 
   // Client-only authoring
-  assessments      InitialAssessment[]
-  bodyMetrics      BodyMetric[]
-  progressPhotos   ProgressPhoto[]
-  workoutSessions  WorkoutSession[]
-  assignedRoutines AssignedRoutine[]
-  chargesReceived  ClientCharge[]      @relation("ClientCharges")
+  assessments       InitialAssessment[]
+  bodyMetrics       BodyMetric[]
+  progressPhotos    ProgressPhoto[]
+  workoutSessions   WorkoutSession[]
+  assignedRoutines  AssignedRoutine[]
+  chargesReceived   ClientCharge[]      @relation("ClientCharges")
+  medicalConditions MedicalCondition[]  @relation("ClientMedicalConditions")
 
   // Comments authored on assigned routines (trainer or client)
   routineComments RoutineComment[]
@@ -478,6 +494,13 @@ model ClientProfile {
   heightCm         Decimal?   @db.Decimal(5, 1)
   restingHrBpm     Int?
   lastWeightUpdate DateTime?
+  // Medical conditions popup lifecycle:
+  // - `medicalPromptShownAt` is set the first time the client sees the popup
+  //   that asks them to declare allergies / injuries / chronic conditions.
+  // - `medicalConditionsReviewedAt` is bumped every time the client updates
+  //   or confirms their MedicalCondition list (used to nudge periodic review).
+  medicalPromptShownAt        DateTime?
+  medicalConditionsReviewedAt DateTime?
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
   deletedAt        DateTime?
@@ -586,6 +609,32 @@ model ParqAnswer {
 
   @@index([assessmentId])
   @@index([questionCode])
+}
+
+/// Live, client-editable list of medical conditions / ailments.
+/// Complementary to PAR-Q (which is a binary one-shot questionnaire captured
+/// in `InitialAssessment` + `ParqAnswer`): this table is a long-lived register
+/// the client themselves curates (allergies, injuries, chronic conditions,
+/// medications, surgeries). Only the owning client can write to it; trainers
+/// may read it through API guards but cannot mutate.
+/// Soft-deletable so a "resolved" or "deleted" condition can still be audited.
+model MedicalCondition {
+  id           String               @id @default(cuid())
+  clientUserId String
+  kind         MedicalConditionKind
+  label        String
+  detail       String?              @db.Text
+  severity     ConditionSeverity?
+  startedAt    DateTime?
+  isActive     Boolean              @default(true)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  deletedAt    DateTime?
+
+  clientUser User @relation("ClientMedicalConditions", fields: [clientUserId], references: [id], onDelete: Restrict)
+
+  @@index([clientUserId, isActive])
+  @@index([clientUserId, deletedAt])
 }
 
 // =============================================================================
