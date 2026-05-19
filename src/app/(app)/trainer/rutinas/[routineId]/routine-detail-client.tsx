@@ -35,6 +35,7 @@ export default function RoutineDetailClient({ routineId }: Props) {
   const [routine, setRoutine] = useState<RoutineDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [missing, setMissing] = useState(false);
+  const storeDays = useRoutineBuilderStore((s) => s.days);
 
   useEffect(() => {
     async function load() {
@@ -69,7 +70,6 @@ export default function RoutineDetailClient({ routineId }: Props) {
   }
 
   const goal = getGoalMeta(routine.goal);
-  const storeDays = useRoutineBuilderStore((s) => s.days);
   const totalExercises = storeDays.length > 0
     ? storeDays.reduce((sum, d) => sum + d.exercises.length, 0)
     : routine.days.reduce((sum, d) => sum + d.exercises.length, 0);
