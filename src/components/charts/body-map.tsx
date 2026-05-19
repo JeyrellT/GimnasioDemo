@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useReducedMotion, type Variants } from "framer
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { differenceInDays } from "date-fns";
+import { useBranding } from "@/lib/branding/branding-context";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -344,6 +345,7 @@ function ZoneHotspot({
   onZoneClick,
   index,
 }: ZoneHotspotProps) {
+  const { palette } = useBranding();
   const [hovered, setHovered] = useState(false);
 
   const measuredAt = data?.measuredAt ?? null;
@@ -439,7 +441,7 @@ function ZoneHotspot({
           height={28}
           rx={14}
           fill="none"
-          stroke="var(--brand-primary)"
+          stroke={palette.primary}
           strokeWidth={2}
           strokeDasharray="0"
         />

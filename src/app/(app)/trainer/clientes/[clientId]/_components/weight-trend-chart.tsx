@@ -17,6 +17,7 @@ import {
   Area,
   AreaChart,
 } from "recharts";
+import { useBranding } from "@/lib/branding/branding-context";
 
 // -----------------------------------------------------------------------------
 // Types
@@ -61,18 +62,18 @@ interface CustomDotProps {
   dataLength?: number;
 }
 
-function LastPointDot({ cx, cy, index, dataLength }: CustomDotProps) {
+function LastPointDot({ cx, cy, index, dataLength, color }: CustomDotProps & { color: string }) {
   if (index !== (dataLength ?? 0) - 1 || cx === undefined || cy === undefined) {
     return null;
   }
   return (
     <g>
       {/* Glow ring exterior */}
-      <circle cx={cx} cy={cy} r={9} fill="var(--brand-primary)" fillOpacity={0.15} />
+      <circle cx={cx} cy={cy} r={9} fill={color} fillOpacity={0.15} />
       {/* Glow ring interior */}
-      <circle cx={cx} cy={cy} r={6} fill="var(--brand-primary)" fillOpacity={0.3} />
+      <circle cx={cx} cy={cy} r={6} fill={color} fillOpacity={0.3} />
       {/* Dot sólido */}
-      <circle cx={cx} cy={cy} r={4} fill="var(--brand-primary)" strokeWidth={0} />
+      <circle cx={cx} cy={cy} r={4} fill={color} strokeWidth={0} />
     </g>
   );
 }
@@ -123,6 +124,7 @@ function CustomTooltip({ active, payload, label, startWeight }: TooltipProps) {
 // -----------------------------------------------------------------------------
 
 export function WeightTrendChart({ data }: WeightTrendChartProps) {
+  const { palette } = useBranding();
   const chartData = buildChartData(data);
   const startWeight = data[0] ?? 0;
   const values = data.filter((v) => Number.isFinite(v));
@@ -192,7 +194,7 @@ export function WeightTrendChart({ data }: WeightTrendChartProps) {
           <Area
             type="monotone"
             dataKey="peso"
-            stroke="var(--brand-primary)"
+            stroke={palette.primary}
             strokeWidth={2}
             fill={`url(#${gradientId})`}
             dot={(props: CustomDotProps & { index: number }) => (
@@ -202,6 +204,7 @@ export function WeightTrendChart({ data }: WeightTrendChartProps) {
                 cy={props.cy}
                 index={props.index}
                 dataLength={chartData.length}
+                color={palette.primary}
               />
             )}
             activeDot={{ r: 4, fill: "var(--brand-primary)", strokeWidth: 0 }}
