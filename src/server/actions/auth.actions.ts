@@ -282,6 +282,61 @@ export async function registerUser(
 }
 
 // =============================================================================
+// searchTrainersByName — public (no auth), used in registration referral field
+// =============================================================================
+
+export interface TrainerSearchResult {
+  id: string;
+  name: string;
+  tradeName: string | null;
+  specialty: string | null;
+  avatarUrl: string | null;
+}
+
+export async function searchTrainersByName(
+  query: string,
+): Promise<ActionResult<TrainerSearchResult[]>> {
+  return tryCatch(async () => {
+    const trimmed = query.trim();
+    if (trimmed.length < 2) return [];
+
+    const trainers = await prisma.user.findMany({
+      where: {
+        role: "TRAINER",
+        deletedAt: null,
+        suspendedAt: null,
+        OR: [
+          { name: { contains: trimmed, mode: "insensitive" } },
+          {
+            trainerProfile: {
+              tradeName: { contains: trimmed, mode: "insensitive" },
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        avatarUrl: true,
+        trainerProfile: {
+          select: { tradeName: true, specialty: true },
+        },
+      },
+      take: 5,
+      orderBy: { name: "asc" },
+    });
+
+    return trainers.map((t) => ({
+      id: t.id,
+      name: t.name,
+      tradeName: t.trainerProfile?.tradeName ?? null,
+      specialty: t.trainerProfile?.specialty ?? null,
+      avatarUrl: t.avatarUrl,
+    }));
+  });
+}
+
+// =============================================================================
 // requestMagicLink
 // =============================================================================
 

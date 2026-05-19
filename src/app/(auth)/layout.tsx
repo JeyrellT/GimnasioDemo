@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { BlacklineFitnessLogo } from "@/components/shared/blackline-fitness-logo";
 
-const BASE = process.env.GITHUB_PAGES === "true" ? "/BlacklineFitness" : "";
+const BASE = "";
 
 interface AuthLayoutProps {
   children: ReactNode;

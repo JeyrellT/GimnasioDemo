@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Dumbbell, Eye, EyeOff, User, ArrowRight, Loader2 } from "lucide-react";
+import { Dumbbell, Eye, EyeOff, User, ArrowRight, Loader2, Search, CheckCircle2, X } from "lucide-react";
 import { SignInForm } from "@/components/forms/sign-in-form";
 import {
   Dialog,
@@ -16,84 +16,9 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { registerUser } from "@/app/actions/auth";
-
-// ---------------------------------------------------------------------------
-// Demo: selector de perfiles (sin auth real)
-// ---------------------------------------------------------------------------
-
-const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
-
-interface DemoProfile {
-  id: string;
-  name: string;
-  email: string;
-  role: "TRAINER" | "CLIENT";
-  avatarInitials: string;
-}
-
-const DEMO_PROFILES: DemoProfile[] = [
-  { id: "trainer-demo-001", name: "Coach Demo", email: "demo@blacklinefitness.app", role: "TRAINER", avatarInitials: "CD" },
-  { id: "client-ana", name: "Ana Solis Mora", email: "ana.solis@demo.local", role: "CLIENT", avatarInitials: "AS" },
-  { id: "client-bruno", name: "Bruno Jimenez Rojas", email: "bruno.jimenez@demo.local", role: "CLIENT", avatarInitials: "BJ" },
-  { id: "client-diana", name: "Diana Mora Quesada", email: "diana.mora@demo.local", role: "CLIENT", avatarInitials: "DM" },
-];
-
-function DemoProfileSelector() {
-  function handleSelect(profile: DemoProfile) {
-    localStorage.setItem("blackline-fitness-demo-profile", JSON.stringify(profile.id));
-    window.location.href = profile.role === "TRAINER" ? "/inicio" : "/client/rutinas";
-  }
-
-  return (
-    <div className="space-y-8">
-      <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-bold text-[#FAFAFA]">Blackline Fitness Demo</h1>
-        <p className="text-sm text-[#71717A]">
-          Elegí un perfil para explorar la demo. Tus datos se guardan solo en
-          este navegador.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-3">
-        {DEMO_PROFILES.map((profile) => (
-          <button
-            key={profile.id}
-            onClick={() => handleSelect(profile)}
-            className="group flex items-center gap-4 rounded-xl border border-[#3F3F46] bg-[#27272A]/60 px-4 py-3.5 text-left transition-all hover:border-[#3B82F6]/50 hover:bg-[#27272A]/80"
-          >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#3F3F46] text-sm font-semibold text-[#D4D4D8] group-hover:bg-[#3B82F6]/20 group-hover:text-[#3B82F6]">
-              {profile.avatarInitials}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-[#FAFAFA]">{profile.name}</p>
-              <p className="text-xs text-[#71717A]">
-                {profile.role === "TRAINER" ? (
-                  <span className="inline-flex items-center gap-1">
-                    <Dumbbell className="h-3 w-3" />
-                    Entrenador
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1">
-                    <User className="h-3 w-3" />
-                    Cliente
-                  </span>
-                )}
-                <span className="mx-1.5">&middot;</span>
-                {profile.email}
-              </p>
-            </div>
-            <ArrowRight className="h-4 w-4 shrink-0 text-[#52525B] transition-colors group-hover:text-[#3B82F6]" />
-          </button>
-        ))}
-      </div>
-
-      <p className="text-center text-[11px] text-[#52525B]">
-        Versión demo &middot; Sin servidor &middot; Datos en localStorage
-      </p>
-    </div>
-  );
-}
+import { registerUser, searchTrainersByName } from "@/app/actions/auth";
+import type { TrainerSearchResult } from "@/app/actions/auth";
+import { useDebounce } from "@/hooks/use-debounce";
 
 // ---------------------------------------------------------------------------
 // Schema de validación para el registro
@@ -216,6 +141,7 @@ function RegisterDialog({
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerFormSchema),
@@ -226,10 +152,70 @@ function RegisterDialog({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // -- Trainer referral search state --
+  const [referralQuery, setReferralQuery] = useState("");
+  const [trainerResults, setTrainerResults] = useState<TrainerSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [confirmedTrainer, setConfirmedTrainer] = useState<TrainerSearchResult | null>(null);
+  const referralContainerRef = useRef<HTMLDivElement>(null);
+
+  const debouncedQuery = useDebounce(referralQuery, 350);
+
+  useEffect(() => {
+    if (confirmedTrainer) return;
+    if (debouncedQuery.trim().length < 2) {
+      setTrainerResults([]);
+      setShowResults(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsSearching(true);
+
+    searchTrainersByName(debouncedQuery).then((result) => {
+      if (cancelled) return;
+      setIsSearching(false);
+      if (result.ok) {
+        setTrainerResults(result.value);
+        setShowResults(true);
+      }
+    });
+
+    return () => { cancelled = true; };
+  }, [debouncedQuery, confirmedTrainer]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (referralContainerRef.current && !referralContainerRef.current.contains(e.target as Node)) {
+        setShowResults(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  function selectTrainer(trainer: TrainerSearchResult) {
+    setConfirmedTrainer(trainer);
+    setReferralQuery("");
+    setShowResults(false);
+    setValue("referredByCode", `trainer:${trainer.id}`);
+  }
+
+  function clearTrainer() {
+    setConfirmedTrainer(null);
+    setReferralQuery("");
+    setValue("referredByCode", "");
+  }
+
   // Cuando el dialog se cierra, reseteamos el form
   function handleOpenChange(isOpen: boolean) {
     if (!isOpen) {
       reset();
+      setReferralQuery("");
+      setConfirmedTrainer(null);
+      setTrainerResults([]);
+      setShowResults(false);
       onClose();
     }
   }
@@ -447,13 +433,89 @@ function RegisterDialog({
                   >
                     ¿Quién te refirió? <span className="text-[#71717A] font-normal">(opcional)</span>
                   </label>
-                  <input
-                    id="reg-referral"
-                    type="text"
-                    placeholder="Nombre o código de quien te refirió"
-                    className={inputClassName}
-                    {...register("referredByCode")}
-                  />
+
+                  {confirmedTrainer ? (
+                    <div className="flex items-center gap-3 rounded-lg border border-[#3B82F6]/30 bg-[#3B82F6]/5 px-3 py-2.5">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#3B82F6]/20 text-xs font-semibold text-[#3B82F6]">
+                        {confirmedTrainer.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-[#FAFAFA] truncate">{confirmedTrainer.name}</p>
+                        {confirmedTrainer.specialty && (
+                          <p className="text-xs text-[#71717A] truncate">{confirmedTrainer.specialty}</p>
+                        )}
+                      </div>
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-[#3B82F6]" aria-hidden="true" />
+                      <button
+                        type="button"
+                        onClick={clearTrainer}
+                        className="shrink-0 rounded p-0.5 text-[#71717A] hover:text-[#FAFAFA] transition-colors"
+                        aria-label="Quitar entrenador seleccionado"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div ref={referralContainerRef} className="relative">
+                      <div className="relative">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#71717A]" aria-hidden="true" />
+                        <input
+                          id="reg-referral"
+                          type="text"
+                          placeholder="Buscá por nombre del entrenador"
+                          className={`${inputClassName} pl-9`}
+                          value={referralQuery}
+                          onChange={(e) => {
+                            setReferralQuery(e.target.value);
+                          }}
+                          onFocus={() => {
+                            if (trainerResults.length > 0 || debouncedQuery.trim().length >= 2) setShowResults(true);
+                          }}
+                          autoComplete="off"
+                        />
+                        {isSearching && (
+                          <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-[#71717A]" aria-hidden="true" />
+                        )}
+                      </div>
+
+                      {showResults && trainerResults.length > 0 && (
+                        <div className="absolute z-50 mt-1 w-full rounded-lg border border-[#3F3F46] bg-[#27272A] shadow-xl">
+                          <p className="px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-[#71717A]">
+                            Seleccioná tu entrenador
+                          </p>
+                          {trainerResults.map((trainer) => (
+                            <button
+                              key={trainer.id}
+                              type="button"
+                              onClick={() => selectTrainer(trainer)}
+                              className="flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-[#3F3F46]/50 first:rounded-t-lg last:rounded-b-lg"
+                            >
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#3F3F46] text-xs font-semibold text-[#D4D4D8]">
+                                {trainer.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium text-[#FAFAFA] truncate">{trainer.name}</p>
+                                <p className="text-xs text-[#71717A] truncate">
+                                  {trainer.tradeName && trainer.tradeName !== trainer.name
+                                    ? trainer.tradeName
+                                    : trainer.specialty || "Entrenador"}
+                                </p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {showResults && trainerResults.length === 0 && !isSearching && debouncedQuery.trim().length >= 2 && (
+                        <div className="absolute z-50 mt-1 w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-3 shadow-xl">
+                          <p className="text-center text-xs text-[#71717A]">
+                            No se encontró ningún entrenador con ese nombre.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                 </div>
               )}
 
@@ -604,6 +666,5 @@ function ProdHub() {
 // ---------------------------------------------------------------------------
 
 export default function IngresarPage() {
-  if (IS_DEMO) return <DemoProfileSelector />;
   return <ProdHub />;
 }

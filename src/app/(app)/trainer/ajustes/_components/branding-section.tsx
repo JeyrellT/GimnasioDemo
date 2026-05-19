@@ -94,7 +94,6 @@ function LogoUploadSlot({
       reader.onerror = () => toast.error("Error al leer el archivo.");
       reader.readAsDataURL(file);
 
-      // Reset input so same file can be re-selected
       e.target.value = "";
     },
     [onUpload],
@@ -106,7 +105,6 @@ function LogoUploadSlot({
       <p className="text-[11px] text-[#52525B]">{hint}</p>
 
       <div className="flex items-center gap-3">
-        {/* Preview */}
         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-[#3F3F46] bg-[#09090B] overflow-hidden">
           {currentSrc ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -120,7 +118,6 @@ function LogoUploadSlot({
           )}
         </div>
 
-        {/* Actions */}
         <div className="flex gap-2">
           <input
             ref={inputRef}
@@ -165,12 +162,10 @@ export function BrandingSection() {
   const [localName, setLocalName] = useState(branding.businessName);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Sync localName when branding changes externally (e.g. reset)
   useEffect(() => {
     setLocalName(branding.businessName);
   }, [branding.businessName]);
 
-  // Debounced real-time update: pushes to context (and topbar) ~300ms after typing stops
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setLocalName(value);
@@ -181,7 +176,6 @@ export function BrandingSection() {
     }, 300);
   };
 
-  // Clean up debounce timer on unmount
   useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -281,7 +275,6 @@ export function BrandingSection() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          {/* Full logo (desktop) */}
           <LogoUploadSlot
             label="Logo completo"
             hint="Se muestra en escritorio. Recomendado: 200x50 px, PNG o SVG."
@@ -291,7 +284,6 @@ export function BrandingSection() {
             fallback={<BlacklineFitnessLogo variant="full" size={28} />}
           />
 
-          {/* Mark logo (mobile) */}
           <LogoUploadSlot
             label="Logo abreviado"
             hint="Se muestra en móvil. Recomendado: 64x64 px, cuadrado."

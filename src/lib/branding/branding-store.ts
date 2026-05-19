@@ -68,6 +68,5 @@ export function setCachedBranding(branding: TrainerBranding): void {
 export function clearCachedBranding(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(CACHE_KEY);
-  // Also clean up legacy key from the old localStorage-only system
   localStorage.removeItem("blackline-fitness_trainer_branding");
 }

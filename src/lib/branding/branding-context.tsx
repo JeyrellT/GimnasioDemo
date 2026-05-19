@@ -57,39 +57,31 @@ const BrandingContext = createContext<BrandingContextValue>({
 export function BrandingProvider({ children }: { children: ReactNode }) {
   const { user, isAuthenticated } = useAuth();
 
-  // Hydrate from cache immediately (avoids flash)
   const [branding, setBranding] = useState<TrainerBranding>(
     () => getCachedBranding() ?? DEFAULT_BRANDING,
   );
   const [isLoading, setIsLoading] = useState(true);
 
-  // Track whether we've loaded from DB to avoid re-fetching
   const loadedRef = useRef(false);
-  // Track pending server action imports to avoid stale closures
   const actionsRef = useRef<{
     getTrainerBranding: (() => Promise<unknown>) | null;
     getClientTrainerBranding: (() => Promise<unknown>) | null;
     updateTrainerBranding: ((input: Partial<TrainerBranding>) => Promise<unknown>) | null;
   }>({ getTrainerBranding: null, getClientTrainerBranding: null, updateTrainerBranding: null });
 
-  // Load server actions dynamically (tree-shakes in non-auth pages)
   useEffect(() => {
     import("@/app/actions/branding").then((mod) => {
       actionsRef.current.getTrainerBranding = mod.getTrainerBranding;
       actionsRef.current.getClientTrainerBranding = mod.getClientTrainerBranding;
       actionsRef.current.updateTrainerBranding = mod.updateTrainerBranding;
-    }).catch(() => {
-      // Server actions not available (e.g. build-time)
-    });
+    }).catch(() => {});
   }, []);
 
-  // Fetch from DB once authenticated
   useEffect(() => {
     if (!isAuthenticated || !user || loadedRef.current) return;
 
     const fetchBranding = async () => {
       try {
-        // Wait a tick for actions to be loaded
         await new Promise((r) => setTimeout(r, 50));
 
         let result: unknown;
@@ -101,7 +93,6 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
           if (fn) result = await fn();
         }
 
-        // Server actions return { ok: true, value: ... } or { ok: false, error: ... }
         const res = result as { ok?: boolean; value?: TrainerBranding } | undefined;
         if (res?.ok && res.value) {
           const fromDb: TrainerBranding = {
@@ -114,7 +105,7 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
           setCachedBranding(fromDb);
         }
       } catch {
-        // Fallback to cache or defaults — already set
+        // Fallback to cache or defaults
       } finally {
         loadedRef.current = true;
         setIsLoading(false);
@@ -124,7 +115,6 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     fetchBranding();
   }, [isAuthenticated, user]);
 
-  // If not authenticated after a delay, stop loading
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!isAuthenticated) setIsLoading(false);
@@ -137,7 +127,6 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     [branding.paletteId],
   );
 
-  // Inject CSS custom properties onto :root whenever palette changes
   useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty("--brand-primary", palette.primary);
@@ -147,7 +136,6 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     root.style.setProperty("--brand-deep", palette.deep);
     root.style.setProperty("--brand-tint", palette.tint);
 
-    // Also update the Tailwind v4 @theme tokens that use --color-brand-*
     root.style.setProperty("--color-brand-primary", palette.primary);
     root.style.setProperty("--color-brand-primary-hover", palette.primaryHover);
     root.style.setProperty("--color-brand-accent", palette.accent);
@@ -173,15 +161,11 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     (patch: Partial<TrainerBranding>) => {
       setBranding((prev) => {
         const next = { ...prev, ...patch };
-        // Persist to cache immediately for responsive UI
         setCachedBranding(next);
 
-        // Persist to database in background
         const fn = actionsRef.current.updateTrainerBranding;
         if (fn) {
-          fn(patch).catch(() => {
-            // Silently fail — cache is the source of truth for this session
-          });
+          fn(patch).catch(() => {});
         }
 
         return next;
@@ -195,7 +179,6 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     setCachedBranding(DEFAULT_BRANDING);
     clearCachedBranding();
 
-    // Persist reset to database
     const fn = actionsRef.current.updateTrainerBranding;
     if (fn) {
       fn({
