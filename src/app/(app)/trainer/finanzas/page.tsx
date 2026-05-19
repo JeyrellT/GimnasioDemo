@@ -14,6 +14,7 @@ import { IncomeBreakdownCard } from "./_components/income-breakdown-card";
 import { ExpenseBreakdownChart } from "./_components/expense-breakdown-chart";
 import { LocationCostTable } from "./_components/location-cost-table";
 import { RecentTransactionsList } from "./_components/recent-transactions-list";
+import { useAuth } from "@/components/providers/auth-provider";
 import type { FinanceDashboardPayload } from "@/types/finance";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -57,6 +58,8 @@ function DashboardSkeleton() {
 export default function FinanzasPage() {
   const searchParams = useSearchParams();
   const monthStr = searchParams.get("month") ?? currentMonthStr();
+  const { user } = useAuth();
+  const trainerName = user?.name ?? user?.email ?? null;
 
   const [payload, setPayload] = React.useState<FinanceDashboardPayload | null>(null);
   const [error, setError] = React.useState<string | null>(null);
@@ -78,7 +81,7 @@ export default function FinanzasPage() {
 
   if (loading) {
     return (
-      <FinanceShell trainerName="Coach Demo" currentMonth={monthStr}>
+      <FinanceShell trainerName={trainerName} currentMonth={monthStr}>
         <DashboardSkeleton />
       </FinanceShell>
     );
@@ -86,7 +89,7 @@ export default function FinanzasPage() {
 
   if (error || !payload) {
     return (
-      <FinanceShell trainerName="Coach Demo" currentMonth={monthStr}>
+      <FinanceShell trainerName={trainerName} currentMonth={monthStr}>
         <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-[#EF4444]/30 bg-[#EF4444]/5 p-8 text-center">
           <div className="space-y-1">
             <p className="text-sm font-semibold text-[#EF4444]">Error al cargar el dashboard</p>
@@ -98,7 +101,7 @@ export default function FinanzasPage() {
   }
 
   return (
-    <FinanceShell trainerName="Coach Demo" currentMonth={monthStr}>
+    <FinanceShell trainerName={trainerName} currentMonth={monthStr}>
       <FinanceKPIRow kpis={payload.kpis} />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

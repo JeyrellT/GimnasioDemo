@@ -8,6 +8,15 @@ import { createRoutineTemplate, createCustomGoal, listCustomGoals } from "@/app/
 import { createRoutineSchema, type CreateRoutineInput } from "@/lib/validation/routine.schema";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/shared/page-header";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ArrowRight, Loader2, Plus, X } from "lucide-react";
 
 const BUILT_IN_GOALS = [
@@ -133,6 +142,7 @@ export default function NuevaRutinaPage() {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<CreateRoutineInput>({
     resolver: zodResolver(createRoutineSchema),
@@ -199,22 +209,34 @@ export default function NuevaRutinaPage() {
               Objetivo
             </label>
             <div className="flex gap-2">
-              <select id="goal" {...register("goal")} className={`${inputCls} flex-1`}>
-                {BUILT_IN_GOALS.map(({ value, label }) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-                {customGoals.length > 0 && (
-                  <optgroup label="Mis objetivos">
-                    {customGoals.map((g) => (
-                      <option key={g.id} value={g.name}>
-                        {g.name}
-                      </option>
+              <Select
+                value={watch("goal")}
+                onValueChange={(val) => setValue("goal", val, { shouldValidate: true })}
+              >
+                <SelectTrigger id="goal" className="flex-1 bg-[#27272A] border-[#3F3F46] h-[42px] text-sm text-[#FAFAFA]">
+                  <SelectValue placeholder="Elegí un objetivo" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#18181B] border-[#3F3F46] max-h-[300px]">
+                  <SelectGroup>
+                    <SelectLabel>Objetivos</SelectLabel>
+                    {BUILT_IN_GOALS.map(({ value, label }) => (
+                      <SelectItem key={value} value={value} className="text-sm">
+                        {label}
+                      </SelectItem>
                     ))}
-                  </optgroup>
-                )}
-              </select>
+                  </SelectGroup>
+                  {customGoals.length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel>Mis objetivos</SelectLabel>
+                      {customGoals.map((g) => (
+                        <SelectItem key={g.id} value={g.name} className="text-sm">
+                          {g.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  )}
+                </SelectContent>
+              </Select>
               <button
                 type="button"
                 onClick={() => setDialogOpen(true)}

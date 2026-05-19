@@ -131,14 +131,27 @@ export default function EntrenadorConsentimientosPage() {
         ))}
       </div>
 
-      <button
-        type="button"
-        onClick={handleContinue}
-        disabled={!requiredChecked || submitting}
-        className="flex w-full items-center justify-center rounded-xl bg-brand-primary py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-brand-primary-hover disabled:opacity-50 transition-colors"
-      >
-        {submitting ? "Guardando..." : "Continuar"}
-      </button>
+      <div>
+        <button
+          type="button"
+          onClick={handleContinue}
+          disabled={!requiredChecked || submitting}
+          aria-disabled={!requiredChecked || submitting}
+          title={
+            !requiredChecked
+              ? "Aceptá los consentimientos obligatorios para continuar."
+              : undefined
+          }
+          className="flex w-full items-center justify-center rounded-xl bg-brand-primary py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-brand-primary-hover disabled:opacity-50 transition-colors"
+        >
+          {submitting ? "Guardando..." : "Continuar"}
+        </button>
+        {!requiredChecked && (
+          <p className="text-xs text-[#71717A] mt-1 text-center">
+            Aceptá los consentimientos obligatorios para continuar.
+          </p>
+        )}
+      </div>
     </div>
   );
 }

@@ -109,6 +109,7 @@ export function SaleForm({ clients, onSuccess, onCancel }: SaleFormProps) {
         category: values.category,
         paidStatus: values.paidStatus,
         ...(values.clientUserId ? { clientUserId: values.clientUserId } : {}),
+        ...(values.paymentMethod?.trim() ? { paymentMethod: values.paymentMethod.trim() } : {}),
         ...(values.description?.trim() ? { description: values.description.trim() } : {}),
       };
 

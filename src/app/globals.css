@@ -13,10 +13,10 @@
      instead of being baked to the build-time literal. */
   --color-brand-primary: var(--brand-primary);
   --color-brand-primary-hover: var(--brand-primary-hover);
-  --color-brand-secondary: var(--brand-secondary);
   --color-brand-accent: var(--brand-accent);
   --color-brand-deep: var(--brand-deep, #1e40af);
   --color-brand-glow: var(--brand-glow, #60a5fa);
+  --color-brand-tint: var(--brand-tint);
 
   /* ── Semantic ───────────────────────────────────────────────────────────── */
   --color-success: #22c55e;

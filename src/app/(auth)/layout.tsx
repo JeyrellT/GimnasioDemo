@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { BlacklineFitnessLogo } from "@/components/shared/blackline-fitness-logo";
@@ -12,12 +13,13 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden px-4 py-12">
       {/* Full-bleed gym background */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={`${BASE}/images/gym-bg.jpg`}
+      <Image
+        fill
+        priority
         alt=""
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+        src={`${BASE}/images/gym-bg.jpg`}
+        className="pointer-events-none object-cover"
       />
 
       {/* Dark overlay — allows card to pop */}

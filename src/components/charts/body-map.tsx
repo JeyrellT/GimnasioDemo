@@ -333,7 +333,7 @@ interface ZoneHotspotProps {
   data: ZoneData | null;
   isSelected: boolean;
   reducedMotion: boolean;
-  onZoneClick: (zone: BodyZone) => void;
+  onZoneClick?: (zone: BodyZone) => void;
   index: number;
 }
 
@@ -347,6 +347,8 @@ function ZoneHotspot({
 }: ZoneHotspotProps) {
   const { palette } = useBranding();
   const [hovered, setHovered] = useState(false);
+
+  const interactive = typeof onZoneClick === "function";
 
   const measuredAt = data?.measuredAt ?? null;
   const color = getFreshnessColor(measuredAt);
@@ -379,7 +381,7 @@ function ZoneHotspot({
   function handleKeyDown(e: React.KeyboardEvent<SVGGElement>) {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      onZoneClick(path.zone);
+      onZoneClick!(path.zone);
     }
   }
 
@@ -389,24 +391,24 @@ function ZoneHotspot({
       variants={springVariants}
       initial="hidden"
       animate="visible"
-      role="button"
-      tabIndex={0}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : -1}
       aria-label={label}
-      aria-pressed={isSelected}
-      style={{ cursor: "pointer", outline: "none" }}
-      onClick={() => onZoneClick(path.zone)}
-      onKeyDown={handleKeyDown}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onFocus={() => setHovered(true)}
-      onBlur={() => setHovered(false)}
+      aria-pressed={interactive ? isSelected : undefined}
+      style={{ cursor: interactive ? "pointer" : "default", outline: "none" }}
+      onClick={interactive ? () => onZoneClick!(path.zone) : undefined}
+      onKeyDown={interactive ? handleKeyDown : undefined}
+      onMouseEnter={interactive ? () => setHovered(true) : undefined}
+      onMouseLeave={interactive ? () => setHovered(false) : undefined}
+      onFocus={interactive ? () => setHovered(true) : undefined}
+      onBlur={interactive ? () => setHovered(false) : undefined}
       whileHover={
-        reducedMotion
-          ? {}
-          : {
+        interactive && !reducedMotion
+          ? {
               filter: `drop-shadow(0 0 8px ${color})`,
               transition: { duration: 0.18, ease: "easeOut" },
             }
+          : {}
       }
     >
       {/* Region fill — color-coded by freshness */}
@@ -552,7 +554,7 @@ export function BodyMap({
                   data={zones[path.zone]}
                   isSelected={selectedZone === path.zone}
                   reducedMotion={reducedMotion}
-                  onZoneClick={onZoneClick ?? (() => {})}
+                  onZoneClick={onZoneClick}
                   index={i}
                 />
               ))}
