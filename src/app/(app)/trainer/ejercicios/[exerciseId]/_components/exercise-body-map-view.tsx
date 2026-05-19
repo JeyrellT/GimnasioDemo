@@ -1,33 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import type { MuscleGroup } from "@prisma/client";
 import { MUSCLE_LABELS } from "@/lib/constants/exercise-display";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-type BodyZone =
-  | "neck"
-  | "shoulderLeft"
-  | "shoulderRight"
-  | "chest"
-  | "bicepLeft"
-  | "bicepRight"
-  | "forearmLeft"
-  | "forearmRight"
-  | "abdomen"
-  | "waist"
-  | "hip"
-  | "glute"
-  | "quadLeft"
-  | "quadRight"
-  | "hamstringLeft"
-  | "hamstringRight"
-  | "calfLeft"
-  | "calfRight";
+interface ZoneDef {
+  id: string;
+  d: string;
+  muscle: MuscleGroup;
+}
 
 export interface ExerciseBodyMapViewProps {
   primaryMuscle: MuscleGroup;
@@ -35,286 +17,273 @@ export interface ExerciseBodyMapViewProps {
 }
 
 // ---------------------------------------------------------------------------
-// Muscle → BodyZone mapping
+// Front muscle zones — viewBox 0 0 200 440
 // ---------------------------------------------------------------------------
 
-const MUSCLE_TO_ZONES: Record<MuscleGroup, BodyZone[]> = {
-  CHEST: ["chest"],
-  BACK: ["shoulderLeft", "shoulderRight"],
-  SHOULDERS: ["shoulderLeft", "shoulderRight"],
-  BICEPS: ["bicepLeft", "bicepRight"],
-  TRICEPS: ["bicepLeft", "bicepRight"],
-  FOREARMS: ["forearmLeft", "forearmRight"],
-  ABS: ["abdomen"],
-  OBLIQUES: ["waist"],
-  GLUTES: ["glute"],
-  QUADS: ["quadLeft", "quadRight"],
-  HAMSTRINGS: ["hamstringLeft", "hamstringRight"],
-  CALVES: ["calfLeft", "calfRight"],
-  NECK: ["neck"],
-  FULL_BODY: ["chest", "abdomen", "quadLeft", "quadRight", "shoulderLeft", "shoulderRight"],
-};
-
-// Reverse map: zone → muscle enum key (first match wins)
-const ZONE_TO_MUSCLE: Partial<Record<BodyZone, MuscleGroup>> = {} as Partial<
-  Record<BodyZone, MuscleGroup>
->;
-(Object.entries(MUSCLE_TO_ZONES) as [MuscleGroup, BodyZone[]][]).forEach(([muscle, zones]) => {
-  zones.forEach((zone) => {
-    if (!(zone in ZONE_TO_MUSCLE)) {
-      ZONE_TO_MUSCLE[zone] = muscle;
-    }
-  });
-});
-
-// ---------------------------------------------------------------------------
-// SVG path data (copied from src/components/charts/body-map.tsx)
-// ViewBox 360×480, body center X=180.
-// ---------------------------------------------------------------------------
-
-interface ZonePath {
-  zone: BodyZone;
-  d: string;
-  view: "front" | "back";
-}
-
-const FRONT_PATHS: ZonePath[] = [
-  {
-    zone: "neck",
-    d: "M168 68 C168 60 192 60 192 68 L194 86 C185 90 175 90 166 86 Z",
-    view: "front",
-  },
-  {
-    zone: "shoulderLeft",
-    d: "M214 90 C226 87 242 94 248 108 C252 118 248 130 240 134 C232 130 222 124 216 112 Z",
-    view: "front",
-  },
-  {
-    zone: "shoulderRight",
-    d: "M146 90 C134 87 118 94 112 108 C108 118 112 130 120 134 C128 130 138 124 144 112 Z",
-    view: "front",
-  },
-  {
-    zone: "chest",
-    d: "M148 90 C158 86 175 84 180 84 C185 84 202 86 212 90 L216 112 C210 118 200 124 180 126 C160 124 150 118 144 112 Z",
-    view: "front",
-  },
-  {
-    zone: "bicepLeft",
-    d: "M240 134 C248 136 256 146 256 158 C256 168 252 178 244 182 C238 174 236 162 236 150 Z",
-    view: "front",
-  },
-  {
-    zone: "bicepRight",
-    d: "M120 134 C112 136 104 146 104 158 C104 168 108 178 116 182 C122 174 124 162 124 150 Z",
-    view: "front",
-  },
-  {
-    zone: "forearmLeft",
-    d: "M244 182 C250 186 258 196 260 212 C260 224 256 236 248 240 C242 232 238 218 238 206 C238 196 240 188 244 182 Z",
-    view: "front",
-  },
-  {
-    zone: "forearmRight",
-    d: "M116 182 C110 186 102 196 100 212 C100 224 104 236 112 240 C118 232 122 218 122 206 C122 196 120 188 116 182 Z",
-    view: "front",
-  },
-  {
-    zone: "abdomen",
-    d: "M152 126 C158 124 170 122 180 122 C190 122 202 124 208 126 L210 162 C202 166 192 168 180 168 C168 168 158 166 150 162 Z",
-    view: "front",
-  },
-  {
-    zone: "waist",
-    d: "M150 162 C158 166 168 168 180 168 C192 168 202 166 210 162 L212 194 C204 198 192 200 180 200 C168 200 156 198 148 194 Z",
-    view: "front",
-  },
-  {
-    zone: "hip",
-    d: "M148 194 C156 198 168 200 180 200 C192 200 204 198 212 194 L218 220 C210 228 196 234 180 234 C164 234 150 228 142 220 Z",
-    view: "front",
-  },
-  {
-    zone: "quadLeft",
-    d: "M188 234 C196 232 208 230 216 228 L220 310 C214 316 204 320 196 318 C190 306 188 276 188 256 Z",
-    view: "front",
-  },
-  {
-    zone: "quadRight",
-    d: "M172 234 C164 232 152 230 144 228 L140 310 C146 316 156 320 164 318 C170 306 172 276 172 256 Z",
-    view: "front",
-  },
-  {
-    zone: "calfLeft",
-    d: "M196 318 C204 320 214 322 218 326 L214 390 C210 400 202 408 196 408 C192 396 190 372 190 354 Z",
-    view: "front",
-  },
-  {
-    zone: "calfRight",
-    d: "M164 318 C156 320 146 322 142 326 L146 390 C150 400 158 408 164 408 C168 396 170 372 170 354 Z",
-    view: "front",
-  },
+const FRONT_ZONES: ZoneDef[] = [
+  // Neck
+  { id: "neckF", muscle: "NECK", d: "M88,50 L112,50 L114,64 C108,67 92,67 86,64 Z" },
+  // Shoulders (front deltoids)
+  { id: "leftFrontDelt", muscle: "SHOULDERS", d: "M117,64 C128,59 150,57 160,66 C166,74 164,88 157,96 L143,89 C135,81 125,72 117,64 Z" },
+  { id: "rightFrontDelt", muscle: "SHOULDERS", d: "M83,64 C72,59 50,57 40,66 C34,74 36,88 43,96 L57,89 C65,81 75,72 83,64 Z" },
+  // Chest (pectorals)
+  { id: "leftPec", muscle: "CHEST", d: "M105,72 C119,68 141,71 149,85 C153,97 149,112 141,118 L107,118 C103,106 103,88 105,76 Z" },
+  { id: "rightPec", muscle: "CHEST", d: "M95,72 C81,68 59,71 51,85 C47,97 51,112 59,118 L93,118 C97,106 97,88 95,76 Z" },
+  // Biceps
+  { id: "leftBicep", muscle: "BICEPS", d: "M159,98 C165,104 169,122 169,142 C169,158 165,169 159,175 L151,169 C149,153 149,131 151,113 C153,107 155,101 159,98 Z" },
+  { id: "rightBicep", muscle: "BICEPS", d: "M41,98 C35,104 31,122 31,142 C31,158 35,169 41,175 L49,169 C51,153 51,131 49,113 C47,107 45,101 41,98 Z" },
+  // Forearms
+  { id: "leftForearm", muscle: "FOREARMS", d: "M159,179 C165,185 171,203 173,223 C175,241 171,253 165,259 L157,253 C155,239 155,217 157,199 C157,191 159,185 159,179 Z" },
+  { id: "rightForearm", muscle: "FOREARMS", d: "M41,179 C35,185 29,203 27,223 C25,241 29,253 35,259 L43,253 C45,239 45,217 43,199 C43,191 41,185 41,179 Z" },
+  // Abs
+  { id: "upperAbs", muscle: "ABS", d: "M92,120 L108,120 L110,148 C106,151 94,151 90,148 Z" },
+  { id: "lowerAbs", muscle: "ABS", d: "M90,153 C94,150 106,150 110,153 L112,184 C108,188 92,188 88,184 Z" },
+  // Obliques
+  { id: "leftOblique", muscle: "OBLIQUES", d: "M112,120 L141,118 C143,130 143,150 139,170 L127,185 L112,188 Z" },
+  { id: "rightOblique", muscle: "OBLIQUES", d: "M88,120 L59,118 C57,130 57,150 61,170 L73,185 L88,188 Z" },
+  // Quads
+  { id: "leftQuad", muscle: "QUADS", d: "M109,200 C121,196 139,198 145,206 L143,312 C139,320 127,324 119,322 C113,302 109,264 109,230 Z" },
+  { id: "rightQuad", muscle: "QUADS", d: "M91,200 C79,196 61,198 55,206 L57,312 C61,320 73,324 81,322 C87,302 91,264 91,230 Z" },
+  // Calves (tibialis anterior — front)
+  { id: "leftTibialis", muscle: "CALVES", d: "M121,326 C129,322 139,324 141,332 L139,388 C135,396 127,402 121,402 C119,382 119,352 121,336 Z" },
+  { id: "rightTibialis", muscle: "CALVES", d: "M79,326 C71,322 61,324 59,332 L61,388 C65,396 73,402 79,402 C81,382 81,352 79,336 Z" },
 ];
 
-const BACK_PATHS: ZonePath[] = [
-  {
-    zone: "neck",
-    d: "M168 68 C168 60 192 60 192 68 L194 86 C185 90 175 90 166 86 Z",
-    view: "back",
-  },
-  {
-    zone: "shoulderLeft",
-    d: "M214 90 C226 87 242 94 248 108 C252 118 248 130 240 134 C232 130 222 124 216 112 Z",
-    view: "back",
-  },
-  {
-    zone: "shoulderRight",
-    d: "M146 90 C134 87 118 94 112 108 C108 118 112 130 120 134 C128 130 138 124 144 112 Z",
-    view: "back",
-  },
-  {
-    zone: "glute",
-    d: "M146 194 C154 198 166 202 180 202 C194 202 206 198 214 194 L220 232 C210 244 196 250 180 250 C164 250 150 244 140 232 Z",
-    view: "back",
-  },
-  {
-    zone: "hamstringLeft",
-    d: "M188 250 C196 248 208 246 216 244 L218 320 C212 328 202 332 194 330 C190 314 188 282 188 262 Z",
-    view: "back",
-  },
-  {
-    zone: "hamstringRight",
-    d: "M172 250 C164 248 152 246 144 244 L142 320 C148 328 158 332 166 330 C170 314 172 282 172 262 Z",
-    view: "back",
-  },
-  {
-    zone: "calfLeft",
-    d: "M194 330 C202 332 212 334 216 338 L212 400 C208 410 200 418 194 418 C190 404 188 378 188 360 Z",
-    view: "back",
-  },
-  {
-    zone: "calfRight",
-    d: "M166 330 C158 332 148 334 144 338 L148 400 C152 410 160 418 166 418 C170 404 172 378 172 360 Z",
-    view: "back",
-  },
+// ---------------------------------------------------------------------------
+// Back muscle zones — viewBox 0 0 200 440
+// ---------------------------------------------------------------------------
+
+const BACK_ZONES: ZoneDef[] = [
+  // Neck
+  { id: "neckB", muscle: "NECK", d: "M88,50 L112,50 L114,64 C108,67 92,67 86,64 Z" },
+  // Traps (upper back)
+  { id: "traps", muscle: "BACK", d: "M87,66 C94,62 106,62 113,66 L133,79 C141,87 145,99 143,109 L111,101 C105,95 95,95 89,101 L57,109 C55,99 59,87 67,79 Z" },
+  // Rear deltoids
+  { id: "leftRearDelt", muscle: "SHOULDERS", d: "M137,71 C149,65 163,67 167,77 C169,87 165,97 159,103 L147,97 C141,87 137,79 137,71 Z" },
+  { id: "rightRearDelt", muscle: "SHOULDERS", d: "M63,71 C51,65 37,67 33,77 C31,87 35,97 41,103 L53,97 C59,87 63,79 63,71 Z" },
+  // Lats
+  { id: "leftLat", muscle: "BACK", d: "M113,103 C127,99 143,105 147,117 C151,133 149,155 143,171 L127,177 C121,163 117,141 115,121 Z" },
+  { id: "rightLat", muscle: "BACK", d: "M87,103 C73,99 57,105 53,117 C49,133 51,155 57,171 L73,177 C79,163 83,141 85,121 Z" },
+  // Triceps
+  { id: "leftTricep", muscle: "TRICEPS", d: "M161,105 C167,111 171,129 171,149 C171,165 167,177 161,183 L153,177 C151,161 151,137 153,119 C155,113 157,107 161,105 Z" },
+  { id: "rightTricep", muscle: "TRICEPS", d: "M39,105 C33,111 29,129 29,149 C29,165 33,177 39,183 L47,177 C49,161 49,137 47,119 C45,113 43,107 39,105 Z" },
+  // Lower back
+  { id: "lowerBack", muscle: "BACK", d: "M83,171 L117,171 L119,197 C113,203 87,203 81,197 Z" },
+  // Glutes
+  { id: "leftGlute", muscle: "GLUTES", d: "M107,203 C121,199 141,203 147,215 C151,227 147,243 139,251 L113,247 C109,235 107,219 107,209 Z" },
+  { id: "rightGlute", muscle: "GLUTES", d: "M93,203 C79,199 59,203 53,215 C49,227 53,243 61,251 L87,247 C91,235 93,219 93,209 Z" },
+  // Hamstrings
+  { id: "leftHamstring", muscle: "HAMSTRINGS", d: "M115,253 C127,249 143,251 147,261 L145,317 C141,325 129,329 121,327 C117,307 115,279 115,263 Z" },
+  { id: "rightHamstring", muscle: "HAMSTRINGS", d: "M85,253 C73,249 57,251 53,261 L55,317 C59,325 71,329 79,327 C83,307 85,279 85,263 Z" },
+  // Calves (gastrocnemius — back)
+  { id: "leftGastroc", muscle: "CALVES", d: "M123,331 C133,327 143,329 145,339 C147,355 143,377 137,393 C131,401 125,405 121,405 C119,385 121,357 123,341 Z" },
+  { id: "rightGastroc", muscle: "CALVES", d: "M77,331 C67,327 57,329 55,339 C53,355 57,377 63,393 C69,401 75,405 79,405 C81,385 79,357 77,341 Z" },
 ];
 
-const HEAD = { cx: 180, cy: 44, r: 28 };
-const TORSO_D =
-  "M148 90 C136 94 118 100 112 110 L100 240 C100 246 120 252 140 248 L142 320 L150 430 L170 432 L172 360 L188 360 L190 432 L210 430 L218 320 L220 248 C240 252 260 246 260 240 L248 110 C242 100 224 94 212 90 C202 86 192 84 180 84 C168 84 158 86 148 90 Z";
-
 // ---------------------------------------------------------------------------
-// Zone fill color helpers
+// Static body silhouette paths (head + body outline)
 // ---------------------------------------------------------------------------
 
-type ZoneRole = "primary" | "secondary" | "other";
+const HEAD = { cx: 100, cy: 30, r: 19 };
 
-function getZoneFill(
-  role: ZoneRole,
-  hovered: boolean,
-): { fill: string; fillOpacity: number; filter?: string } {
-  switch (role) {
-    case "primary":
-      return { fill: "#3B82F6", fillOpacity: hovered ? 0.8 : 0.6, filter: "url(#glow-primary)" };
-    case "secondary":
-      return { fill: "#F59E0B", fillOpacity: hovered ? 0.55 : 0.35 };
-    default:
-      return { fill: "#FAFAFA", fillOpacity: 0.05 };
+const BODY_OUTLINE_FRONT =
+  "M86,50 C60,56 38,64 32,78 L26,108 C24,140 26,172 32,200 C28,222 26,244 30,258 L22,268 C36,264 42,248 42,228 L48,178 C44,160 42,134 44,110 L50,98 C52,128 54,158 56,186 C56,198 56,214 58,234 C60,272 62,310 66,350 C68,372 70,392 74,408 L82,416 L92,414 C90,392 88,362 86,340 C82,300 82,262 86,230 C90,214 96,204 100,200 C104,204 110,214 114,230 C118,262 118,300 114,340 C112,362 110,392 108,414 L118,416 L126,408 C130,392 132,372 134,350 C138,310 140,272 142,234 C144,214 144,198 144,186 C146,158 148,128 150,98 L156,110 C158,134 156,160 152,178 L158,228 C158,248 164,264 178,268 L170,258 C174,244 172,222 168,200 C174,172 176,140 174,108 L168,78 C162,64 140,56 114,50 Z";
+
+const BODY_OUTLINE_BACK =
+  "M86,50 C60,56 38,64 32,78 L26,108 C24,140 26,172 32,200 C28,222 26,244 30,258 L22,268 C36,264 42,248 42,228 L48,186 C44,160 42,134 44,110 L50,98 C52,128 54,158 56,186 C56,198 56,214 58,234 C60,272 62,310 66,350 C68,372 70,392 74,408 L82,416 L92,414 C90,392 88,362 86,340 C82,300 82,262 86,230 C90,214 96,204 100,200 C104,204 110,214 114,230 C118,262 118,300 114,340 C112,362 110,392 108,414 L118,416 L126,408 C130,392 132,372 134,350 C138,310 140,272 142,234 C144,214 144,198 144,186 C146,158 148,128 150,98 L156,110 C158,134 156,160 152,186 L158,228 C158,248 164,264 178,268 L170,258 C174,244 172,222 168,200 C174,172 176,140 174,108 L168,78 C162,64 140,56 114,50 Z";
+
+// ---------------------------------------------------------------------------
+// Color system
+// ---------------------------------------------------------------------------
+
+type Role = "primary" | "secondary" | "inactive";
+
+const COLORS = {
+  primary: { base: "#3B82F6", bright: "#60A5FA", stroke: "#93C5FD" },
+  secondary: { base: "#F59E0B", bright: "#FBBF24", stroke: "#FCD34D" },
+  inactive: { base: "#27272A", bright: "#3F3F46", stroke: "#52525B" },
+} as const;
+
+function getZoneStyle(role: Role, hovered: boolean) {
+  const c = COLORS[role];
+  if (role === "inactive") {
+    return {
+      fill: hovered ? c.bright : c.base,
+      fillOpacity: hovered ? 0.7 : 0.45,
+      stroke: hovered ? c.stroke : "#3F3F46",
+      strokeWidth: hovered ? 1 : 0.5,
+      strokeOpacity: hovered ? 0.8 : 0.3,
+      filter: undefined as string | undefined,
+    };
   }
+  return {
+    fill: hovered ? c.bright : c.base,
+    fillOpacity: hovered ? 0.9 : 0.7,
+    stroke: hovered ? c.stroke : c.base,
+    strokeWidth: hovered ? 1.5 : 1,
+    strokeOpacity: hovered ? 1 : 0.6,
+    filter: role === "primary" ? "url(#glow-blue)" : "url(#glow-amber)",
+  };
 }
 
 // ---------------------------------------------------------------------------
-// Single SVG body view (with hover interactivity)
+// Single body SVG view
 // ---------------------------------------------------------------------------
 
-interface BodySvgProps {
-  paths: ZonePath[];
-  primaryZones: Set<BodyZone>;
-  secondaryZones: Set<BodyZone>;
+interface BodyViewProps {
+  zones: ZoneDef[];
+  outline: string;
+  primarySet: Set<MuscleGroup>;
+  secondarySet: Set<MuscleGroup>;
   label: string;
-  hoveredZone: BodyZone | null;
-  onZoneEnter: (zone: BodyZone) => void;
+  viewLabel: string;
+  hoveredId: string | null;
+  onZoneEnter: (zone: ZoneDef, e: React.MouseEvent) => void;
   onZoneLeave: () => void;
+  onZoneMove: (e: React.MouseEvent) => void;
 }
 
-function BodySvg({
-  paths,
-  primaryZones,
-  secondaryZones,
+function BodyView({
+  zones,
+  outline,
+  primarySet,
+  secondarySet,
   label,
-  hoveredZone,
+  viewLabel,
+  hoveredId,
   onZoneEnter,
   onZoneLeave,
-}: BodySvgProps) {
-  return (
-    <svg
-      viewBox="0 0 360 480"
-      width="160"
-      height="213"
-      role="img"
-      aria-label={label}
-      style={{ display: "block", flexShrink: 0 }}
-    >
-      {/* Glow filter for primary muscle */}
-      <defs>
-        <filter id="glow-primary" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation="6" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
+  onZoneMove,
+}: BodyViewProps) {
+  function roleOf(z: ZoneDef): Role {
+    if (primarySet.has(z.muscle)) return "primary";
+    if (secondarySet.has(z.muscle)) return "secondary";
+    return "inactive";
+  }
 
-      {/* Static silhouette */}
-      <g aria-hidden="true">
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#52525B]">
+        {viewLabel}
+      </span>
+      <svg
+        viewBox="0 0 200 440"
+        className="w-[155px] h-auto"
+        role="img"
+        aria-label={label}
+      >
+        <defs>
+          <filter id="glow-blue" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feFlood floodColor="#3B82F6" floodOpacity="0.35" result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="glow" />
+            <feMerge>
+              <feMergeNode in="glow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="glow-amber" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feFlood floodColor="#F59E0B" floodOpacity="0.3" result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="glow" />
+            <feMerge>
+              <feMergeNode in="glow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Body silhouette */}
         <circle
           cx={HEAD.cx}
           cy={HEAD.cy}
           r={HEAD.r}
-          fill="#27272A"
-          stroke="#52525B"
-          strokeWidth={1.5}
+          fill="#1A1A2E"
+          stroke="#2A2A3E"
+          strokeWidth={1}
         />
         <path
-          d={TORSO_D}
-          fill="#27272A"
-          stroke="#52525B"
-          strokeWidth={1.5}
+          d={outline}
+          fill="#1A1A2E"
+          stroke="#2A2A3E"
+          strokeWidth={0.8}
           strokeLinejoin="round"
         />
-      </g>
 
-      {/* Zone fills — interactive for primary/secondary */}
-      {paths.map((p) => {
-        const role: ZoneRole = primaryZones.has(p.zone)
-          ? "primary"
-          : secondaryZones.has(p.zone)
-            ? "secondary"
-            : "other";
-        const isHovered = hoveredZone === p.zone;
-        const { fill, fillOpacity, filter } = getZoneFill(role, isHovered);
-        const isInteractive = role !== "other";
-        return (
-          <path
-            key={p.zone + p.view}
-            d={p.d}
-            fill={fill}
-            fillOpacity={fillOpacity}
-            stroke={role === "primary" ? "#3B82F6" : role === "secondary" ? "#F59E0B" : "none"}
-            strokeWidth={role !== "other" ? 1 : 0}
-            strokeOpacity={role === "primary" ? 0.8 : 0.5}
-            filter={filter}
-            style={{
-              cursor: isInteractive ? "pointer" : undefined,
-              transition: "fill-opacity 0.15s ease",
-            }}
-            onMouseEnter={isInteractive ? () => onZoneEnter(p.zone) : undefined}
-            onMouseLeave={isInteractive ? onZoneLeave : undefined}
-          />
-        );
-      })}
-    </svg>
+        {/* Muscle zones */}
+        {zones.map((z) => {
+          const role = roleOf(z);
+          const isHovered = hoveredId === z.id;
+          const s = getZoneStyle(role, isHovered);
+          const interactive = role !== "inactive" || isHovered;
+          return (
+            <path
+              key={z.id}
+              d={z.d}
+              fill={s.fill}
+              fillOpacity={s.fillOpacity}
+              stroke={s.stroke}
+              strokeWidth={s.strokeWidth}
+              strokeOpacity={s.strokeOpacity}
+              strokeLinejoin="round"
+              filter={s.filter}
+              style={{
+                cursor: role !== "inactive" ? "pointer" : "default",
+                transition: "fill 0.15s ease, fill-opacity 0.15s ease, stroke 0.15s ease",
+              }}
+              onMouseEnter={(e) => onZoneEnter(z, e)}
+              onMouseMove={interactive ? onZoneMove : undefined}
+              onMouseLeave={onZoneLeave}
+            />
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Tooltip
+// ---------------------------------------------------------------------------
+
+interface TooltipData {
+  label: string;
+  role: Role;
+  x: number;
+  y: number;
+}
+
+function Tooltip({ data }: { data: TooltipData }) {
+  const roleLabel = data.role === "primary" ? "Primario" : data.role === "secondary" ? "Secundario" : null;
+  const dotColor = data.role === "primary" ? "#3B82F6" : data.role === "secondary" ? "#F59E0B" : null;
+
+  return (
+    <div
+      className="pointer-events-none absolute z-20"
+      style={{
+        left: data.x,
+        top: data.y - 44,
+        transform: "translateX(-50%)",
+      }}
+    >
+      <div className="flex items-center gap-2 rounded-lg border border-[#3F3F46] bg-[#09090B]/95 px-3 py-1.5 shadow-xl backdrop-blur-sm">
+        <span className="text-xs font-semibold text-[#FAFAFA] whitespace-nowrap">
+          {data.label}
+        </span>
+        {roleLabel && (
+          <>
+            <span className="h-3 w-px bg-[#3F3F46]" />
+            <span className="flex items-center gap-1 whitespace-nowrap">
+              <span
+                className="inline-block h-2 w-2 rounded-full"
+                style={{ background: dotColor ?? undefined }}
+              />
+              <span className="text-[10px] font-medium text-[#A1A1AA]">{roleLabel}</span>
+            </span>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -328,84 +297,115 @@ const fadeIn = {
 };
 
 export function ExerciseBodyMapView({ primaryMuscle, secondaryMuscles }: ExerciseBodyMapViewProps) {
-  const primaryZones = new Set<BodyZone>(MUSCLE_TO_ZONES[primaryMuscle] ?? []);
-  const secondaryZones = new Set<BodyZone>(
-    secondaryMuscles.flatMap((m) => MUSCLE_TO_ZONES[m] ?? []),
+  const primarySet = new Set<MuscleGroup>([primaryMuscle]);
+  const secondarySet = new Set<MuscleGroup>(secondaryMuscles ?? []);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [tooltip, setTooltip] = useState<TooltipData | null>(null);
+
+  const getRole = useCallback(
+    (muscle: MuscleGroup): Role => {
+      if (primarySet.has(muscle)) return "primary";
+      if (secondarySet.has(muscle)) return "secondary";
+      return "inactive";
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [primaryMuscle, secondaryMuscles],
   );
 
-  const [hoveredZone, setHoveredZone] = useState<BodyZone | null>(null);
+  const updateTooltip = useCallback(
+    (zone: ZoneDef, e: React.MouseEvent) => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      setTooltip({
+        label: MUSCLE_LABELS[zone.muscle] ?? zone.muscle,
+        role: getRole(zone.muscle),
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      });
+    },
+    [getRole],
+  );
 
-  // Resolve the muscle label for the hovered zone
-  const hoveredMuscle = hoveredZone ? ZONE_TO_MUSCLE[hoveredZone] : null;
-  const tooltipLabel = hoveredMuscle ? (MUSCLE_LABELS[hoveredMuscle] ?? hoveredMuscle) : null;
+  const handleZoneEnter = useCallback(
+    (zone: ZoneDef, e: React.MouseEvent) => {
+      setHoveredId(zone.id);
+      updateTooltip(zone, e);
+    },
+    [updateTooltip],
+  );
+
+  const handleZoneMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!containerRef.current || !hoveredId) return;
+      const zone = [...FRONT_ZONES, ...BACK_ZONES].find((z) => z.id === hoveredId);
+      if (zone) updateTooltip(zone, e);
+    },
+    [hoveredId, updateTooltip],
+  );
+
+  const handleZoneLeave = useCallback(() => {
+    setHoveredId(null);
+    setTooltip(null);
+  }, []);
+
+  const activeMuscles = [primaryMuscle, ...(secondaryMuscles ?? [])];
+  const frontHasActive = FRONT_ZONES.some((z) => activeMuscles.includes(z.muscle));
+  const backHasActive = BACK_ZONES.some((z) => activeMuscles.includes(z.muscle));
 
   return (
     <motion.div {...fadeIn} className="flex flex-col items-center gap-4">
-      {/* Dual view: front + back */}
-      <div className="relative flex items-start justify-center gap-4">
-        <div className="flex flex-col items-center gap-1.5">
-          <span className="text-[10px] font-medium uppercase tracking-widest text-[#71717A]">
-            Frente
-          </span>
-          <BodySvg
-            paths={FRONT_PATHS}
-            primaryZones={primaryZones}
-            secondaryZones={secondaryZones}
+      <div ref={containerRef} className="relative flex items-start justify-center gap-3">
+        {/* Front view */}
+        <div className={!frontHasActive && backHasActive ? "opacity-50" : ""}>
+          <BodyView
+            zones={FRONT_ZONES}
+            outline={BODY_OUTLINE_FRONT}
+            primarySet={primarySet}
+            secondarySet={secondarySet}
             label="Vista frontal del cuerpo con músculos marcados"
-            hoveredZone={hoveredZone}
-            onZoneEnter={setHoveredZone}
-            onZoneLeave={() => setHoveredZone(null)}
+            viewLabel="Frente"
+            hoveredId={hoveredId}
+            onZoneEnter={handleZoneEnter}
+            onZoneLeave={handleZoneLeave}
+            onZoneMove={handleZoneMove}
           />
         </div>
 
-        <div className="flex flex-col items-center gap-1.5">
-          <span className="text-[10px] font-medium uppercase tracking-widest text-[#71717A]">
-            Espalda
-          </span>
-          <BodySvg
-            paths={BACK_PATHS}
-            primaryZones={primaryZones}
-            secondaryZones={secondaryZones}
+        {/* Back view */}
+        <div className={!backHasActive && frontHasActive ? "opacity-50" : ""}>
+          <BodyView
+            zones={BACK_ZONES}
+            outline={BODY_OUTLINE_BACK}
+            primarySet={primarySet}
+            secondarySet={secondarySet}
             label="Vista dorsal del cuerpo con músculos marcados"
-            hoveredZone={hoveredZone}
-            onZoneEnter={setHoveredZone}
-            onZoneLeave={() => setHoveredZone(null)}
+            viewLabel="Espalda"
+            hoveredId={hoveredId}
+            onZoneEnter={handleZoneEnter}
+            onZoneLeave={handleZoneLeave}
+            onZoneMove={handleZoneMove}
           />
         </div>
 
         {/* Floating tooltip */}
-        {tooltipLabel && (
-          <div
-            className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
-            aria-hidden="true"
-          >
-            <div className="rounded-md border border-[#3F3F46] bg-[#09090B]/95 px-2.5 py-1 shadow-lg">
-              <span className="text-xs font-semibold text-[#FAFAFA] whitespace-nowrap">
-                {tooltipLabel}
-              </span>
-            </div>
-          </div>
-        )}
+        {tooltip && <Tooltip data={tooltip} />}
       </div>
 
       {/* Legend */}
-      <div
-        className="flex items-center gap-5"
-        aria-label="Leyenda del mapa muscular"
-      >
+      <div className="flex items-center gap-6" aria-label="Leyenda del mapa muscular">
         <span className="flex items-center gap-1.5 text-xs text-[#A1A1AA]">
           <span
-            aria-hidden="true"
-            className="inline-block h-2.5 w-2.5 rounded-full"
-            style={{ background: "#3B82F6", flexShrink: 0 }}
+            className="inline-block h-2.5 w-2.5 rounded-full shadow-[0_0_6px_rgba(59,130,246,0.5)]"
+            style={{ background: "#3B82F6" }}
           />
           Primario
         </span>
         <span className="flex items-center gap-1.5 text-xs text-[#A1A1AA]">
           <span
-            aria-hidden="true"
-            className="inline-block h-2.5 w-2.5 rounded-full"
-            style={{ background: "#F59E0B", flexShrink: 0 }}
+            className="inline-block h-2.5 w-2.5 rounded-full shadow-[0_0_6px_rgba(245,158,11,0.5)]"
+            style={{ background: "#F59E0B" }}
           />
           Secundario
         </span>
