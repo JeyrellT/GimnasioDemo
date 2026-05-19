@@ -134,7 +134,7 @@ export function Step4Questionnaire({ draftId }: Step4QuestionnaireProps) {
                 onClick={() => setGoal(value)}
                 className={`rounded-lg border py-2.5 text-xs font-semibold transition-colors min-h-[44px] ${
                   goal === value
-                    ? "border-[#FF6A1A] bg-[rgba(255,106,26,0.15)] text-[#FF6A1A]"
+                    ? "border-[#3B82F6] bg-[rgba(255,106,26,0.15)] text-[#3B82F6]"
                     : "border-[#3F3F46] bg-[#27272A] text-[#A1A1AA] hover:border-[#52525B]"
                 }`}
                 aria-pressed={goal === value}
@@ -184,7 +184,7 @@ export function Step4Questionnaire({ draftId }: Step4QuestionnaireProps) {
                   onClick={() => setTakesMedication(val)}
                   className={`flex-1 rounded-lg border py-2.5 text-sm font-semibold transition-colors min-h-[44px] ${
                     takesMedication === val
-                      ? "border-[#FF6A1A] bg-[rgba(255,106,26,0.15)] text-[#FF6A1A]"
+                      ? "border-[#3B82F6] bg-[rgba(255,106,26,0.15)] text-[#3B82F6]"
                       : "border-[#3F3F46] bg-[#27272A] text-[#A1A1AA] hover:border-[#52525B]"
                   }`}
                 >
@@ -216,7 +216,7 @@ export function Step4Questionnaire({ draftId }: Step4QuestionnaireProps) {
                   onClick={() => setHasInjuries(val)}
                   className={`flex-1 rounded-lg border py-2.5 text-sm font-semibold transition-colors min-h-[44px] ${
                     hasInjuries === val
-                      ? "border-[#FF6A1A] bg-[rgba(255,106,26,0.15)] text-[#FF6A1A]"
+                      ? "border-[#3B82F6] bg-[rgba(255,106,26,0.15)] text-[#3B82F6]"
                       : "border-[#3F3F46] bg-[#27272A] text-[#A1A1AA] hover:border-[#52525B]"
                   }`}
                 >

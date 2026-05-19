@@ -12,7 +12,7 @@ import type { RoutineWithDays } from "@/types/domain";
 // ── Goal config ───────────────────────────────────────────────────────────────
 
 const GOAL_META: Record<string, { label: string; color: string; bg: string }> = {
-  HYPERTROPHY: { label: "Hipertrofia",              color: "#FF6A1A", bg: "rgba(255,106,26,0.12)" },
+  HYPERTROPHY: { label: "Hipertrofia",              color: "#3B82F6", bg: "rgba(255,106,26,0.12)" },
   STRENGTH:    { label: "Fuerza",                   color: "#3B82F6", bg: "rgba(59,130,246,0.12)"  },
   ENDURANCE:   { label: "Resistencia",              color: "#22C55E", bg: "rgba(34,197,94,0.12)"   },
   FAT_LOSS:    { label: "Pérdida de grasa",         color: "#F59E0B", bg: "rgba(245,158,11,0.12)"  },
@@ -59,7 +59,7 @@ export default function RoutineDetailClient({ routineId }: Props) {
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-[#FF6A1A]" aria-label="Cargando rutina" />
+        <Loader2 className="h-6 w-6 animate-spin text-[#3B82F6]" aria-label="Cargando rutina" />
       </div>
     );
   }
@@ -132,7 +132,7 @@ export default function RoutineDetailClient({ routineId }: Props) {
             {/* Assign CTA */}
             <Link
               href={`/trainer/rutinas/${routineId}/asignar`}
-              className="shrink-0 flex items-center gap-2 rounded-xl border border-[#3F3F46] bg-[#09090B] px-4 py-2.5 text-xs font-semibold text-[#FAFAFA] min-h-[44px] hover:border-[#FF6A1A] hover:text-[#FF6A1A] transition-colors"
+              className="shrink-0 flex items-center gap-2 rounded-xl border border-[#3F3F46] bg-[#09090B] px-4 py-2.5 text-xs font-semibold text-[#FAFAFA] min-h-[44px] hover:border-[#3B82F6] hover:text-[#3B82F6] transition-colors"
             >
               <UserCheck className="h-4 w-4" aria-hidden="true" />
               Asignar
@@ -178,7 +178,7 @@ function NotFoundView() {
       </div>
       <Link
         href="/trainer/rutinas"
-        className="text-xs text-[#FF6A1A] hover:text-[#E55A0E] transition-colors"
+        className="text-xs text-[#3B82F6] hover:text-[#2563EB] transition-colors"
       >
         Volver a mis rutinas
       </Link>

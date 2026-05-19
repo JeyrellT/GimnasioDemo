@@ -50,7 +50,7 @@ export default function LpdpPage() {
             Podés corregir tus datos personales en cualquier momento desde tu
             perfil. Para datos clínicos (mediciones, PAR-Q) que requieren
             validación del entrenador, enviá la solicitud a{" "}
-            <a href="mailto:dpo@blacklinefitness.app" className="text-[#FF6A1A]">
+            <a href="mailto:dpo@blacklinefitness.app" className="text-[#3B82F6]">
               dpo@blacklinefitness.app
             </a>
             .
@@ -115,13 +115,13 @@ export default function LpdpPage() {
           <ul className="ml-4 list-disc space-y-1">
             <li>
               Email DPO:{" "}
-              <a href="mailto:dpo@blacklinefitness.app" className="text-[#FF6A1A]">
+              <a href="mailto:dpo@blacklinefitness.app" className="text-[#3B82F6]">
                 dpo@blacklinefitness.app
               </a>
             </li>
             <li>
               Soporte general:{" "}
-              <a href="mailto:soporte@blacklinefitness.app" className="text-[#FF6A1A]">
+              <a href="mailto:soporte@blacklinefitness.app" className="text-[#3B82F6]">
                 soporte@blacklinefitness.app
               </a>
             </li>
@@ -133,7 +133,7 @@ export default function LpdpPage() {
               href="https://www.prodhab.go.cr"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#FF6A1A]"
+              className="text-[#3B82F6]"
             >
               prodhab.go.cr
             </a>

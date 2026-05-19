@@ -75,7 +75,7 @@ export function TrainerDashboardClient({ trainerName }: TrainerDashboardClientPr
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#FF6A1A]" aria-label="Cargando dashboard" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#3B82F6]" aria-label="Cargando dashboard" />
       </div>
     );
   }

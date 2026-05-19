@@ -51,7 +51,7 @@ export default function EntrenadorPricingPage() {
             min={0}
             step={1000}
             aria-label="Precio mensual en colones"
-            className="w-36 bg-transparent text-center text-5xl font-bold tabular text-[#FAFAFA] focus:outline-none focus:text-[#FF6A1A] transition-colors"
+            className="w-36 bg-transparent text-center text-5xl font-bold tabular text-[#FAFAFA] focus:outline-none focus:text-[#3B82F6] transition-colors"
           />
           <span className="text-xl text-[#71717A]">/mes</span>
         </div>
@@ -71,7 +71,7 @@ export default function EntrenadorPricingPage() {
               onClick={() => setPrice(s)}
               className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                 price === s
-                  ? "bg-[#FF6A1A] text-white"
+                  ? "bg-[#3B82F6] text-white"
                   : "border border-[#3F3F46] text-[#A1A1AA] hover:border-[#71717A]"
               }`}
             >
@@ -91,7 +91,7 @@ export default function EntrenadorPricingPage() {
         type="button"
         onClick={handleContinue}
         disabled={submitting}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#FF6A1A] py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-[#E55A0E] disabled:opacity-60 transition-colors"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#3B82F6] py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-[#2563EB] disabled:opacity-60 transition-colors"
       >
         {submitting ? "Guardando..." : "Ir al dashboard"}
         {!submitting && <ArrowRight className="h-4 w-4" aria-hidden="true" />}

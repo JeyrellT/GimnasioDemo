@@ -75,7 +75,7 @@ export default function PerfilPage() {
       {/* Avatar section */}
       <div className="flex items-center gap-5">
         <div className="relative group">
-          <div className="h-20 w-20 rounded-full bg-gradient-to-br from-brand-primary to-[#C04A00] p-[2px]">
+          <div className="h-20 w-20 rounded-full bg-gradient-to-br from-brand-primary to-[#1D4ED8] p-[2px]">
             <Avatar className="h-full w-full">
               {avatarUrl && (
                 <AvatarImage src={avatarUrl} alt={user.name} />
@@ -144,8 +144,8 @@ export default function PerfilPage() {
       {IS_DEMO && (
         <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-4 space-y-3">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#FF6A1A]/15">
-              <Sparkles className="h-4 w-4 text-[#FF6A1A]" aria-hidden="true" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#3B82F6]/15">
+              <Sparkles className="h-4 w-4 text-[#3B82F6]" aria-hidden="true" />
             </div>
             <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-400">
               API Key de Gemini
@@ -160,7 +160,7 @@ export default function PerfilPage() {
               value={apiKey}
               onChange={(e) => setApiKeyState(e.target.value)}
               placeholder="AIzaSy..."
-              className="w-full min-h-[44px] rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 pr-10 font-mono text-sm text-neutral-50 placeholder:text-neutral-600 focus:border-[#FF6A1A] focus:outline-none focus:ring-1 focus:ring-[#FF6A1A]"
+              className="w-full min-h-[44px] rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 pr-10 font-mono text-sm text-neutral-50 placeholder:text-neutral-600 focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6]"
               aria-label="API Key de Gemini"
             />
             <button
@@ -180,7 +180,7 @@ export default function PerfilPage() {
             href="https://aistudio.google.com/app/apikey"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-[#FF6A1A] hover:underline"
+            className="inline-flex items-center gap-1 text-xs text-[#3B82F6] hover:underline"
           >
             Obtene tu clave gratuita en Google AI Studio
             <ExternalLink className="h-3 w-3" aria-hidden="true" />

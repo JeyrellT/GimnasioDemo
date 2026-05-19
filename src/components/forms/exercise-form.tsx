@@ -447,7 +447,7 @@ export function ExerciseForm({ exercise }: ExerciseFormProps) {
           <Button
             type="submit"
             disabled={isPending}
-            className="min-w-[160px] bg-[#FF6A1A] hover:bg-[#E55A0E] text-white font-semibold disabled:opacity-60"
+            className="min-w-[160px] bg-[#3B82F6] hover:bg-[#2563EB] text-white font-semibold disabled:opacity-60"
           >
             {isPending
               ? exercise

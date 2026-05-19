@@ -146,7 +146,7 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
       {/* Sticky header */}
       <div className="sticky top-14 z-30 flex items-center justify-between border-b border-[#3F3F46] bg-[#09090B] px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className="text-sm font-bold tabular text-[#FF6A1A]">
+          <div className="text-sm font-bold tabular text-[#3B82F6]">
             {formatElapsed(elapsed)}
           </div>
           {!isOnline && (
@@ -216,7 +216,7 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
               className={cn(
                 "h-2 rounded-full transition-all",
                 i === currentExerciseIndex
-                  ? "w-6 bg-[#FF6A1A]"
+                  ? "w-6 bg-[#3B82F6]"
                   : i < currentExerciseIndex
                     ? "w-2 bg-[#22C55E]"
                     : "w-2 bg-[#3F3F46]",
@@ -227,8 +227,8 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
 
         {/* Rest timer */}
         {timerActive && (
-          <div className="rounded-2xl border border-[#FF6A1A]/30 bg-[#FF6A1A]/5 p-4 text-center">
-            <p className="text-xs text-[#FF6A1A] mb-1">Descanso</p>
+          <div className="rounded-2xl border border-[#3B82F6]/30 bg-[#3B82F6]/5 p-4 text-center">
+            <p className="text-xs text-[#3B82F6] mb-1">Descanso</p>
             <p className="text-5xl font-bold tabular text-[#FAFAFA]">
               {secondsLeft}
             </p>
@@ -265,7 +265,7 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
                 </span>
                 {s.isPr && (
                   <Trophy
-                    className="ml-auto h-4 w-4 text-[#F5C542]"
+                    className="ml-auto h-4 w-4 text-[#60A5FA]"
                     aria-hidden="true"
                   />
                 )}
@@ -310,7 +310,7 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
                     className={cn(
                       "flex-1 rounded-lg py-2 text-xs font-medium transition-colors",
                       fatigue === n
-                        ? "bg-[#FF6A1A] text-white"
+                        ? "bg-[#3B82F6] text-white"
                         : "bg-[#27272A] text-[#A1A1AA] hover:bg-[#3F3F46]",
                     )}
                   >
@@ -332,7 +332,7 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
                 type="button"
                 onClick={handleComplete}
                 disabled={completing}
-                className="flex-1 rounded-xl bg-[#FF6A1A] py-3 text-sm font-semibold text-white min-h-[48px] hover:bg-[#E55A0E] disabled:opacity-60 transition-colors"
+                className="flex-1 rounded-xl bg-[#3B82F6] py-3 text-sm font-semibold text-white min-h-[48px] hover:bg-[#2563EB] disabled:opacity-60 transition-colors"
               >
                 {completing ? "Guardando..." : "Completar sesión"}
               </button>

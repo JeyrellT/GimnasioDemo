@@ -31,17 +31,17 @@ function StatCard({
   label: string;
   value: number | string;
   icon: LucideIcon;
-  accent?: "orange" | "green" | "red" | "yellow" | "neutral";
+  accent?: "blue" | "green" | "red" | "yellow" | "neutral";
   sub?: string;
 }) {
   const colors: Record<
     string,
     { bg: string; icon: string; border: string }
   > = {
-    orange: {
-      bg: "bg-[#FF6A1A]/10",
-      icon: "text-[#FF6A1A]",
-      border: "border-[#FF6A1A]/20",
+    blue: {
+      bg: "bg-[#3B82F6]/10",
+      icon: "text-[#3B82F6]",
+      border: "border-[#3B82F6]/20",
     },
     green: {
       bg: "bg-[#22C55E]/10",
@@ -124,7 +124,7 @@ export default async function AdminDashboardPage() {
             label="Total usuarios"
             value={s.totalUsers}
             icon={Users}
-            accent="orange"
+            accent="blue"
           />
           <StatCard
             label="Trainers"
@@ -197,7 +197,7 @@ export default async function AdminDashboardPage() {
             label="Nuevos usuarios"
             value={s.newUsersLast30d}
             icon={TrendingUp}
-            accent="orange"
+            accent="blue"
           />
           <StatCard
             label="Nuevos trainers"

@@ -29,7 +29,7 @@ export default function ClientesPage() {
   if (loading) {
     return (
       <div className="flex min-h-[300px] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-[#FF6A1A]" />
+        <Loader2 className="h-6 w-6 animate-spin text-[#3B82F6]" />
       </div>
     );
   }
@@ -47,7 +47,7 @@ export default function ClientesPage() {
             <button
               type="button"
               onClick={() => setDialogOpen(true)}
-              className="flex items-center gap-2 rounded-lg bg-[#FF6A1A] px-4 py-2 text-sm font-semibold text-white min-h-[44px] hover:bg-[#E55A0E] transition-colors"
+              className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2 text-sm font-semibold text-white min-h-[44px] hover:bg-[#2563EB] transition-colors"
             >
               <UserPlus className="h-4 w-4" aria-hidden="true" />
               Agregar cliente
@@ -79,7 +79,7 @@ export default function ClientesPage() {
                 className="flex items-center gap-4 rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 hover:bg-[#27272A] transition-colors"
               >
                 {/* Avatar */}
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#1E2A38] text-sm font-bold text-[#F5C542]">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#1E2A38] text-sm font-bold text-[#60A5FA]">
                   {(client.name ?? "?").slice(0, 2).toUpperCase()}
                 </div>
 

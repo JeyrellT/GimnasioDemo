@@ -56,7 +56,7 @@ function DifficultyDots({ filled }: DifficultyDotsProps) {
           key={level}
           className={cn(
             "h-2 w-2 rounded-full transition-colors",
-            level <= filled ? "bg-[#FF6A1A]" : "bg-[#3F3F46]",
+            level <= filled ? "bg-[#3B82F6]" : "bg-[#3F3F46]",
           )}
         />
       ))}
@@ -186,7 +186,7 @@ function MediaHero({ nameEs, gifUrl, thumbnailUrl, videoUrl }: MediaHeroProps) {
           aria-label="Reproducir video tutorial"
           className="absolute inset-0 z-10 flex items-center justify-center group/play"
         >
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#FF6A1A]/90 shadow-lg shadow-[#FF6A1A]/30 ring-2 ring-white/20 transition-transform duration-200 group-hover/play:scale-110 group-active/play:scale-95">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#3B82F6]/90 shadow-lg shadow-[#3B82F6]/30 ring-2 ring-white/20 transition-transform duration-200 group-hover/play:scale-110 group-active/play:scale-95">
             <PlayCircle
               className="h-8 w-8 text-white"
               aria-hidden="true"
@@ -253,7 +253,7 @@ function ContextBar({
   return (
     <div className="flex items-center gap-0 rounded-xl bg-[#27272A] ring-1 ring-[#3F3F46] overflow-hidden">
       <div className="flex flex-1 flex-col items-center gap-0.5 px-3 py-2.5">
-        <RotateCcw className="h-3.5 w-3.5 text-[#FF6A1A]" aria-hidden="true" />
+        <RotateCcw className="h-3.5 w-3.5 text-[#3B82F6]" aria-hidden="true" />
         <span className="text-xs font-bold text-[#FAFAFA]">{targetSets}</span>
         <span className="text-[10px] text-[#71717A] leading-none">
           {targetSets === 1 ? "serie" : "series"}
@@ -263,7 +263,7 @@ function ContextBar({
       <div className="h-8 w-px bg-[#3F3F46]" aria-hidden="true" />
 
       <div className="flex flex-1 flex-col items-center gap-0.5 px-3 py-2.5">
-        <ChevronRight className="h-3.5 w-3.5 text-[#FF6A1A]" aria-hidden="true" />
+        <ChevronRight className="h-3.5 w-3.5 text-[#3B82F6]" aria-hidden="true" />
         <span className="text-xs font-bold text-[#FAFAFA]">
           {targetRepsMin === targetRepsMax
             ? targetRepsMin
@@ -275,7 +275,7 @@ function ContextBar({
       <div className="h-8 w-px bg-[#3F3F46]" aria-hidden="true" />
 
       <div className="flex flex-1 flex-col items-center gap-0.5 px-3 py-2.5">
-        <Timer className="h-3.5 w-3.5 text-[#FF6A1A]" aria-hidden="true" />
+        <Timer className="h-3.5 w-3.5 text-[#3B82F6]" aria-hidden="true" />
         <span className="text-xs font-bold text-[#FAFAFA]">{restSeconds}s</span>
         <span className="text-[10px] text-[#71717A] leading-none">descanso</span>
       </div>
@@ -423,7 +423,7 @@ export function ExerciseVideoModal({
                         "flex h-8 w-8 items-center justify-center rounded-full",
                         "bg-black/50 backdrop-blur-sm ring-1 ring-white/10",
                         "text-white/80 transition-colors hover:bg-black/70 hover:text-white",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6A1A]",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6]",
                       )}
                     >
                       <X className="h-4 w-4" />
@@ -531,10 +531,10 @@ export function ExerciseVideoModal({
                         <motion.div
                           initial={sectionHidden}
                           animate={makeSectionVariant(context !== null ? 4 : 3)}
-                          className="flex gap-3 rounded-xl border border-[#FF6A1A]/25 bg-[#FF6A1A]/5 px-4 py-3"
+                          className="flex gap-3 rounded-xl border border-[#3B82F6]/25 bg-[#3B82F6]/5 px-4 py-3"
                         >
                           <StickyNote
-                            className="mt-0.5 h-4 w-4 shrink-0 text-[#FF6A1A]"
+                            className="mt-0.5 h-4 w-4 shrink-0 text-[#3B82F6]"
                             aria-hidden="true"
                           />
                           <p className="text-sm italic leading-relaxed text-[#E4E4E7]">

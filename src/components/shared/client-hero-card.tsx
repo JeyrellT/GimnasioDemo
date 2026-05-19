@@ -132,7 +132,7 @@ export function ClientHeroCard({
 
         {/* Layout principal */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
-          {/* Avatar con orange ring */}
+          {/* Avatar con blue ring */}
           <AvatarPrimitive.Root
             className="mx-auto h-20 w-20 shrink-0 overflow-hidden rounded-2xl ring-2 ring-[rgba(255,106,26,0.3)] sm:mx-0"
             aria-label={`Avatar de ${name}`}
@@ -143,7 +143,7 @@ export function ClientHeroCard({
               className="h-full w-full object-cover"
             />
             <AvatarPrimitive.Fallback
-              className="flex h-full w-full items-center justify-center bg-[#27272A] text-xl font-bold text-[#FF6A1A]"
+              className="flex h-full w-full items-center justify-center bg-[#27272A] text-xl font-bold text-[#3B82F6]"
               aria-hidden="true"
             >
               {getInitials(name)}
@@ -166,7 +166,7 @@ export function ClientHeroCard({
                 <Chip>{genderLabel}</Chip>
               )}
               {resolvedGoalLabel && (
-                <span className="inline-flex items-center rounded-full bg-[rgba(255,106,26,0.15)] px-2.5 py-1 text-xs font-semibold text-[#FF6A1A] border border-[rgba(255,106,26,0.3)]">
+                <span className="inline-flex items-center rounded-full bg-[rgba(255,106,26,0.15)] px-2.5 py-1 text-xs font-semibold text-[#3B82F6] border border-[rgba(255,106,26,0.3)]">
                   {resolvedGoalLabel}
                 </span>
               )}
@@ -196,14 +196,14 @@ export function ClientHeroCard({
               <button
                 type="button"
                 onClick={() => openMeasurementSheet(clientId)}
-                className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#FF6A1A] px-5 py-3 text-sm font-semibold text-[#09090B] shadow-[0_0_20px_-4px_rgba(255,106,26,0.4)] transition-all duration-150 hover:scale-[1.02] hover:bg-[#E55A0E] hover:shadow-[0_0_28px_-4px_rgba(255,106,26,0.6)] focus-visible:outline-2 focus-visible:outline-[#FF6A1A] focus-visible:outline-offset-2"
+                className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#3B82F6] px-5 py-3 text-sm font-semibold text-[#09090B] shadow-[0_0_20px_-4px_rgba(255,106,26,0.4)] transition-all duration-150 hover:scale-[1.02] hover:bg-[#2563EB] hover:shadow-[0_0_28px_-4px_rgba(255,106,26,0.6)] focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2"
                 aria-label="Agregar nueva medición para este cliente"
               >
                 + Nueva medición
               </button>
               <Link
                 href={routineHref}
-                className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-[rgba(63,63,70,0.8)] bg-transparent px-5 py-3 text-sm font-semibold text-[#FAFAFA] transition-all duration-150 hover:scale-[1.02] hover:bg-[#27272A] hover:border-[rgba(63,63,70,1)] focus-visible:outline-2 focus-visible:outline-[#FF6A1A] focus-visible:outline-offset-2"
+                className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-[rgba(63,63,70,0.8)] bg-transparent px-5 py-3 text-sm font-semibold text-[#FAFAFA] transition-all duration-150 hover:scale-[1.02] hover:bg-[#27272A] hover:border-[rgba(63,63,70,1)] focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2"
                 aria-label={
                   hasActiveRoutine
                     ? "Ver rutina activa de este cliente"

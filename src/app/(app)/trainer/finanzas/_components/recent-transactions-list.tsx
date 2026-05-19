@@ -62,7 +62,7 @@ function TypeBadge({ type }: TypeBadgeProps) {
     },
     visit: {
       label: "Visita",
-      className: "bg-[#FF6A1A]/15 text-[#FF6A1A]",
+      className: "bg-[#3B82F6]/15 text-[#3B82F6]",
     },
   } as const satisfies Record<FinanceTransaction["type"], { label: string; className: string }>;
 
@@ -156,7 +156,7 @@ export function RecentTransactionsList({ transactions }: RecentTransactionsListP
         <div className="border-t border-[#27272A]/60 px-4 py-2.5">
           <Link
             href="/trainer/finanzas/movimientos"
-            className="flex items-center gap-1.5 text-xs font-medium text-[#FF6A1A] transition-opacity duration-100 hover:opacity-80"
+            className="flex items-center gap-1.5 text-xs font-medium text-[#3B82F6] transition-opacity duration-100 hover:opacity-80"
           >
             Ver todos los movimientos
             <ArrowRight className="h-3 w-3" aria-hidden="true" />

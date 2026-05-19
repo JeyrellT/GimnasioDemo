@@ -182,7 +182,7 @@ export function VisitForm({ locations, onSuccess, onCancel }: VisitFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs uppercase tracking-wide text-[#A1A1AA]">
-                Ubicación <span className="text-[#FF6A1A]">*</span>
+                Ubicación <span className="text-[#3B82F6]">*</span>
               </FormLabel>
               <Select
                 onValueChange={handleLocationChange}
@@ -216,7 +216,7 @@ export function VisitForm({ locations, onSuccess, onCancel }: VisitFormProps) {
               <FormControl>
                 <Input
                   type="datetime-local"
-                  className="bg-[#09090B] border-[#3F3F46] focus:border-[#FF6A1A] h-11 text-sm"
+                  className="bg-[#09090B] border-[#3F3F46] focus:border-[#3B82F6] h-11 text-sm"
                   {...field}
                 />
               </FormControl>
@@ -243,7 +243,7 @@ export function VisitForm({ locations, onSuccess, onCancel }: VisitFormProps) {
                       max={10000}
                       step={0.1}
                       placeholder={String(selectedLocation?.defaultKm ?? "0")}
-                      className="bg-[#09090B] border-[#3F3F46] focus:border-[#FF6A1A] h-11 text-sm pr-10"
+                      className="bg-[#09090B] border-[#3F3F46] focus:border-[#3B82F6] h-11 text-sm pr-10"
                       value={field.value === "" ? "" : field.value}
                       onChange={(e) => field.onChange(e.target.value === "" ? "" : e.target.valueAsNumber)}
                     />
@@ -260,7 +260,7 @@ export function VisitForm({ locations, onSuccess, onCancel }: VisitFormProps) {
         {selectedLocation && previewLabel && (
           <div className="rounded-lg border border-[#3F3F46] bg-[#09090B] px-4 py-3">
             <p className="text-xs text-[#71717A] mb-0.5">Costo estimado</p>
-            <p className="text-sm font-semibold text-[#FF6A1A]">{previewLabel}</p>
+            <p className="text-sm font-semibold text-[#3B82F6]">{previewLabel}</p>
           </div>
         )}
 
@@ -277,7 +277,7 @@ export function VisitForm({ locations, onSuccess, onCancel }: VisitFormProps) {
                 <Textarea
                   placeholder="Notas de la visita..."
                   maxLength={500}
-                  className="bg-[#09090B] border-[#3F3F46] focus-visible:ring-[#FF6A1A] text-sm resize-none min-h-[72px]"
+                  className="bg-[#09090B] border-[#3F3F46] focus-visible:ring-[#3B82F6] text-sm resize-none min-h-[72px]"
                   {...field}
                 />
               </FormControl>
@@ -294,7 +294,7 @@ export function VisitForm({ locations, onSuccess, onCancel }: VisitFormProps) {
               variant="outline"
               onClick={onCancel}
               disabled={pending}
-              className="flex-1 border-[#3F3F46] text-[#A1A1AA] hover:border-[#FF6A1A] hover:text-[#FAFAFA] h-11"
+              className="flex-1 border-[#3F3F46] text-[#A1A1AA] hover:border-[#3B82F6] hover:text-[#FAFAFA] h-11"
             >
               Cancelar
             </Button>
@@ -302,7 +302,7 @@ export function VisitForm({ locations, onSuccess, onCancel }: VisitFormProps) {
           <Button
             type="submit"
             disabled={pending || !locationId}
-            className="flex-1 bg-[#FF6A1A] hover:bg-[#E55A0E] text-white h-11 font-semibold disabled:opacity-50"
+            className="flex-1 bg-[#3B82F6] hover:bg-[#2563EB] text-white h-11 font-semibold disabled:opacity-50"
           >
             {pending ? (
               <>

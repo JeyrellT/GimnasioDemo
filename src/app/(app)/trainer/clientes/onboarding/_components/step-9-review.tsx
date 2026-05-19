@@ -61,13 +61,13 @@ function ReviewCard({
     <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Icon className="h-4 w-4 text-[#FF6A1A]" aria-hidden="true" />
+          <Icon className="h-4 w-4 text-[#3B82F6]" aria-hidden="true" />
           <span className="text-sm font-semibold text-[#FAFAFA]">{title}</span>
         </div>
         <button
           type="button"
           onClick={() => onEdit(step)}
-          className="flex items-center gap-1 text-xs text-[#71717A] hover:text-[#FF6A1A] transition-colors"
+          className="flex items-center gap-1 text-xs text-[#71717A] hover:text-[#3B82F6] transition-colors"
           aria-label={`Editar ${title}`}
         >
           <Pencil className="h-3 w-3" />

@@ -80,7 +80,7 @@ export default function EntrenadorFacturacionPage() {
             ].map(({ value, label }) => (
               <label
                 key={value}
-                className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#3F3F46] px-4 py-2.5 has-[:checked]:border-[#FF6A1A] has-[:checked]:bg-[#FF6A1A]/5 transition-colors"
+                className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#3F3F46] px-4 py-2.5 has-[:checked]:border-[#3B82F6] has-[:checked]:bg-[#3B82F6]/5 transition-colors"
               >
                 <input
                   type="radio"
@@ -109,7 +109,7 @@ export default function EntrenadorFacturacionPage() {
             type="text"
             placeholder="1-1234-5678"
             {...register("cedulaNumber")}
-            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-[#FF6A1A] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#FF6A1A]"
+            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6]"
           />
           {errors.cedulaNumber && (
             <p role="alert" className="text-xs text-[#EF4444]">
@@ -132,7 +132,7 @@ export default function EntrenadorFacturacionPage() {
             type="text"
             placeholder="Ej: 50604013000010012345678400001"
             {...register("haciendaId")}
-            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-[#FF6A1A] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#FF6A1A]"
+            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6]"
           />
         </div>
 
@@ -149,7 +149,7 @@ export default function EntrenadorFacturacionPage() {
             rows={2}
             placeholder="Provincia, cantón, distrito, detalles..."
             {...register("address")}
-            className="w-full resize-none rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-[#FF6A1A] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#FF6A1A]"
+            className="w-full resize-none rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6]"
           />
           {errors.address && (
             <p role="alert" className="text-xs text-[#EF4444]">
@@ -162,7 +162,7 @@ export default function EntrenadorFacturacionPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#FF6A1A] py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-[#E55A0E] disabled:opacity-60 transition-colors"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#3B82F6] py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-[#2563EB] disabled:opacity-60 transition-colors"
           >
             {isSubmitting ? "Guardando..." : "Continuar"}
             {!isSubmitting && (

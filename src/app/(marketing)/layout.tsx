@@ -31,7 +31,7 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
             </Link>
             <Link
               href="/registrarse"
-              className="rounded-lg bg-[#FF6A1A] px-4 py-2 text-sm font-semibold text-white hover:bg-[#E55A0E] transition-colors min-h-[44px] inline-flex items-center"
+              className="rounded-lg bg-[#3B82F6] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2563EB] transition-colors min-h-[44px] inline-flex items-center"
             >
               Empezar gratis
             </Link>

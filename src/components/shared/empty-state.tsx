@@ -43,7 +43,7 @@ export function EmptyState({
           {action.href ? (
             <a
               href={action.href}
-              className="mt-2 rounded-lg bg-[#FF6A1A] px-5 py-2.5 text-sm font-semibold text-white min-h-[44px] hover:bg-[#E55A0E] transition-colors inline-flex items-center"
+              className="mt-2 rounded-lg bg-[#3B82F6] px-5 py-2.5 text-sm font-semibold text-white min-h-[44px] hover:bg-[#2563EB] transition-colors inline-flex items-center"
             >
               {action.label}
             </a>
@@ -51,7 +51,7 @@ export function EmptyState({
             <button
               type="button"
               onClick={action.onClick}
-              className="mt-2 rounded-lg bg-[#FF6A1A] px-5 py-2.5 text-sm font-semibold text-white min-h-[44px] hover:bg-[#E55A0E] transition-colors"
+              className="mt-2 rounded-lg bg-[#3B82F6] px-5 py-2.5 text-sm font-semibold text-white min-h-[44px] hover:bg-[#2563EB] transition-colors"
             >
               {action.label}
             </button>

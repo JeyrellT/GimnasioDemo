@@ -221,9 +221,9 @@ function MeasurementContent({
             aria-controls={`tabpanel-${tab.id}`}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "flex-1 px-3 py-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-[#FF6A1A] focus-visible:outline-offset-[-2px]",
+              "flex-1 px-3 py-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-[-2px]",
               activeTab === tab.id
-                ? "border-b-2 border-[#FF6A1A] text-[#FAFAFA]"
+                ? "border-b-2 border-[#3B82F6] text-[#FAFAFA]"
                 : "text-[#71717A] hover:text-[#A1A1AA]",
             )}
           >
@@ -241,7 +241,7 @@ function MeasurementContent({
           aria-labelledby="tab-bascula"
           hidden={activeTab !== "bascula"}
         >
-          <React.Suspense fallback={<div className="flex h-32 items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-[#FF6A1A]" /></div>}>
+          <React.Suspense fallback={<div className="flex h-32 items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-[#3B82F6]" /></div>}>
             <LazyScaleOcrUploader
               onExtracted={handleOcrExtracted}
               onError={(msg) => setErrorMsg(msg)}
@@ -272,7 +272,7 @@ function MeasurementContent({
                 aria-controls={`subtabpanel-${t.id}`}
                 onClick={() => setAnthroTab(t.id)}
                 className={cn(
-                  "flex-1 rounded-lg py-2 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-[#FF6A1A]",
+                  "flex-1 rounded-lg py-2 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-[#3B82F6]",
                   anthroTab === t.id
                     ? "bg-[#3F3F46] text-[#FAFAFA]"
                     : "text-[#71717A] hover:text-[#A1A1AA]",
@@ -382,10 +382,10 @@ function MeasurementContent({
           disabled={saveState === "saving" || saveState === "success"}
           className={cn(
             "inline-flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-colors",
-            "focus-visible:outline-2 focus-visible:outline-[#FF6A1A] focus-visible:outline-offset-2",
+            "focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2",
             saveState === "success"
               ? "bg-[#22C55E] text-[#09090B]"
-              : "bg-[#FF6A1A] text-[#09090B] hover:bg-[#E55A0E] disabled:opacity-60 disabled:cursor-not-allowed",
+              : "bg-[#3B82F6] text-[#09090B] hover:bg-[#2563EB] disabled:opacity-60 disabled:cursor-not-allowed",
           )}
           aria-busy={saveState === "saving"}
         >
@@ -444,7 +444,7 @@ function AnthroFieldGrid({ fields, form, setField }: AnthroFieldGridProps) {
                 className={cn(
                   "min-h-[44px] w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA]",
                   "placeholder:text-[#52525B]",
-                  "focus:border-[#FF6A1A] focus:outline-none focus:ring-1 focus:ring-[#FF6A1A]",
+                  "focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6]",
                   unit && "pr-10",
                 )}
                 aria-label={`${label}${unit ? `, en ${unit}` : ""}`}

@@ -147,7 +147,7 @@ export function Step5Anthropometry({ draftId }: Step5AnthropometryProps) {
 
         {/* Optional */}
         <details className="rounded-xl border border-[#3F3F46] bg-[#18181B]">
-          <summary className="cursor-pointer select-none px-5 py-4 text-sm text-[#FF6A1A] hover:text-[#E55A0E] list-none">
+          <summary className="cursor-pointer select-none px-5 py-4 text-sm text-[#3B82F6] hover:text-[#2563EB] list-none">
             + Medidas adicionales (opcional)
           </summary>
           <div className="px-5 pb-5 space-y-4 border-t border-[#3F3F46] pt-4">

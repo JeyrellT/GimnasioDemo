@@ -215,7 +215,7 @@ function getZoneFill(
 ): { fill: string; fillOpacity: number; filter?: string } {
   switch (role) {
     case "primary":
-      return { fill: "#FF6A1A", fillOpacity: hovered ? 0.8 : 0.6, filter: "url(#glow-primary)" };
+      return { fill: "#3B82F6", fillOpacity: hovered ? 0.8 : 0.6, filter: "url(#glow-primary)" };
     case "secondary":
       return { fill: "#F59E0B", fillOpacity: hovered ? 0.55 : 0.35 };
     default:
@@ -301,7 +301,7 @@ function BodySvg({
             d={p.d}
             fill={fill}
             fillOpacity={fillOpacity}
-            stroke={role === "primary" ? "#FF6A1A" : role === "secondary" ? "#F59E0B" : "none"}
+            stroke={role === "primary" ? "#3B82F6" : role === "secondary" ? "#F59E0B" : "none"}
             strokeWidth={role !== "other" ? 1 : 0}
             strokeOpacity={role === "primary" ? 0.8 : 0.5}
             filter={filter}
@@ -397,7 +397,7 @@ export function ExerciseBodyMapView({ primaryMuscle, secondaryMuscles }: Exercis
           <span
             aria-hidden="true"
             className="inline-block h-2.5 w-2.5 rounded-full"
-            style={{ background: "#FF6A1A", flexShrink: 0 }}
+            style={{ background: "#3B82F6", flexShrink: 0 }}
           />
           Primario
         </span>

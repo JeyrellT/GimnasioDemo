@@ -53,7 +53,7 @@ export default function EditarEjercicioClient({ exerciseId }: Props) {
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-[#FF6A1A]" aria-label="Cargando ejercicio" />
+        <Loader2 className="h-6 w-6 animate-spin text-[#3B82F6]" aria-label="Cargando ejercicio" />
       </div>
     );
   }
@@ -72,7 +72,7 @@ export default function EditarEjercicioClient({ exerciseId }: Props) {
         </div>
         <Link
           href="/trainer/ejercicios"
-          className="text-xs text-[#FF6A1A] hover:text-[#E55A0E] transition-colors"
+          className="text-xs text-[#3B82F6] hover:text-[#2563EB] transition-colors"
         >
           Volver a la biblioteca
         </Link>
@@ -95,7 +95,7 @@ export default function EditarEjercicioClient({ exerciseId }: Props) {
         </div>
         <Link
           href={`/trainer/ejercicios/${exerciseId}`}
-          className="text-xs text-[#FF6A1A] hover:text-[#E55A0E] transition-colors"
+          className="text-xs text-[#3B82F6] hover:text-[#2563EB] transition-colors"
         >
           Ver ejercicio
         </Link>
@@ -117,7 +117,7 @@ export default function EditarEjercicioClient({ exerciseId }: Props) {
         </div>
         <Link
           href="/trainer/ejercicios"
-          className="text-xs text-[#FF6A1A] hover:text-[#E55A0E] transition-colors"
+          className="text-xs text-[#3B82F6] hover:text-[#2563EB] transition-colors"
         >
           Volver a la biblioteca
         </Link>

@@ -39,13 +39,13 @@ export function AdminBottomNav() {
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 className={cn(
                   "flex items-center justify-center rounded-full transition-colors duration-200",
-                  active ? "bg-[#FF6A1A]/15 p-1.5" : "p-1.5",
+                  active ? "bg-[#3B82F6]/15 p-1.5" : "p-1.5",
                 )}
               >
                 <Icon
                   className={cn(
                     "h-5 w-5 transition-colors duration-200",
-                    active ? "text-[#FF6A1A]" : "text-[#71717A]",
+                    active ? "text-[#3B82F6]" : "text-[#71717A]",
                   )}
                   aria-hidden="true"
                 />
@@ -53,7 +53,7 @@ export function AdminBottomNav() {
               <span
                 className={cn(
                   "text-[10px] font-medium transition-colors duration-200 leading-none",
-                  active ? "text-[#FF6A1A]" : "text-[#71717A]",
+                  active ? "text-[#3B82F6]" : "text-[#71717A]",
                 )}
               >
                 {label}
@@ -66,7 +66,7 @@ export function AdminBottomNav() {
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0, opacity: 0 }}
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                    className="absolute bottom-1 h-1 w-1 rounded-full bg-[#FF6A1A]"
+                    className="absolute bottom-1 h-1 w-1 rounded-full bg-[#3B82F6]"
                   />
                 )}
               </AnimatePresence>

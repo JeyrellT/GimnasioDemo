@@ -13,8 +13,8 @@ export default function OfflinePage() {
         aria-hidden="true"
       >
         <rect width="56" height="56" rx="12" fill="#1E2A38" />
-        <path d="M14 38 L28 16 L42 38 H32 L28 30 L24 38 Z" fill="#FF6A1A" />
-        <rect x="11" y="40" width="34" height="4" rx="2" fill="#FF6A1A" />
+        <path d="M14 38 L28 16 L42 38 H32 L28 30 L24 38 Z" fill="#3B82F6" />
+        <rect x="11" y="40" width="34" height="4" rx="2" fill="#3B82F6" />
       </svg>
 
       <div className="flex flex-col gap-2">
@@ -28,7 +28,7 @@ export default function OfflinePage() {
       <button
         type="button"
         onClick={() => window.location.reload()}
-        className="mt-2 rounded-lg bg-[#FF6A1A] px-6 py-3 text-sm font-semibold text-white min-h-[44px] hover:bg-[#E55A0E] transition-colors"
+        className="mt-2 rounded-lg bg-[#3B82F6] px-6 py-3 text-sm font-semibold text-white min-h-[44px] hover:bg-[#2563EB] transition-colors"
       >
         Reintentar
       </button>

@@ -161,7 +161,7 @@ export default function FotoInicialPage() {
           type="button"
           onClick={handleContinue}
           disabled={uploading}
-          className="flex w-full items-center justify-center rounded-xl bg-[#FF6A1A] py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-[#E55A0E] disabled:opacity-60 transition-colors"
+          className="flex w-full items-center justify-center rounded-xl bg-[#3B82F6] py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-[#2563EB] disabled:opacity-60 transition-colors"
         >
           {uploading ? "Subiendo fotos..." : "Continuar"}
         </button>

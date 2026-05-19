@@ -132,7 +132,7 @@ export function Step7Plan({ draftId }: Step7PlanProps) {
                     </div>
                   ) : (
                     <select
-                      className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] focus-visible:border-[#FF6A1A] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#FF6A1A]"
+                      className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6]"
                       {...field}
                       value={field.value ?? ""}
                     >

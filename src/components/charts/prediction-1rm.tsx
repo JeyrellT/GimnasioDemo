@@ -42,7 +42,7 @@ export default function Prediction1RM({ data, exerciseName }: Prediction1RMProps
         <p className="text-xs text-[#71717A] uppercase tracking-wide">{exerciseName}</p>
       )}
       <div className="flex items-baseline gap-1">
-        <span className="text-3xl font-bold tabular text-[#F5C542]">{latest.toFixed(1)}</span>
+        <span className="text-3xl font-bold tabular text-[#60A5FA]">{latest.toFixed(1)}</span>
         <span className="text-sm text-[#71717A]">kg 1RM estimado</span>
       </div>
       <ResponsiveContainer width="100%" height={120}>
@@ -54,10 +54,10 @@ export default function Prediction1RM({ data, exerciseName }: Prediction1RMProps
             contentStyle={{ background: "#18181B", border: "1px solid #3F3F46", borderRadius: "8px" }}
             labelFormatter={(v: string) => formatDate(v)}
             formatter={(v: number) => [v.toFixed(1) + " kg", "1RM"]}
-            itemStyle={{ color: "#F5C542", fontSize: 12 }}
+            itemStyle={{ color: "#60A5FA", fontSize: 12 }}
           />
-          <ReferenceLine y={latest} stroke="#F5C542" strokeDasharray="4 2" strokeOpacity={0.4} />
-          <Line type="monotone" dataKey="predicted1rm" stroke="#F5C542" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: "#F5C542" }} />
+          <ReferenceLine y={latest} stroke="#60A5FA" strokeDasharray="4 2" strokeOpacity={0.4} />
+          <Line type="monotone" dataKey="predicted1rm" stroke="#60A5FA" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: "#60A5FA" }} />
         </LineChart>
       </ResponsiveContainer>
     </div>

@@ -37,7 +37,7 @@ export function MovimientosTipoFilter({ current }: { current: Tipo }) {
           className={cn(
             "rounded-md px-3 py-1 text-sm font-medium transition-colors duration-150",
             current === o.value
-              ? "bg-[#FF6A1A] text-white shadow-sm"
+              ? "bg-[#3B82F6] text-white shadow-sm"
               : "text-[#71717A] hover:text-[#FAFAFA] hover:bg-[#27272A]",
           )}
         >

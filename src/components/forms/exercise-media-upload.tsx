@@ -272,16 +272,16 @@ export function ExerciseMediaUpload({
             onDrop={handleDrop}
             className={cn(
               "flex min-h-[180px] cursor-pointer select-none flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-6 transition-all duration-150",
-              "focus-visible:outline-2 focus-visible:outline-[#FF6A1A] focus-visible:outline-offset-2",
+              "focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2",
               isDragging
-                ? "border-[#FF6A1A] bg-[#FF6A1A]/5"
-                : "border-[#3F3F46] bg-[#18181B] hover:border-[#FF6A1A]",
+                ? "border-[#3B82F6] bg-[#3B82F6]/5"
+                : "border-[#3F3F46] bg-[#18181B] hover:border-[#3B82F6]",
               isBusy && "pointer-events-none opacity-50",
             )}
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#27272A]">
               {isDragging ? (
-                <Upload className="h-6 w-6 text-[#FF6A1A]" aria-hidden="true" />
+                <Upload className="h-6 w-6 text-[#3B82F6]" aria-hidden="true" />
               ) : (
                 <Image className="h-6 w-6 text-[#71717A]" aria-hidden="true" />
               )}
@@ -308,7 +308,7 @@ export function ExerciseMediaUpload({
               <button
                 type="button"
                 onClick={handleRetry}
-                className="shrink-0 text-xs font-semibold text-[#EF4444] underline underline-offset-2 hover:text-[#FCA5A5] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#FF6A1A]"
+                className="shrink-0 text-xs font-semibold text-[#EF4444] underline underline-offset-2 hover:text-[#FCA5A5] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6]"
               >
                 Reintentar
               </button>
@@ -329,7 +329,7 @@ export function ExerciseMediaUpload({
           {phase.name === "uploading" && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[rgba(9,9,11,0.65)]">
               <Loader2
-                className="h-8 w-8 animate-spin text-[#FF6A1A]"
+                className="h-8 w-8 animate-spin text-[#3B82F6]"
                 aria-hidden="true"
               />
               <span className="text-xs font-medium text-[#FAFAFA]">
@@ -384,8 +384,8 @@ export function ExerciseMediaUpload({
               onClick={() => inputRef.current?.click()}
               className={cn(
                 "inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-[#3F3F46] bg-[#18181B]/90 px-3 py-1.5 text-xs font-semibold text-[#FAFAFA] backdrop-blur-sm transition-colors",
-                "hover:border-[#FF6A1A] hover:text-[#FF6A1A]",
-                "focus-visible:outline-2 focus-visible:outline-[#FF6A1A] focus-visible:outline-offset-2",
+                "hover:border-[#3B82F6] hover:text-[#3B82F6]",
+                "focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2",
                 "disabled:cursor-not-allowed disabled:opacity-50",
               )}
               aria-label="Cambiar imagen del ejercicio"
@@ -402,7 +402,7 @@ export function ExerciseMediaUpload({
                 className={cn(
                   "inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-[rgba(239,68,68,0.4)] bg-[rgba(239,68,68,0.1)] px-3 py-1.5 text-xs font-semibold text-[#EF4444] backdrop-blur-sm transition-colors",
                   "hover:bg-[rgba(239,68,68,0.2)]",
-                  "focus-visible:outline-2 focus-visible:outline-[#FF6A1A] focus-visible:outline-offset-2",
+                  "focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2",
                 )}
                 aria-label="Eliminar imagen del ejercicio"
               >
@@ -419,7 +419,7 @@ export function ExerciseMediaUpload({
                   className={cn(
                     "inline-flex min-h-[36px] items-center gap-1 rounded-lg bg-[#EF4444] px-3 py-1.5 text-xs font-semibold text-white transition-colors",
                     "hover:bg-[#DC2626]",
-                    "focus-visible:outline-2 focus-visible:outline-[#FF6A1A] focus-visible:outline-offset-2",
+                    "focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2",
                     "disabled:cursor-not-allowed disabled:opacity-60",
                   )}
                   aria-label="Confirmar eliminación de imagen"
@@ -438,7 +438,7 @@ export function ExerciseMediaUpload({
                   className={cn(
                     "inline-flex min-h-[36px] items-center gap-1 rounded-lg border border-[#3F3F46] bg-[#18181B]/90 px-2 py-1.5 text-xs font-semibold text-[#A1A1AA] backdrop-blur-sm transition-colors",
                     "hover:text-[#FAFAFA]",
-                    "focus-visible:outline-2 focus-visible:outline-[#FF6A1A] focus-visible:outline-offset-2",
+                    "focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2",
                     "disabled:cursor-not-allowed disabled:opacity-50",
                   )}
                   aria-label="Cancelar eliminación"

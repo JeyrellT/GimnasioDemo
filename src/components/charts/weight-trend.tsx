@@ -61,10 +61,10 @@ export default function WeightTrend({ data }: WeightTrendProps) {
         <Line
           type="monotone"
           dataKey="weight"
-          stroke="#FF6A1A"
+          stroke="#3B82F6"
           strokeWidth={2}
           dot={false}
-          activeDot={{ r: 4, fill: "#FF6A1A" }}
+          activeDot={{ r: 4, fill: "#3B82F6" }}
         />
       </LineChart>
     </ResponsiveContainer>

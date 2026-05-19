@@ -164,7 +164,7 @@ export function CircumferencesTable({
                         "flex items-center justify-between py-3 transition-all duration-150",
                         // Selection overrides accent border and background
                         isSelected
-                          ? "border-l-2 border-l-[#FF6A1A] bg-[rgba(255,106,26,0.10)] pl-3 pr-4"
+                          ? "border-l-2 border-l-[#3B82F6] bg-[rgba(255,106,26,0.10)] pl-3 pr-4"
                           : hasValue
                             ? cn("pl-3 pr-4", group.accentClass)
                             : "px-4",

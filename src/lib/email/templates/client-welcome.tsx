@@ -6,7 +6,7 @@
 // provisional vía quickAddClient(). El botón lleva al cliente a
 // /client/bienvenida donde se le pide que cambie su contraseña.
 //
-// Tono: voseo CR, dark theme, brand orange #FF6A1A.
+// Tono: voseo CR, dark theme, brand blue #3B82F6.
 // =============================================================================
 
 import {
@@ -136,7 +136,7 @@ const styles = {
     padding: "32px 40px 24px",
   },
   logo: {
-    color: "#FF6A1A",
+    color: "#3B82F6",
     fontSize: "28px",
     fontWeight: "700",
     margin: "0 0 4px",
@@ -170,7 +170,7 @@ const styles = {
     textAlign: "center" as const,
   },
   button: {
-    backgroundColor: "#FF6A1A",
+    backgroundColor: "#3B82F6",
     borderRadius: "8px",
     color: "#FFFFFF",
     display: "inline-block",
@@ -195,7 +195,7 @@ const styles = {
     margin: "0 0 8px",
   },
   fallback_link: {
-    color: "#FF6A1A",
+    color: "#3B82F6",
     fontSize: "12px",
     wordBreak: "break-all" as const,
   },

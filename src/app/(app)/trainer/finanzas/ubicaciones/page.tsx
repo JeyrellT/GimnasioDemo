@@ -36,8 +36,8 @@ export default function UbicacionesPage() {
     <div className="space-y-6">
       {/* Page header */}
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#FF6A1A]/15">
-          <MapPin className="h-5 w-5 text-[#FF6A1A]" aria-hidden="true" />
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#3B82F6]/15">
+          <MapPin className="h-5 w-5 text-[#3B82F6]" aria-hidden="true" />
         </div>
         <div>
           <h1 className="text-xl font-bold text-[#FAFAFA] leading-tight">Ubicaciones</h1>

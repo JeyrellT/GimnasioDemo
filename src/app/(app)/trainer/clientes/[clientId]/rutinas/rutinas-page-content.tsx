@@ -50,11 +50,11 @@ function ProgressBar({ pct }: { pct: number }) {
     <div className="mt-3">
       <div className="mb-1 flex items-center justify-between">
         <span className="text-[10px] text-[#71717A]">Progreso estimado</span>
-        <span className="text-[10px] font-semibold text-[#FF6A1A]">{pct}%</span>
+        <span className="text-[10px] font-semibold text-[#3B82F6]">{pct}%</span>
       </div>
       <div className="h-1.5 w-full rounded-full bg-[#27272A] overflow-hidden">
         <div
-          className="h-full rounded-full bg-[#FF6A1A] transition-all"
+          className="h-full rounded-full bg-[#3B82F6] transition-all"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -101,7 +101,7 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
   if (loading) {
     return (
       <div className="flex min-h-[300px] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-[#FF6A1A]" />
+        <Loader2 className="h-6 w-6 animate-spin text-[#3B82F6]" />
       </div>
     );
   }
@@ -115,7 +115,7 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
       <div className="flex items-center gap-3">
         <Link
           href={"/trainer/clientes/" + clientId}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#3F3F46] bg-[#18181B] text-[#71717A] transition-colors hover:border-[#FF6A1A]/40 hover:text-[#FAFAFA]"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#3F3F46] bg-[#18181B] text-[#71717A] transition-colors hover:border-[#3B82F6]/40 hover:text-[#FAFAFA]"
           aria-label="Volver al cliente"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />

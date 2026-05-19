@@ -21,7 +21,7 @@ const BUILT_IN_GOALS = [
 const inputCls =
   "w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] " +
   "transition-[border-color,box-shadow] duration-150 " +
-  "focus-visible:border-[#FF6A1A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6A1A]/30";
+  "focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6]/30";
 
 const groupCardCls =
   "rounded-xl border border-[#3F3F46] bg-[#18181B]/80 backdrop-blur-sm " +
@@ -113,7 +113,7 @@ function CreateGoalDialog({
             type="button"
             onClick={handleSave}
             disabled={!name.trim() || saving}
-            className="flex items-center gap-1.5 rounded-lg bg-[#FF6A1A] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
             {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
             Guardar
@@ -219,7 +219,7 @@ export default function NuevaRutinaPage() {
                 type="button"
                 onClick={() => setDialogOpen(true)}
                 title="Crear objetivo"
-                className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-lg border border-[#3F3F46] bg-[#27272A] text-[#A1A1AA] transition-colors hover:border-[#FF6A1A] hover:text-[#FF6A1A]"
+                className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-lg border border-[#3F3F46] bg-[#27272A] text-[#A1A1AA] transition-colors hover:border-[#3B82F6] hover:text-[#3B82F6]"
               >
                 <Plus className="h-4 w-4" />
               </button>
@@ -281,7 +281,7 @@ export default function NuevaRutinaPage() {
           className={[
             "flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white",
             "min-h-[48px] transition-all duration-200",
-            "bg-gradient-to-r from-[#FF6A1A] to-[#E55A0E]",
+            "bg-gradient-to-r from-[#3B82F6] to-[#2563EB]",
             "shadow-[0_0_20px_rgba(255,106,26,0.30)]",
             "hover:shadow-[0_0_28px_rgba(255,106,26,0.45)] hover:brightness-110",
             "active:scale-[0.98]",

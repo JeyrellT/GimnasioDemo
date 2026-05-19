@@ -78,8 +78,8 @@ export function FinancePeriodSelector({ currentMonth }: FinancePeriodSelectorPro
         className={cn(
           "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors duration-150",
           "border-[#3F3F46]/70 bg-[#18181B] text-[#A1A1AA]",
-          "hover:border-[#FF6A1A]/50 hover:text-[#FAFAFA]",
-          open && "border-[#FF6A1A]/50 text-[#FAFAFA]",
+          "hover:border-[#3B82F6]/50 hover:text-[#FAFAFA]",
+          open && "border-[#3B82F6]/50 text-[#FAFAFA]",
         )}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -116,7 +116,7 @@ export function FinancePeriodSelector({ currentMonth }: FinancePeriodSelectorPro
                   className={cn(
                     "w-full px-3 py-2 text-left text-sm transition-colors duration-100",
                     value === currentMonth
-                      ? "text-[#FF6A1A] font-semibold bg-[#FF6A1A]/10"
+                      ? "text-[#3B82F6] font-semibold bg-[#3B82F6]/10"
                       : "text-[#A1A1AA] hover:bg-[#27272A] hover:text-[#FAFAFA]",
                   )}
                 >

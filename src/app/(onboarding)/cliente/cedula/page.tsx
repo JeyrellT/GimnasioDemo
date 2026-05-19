@@ -82,7 +82,7 @@ export default function CedulaPage() {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex w-full flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-[#3F3F46] bg-[#18181B] p-8 hover:border-[#FF6A1A] hover:bg-[#FF6A1A]/5 transition-colors"
+            className="flex w-full flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-[#3F3F46] bg-[#18181B] p-8 hover:border-[#3B82F6] hover:bg-[#3B82F6]/5 transition-colors"
           >
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#27272A]">
               <Upload className="h-7 w-7 text-[#A1A1AA]" aria-hidden="true" />
@@ -165,7 +165,7 @@ export default function CedulaPage() {
                     onChange={(e) =>
                       setEdited((prev) => ({ ...prev, [key]: e.target.value }))
                     }
-                    className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] focus-visible:border-[#FF6A1A] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#FF6A1A]"
+                    className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6]"
                   />
                 </div>
               ))}
@@ -179,7 +179,7 @@ export default function CedulaPage() {
           <button
             type="button"
             onClick={handleContinue}
-            className="flex w-full items-center justify-center rounded-xl bg-[#FF6A1A] py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-[#E55A0E] transition-colors"
+            className="flex w-full items-center justify-center rounded-xl bg-[#3B82F6] py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-[#2563EB] transition-colors"
           >
             Continuar
           </button>

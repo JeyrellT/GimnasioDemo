@@ -33,7 +33,7 @@ const INTENSITY_COLOR: Record<CalendarHeatDay["intensity"], string> = {
   none: "#27272A",
   low: "rgba(255,106,26,0.30)",
   medium: "rgba(255,106,26,0.60)",
-  high: "#FF6A1A",
+  high: "#3B82F6",
 };
 
 // Max bars to show before collapsing into "ESTA SEMANA" summary
@@ -147,7 +147,7 @@ function EventTypeIcon({ type }: EventTypeIconProps) {
   // session_today
   return (
     <Clock
-      className="h-3.5 w-3.5 shrink-0 text-[#FF6A1A]"
+      className="h-3.5 w-3.5 shrink-0 text-[#3B82F6]"
       aria-hidden
     />
   );
@@ -207,7 +207,7 @@ function DaySection({ dateStr, events, isHighlighted, sectionId, reduced }: DayS
       className={cn(
         "rounded-lg border transition-all duration-300",
         isHighlighted
-          ? "border-[#FF6A1A]/40 bg-[#FF6A1A]/5"
+          ? "border-[#3B82F6]/40 bg-[#3B82F6]/5"
           : "border-transparent",
       )}
     >
@@ -218,7 +218,7 @@ function DaySection({ dateStr, events, isHighlighted, sectionId, reduced }: DayS
             className={cn(
               "text-[11px] font-bold uppercase tracking-[0.1em]",
               diff === 0
-                ? "text-[#FF6A1A]"
+                ? "text-[#3B82F6]"
                 : diff < 0
                   ? "text-[#52525B]"
                   : "text-[#A1A1AA]",
@@ -336,7 +336,7 @@ function HeatBar({ day, isToday, isSelected, barIndex, reduced, onClick, section
       <span
         className={cn(
           "text-xs font-medium leading-none",
-          isToday ? "text-[#FF6A1A]" : "text-[#52525B]",
+          isToday ? "text-[#3B82F6]" : "text-[#52525B]",
         )}
         aria-hidden
       >
@@ -352,8 +352,8 @@ function HeatBar({ day, isToday, isSelected, barIndex, reduced, onClick, section
           aria-pressed={isSelected}
           onClick={onClick}
           className={cn(
-            "relative w-full rounded-sm transition-all duration-200 focus-visible:outline-2 focus-visible:outline-[#FF6A1A] focus-visible:outline-offset-2",
-            isSelected ? "ring-1 ring-[#FF6A1A] ring-offset-1 ring-offset-[#09090B]" : "",
+            "relative w-full rounded-sm transition-all duration-200 focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2",
+            isSelected ? "ring-1 ring-[#3B82F6] ring-offset-1 ring-offset-[#09090B]" : "",
           )}
           style={{
             height: 48,
@@ -389,7 +389,7 @@ function HeatBar({ day, isToday, isSelected, barIndex, reduced, onClick, section
       <span
         className={cn(
           "text-[10px] leading-none tabular-nums",
-          isToday ? "font-bold text-[#FF6A1A]" : "text-[#52525B]",
+          isToday ? "font-bold text-[#3B82F6]" : "text-[#52525B]",
         )}
         aria-hidden
       >
@@ -399,7 +399,7 @@ function HeatBar({ day, isToday, isSelected, barIndex, reduced, onClick, section
       {/* Today dot */}
       {isToday && (
         <span
-          className="h-1 w-1 rounded-full bg-[#FF6A1A]"
+          className="h-1 w-1 rounded-full bg-[#3B82F6]"
           aria-hidden
         />
       )}
@@ -521,7 +521,7 @@ export function CalendarWidget({ calendar, className }: CalendarWidgetProps) {
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-[#FF6A1A]" aria-hidden />
+          <Calendar className="h-4 w-4 text-[#3B82F6]" aria-hidden />
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#A1A1AA]">
               Calendario
@@ -533,7 +533,7 @@ export function CalendarWidget({ calendar, className }: CalendarWidgetProps) {
         <button
           type="button"
           onClick={handleTodayClick}
-          className="shrink-0 rounded-full border border-[#3F3F46] bg-[#27272A] px-3 py-1 text-xs font-medium text-[#A1A1AA] transition-all duration-150 hover:border-[#FF6A1A]/40 hover:bg-[#FF6A1A]/10 hover:text-[#FF6A1A] focus-visible:outline-2 focus-visible:outline-[#FF6A1A] focus-visible:outline-offset-2"
+          className="shrink-0 rounded-full border border-[#3F3F46] bg-[#27272A] px-3 py-1 text-xs font-medium text-[#A1A1AA] transition-all duration-150 hover:border-[#3B82F6]/40 hover:bg-[#3B82F6]/10 hover:text-[#3B82F6] focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2"
           aria-label="Ir a hoy en el calendario"
         >
           Hoy

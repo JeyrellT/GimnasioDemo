@@ -89,7 +89,7 @@ function DifficultyDots({ level }: { level: string | null }) {
           key={n}
           className={
             n <= filled
-              ? "h-1.5 w-1.5 rounded-full bg-[#FF6A1A]"
+              ? "h-1.5 w-1.5 rounded-full bg-[#3B82F6]"
               : "h-1.5 w-1.5 rounded-full bg-[#3F3F46]"
           }
         />
@@ -201,7 +201,7 @@ export default function EjerciciosPage() {
   }
 
   const pillBase = "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-colors ";
-  const pillActive = "bg-[#FF6A1A] text-white";
+  const pillActive = "bg-[#3B82F6] text-white";
   const pillInactive = "bg-[#27272A] text-[#A1A1AA] hover:bg-[#3F3F46] hover:text-[#FAFAFA]";
 
   return (
@@ -214,7 +214,7 @@ export default function EjerciciosPage() {
         />
         <Link
           href="/trainer/ejercicios/nuevo"
-          className="flex shrink-0 items-center gap-2 rounded-lg bg-[#FF6A1A] px-4 py-2 text-sm font-semibold text-white min-h-[44px] hover:bg-[#E55A0E] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6A1A]/60"
+          className="flex shrink-0 items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2 text-sm font-semibold text-white min-h-[44px] hover:bg-[#2563EB] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6]/60"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
           Crear ejercicio
@@ -232,11 +232,11 @@ export default function EjerciciosPage() {
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           placeholder="Buscar ejercicio..."
-          className="w-full rounded-xl border border-[#3F3F46] bg-[#18181B] pl-9 pr-28 py-3 text-sm text-[#FAFAFA] placeholder:text-[#52525B] focus:outline-none focus:ring-2 focus:ring-[#FF6A1A]/60 min-h-[44px] transition-colors"
+          className="w-full rounded-xl border border-[#3F3F46] bg-[#18181B] pl-9 pr-28 py-3 text-sm text-[#FAFAFA] placeholder:text-[#52525B] focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/60 min-h-[44px] transition-colors"
         />
         <button
           type="submit"
-          className="absolute right-1.5 rounded-lg bg-[#FF6A1A] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#E55A0E] transition-colors min-h-[36px]"
+          className="absolute right-1.5 rounded-lg bg-[#3B82F6] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#2563EB] transition-colors min-h-[36px]"
         >
           Buscar
         </button>
@@ -291,7 +291,7 @@ export default function EjerciciosPage() {
       {hasFilters && (
         <Link
           href={clearHref}
-          className="inline-flex text-xs text-[#FF6A1A] hover:text-[#E55A0E] transition-colors"
+          className="inline-flex text-xs text-[#3B82F6] hover:text-[#2563EB] transition-colors"
         >
           Limpiar filtros
         </Link>
@@ -300,7 +300,7 @@ export default function EjerciciosPage() {
       {/* Exercise grid */}
       {loading ? (
         <div className="flex justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-[#FF6A1A]" aria-label="Cargando ejercicios" />
+          <Loader2 className="h-6 w-6 animate-spin text-[#3B82F6]" aria-label="Cargando ejercicios" />
         </div>
       ) : exercises.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-[#3F3F46] px-6 py-16 text-center">
@@ -329,7 +329,7 @@ export default function EjerciciosPage() {
                 <li key={ex.id}>
                   <Link
                     href={`/trainer/ejercicios/${ex.id}`}
-                    className="group relative flex flex-col overflow-hidden rounded-xl border border-[#3F3F46] bg-[#18181B]/80 backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:scale-[1.02] hover:border-[#FF6A1A]/40 hover:shadow-[0_0_0_1px_rgba(255,106,26,0.15)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6A1A]/60 cursor-pointer"
+                    className="group relative flex flex-col overflow-hidden rounded-xl border border-[#3F3F46] bg-[#18181B]/80 backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:scale-[1.02] hover:border-[#3B82F6]/40 hover:shadow-[0_0_0_1px_rgba(255,106,26,0.15)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6]/60 cursor-pointer"
                   >
                     {/* Thumbnail */}
                     <div className="relative aspect-video w-full overflow-hidden bg-[#27272A]">

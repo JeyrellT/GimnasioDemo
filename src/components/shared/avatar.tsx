@@ -40,7 +40,7 @@ export function Avatar({ src, name, size = "md", className }: AvatarProps) {
         className="h-full w-full object-cover"
       />
       <RadixAvatar.Fallback
-        className="flex h-full w-full items-center justify-center bg-[#1E2A38] font-semibold text-[#F5C542]"
+        className="flex h-full w-full items-center justify-center bg-[#1E2A38] font-semibold text-[#60A5FA]"
         delayMs={600}
       >
         {initials}

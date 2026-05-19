@@ -212,7 +212,7 @@ export function DashboardFilterBar({
               className={cn(
                 "rounded-md px-3 py-1 text-xs font-medium transition-colors min-h-[28px]",
                 currentRange === range
-                  ? "bg-[#FF6A1A] text-[#FAFAFA]"
+                  ? "bg-[#3B82F6] text-[#FAFAFA]"
                   : "text-[#71717A] hover:text-[#A1A1AA] hover:bg-[#27272A]",
               )}
             >
@@ -270,7 +270,7 @@ export function DashboardFilterBar({
           <div className="flex items-center gap-1.5">
             {/* Badge showing count of active filter dimensions */}
             <span
-              className="inline-flex items-center gap-1 rounded-full bg-[#FF6A1A]/15 px-2.5 py-0.5 text-xs font-semibold text-[#FF6A1A]"
+              className="inline-flex items-center gap-1 rounded-full bg-[#3B82F6]/15 px-2.5 py-0.5 text-xs font-semibold text-[#3B82F6]"
               aria-live="polite"
               aria-label={`${activeFilterCount} ${activeFilterCount === 1 ? "filtro activo" : "filtros activos"}`}
             >
@@ -353,7 +353,7 @@ function MultiSelectDropdown({
         className={cn(
           "flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors min-h-[36px]",
           hasSelection
-            ? "border-[#FF6A1A]/40 bg-[#FF6A1A]/8 text-[#FF6A1A]"
+            ? "border-[#3B82F6]/40 bg-[#3B82F6]/8 text-[#3B82F6]"
             : "border-[#3F3F46] bg-[#18181B] text-[#71717A] hover:text-[#A1A1AA] hover:border-[#52525B]",
         )}
       >
@@ -389,7 +389,7 @@ function MultiSelectDropdown({
                 className={cn(
                   "flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm transition-colors",
                   isSelected
-                    ? "bg-[#FF6A1A]/10 text-[#FF6A1A]"
+                    ? "bg-[#3B82F6]/10 text-[#3B82F6]"
                     : "text-[#A1A1AA] hover:bg-[#27272A] hover:text-[#FAFAFA]",
                 )}
               >
@@ -398,7 +398,7 @@ function MultiSelectDropdown({
                   className={cn(
                     "flex h-4 w-4 shrink-0 items-center justify-center rounded border",
                     isSelected
-                      ? "border-[#FF6A1A] bg-[#FF6A1A]"
+                      ? "border-[#3B82F6] bg-[#3B82F6]"
                       : "border-[#52525B] bg-transparent",
                   )}
                   aria-hidden="true"

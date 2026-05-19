@@ -35,10 +35,10 @@ export function AdminSuperNav() {
     >
       {/* SUPER_ADMIN badge */}
       <div className="flex items-center gap-2 border-b border-[#3F3F46]/60 px-4 py-3">
-        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#FF6A1A]/20">
-          <Shield className="h-3.5 w-3.5 text-[#FF6A1A]" aria-hidden="true" />
+        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#3B82F6]/20">
+          <Shield className="h-3.5 w-3.5 text-[#3B82F6]" aria-hidden="true" />
         </div>
-        <span className="text-xs font-bold uppercase tracking-widest text-[#FF6A1A]">
+        <span className="text-xs font-bold uppercase tracking-widest text-[#3B82F6]">
           Super Admin
         </span>
       </div>
@@ -56,18 +56,18 @@ export function AdminSuperNav() {
               className={cn(
                 "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 min-h-[44px] overflow-hidden",
                 active
-                  ? "bg-[#FF6A1A]/10 text-[#FF6A1A]"
+                  ? "bg-[#3B82F6]/10 text-[#3B82F6]"
                   : "text-[#A1A1AA] hover:bg-[#18181B] hover:text-[#FAFAFA]",
               )}
               aria-current={active ? "page" : undefined}
             >
               {active && (
-                <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-[#FF6A1A]" />
+                <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-[#3B82F6]" />
               )}
               <div
                 className={cn(
                   "flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors duration-200",
-                  active ? "bg-[#FF6A1A]/20" : "",
+                  active ? "bg-[#3B82F6]/20" : "",
                 )}
               >
                 <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />

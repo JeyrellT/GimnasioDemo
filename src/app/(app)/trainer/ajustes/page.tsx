@@ -77,8 +77,8 @@ function Section({
   return (
     <section className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-5 space-y-4">
       <div className="flex items-center gap-2">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#FF6A1A]/15">
-          <Icon className="h-4 w-4 text-[#FF6A1A]" />
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#3B82F6]/15">
+          <Icon className="h-4 w-4 text-[#3B82F6]" />
         </div>
         <h2 className="text-sm font-bold uppercase tracking-wider text-[#A1A1AA]">
           {label}
@@ -334,8 +334,8 @@ export default function AjustesPage() {
       />
 
       {/* Demo mode banner */}
-      <div className="rounded-xl border border-[#FF6A1A]/30 bg-[#FF6A1A]/5 p-4 flex items-start gap-3">
-        <AlertTriangle className="h-5 w-5 text-[#FF6A1A] shrink-0 mt-0.5" />
+      <div className="rounded-xl border border-[#3B82F6]/30 bg-[#3B82F6]/5 p-4 flex items-start gap-3">
+        <AlertTriangle className="h-5 w-5 text-[#3B82F6] shrink-0 mt-0.5" />
         <div>
           <p className="text-sm font-semibold text-[#FAFAFA]">
             Modo demo activo
@@ -366,7 +366,7 @@ export default function AjustesPage() {
               value={apiKey}
               onChange={(e) => setApiKeyState(e.target.value)}
               placeholder="AIzaSy..."
-              className="pr-10 bg-[#09090B] border-[#3F3F46] focus:border-[#FF6A1A] font-mono text-sm"
+              className="pr-10 bg-[#09090B] border-[#3F3F46] focus:border-[#3B82F6] font-mono text-sm"
             />
             <button
               type="button"
@@ -388,7 +388,7 @@ export default function AjustesPage() {
             onClick={handleTestKey}
             disabled={testing || !apiKey.trim()}
             size="sm"
-            className="bg-[#FF6A1A] hover:bg-[#E55A0E] text-white disabled:opacity-50"
+            className="bg-[#3B82F6] hover:bg-[#2563EB] text-white disabled:opacity-50"
           >
             {testing ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
@@ -408,7 +408,7 @@ export default function AjustesPage() {
           </Button>
         </div>
 
-        <div className="rounded-md bg-[#FF6A1A]/5 border border-[#FF6A1A]/20 p-3 text-xs text-[#A1A1AA] space-y-1">
+        <div className="rounded-md bg-[#3B82F6]/5 border border-[#3B82F6]/20 p-3 text-xs text-[#A1A1AA] space-y-1">
           <p>
             Cada extraccion de cedula consume aproximadamente 500 tokens en tu
             cuota de Gemini.
@@ -417,7 +417,7 @@ export default function AjustesPage() {
             href="https://aistudio.google.com/app/apikey"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-[#FF6A1A] hover:underline"
+            className="inline-flex items-center gap-1 text-[#3B82F6] hover:underline"
           >
             Obtene tu clave gratuita en Google AI Studio
             <ExternalLink className="h-3 w-3" />
@@ -521,7 +521,7 @@ export default function AjustesPage() {
           href="https://github.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs text-[#FF6A1A] hover:underline"
+          className="inline-flex items-center gap-1 text-xs text-[#3B82F6] hover:underline"
         >
           Ver codigo en GitHub
           <ExternalLink className="h-3 w-3" />

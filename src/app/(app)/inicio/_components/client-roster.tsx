@@ -122,7 +122,7 @@ interface RosterAvatarProps {
 function RosterAvatar({ src, name }: RosterAvatarProps) {
   const initials = getInitials(name);
   return (
-    <div className="relative h-8 w-8 shrink-0 rounded-full bg-gradient-to-br from-[#FF6A1A] to-[#C04A00] p-[1.5px]">
+    <div className="relative h-8 w-8 shrink-0 rounded-full bg-gradient-to-br from-[#3B82F6] to-[#1D4ED8] p-[1.5px]">
       <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-[#1C1C1F]">
         {src ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -132,7 +132,7 @@ function RosterAvatar({ src, name }: RosterAvatarProps) {
             className="h-full w-full object-cover"
           />
         ) : (
-          <span className="text-[10px] font-bold text-[#FF6A1A]">{initials}</span>
+          <span className="text-[10px] font-bold text-[#3B82F6]">{initials}</span>
         )}
       </div>
     </div>
@@ -226,7 +226,7 @@ function RosterRow({ item, index, reduceMotion }: RosterRowProps) {
         className={cn(
           "group flex items-center gap-3 px-4 py-3 transition-all duration-150",
           "hover:bg-[#27272A] active:bg-[#27272A]",
-          "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#FF6A1A] focus-visible:ring-inset",
+          "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6] focus-visible:ring-inset",
         )}
         style={
           reduceMotion
@@ -308,7 +308,7 @@ function SortDropdown({ value, onChange }: SortDropdownProps) {
           "appearance-none rounded-lg border border-[#3F3F46] bg-[#27272A]",
           "pl-3 pr-8 py-1.5 text-xs font-medium text-[#FAFAFA]",
           "cursor-pointer transition-colors hover:border-[#52525B]",
-          "focus:outline-none focus:ring-1 focus:ring-[#FF6A1A]",
+          "focus:outline-none focus:ring-1 focus:ring-[#3B82F6]",
         )}
       >
         {SORT_OPTIONS.map((o) => (
@@ -380,7 +380,7 @@ export function ClientRoster({ items, className }: ClientRosterProps) {
         </div>
         <Link
           href="/trainer/clientes"
-          className="shrink-0 text-xs font-medium text-[#FF6A1A] transition-colors hover:text-[#C04A00] focus-visible:outline-none focus-visible:underline"
+          className="shrink-0 text-xs font-medium text-[#3B82F6] transition-colors hover:text-[#1D4ED8] focus-visible:outline-none focus-visible:underline"
         >
           Ver todos
         </Link>
@@ -404,7 +404,7 @@ export function ClientRoster({ items, className }: ClientRosterProps) {
               "w-full rounded-lg border border-[#3F3F46] bg-[#27272A]",
               "pl-8 pr-3 py-1.5 text-xs text-[#FAFAFA] placeholder:text-[#52525B]",
               "transition-colors hover:border-[#52525B]",
-              "focus:outline-none focus:ring-1 focus:ring-[#FF6A1A]",
+              "focus:outline-none focus:ring-1 focus:ring-[#3B82F6]",
             )}
           />
         </div>
@@ -471,7 +471,7 @@ export function ClientRoster({ items, className }: ClientRosterProps) {
         <div className="pt-1 text-center">
           <Link
             href="/trainer/clientes"
-            className="text-xs font-medium text-[#71717A] transition-colors hover:text-[#FF6A1A] focus-visible:outline-none focus-visible:underline"
+            className="text-xs font-medium text-[#71717A] transition-colors hover:text-[#3B82F6] focus-visible:outline-none focus-visible:underline"
           >
             + {overflow} {overflow === 1 ? "más" : "más"}
           </Link>

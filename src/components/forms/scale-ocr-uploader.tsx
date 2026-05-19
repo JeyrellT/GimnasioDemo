@@ -205,10 +205,10 @@ export function ScaleOcrUploader({
           }}
           className={cn(
             "flex min-h-[220px] cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed p-6 transition-all duration-150",
-            "focus-visible:outline-2 focus-visible:outline-[#FF6A1A] focus-visible:outline-offset-2",
+            "focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2",
             dragging
-              ? "border-[#FF6A1A] bg-[#27272A]"
-              : "border-[#3F3F46] bg-[#18181B] hover:border-[#FF6A1A] hover:bg-[#27272A]",
+              ? "border-[#3B82F6] bg-[#27272A]"
+              : "border-[#3F3F46] bg-[#18181B] hover:border-[#3B82F6] hover:bg-[#27272A]",
           )}
         >
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#27272A]">
@@ -231,7 +231,7 @@ export function ScaleOcrUploader({
           />
           {state.phase === "processing" && (
             <div className="absolute inset-0 flex items-center justify-center bg-[rgba(9,9,11,0.7)]">
-              <Loader2 className="h-8 w-8 animate-spin text-[#FF6A1A]" aria-hidden="true" />
+              <Loader2 className="h-8 w-8 animate-spin text-[#3B82F6]" aria-hidden="true" />
               <span className="sr-only">Procesando imagen...</span>
             </div>
           )}
@@ -260,7 +260,7 @@ export function ScaleOcrUploader({
             <button
               type="button"
               onClick={handleDetect}
-              className="flex-1 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#FF6A1A] px-4 py-3 text-sm font-semibold text-[#09090B] transition-colors hover:bg-[#E55A0E] focus-visible:outline-2 focus-visible:outline-[#FF6A1A] focus-visible:outline-offset-2"
+              className="flex-1 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#3B82F6] px-4 py-3 text-sm font-semibold text-[#09090B] transition-colors hover:bg-[#2563EB] focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2"
             >
               Detectar datos
             </button>
@@ -268,7 +268,7 @@ export function ScaleOcrUploader({
           <button
             type="button"
             onClick={handleReset}
-            className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-[#3F3F46] px-4 py-3 text-sm font-semibold text-[#FAFAFA] transition-colors hover:bg-[#27272A] focus-visible:outline-2 focus-visible:outline-[#FF6A1A] focus-visible:outline-offset-2"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-[#3F3F46] px-4 py-3 text-sm font-semibold text-[#FAFAFA] transition-colors hover:bg-[#27272A] focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2"
           >
             Cambiar foto
           </button>
@@ -300,7 +300,7 @@ export function ScaleOcrUploader({
         <button
           type="button"
           onClick={handleConfirm}
-          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#FF6A1A] px-4 py-3 text-sm font-semibold text-[#09090B] transition-colors hover:bg-[#E55A0E] focus-visible:outline-2 focus-visible:outline-[#FF6A1A] focus-visible:outline-offset-2"
+          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#3B82F6] px-4 py-3 text-sm font-semibold text-[#09090B] transition-colors hover:bg-[#2563EB] focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2"
         >
           <CheckCircle className="h-4 w-4" aria-hidden="true" />
           Confirmar y guardar
@@ -386,7 +386,7 @@ function ExtractedFields({ data, confidence, onChange }: ExtractedFieldsProps) {
                 step="0.1"
                 value={data[key] ?? ""}
                 onChange={(e) => handleChange(key, e.target.value)}
-                className="min-h-[44px] rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder:text-[#52525B] focus:border-[#FF6A1A] focus:outline-none focus:ring-1 focus:ring-[#FF6A1A]"
+                className="min-h-[44px] rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder:text-[#52525B] focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6]"
                 aria-label={readableFieldName(key)}
               />
             </div>

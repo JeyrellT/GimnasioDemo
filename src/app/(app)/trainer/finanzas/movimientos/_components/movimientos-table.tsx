@@ -184,7 +184,7 @@ export function MovimientosTable({ rows, total, page, totalPages, month, tipo }:
             size="sm"
             disabled={page <= 1}
             onClick={() => goToPage(page - 1)}
-            className="gap-1.5 border-[#3F3F46] text-[#A1A1AA] hover:border-[#FF6A1A] hover:text-[#FAFAFA] disabled:opacity-40"
+            className="gap-1.5 border-[#3F3F46] text-[#A1A1AA] hover:border-[#3B82F6] hover:text-[#FAFAFA] disabled:opacity-40"
           >
             <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             Anterior
@@ -198,7 +198,7 @@ export function MovimientosTable({ rows, total, page, totalPages, month, tipo }:
             size="sm"
             disabled={page >= totalPages}
             onClick={() => goToPage(page + 1)}
-            className="gap-1.5 border-[#3F3F46] text-[#A1A1AA] hover:border-[#FF6A1A] hover:text-[#FAFAFA] disabled:opacity-40"
+            className="gap-1.5 border-[#3F3F46] text-[#A1A1AA] hover:border-[#3B82F6] hover:text-[#FAFAFA] disabled:opacity-40"
           >
             Siguiente
             <ChevronRight className="h-4 w-4" aria-hidden="true" />
@@ -224,7 +224,7 @@ export function MovimientosTable({ rows, total, page, totalPages, month, tipo }:
               variant="outline"
               onClick={() => setDeleteTarget(null)}
               disabled={deleting}
-              className="border-[#3F3F46] text-[#A1A1AA] hover:border-[#FF6A1A]"
+              className="border-[#3F3F46] text-[#A1A1AA] hover:border-[#3B82F6]"
             >
               Cancelar
             </Button>

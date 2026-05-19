@@ -47,17 +47,17 @@ export default function LandingPage() {
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 -z-10"
         >
-          <div className="absolute left-1/2 top-1/3 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#FF6A1A]/8 blur-3xl" />
+          <div className="absolute left-1/2 top-1/3 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#3B82F6]/8 blur-3xl" />
         </div>
 
-        <div className="mb-6 inline-flex items-center rounded-full border border-[#FF6A1A]/30 bg-[#FF6A1A]/10 px-3 py-1 text-xs font-medium text-[#FF6A1A]">
+        <div className="mb-6 inline-flex items-center rounded-full border border-[#3B82F6]/30 bg-[#3B82F6]/10 px-3 py-1 text-xs font-medium text-[#3B82F6]">
           Hecho en Costa Rica
         </div>
 
         <h1 className="max-w-3xl text-4xl font-bold leading-tight text-[#FAFAFA] sm:text-5xl lg:text-6xl text-balance">
           Tu visión,
           <br />
-          <span className="text-[#FF6A1A]">tu evolución.</span>
+          <span className="text-[#3B82F6]">tu evolución.</span>
         </h1>
 
         <p className="mt-6 max-w-xl text-base text-[#A1A1AA] sm:text-lg text-balance">
@@ -69,7 +69,7 @@ export default function LandingPage() {
         <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:gap-4">
           <Link
             href="/registrarse"
-            className="inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-[#FF6A1A] px-8 py-3 text-base font-semibold text-white hover:bg-[#E55A0E] transition-colors"
+            className="inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-[#3B82F6] px-8 py-3 text-base font-semibold text-white hover:bg-[#2563EB] transition-colors"
           >
             Empezar gratis
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -102,8 +102,8 @@ export default function LandingPage() {
                 key={title}
                 className="rounded-2xl border border-[#3F3F46] bg-[#18181B] p-6"
               >
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[#FF6A1A]/10">
-                  <Icon className="h-6 w-6 text-[#FF6A1A]" aria-hidden="true" />
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[#3B82F6]/10">
+                  <Icon className="h-6 w-6 text-[#3B82F6]" aria-hidden="true" />
                 </div>
                 <h3 className="mb-2 text-base font-semibold text-[#FAFAFA]">
                   {title}
@@ -141,12 +141,12 @@ export default function LandingPage() {
                 key={tier}
                 className={`rounded-2xl border p-6 ${
                   highlight
-                    ? "border-[#FF6A1A] bg-[#FF6A1A]/5"
+                    ? "border-[#3B82F6] bg-[#3B82F6]/5"
                     : "border-[#3F3F46] bg-[#27272A]"
                 }`}
               >
                 {highlight && (
-                  <div className="mb-3 text-xs font-semibold text-[#FF6A1A] uppercase tracking-wider">
+                  <div className="mb-3 text-xs font-semibold text-[#3B82F6] uppercase tracking-wider">
                     Más popular
                   </div>
                 )}
@@ -162,7 +162,7 @@ export default function LandingPage() {
 
           <Link
             href="/pricing"
-            className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-[#FF6A1A] hover:text-[#E55A0E] transition-colors"
+            className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-[#3B82F6] hover:text-[#2563EB] transition-colors"
           >
             Ver comparativa completa
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -181,7 +181,7 @@ export default function LandingPage() {
               &ldquo;{testimonial.quote}&rdquo;
             </p>
             <footer className="mt-6">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#1E2A38] text-sm font-semibold text-[#F5C542]">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#1E2A38] text-sm font-semibold text-[#60A5FA]">
                 {testimonial.initials}
               </div>
               <cite className="not-italic">
@@ -204,7 +204,7 @@ export default function LandingPage() {
           </p>
           <Link
             href="/registrarse"
-            className="mt-8 inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-[#FF6A1A] px-10 py-3 text-base font-semibold text-white hover:bg-[#E55A0E] transition-colors"
+            className="mt-8 inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-[#3B82F6] px-10 py-3 text-base font-semibold text-white hover:bg-[#2563EB] transition-colors"
           >
             Crear mi cuenta gratis
             <ArrowRight className="h-4 w-4" aria-hidden="true" />

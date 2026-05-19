@@ -56,25 +56,25 @@ export function ClientProfileTabsClient({
       <TabsList className="flex w-full justify-start overflow-x-auto rounded-none rounded-t-2xl border-b border-[#3F3F46] bg-transparent px-2 py-0">
         <TabsTrigger
           value="historico"
-          className="shrink-0 rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-medium text-[#71717A] transition-colors data-[state=active]:border-[#FF6A1A] data-[state=active]:text-[#FAFAFA] data-[state=active]:bg-transparent hover:text-[#A1A1AA] focus-visible:outline-2 focus-visible:outline-[#FF6A1A]"
+          className="shrink-0 rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-medium text-[#71717A] transition-colors data-[state=active]:border-[#3B82F6] data-[state=active]:text-[#FAFAFA] data-[state=active]:bg-transparent hover:text-[#A1A1AA] focus-visible:outline-2 focus-visible:outline-[#3B82F6]"
         >
           Histórico
         </TabsTrigger>
         <TabsTrigger
           value="rutina"
-          className="shrink-0 rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-medium text-[#71717A] transition-colors data-[state=active]:border-[#FF6A1A] data-[state=active]:text-[#FAFAFA] data-[state=active]:bg-transparent hover:text-[#A1A1AA] focus-visible:outline-2 focus-visible:outline-[#FF6A1A]"
+          className="shrink-0 rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-medium text-[#71717A] transition-colors data-[state=active]:border-[#3B82F6] data-[state=active]:text-[#FAFAFA] data-[state=active]:bg-transparent hover:text-[#A1A1AA] focus-visible:outline-2 focus-visible:outline-[#3B82F6]"
         >
           Rutina
         </TabsTrigger>
         <TabsTrigger
           value="sesiones"
-          className="shrink-0 rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-medium text-[#71717A] transition-colors data-[state=active]:border-[#FF6A1A] data-[state=active]:text-[#FAFAFA] data-[state=active]:bg-transparent hover:text-[#A1A1AA] focus-visible:outline-2 focus-visible:outline-[#FF6A1A]"
+          className="shrink-0 rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-medium text-[#71717A] transition-colors data-[state=active]:border-[#3B82F6] data-[state=active]:text-[#FAFAFA] data-[state=active]:bg-transparent hover:text-[#A1A1AA] focus-visible:outline-2 focus-visible:outline-[#3B82F6]"
         >
           Sesiones
         </TabsTrigger>
         <TabsTrigger
           value="notas"
-          className="shrink-0 rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-medium text-[#71717A] transition-colors data-[state=active]:border-[#FF6A1A] data-[state=active]:text-[#FAFAFA] data-[state=active]:bg-transparent hover:text-[#A1A1AA] focus-visible:outline-2 focus-visible:outline-[#FF6A1A]"
+          className="shrink-0 rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-medium text-[#71717A] transition-colors data-[state=active]:border-[#3B82F6] data-[state=active]:text-[#FAFAFA] data-[state=active]:bg-transparent hover:text-[#A1A1AA] focus-visible:outline-2 focus-visible:outline-[#3B82F6]"
         >
           Notas
         </TabsTrigger>

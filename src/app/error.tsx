@@ -26,7 +26,7 @@ export default function RootError({ error, reset }: ErrorProps) {
           urge, escribí a{" "}
           <a
             href="mailto:soporte@blacklinefitness.app"
-            className="text-[#FF6A1A] underline underline-offset-4"
+            className="text-[#3B82F6] underline underline-offset-4"
           >
             soporte@blacklinefitness.app
           </a>
@@ -41,7 +41,7 @@ export default function RootError({ error, reset }: ErrorProps) {
       <button
         type="button"
         onClick={reset}
-        className="flex items-center gap-2 rounded-lg bg-[#FF6A1A] px-6 py-3 text-sm font-semibold text-white min-h-[44px] hover:bg-[#E55A0E] transition-colors"
+        className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-6 py-3 text-sm font-semibold text-white min-h-[44px] hover:bg-[#2563EB] transition-colors"
       >
         <RotateCcw className="h-4 w-4" aria-hidden="true" />
         Intentá de nuevo

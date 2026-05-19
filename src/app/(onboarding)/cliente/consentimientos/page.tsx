@@ -108,7 +108,7 @@ export default function ConsentimientosPage() {
                       [consent.id]: e.target.checked,
                     }))
                   }
-                  className="h-4 w-4 cursor-pointer rounded border-[#3F3F46] bg-[#27272A] accent-[#FF6A1A]"
+                  className="h-4 w-4 cursor-pointer rounded border-[#3F3F46] bg-[#27272A] accent-[#3B82F6]"
                   aria-describedby={`consent-desc-${consent.id}`}
                 />
               </div>
@@ -168,7 +168,7 @@ export default function ConsentimientosPage() {
         type="button"
         onClick={handleContinue}
         disabled={!requiredChecked || submitting}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#FF6A1A] py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-[#E55A0E] disabled:opacity-50 transition-colors"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#3B82F6] py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-[#2563EB] disabled:opacity-50 transition-colors"
       >
         {submitting ? "Guardando..." : "Continuar"}
       </button>

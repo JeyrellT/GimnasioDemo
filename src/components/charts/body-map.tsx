@@ -439,7 +439,7 @@ function ZoneHotspot({
           height={28}
           rx={14}
           fill="none"
-          stroke="#FF6A1A"
+          stroke="#3B82F6"
           strokeWidth={2}
           strokeDasharray="0"
         />

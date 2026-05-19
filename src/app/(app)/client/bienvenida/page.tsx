@@ -37,7 +37,7 @@ type FormValues = z.infer<typeof schema>;
 const inputCls =
   "w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] " +
   "placeholder-[#71717A] transition-[border-color,box-shadow] duration-150 " +
-  "focus-visible:border-[#FF6A1A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6A1A]/30";
+  "focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6]/30";
 
 // ---------------------------------------------------------------------------
 // Page
@@ -85,8 +85,8 @@ export default function BienvenidaPage() {
         <div className="rounded-2xl border border-[#3F3F46] bg-[#18181B] p-8 shadow-2xl">
           {/* Logo */}
           <div className="mb-6 flex justify-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FF6A1A]/15">
-              <Dumbbell className="h-7 w-7 text-[#FF6A1A]" aria-hidden="true" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#3B82F6]/15">
+              <Dumbbell className="h-7 w-7 text-[#3B82F6]" aria-hidden="true" />
             </div>
           </div>
 
@@ -94,7 +94,7 @@ export default function BienvenidaPage() {
           <div className="mb-8 space-y-2 text-center">
             <h1 className="text-2xl font-bold text-[#FAFAFA]">
               ¡Bienvenido a{" "}
-              <span className="text-[#FF6A1A]">Blackline Fitness</span>!
+              <span className="text-[#3B82F6]">Blackline Fitness</span>!
             </h1>
             <p className="text-sm text-[#71717A]">
               Configurá tu contraseña personal para empezar
@@ -137,7 +137,7 @@ export default function BienvenidaPage() {
                 htmlFor="bienvenida-password"
                 className="block text-sm font-medium text-[#FAFAFA]"
               >
-                Nueva contraseña <span className="text-[#FF6A1A]">*</span>
+                Nueva contraseña <span className="text-[#3B82F6]">*</span>
               </label>
               <div className="relative">
                 <input
@@ -182,7 +182,7 @@ export default function BienvenidaPage() {
                 htmlFor="bienvenida-confirm"
                 className="block text-sm font-medium text-[#FAFAFA]"
               >
-                Confirmá la contraseña <span className="text-[#FF6A1A]">*</span>
+                Confirmá la contraseña <span className="text-[#3B82F6]">*</span>
               </label>
               <div className="relative">
                 <input
@@ -230,7 +230,7 @@ export default function BienvenidaPage() {
               className={[
                 "mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white",
                 "min-h-[48px] transition-all duration-200",
-                "bg-gradient-to-r from-[#FF6A1A] to-[#E55A0E]",
+                "bg-gradient-to-r from-[#3B82F6] to-[#2563EB]",
                 "shadow-[0_0_20px_rgba(255,106,26,0.30)]",
                 "hover:shadow-[0_0_28px_rgba(255,106,26,0.45)] hover:brightness-110",
                 "active:scale-[0.98]",

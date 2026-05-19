@@ -162,7 +162,7 @@ export function Step6Photos({ draftId }: Step6PhotosProps) {
                   }`}
                 >
                   {isUploading ? (
-                    <Loader2 className="h-6 w-6 animate-spin text-[#FF6A1A]" />
+                    <Loader2 className="h-6 w-6 animate-spin text-[#3B82F6]" />
                   ) : photo ? (
                     <div className="flex flex-col items-center gap-1">
                       <CheckCircle2 className="h-6 w-6 text-[#22C55E]" />

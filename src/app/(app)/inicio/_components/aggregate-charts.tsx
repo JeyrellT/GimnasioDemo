@@ -49,7 +49,7 @@ const TOKEN = {
   canvas: "#09090B",
   card: "#18181B",
   hover: "#27272A",
-  primary: "#FF6A1A",
+  primary: "#3B82F6",
   primaryBand: "rgba(255,106,26,0.15)",
   text: "#FAFAFA",
   muted: "#71717A",
@@ -386,7 +386,7 @@ function WeightTrendChart({ data }: { data: WeightTrendPoint[] }) {
               className={cn(
                 "rounded-full px-2.5 py-0.5 text-[11px] font-medium transition-colors",
                 activeMetric === metric
-                  ? "bg-[#FF6A1A] text-white"
+                  ? "bg-[#3B82F6] text-white"
                   : "bg-[#27272A] text-[#A1A1AA] hover:bg-[#3F3F46] hover:text-[#FAFAFA]",
               )}
               aria-pressed={activeMetric === metric}

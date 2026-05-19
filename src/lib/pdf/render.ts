@@ -53,7 +53,7 @@ const DEFAULT_OPTIONS: Required<
   Pick<HtmlToPdfOptions, "format" | "printBackground" | "margin" | "extraWaitMs" | "displayHeaderFooter">
 > = {
   format: "A4",
-  printBackground: true, // required so --brand-primary orange prints
+  printBackground: true, // required so --brand-primary blue prints
   margin: {
     top: "20mm",
     right: "15mm",

@@ -60,7 +60,7 @@ export function FinanceKPIRow({ kpis }: FinanceKPIRowProps) {
     <section aria-label="Indicadores financieros" className="space-y-3">
       <div className="flex items-center gap-2">
         <div
-          className="flex h-6 w-6 items-center justify-center rounded-md bg-[#FF6A1A]/15 text-[#FF6A1A]"
+          className="flex h-6 w-6 items-center justify-center rounded-md bg-[#3B82F6]/15 text-[#3B82F6]"
           aria-hidden="true"
         >
           <span className="text-xs font-bold">₡</span>

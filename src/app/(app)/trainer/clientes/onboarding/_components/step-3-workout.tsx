@@ -188,7 +188,7 @@ export function Step3Workout({
                   aria-label={`Foto ${slot + 1}`}
                 >
                   {uploading === slot ? (
-                    <Loader2 className="h-5 w-5 animate-spin text-[#FF6A1A]" />
+                    <Loader2 className="h-5 w-5 animate-spin text-[#3B82F6]" />
                   ) : photo ? (
                     <CheckCircle2 className="h-5 w-5 text-[#22C55E]" />
                   ) : (
@@ -251,9 +251,9 @@ export function Step3Workout({
 
         {/* Summary */}
         {summary && (
-          <div className="rounded-xl border border-[#FF6A1A]/30 bg-[rgba(255,106,26,0.05)] p-4 space-y-3">
+          <div className="rounded-xl border border-[#3B82F6]/30 bg-[rgba(255,106,26,0.05)] p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#FF6A1A]">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#3B82F6]">
                 Resultado IA
               </p>
               <button
@@ -290,7 +290,7 @@ export function Step3Workout({
                     max={7}
                     value={manualDays}
                     onChange={(e) => setManualDays(Number(e.target.value))}
-                    className="w-full accent-[#FF6A1A]"
+                    className="w-full accent-[#3B82F6]"
                   />
                 </div>
               </div>

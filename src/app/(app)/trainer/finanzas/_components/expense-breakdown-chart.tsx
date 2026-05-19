@@ -29,7 +29,7 @@ const CATEGORY_LABELS: Record<ExpenseCategory, string> = {
 
 // Design-system-aligned palette — using distinct tokens, not random
 const CATEGORY_COLORS: Partial<Record<ExpenseCategory, string>> = {
-  TRANSPORTE: "#FF6A1A",
+  TRANSPORTE: "#3B82F6",
   ALQUILER_ESPACIO: "#F59E0B",
   EQUIPO: "#22C55E",
   MARKETING: "#3B82F6",

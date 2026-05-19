@@ -68,7 +68,7 @@ export function ConfirmDialog({
                 "rounded-lg px-4 py-2.5 text-sm font-semibold text-white min-h-[44px] transition-colors disabled:opacity-50",
                 variant === "destructive"
                   ? "bg-[#EF4444] hover:bg-[#DC2626]"
-                  : "bg-[#FF6A1A] hover:bg-[#E55A0E]",
+                  : "bg-[#3B82F6] hover:bg-[#2563EB]",
               )}
             >
               {loading ? "Procesando..." : confirmLabel}

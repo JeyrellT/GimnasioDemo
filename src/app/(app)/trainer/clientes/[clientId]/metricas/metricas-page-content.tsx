@@ -21,7 +21,7 @@ export default function MetricasPageContent({ clientId }: { clientId: string }) 
   if (loading) {
     return (
       <div className="flex min-h-[300px] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-[#FF6A1A]" />
+        <Loader2 className="h-6 w-6 animate-spin text-[#3B82F6]" />
       </div>
     );
   }

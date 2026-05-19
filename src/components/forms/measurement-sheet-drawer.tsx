@@ -50,7 +50,7 @@ export function MeasurementDrawerShell({
               Nueva medición
             </h2>
             <Drawer.Close
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-[#71717A] transition-colors hover:bg-[#27272A] hover:text-[#FAFAFA] focus-visible:outline-2 focus-visible:outline-[#FF6A1A]"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-[#71717A] transition-colors hover:bg-[#27272A] hover:text-[#FAFAFA] focus-visible:outline-2 focus-visible:outline-[#3B82F6]"
               aria-label="Cerrar"
             >
               <X className="h-4 w-4" aria-hidden="true" />

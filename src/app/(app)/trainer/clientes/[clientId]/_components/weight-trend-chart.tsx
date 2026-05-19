@@ -68,11 +68,11 @@ function LastPointDot({ cx, cy, index, dataLength }: CustomDotProps) {
   return (
     <g>
       {/* Glow ring exterior */}
-      <circle cx={cx} cy={cy} r={9} fill="#FF6A1A" fillOpacity={0.15} />
+      <circle cx={cx} cy={cy} r={9} fill="#3B82F6" fillOpacity={0.15} />
       {/* Glow ring interior */}
-      <circle cx={cx} cy={cy} r={6} fill="#FF6A1A" fillOpacity={0.3} />
+      <circle cx={cx} cy={cy} r={6} fill="#3B82F6" fillOpacity={0.3} />
       {/* Dot sólido */}
-      <circle cx={cx} cy={cy} r={4} fill="#FF6A1A" strokeWidth={0} />
+      <circle cx={cx} cy={cy} r={4} fill="#3B82F6" strokeWidth={0} />
     </g>
   );
 }
@@ -143,8 +143,8 @@ export function WeightTrendChart({ data }: WeightTrendChartProps) {
         >
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#FF6A1A" stopOpacity={0.3} />
-              <stop offset="100%" stopColor="#FF6A1A" stopOpacity={0} />
+              <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.3} />
+              <stop offset="100%" stopColor="#3B82F6" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid
@@ -192,7 +192,7 @@ export function WeightTrendChart({ data }: WeightTrendChartProps) {
           <Area
             type="monotone"
             dataKey="peso"
-            stroke="#FF6A1A"
+            stroke="#3B82F6"
             strokeWidth={2}
             fill={`url(#${gradientId})`}
             dot={(props: CustomDotProps & { index: number }) => (
@@ -204,7 +204,7 @@ export function WeightTrendChart({ data }: WeightTrendChartProps) {
                 dataLength={chartData.length}
               />
             )}
-            activeDot={{ r: 4, fill: "#FF6A1A", strokeWidth: 0 }}
+            activeDot={{ r: 4, fill: "#3B82F6", strokeWidth: 0 }}
             isAnimationActive={false}
           />
         </AreaChart>

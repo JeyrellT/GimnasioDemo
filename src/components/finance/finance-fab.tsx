@@ -54,7 +54,7 @@ function FABButton({ label, icon, onClick, delay = 0 }: FABButtonProps) {
       <button
         type="button"
         onClick={onClick}
-        className="flex h-11 w-11 items-center justify-center rounded-full bg-[#18181B] border border-[#3F3F46] text-[#FAFAFA] shadow-lg hover:border-[#FF6A1A] hover:text-[#FF6A1A] transition-colors"
+        className="flex h-11 w-11 items-center justify-center rounded-full bg-[#18181B] border border-[#3F3F46] text-[#FAFAFA] shadow-lg hover:border-[#3B82F6] hover:text-[#3B82F6] transition-colors"
         aria-label={label}
       >
         {icon}
@@ -137,7 +137,7 @@ export function FinanceFAB({ locations, visitLocations, clients }: FinanceFABPro
         onClick={() => setMenuOpen((v) => !v)}
         animate={{ rotate: menuOpen ? 45 : 0 }}
         transition={{ duration: 0.18 }}
-        className="fixed bottom-20 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#FF6A1A] text-white shadow-lg shadow-[#FF6A1A]/40 hover:bg-[#E55A0E] active:scale-95 transition-colors sm:hidden"
+        className="fixed bottom-20 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#3B82F6] text-white shadow-lg shadow-[#3B82F6]/40 hover:bg-[#2563EB] active:scale-95 transition-colors sm:hidden"
         aria-label={menuOpen ? "Cerrar menú de acciones" : "Abrir menú de acciones"}
         aria-expanded={menuOpen}
       >

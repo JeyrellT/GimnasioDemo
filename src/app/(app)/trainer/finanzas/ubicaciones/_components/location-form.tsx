@@ -173,13 +173,13 @@ export function LocationForm({ initial, onSuccess, onCancel }: LocationFormProps
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs uppercase tracking-wide text-[#A1A1AA]">
-                Nombre <span className="text-[#FF6A1A]">*</span>
+                Nombre <span className="text-[#3B82F6]">*</span>
               </FormLabel>
               <FormControl>
                 <Input
                   placeholder="Ej: Fitness Club San José"
                   maxLength={80}
-                  className="bg-[#09090B] border-[#3F3F46] focus:border-[#FF6A1A] h-11 text-sm"
+                  className="bg-[#09090B] border-[#3F3F46] focus:border-[#3B82F6] h-11 text-sm"
                   {...field}
                 />
               </FormControl>
@@ -195,7 +195,7 @@ export function LocationForm({ initial, onSuccess, onCancel }: LocationFormProps
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs uppercase tracking-wide text-[#A1A1AA]">
-                Tipo <span className="text-[#FF6A1A]">*</span>
+                Tipo <span className="text-[#3B82F6]">*</span>
               </FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
@@ -229,7 +229,7 @@ export function LocationForm({ initial, onSuccess, onCancel }: LocationFormProps
                 <Input
                   placeholder="Ej: Escazú, San José"
                   maxLength={200}
-                  className="bg-[#09090B] border-[#3F3F46] focus:border-[#FF6A1A] h-11 text-sm"
+                  className="bg-[#09090B] border-[#3F3F46] focus:border-[#3B82F6] h-11 text-sm"
                   {...field}
                 />
               </FormControl>
@@ -280,7 +280,7 @@ export function LocationForm({ initial, onSuccess, onCancel }: LocationFormProps
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs uppercase tracking-wide text-[#A1A1AA]">
-                  Costo por visita <span className="text-[#FF6A1A]">*</span>
+                  Costo por visita <span className="text-[#3B82F6]">*</span>
                 </FormLabel>
                 <FormControl>
                   <CurrencyInput
@@ -305,7 +305,7 @@ export function LocationForm({ initial, onSuccess, onCancel }: LocationFormProps
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-xs uppercase tracking-wide text-[#A1A1AA]">
-                    Costo por km <span className="text-[#FF6A1A]">*</span>
+                    Costo por km <span className="text-[#3B82F6]">*</span>
                   </FormLabel>
                   <FormControl>
                     <CurrencyInput
@@ -335,7 +335,7 @@ export function LocationForm({ initial, onSuccess, onCancel }: LocationFormProps
                         max={1000}
                         step={0.1}
                         placeholder="0"
-                        className="bg-[#09090B] border-[#3F3F46] focus:border-[#FF6A1A] h-11 text-sm pr-10"
+                        className="bg-[#09090B] border-[#3F3F46] focus:border-[#3B82F6] h-11 text-sm pr-10"
                         value={field.value === "" ? "" : field.value}
                         onChange={(e) => field.onChange(e.target.value === "" ? "" : e.target.valueAsNumber)}
                       />
@@ -383,7 +383,7 @@ export function LocationForm({ initial, onSuccess, onCancel }: LocationFormProps
                 <Textarea
                   placeholder="Detalles sobre el lugar, acceso, estacionamiento..."
                   maxLength={500}
-                  className="bg-[#09090B] border-[#3F3F46] focus-visible:ring-[#FF6A1A] text-sm resize-none min-h-[72px]"
+                  className="bg-[#09090B] border-[#3F3F46] focus-visible:ring-[#3B82F6] text-sm resize-none min-h-[72px]"
                   {...field}
                 />
               </FormControl>
@@ -400,7 +400,7 @@ export function LocationForm({ initial, onSuccess, onCancel }: LocationFormProps
               variant="outline"
               onClick={onCancel}
               disabled={pending}
-              className="flex-1 border-[#3F3F46] text-[#A1A1AA] hover:border-[#FF6A1A] hover:text-[#FAFAFA] h-11"
+              className="flex-1 border-[#3F3F46] text-[#A1A1AA] hover:border-[#3B82F6] hover:text-[#FAFAFA] h-11"
             >
               Cancelar
             </Button>
@@ -408,7 +408,7 @@ export function LocationForm({ initial, onSuccess, onCancel }: LocationFormProps
           <Button
             type="submit"
             disabled={pending}
-            className="flex-1 bg-[#FF6A1A] hover:bg-[#E55A0E] text-white h-11 font-semibold disabled:opacity-50"
+            className="flex-1 bg-[#3B82F6] hover:bg-[#2563EB] text-white h-11 font-semibold disabled:opacity-50"
           >
             {pending ? (
               <>
