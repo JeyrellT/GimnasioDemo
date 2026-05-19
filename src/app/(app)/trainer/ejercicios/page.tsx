@@ -310,6 +310,7 @@ export default function EjerciciosPage() {
                         thumbnailUrl={ex.thumbnailUrl}
                         gifUrl={ex.gifUrl}
                         slug={ex.slug}
+                        nameEn={ex.nameEn}
                         alt={ex.nameEs}
                       />
                     </div>

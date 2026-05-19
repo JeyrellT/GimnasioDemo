@@ -62,6 +62,7 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
       restSeconds: number;
       slug?: string | null;
       thumbnailUrl?: string | null;
+      nameEn?: string | null;
     }>;
   };
   const snapshot = session.assignedRoutine?.snapshotJson as { days?: SnapshotDay[] } | null;
@@ -190,6 +191,7 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
                 <ExerciseThumbnail
                   thumbnailUrl={currentExercise.thumbnailUrl}
                   slug={currentExercise.slug}
+                  nameEn={currentExercise.nameEn}
                   alt={currentExercise.nameEs}
                 />
               </div>
