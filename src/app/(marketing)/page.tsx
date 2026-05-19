@@ -41,7 +41,7 @@ export default function LandingPage() {
   return (
     <>
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <section className="relative flex flex-col items-center justify-center overflow-hidden px-4 py-24 text-center sm:py-32">
+      <section className="relative flex flex-col items-center justify-center overflow-hidden px-4 py-16 text-center sm:py-24 lg:py-32">
         {/* Background glow */}
         <div
           aria-hidden="true"
@@ -54,7 +54,7 @@ export default function LandingPage() {
           Hecho en Costa Rica
         </div>
 
-        <h1 className="max-w-3xl text-4xl font-bold leading-tight text-[#FAFAFA] sm:text-5xl lg:text-6xl text-balance">
+        <h1 className="max-w-3xl text-3xl font-bold leading-tight text-[#FAFAFA] sm:text-5xl lg:text-6xl text-balance">
           Tu línea,
           <br />
           <span className="text-[#3B82F6]">tu fuerza.</span>
@@ -69,14 +69,14 @@ export default function LandingPage() {
         <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:gap-4">
           <Link
             href="/registrarse"
-            className="inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-[#3B82F6] px-8 py-3 text-base font-semibold text-white hover:bg-[#2563EB] transition-colors"
+            className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#3B82F6] px-8 py-3 text-base font-semibold text-white hover:bg-[#2563EB] transition-colors sm:w-auto"
           >
             Empezar gratis
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
           <Link
             href="/pricing"
-            className="inline-flex min-h-[48px] items-center rounded-xl border border-[#3F3F46] px-8 py-3 text-base font-medium text-[#FAFAFA] hover:bg-[#18181B] transition-colors"
+            className="inline-flex min-h-[48px] w-full items-center justify-center rounded-xl border border-[#3F3F46] px-8 py-3 text-base font-medium text-[#FAFAFA] hover:bg-[#18181B] transition-colors sm:w-auto"
           >
             Ver precios
           </Link>
@@ -88,11 +88,11 @@ export default function LandingPage() {
       </section>
 
       {/* ── Features ─────────────────────────────────────────────────────── */}
-      <section aria-labelledby="features-heading" className="px-4 py-20">
+      <section aria-labelledby="features-heading" className="px-4 py-12 sm:py-20">
         <div className="mx-auto max-w-6xl">
           <h2
             id="features-heading"
-            className="mb-12 text-center text-2xl font-bold text-[#FAFAFA] sm:text-3xl"
+            className="mb-8 text-center text-2xl font-bold text-[#FAFAFA] sm:mb-12 sm:text-3xl"
           >
             Todo lo que necesitás, nada que no uses
           </h2>
@@ -120,7 +120,7 @@ export default function LandingPage() {
       {/* ── Pricing teaser ───────────────────────────────────────────────── */}
       <section
         aria-labelledby="pricing-teaser-heading"
-        className="bg-[#18181B] px-4 py-20"
+        className="bg-[#18181B] px-4 py-12 sm:py-20"
       >
         <div className="mx-auto max-w-3xl text-center">
           <h2
@@ -131,7 +131,7 @@ export default function LandingPage() {
           </h2>
           <p className="mb-10 text-[#A1A1AA]">IVA incluido. Precios en colones.</p>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 sm:grid-cols-3">
             {[
               { tier: "Solo", price: "₡8,900", clients: "Hasta 5 clientes", highlight: false },
               { tier: "Pro", price: "₡22,900", clients: "Hasta 25 clientes", highlight: true },
@@ -171,13 +171,13 @@ export default function LandingPage() {
       </section>
 
       {/* ── Testimonial ──────────────────────────────────────────────────── */}
-      <section aria-labelledby="testimonial-heading" className="px-4 py-20">
+      <section aria-labelledby="testimonial-heading" className="px-4 py-12 sm:py-20">
         <div className="mx-auto max-w-2xl text-center">
           <h2 id="testimonial-heading" className="sr-only">
             Testimonio
           </h2>
           <blockquote>
-            <p className="text-lg font-medium text-[#FAFAFA] leading-relaxed text-balance">
+            <p className="text-base font-medium text-[#FAFAFA] leading-relaxed text-balance sm:text-lg">
               &ldquo;{testimonial.quote}&rdquo;
             </p>
             <footer className="mt-6">
@@ -194,9 +194,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA final ────────────────────────────────────────────────────── */}
-      <section className="bg-[#1E2A38] px-4 py-24 text-center">
+      <section className="bg-[#1E2A38] px-4 py-16 text-center sm:py-24">
         <div className="mx-auto max-w-xl">
-          <h2 className="text-3xl font-bold text-[#FAFAFA] text-balance">
+          <h2 className="text-2xl font-bold text-[#FAFAFA] text-balance sm:text-3xl">
             Empezá hoy
           </h2>
           <p className="mt-4 text-[#A1A1AA]">

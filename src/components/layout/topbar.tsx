@@ -48,7 +48,14 @@ export function Topbar({ user, userName, userAvatarUrl }: TopbarProps) {
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#3B82F6]/50 to-transparent" />
 
       <Link href="/inicio" aria-label="Ir al inicio">
-        <BlacklineFitnessLogo variant="full" size={28} />
+        <>
+          <span className="sm:hidden">
+            <BlacklineFitnessLogo variant="mark" size={26} />
+          </span>
+          <span className="hidden sm:inline-flex">
+            <BlacklineFitnessLogo variant="full" size={28} />
+          </span>
+        </>
       </Link>
 
       <DropdownMenu>
