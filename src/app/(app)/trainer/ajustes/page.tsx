@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/shared/page-header";
+import { BrandingSection } from "./_components/branding-section";
 
 import {
   getGeminiKey,
@@ -346,6 +347,9 @@ export default function AjustesPage() {
           </p>
         </div>
       </div>
+
+      {/* ── Branding ────────────────────────────────────────────────────────── */}
+      <BrandingSection />
 
       {/* ── AI Integration ─────────────────────────────────────────────────── */}
       <Section icon={Sparkles} label="Integracion con IA">

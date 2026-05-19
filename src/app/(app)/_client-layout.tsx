@@ -9,6 +9,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { AuthProvider, useAuth } from "@/components/providers/auth-provider";
+import { BrandingProvider } from "@/lib/branding/branding-context";
 import { Topbar } from "@/components/layout/topbar";
 import { TrainerBottomNav, TrainerSidebar } from "@/components/layout/trainer-nav";
 import { ClientBottomNav, ClientSidebar } from "@/components/layout/client-nav";
@@ -104,7 +105,9 @@ export function ClientLayout({ children }: { children: ReactNode }) {
 
   return (
     <AuthProvider>
-      <AppShell>{children}</AppShell>
+      <BrandingProvider>
+        <AppShell>{children}</AppShell>
+      </BrandingProvider>
     </AuthProvider>
   );
 }
