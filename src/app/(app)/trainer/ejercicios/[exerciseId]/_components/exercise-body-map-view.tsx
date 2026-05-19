@@ -17,80 +17,119 @@ export interface ExerciseBodyMapViewProps {
 }
 
 // ---------------------------------------------------------------------------
-// Front muscle zones — viewBox 0 0 200 440
+// Front muscle zones — viewBox 0 0 200 500
+// Anatomically detailed paths with muscle belly definition
 // ---------------------------------------------------------------------------
 
 const FRONT_ZONES: ZoneDef[] = [
-  // Neck
-  { id: "neckF", muscle: "NECK", d: "M88,50 L112,50 L114,64 C108,67 92,67 86,64 Z" },
-  // Shoulders (front deltoids)
-  { id: "leftFrontDelt", muscle: "SHOULDERS", d: "M117,64 C128,59 150,57 160,66 C166,74 164,88 157,96 L143,89 C135,81 125,72 117,64 Z" },
-  { id: "rightFrontDelt", muscle: "SHOULDERS", d: "M83,64 C72,59 50,57 40,66 C34,74 36,88 43,96 L57,89 C65,81 75,72 83,64 Z" },
-  // Chest (pectorals)
-  { id: "leftPec", muscle: "CHEST", d: "M105,72 C119,68 141,71 149,85 C153,97 149,112 141,118 L107,118 C103,106 103,88 105,76 Z" },
-  { id: "rightPec", muscle: "CHEST", d: "M95,72 C81,68 59,71 51,85 C47,97 51,112 59,118 L93,118 C97,106 97,88 95,76 Z" },
-  // Biceps
-  { id: "leftBicep", muscle: "BICEPS", d: "M159,98 C165,104 169,122 169,142 C169,158 165,169 159,175 L151,169 C149,153 149,131 151,113 C153,107 155,101 159,98 Z" },
-  { id: "rightBicep", muscle: "BICEPS", d: "M41,98 C35,104 31,122 31,142 C31,158 35,169 41,175 L49,169 C51,153 51,131 49,113 C47,107 45,101 41,98 Z" },
-  // Forearms
-  { id: "leftForearm", muscle: "FOREARMS", d: "M159,179 C165,185 171,203 173,223 C175,241 171,253 165,259 L157,253 C155,239 155,217 157,199 C157,191 159,185 159,179 Z" },
-  { id: "rightForearm", muscle: "FOREARMS", d: "M41,179 C35,185 29,203 27,223 C25,241 29,253 35,259 L43,253 C45,239 45,217 43,199 C43,191 41,185 41,179 Z" },
-  // Abs
-  { id: "upperAbs", muscle: "ABS", d: "M92,120 L108,120 L110,148 C106,151 94,151 90,148 Z" },
-  { id: "lowerAbs", muscle: "ABS", d: "M90,153 C94,150 106,150 110,153 L112,184 C108,188 92,188 88,184 Z" },
-  // Obliques
-  { id: "leftOblique", muscle: "OBLIQUES", d: "M112,120 L141,118 C143,130 143,150 139,170 L127,185 L112,188 Z" },
-  { id: "rightOblique", muscle: "OBLIQUES", d: "M88,120 L59,118 C57,130 57,150 61,170 L73,185 L88,188 Z" },
-  // Quads
-  { id: "leftQuad", muscle: "QUADS", d: "M109,200 C121,196 139,198 145,206 L143,312 C139,320 127,324 119,322 C113,302 109,264 109,230 Z" },
-  { id: "rightQuad", muscle: "QUADS", d: "M91,200 C79,196 61,198 55,206 L57,312 C61,320 73,324 81,322 C87,302 91,264 91,230 Z" },
-  // Calves (tibialis anterior — front)
-  { id: "leftTibialis", muscle: "CALVES", d: "M121,326 C129,322 139,324 141,332 L139,388 C135,396 127,402 121,402 C119,382 119,352 121,336 Z" },
-  { id: "rightTibialis", muscle: "CALVES", d: "M79,326 C71,322 61,324 59,332 L61,388 C65,396 73,402 79,402 C81,382 81,352 79,336 Z" },
+  // ── Neck (sternocleidomastoid) ──
+  { id: "neckFL", muscle: "NECK", d: "M92,56 C90,60 88,68 87,74 L93,76 C94,70 94,62 94,58 Z" },
+  { id: "neckFR", muscle: "NECK", d: "M108,56 C110,60 112,68 113,74 L107,76 C106,70 106,62 106,58 Z" },
+
+  // ── Front deltoids (anterior delt cap shape) ──
+  { id: "delt-FL", muscle: "SHOULDERS", d: "M82,82 C72,76 58,78 50,86 C46,92 46,100 48,108 L56,106 C60,96 66,88 74,84 L82,82 Z" },
+  { id: "delt-FR", muscle: "SHOULDERS", d: "M118,82 C128,76 142,78 150,86 C154,92 154,100 152,108 L144,106 C140,96 134,88 126,84 L118,82 Z" },
+
+  // ── Pectorals (two pec shapes with inner/outer definition) ──
+  { id: "pec-L", muscle: "CHEST", d: "M97,82 C92,82 82,84 76,90 C66,98 58,106 56,112 L58,120 C64,126 76,130 88,130 L97,128 C98,116 98,98 97,82 Z" },
+  { id: "pec-R", muscle: "CHEST", d: "M103,82 C108,82 118,84 124,90 C134,98 142,106 144,112 L142,120 C136,126 124,130 112,130 L103,128 C102,116 102,98 103,82 Z" },
+
+  // ── Biceps (muscle belly shape with peak) ──
+  { id: "bicep-L", muscle: "BICEPS", d: "M46,112 C42,118 38,130 36,144 C34,158 36,170 40,178 L48,180 C52,172 54,158 54,144 C54,130 52,120 48,114 Z" },
+  { id: "bicep-R", muscle: "BICEPS", d: "M154,112 C158,118 162,130 164,144 C166,158 164,170 160,178 L152,180 C148,172 146,158 146,144 C146,130 148,120 152,114 Z" },
+
+  // ── Forearms (brachioradialis + wrist extensors) ──
+  { id: "forearm-FL", muscle: "FOREARMS", d: "M40,184 C36,192 32,206 30,222 C28,240 30,256 34,268 L42,266 C44,254 44,236 44,220 C44,204 42,192 40,184 Z" },
+  { id: "forearm-FR", muscle: "FOREARMS", d: "M160,184 C164,192 168,206 170,222 C172,240 170,256 166,268 L158,266 C156,254 156,236 156,220 C156,204 158,192 160,184 Z" },
+
+  // ── Upper abs (rectus abdominis — top 4 blocks) ──
+  { id: "abs-up-L", muscle: "ABS", d: "M97,130 L97,150 C95,150 92,150 90,150 L88,130 C90,130 94,130 97,130 Z" },
+  { id: "abs-up-R", muscle: "ABS", d: "M103,130 L103,150 C105,150 108,150 110,150 L112,130 C110,130 106,130 103,130 Z" },
+  { id: "abs-mid-L", muscle: "ABS", d: "M97,152 L97,174 C95,174 92,175 90,175 L88,152 C90,152 94,152 97,152 Z" },
+  { id: "abs-mid-R", muscle: "ABS", d: "M103,152 L103,174 C105,174 108,175 110,175 L112,152 C110,152 106,152 103,152 Z" },
+
+  // ── Lower abs (below navel) ──
+  { id: "abs-low-L", muscle: "ABS", d: "M97,176 L97,198 C94,200 91,200 88,198 L88,176 C91,176 94,176 97,176 Z" },
+  { id: "abs-low-R", muscle: "ABS", d: "M103,176 L103,198 C106,200 109,200 112,198 L112,176 C109,176 106,176 103,176 Z" },
+
+  // ── Obliques (external obliques — tapered flank) ──
+  { id: "oblique-FL", muscle: "OBLIQUES", d: "M86,132 C78,132 68,134 62,138 L60,170 C62,180 66,190 72,196 L86,200 L86,132 Z" },
+  { id: "oblique-FR", muscle: "OBLIQUES", d: "M114,132 C122,132 132,134 138,138 L140,170 C138,180 134,190 128,196 L114,200 L114,132 Z" },
+
+  // ── Quads (rectus femoris + vastus lateralis + vastus medialis) ──
+  { id: "quad-outer-L", muscle: "QUADS", d: "M72,210 C64,214 56,224 52,240 C48,260 50,286 54,310 L62,318 C64,296 64,268 66,244 C68,228 70,218 72,210 Z" },
+  { id: "quad-inner-L", muscle: "QUADS", d: "M90,206 C94,210 96,220 96,234 L94,310 L84,318 C82,296 80,268 80,244 C80,224 84,212 90,206 Z" },
+  { id: "quad-center-L", muscle: "QUADS", d: "M72,210 C78,208 84,206 90,206 L80,244 C76,244 72,244 68,244 L72,210 Z" },
+  { id: "quad-outer-R", muscle: "QUADS", d: "M128,210 C136,214 144,224 148,240 C152,260 150,286 146,310 L138,318 C136,296 136,268 134,244 C132,228 130,218 128,210 Z" },
+  { id: "quad-inner-R", muscle: "QUADS", d: "M110,206 C106,210 104,220 104,234 L106,310 L116,318 C118,296 120,268 120,244 C120,224 116,212 110,206 Z" },
+  { id: "quad-center-R", muscle: "QUADS", d: "M128,210 C122,208 116,206 110,206 L120,244 C124,244 128,244 132,244 L128,210 Z" },
+
+  // ── Tibialis anterior / front calves ──
+  { id: "calf-FL", muscle: "CALVES", d: "M60,326 C56,334 52,352 52,372 C52,390 56,406 62,418 L70,420 C72,404 72,384 70,366 C68,348 66,336 62,326 Z" },
+  { id: "calf-FR", muscle: "CALVES", d: "M140,326 C144,334 148,352 148,372 C148,390 144,406 138,418 L130,420 C128,404 128,384 130,366 C132,348 134,336 138,326 Z" },
 ];
 
 // ---------------------------------------------------------------------------
-// Back muscle zones — viewBox 0 0 200 440
+// Back muscle zones — viewBox 0 0 200 500
 // ---------------------------------------------------------------------------
 
 const BACK_ZONES: ZoneDef[] = [
-  // Neck
-  { id: "neckB", muscle: "NECK", d: "M88,50 L112,50 L114,64 C108,67 92,67 86,64 Z" },
-  // Traps (upper back)
-  { id: "traps", muscle: "BACK", d: "M87,66 C94,62 106,62 113,66 L133,79 C141,87 145,99 143,109 L111,101 C105,95 95,95 89,101 L57,109 C55,99 59,87 67,79 Z" },
-  // Rear deltoids
-  { id: "leftRearDelt", muscle: "SHOULDERS", d: "M137,71 C149,65 163,67 167,77 C169,87 165,97 159,103 L147,97 C141,87 137,79 137,71 Z" },
-  { id: "rightRearDelt", muscle: "SHOULDERS", d: "M63,71 C51,65 37,67 33,77 C31,87 35,97 41,103 L53,97 C59,87 63,79 63,71 Z" },
-  // Lats
-  { id: "leftLat", muscle: "BACK", d: "M113,103 C127,99 143,105 147,117 C151,133 149,155 143,171 L127,177 C121,163 117,141 115,121 Z" },
-  { id: "rightLat", muscle: "BACK", d: "M87,103 C73,99 57,105 53,117 C49,133 51,155 57,171 L73,177 C79,163 83,141 85,121 Z" },
-  // Triceps
-  { id: "leftTricep", muscle: "TRICEPS", d: "M161,105 C167,111 171,129 171,149 C171,165 167,177 161,183 L153,177 C151,161 151,137 153,119 C155,113 157,107 161,105 Z" },
-  { id: "rightTricep", muscle: "TRICEPS", d: "M39,105 C33,111 29,129 29,149 C29,165 33,177 39,183 L47,177 C49,161 49,137 47,119 C45,113 43,107 39,105 Z" },
-  // Lower back
-  { id: "lowerBack", muscle: "BACK", d: "M83,171 L117,171 L119,197 C113,203 87,203 81,197 Z" },
-  // Glutes
-  { id: "leftGlute", muscle: "GLUTES", d: "M107,203 C121,199 141,203 147,215 C151,227 147,243 139,251 L113,247 C109,235 107,219 107,209 Z" },
-  { id: "rightGlute", muscle: "GLUTES", d: "M93,203 C79,199 59,203 53,215 C49,227 53,243 61,251 L87,247 C91,235 93,219 93,209 Z" },
-  // Hamstrings
-  { id: "leftHamstring", muscle: "HAMSTRINGS", d: "M115,253 C127,249 143,251 147,261 L145,317 C141,325 129,329 121,327 C117,307 115,279 115,263 Z" },
-  { id: "rightHamstring", muscle: "HAMSTRINGS", d: "M85,253 C73,249 57,251 53,261 L55,317 C59,325 71,329 79,327 C83,307 85,279 85,263 Z" },
-  // Calves (gastrocnemius — back)
-  { id: "leftGastroc", muscle: "CALVES", d: "M123,331 C133,327 143,329 145,339 C147,355 143,377 137,393 C131,401 125,405 121,405 C119,385 121,357 123,341 Z" },
-  { id: "rightGastroc", muscle: "CALVES", d: "M77,331 C67,327 57,329 55,339 C53,355 57,377 63,393 C69,401 75,405 79,405 C81,385 79,357 77,341 Z" },
+  // ── Neck (posterior) ──
+  { id: "neckB", muscle: "NECK", d: "M93,56 L107,56 L110,72 C106,75 94,75 90,72 Z" },
+
+  // ── Traps (upper trapezius — diamond shape) ──
+  { id: "trap-L", muscle: "BACK", d: "M92,74 C88,76 82,80 76,86 L62,98 C58,104 58,112 60,118 L88,106 L92,74 Z" },
+  { id: "trap-R", muscle: "BACK", d: "M108,74 C112,76 118,80 124,86 L138,98 C142,104 142,112 140,118 L112,106 L108,74 Z" },
+
+  // ── Rear deltoids (posterior delt cap) ──
+  { id: "delt-BL", muscle: "SHOULDERS", d: "M60,86 C52,82 42,84 38,92 C34,100 36,110 40,118 L52,114 C56,104 58,94 60,86 Z" },
+  { id: "delt-BR", muscle: "SHOULDERS", d: "M140,86 C148,82 158,84 162,92 C166,100 164,110 160,118 L148,114 C144,104 142,94 140,86 Z" },
+
+  // ── Infraspinatus / teres (mid-back detail between traps and lats) ──
+  { id: "infra-L", muscle: "BACK", d: "M88,108 C82,110 68,114 62,120 L60,136 C66,140 78,140 88,136 L88,108 Z" },
+  { id: "infra-R", muscle: "BACK", d: "M112,108 C118,110 132,114 138,120 L140,136 C134,140 122,140 112,136 L112,108 Z" },
+
+  // ── Lats (latissimus dorsi — large wing shape) ──
+  { id: "lat-L", muscle: "BACK", d: "M88,138 C78,142 62,142 58,148 C52,158 48,174 50,190 L60,194 C66,182 72,168 78,158 C82,150 86,144 88,138 Z" },
+  { id: "lat-R", muscle: "BACK", d: "M112,138 C122,142 138,142 142,148 C148,158 152,174 150,190 L140,194 C134,182 128,168 122,158 C118,150 114,144 112,138 Z" },
+
+  // ── Spinal erectors (lower back — two columns) ──
+  { id: "erector-L", muscle: "BACK", d: "M96,140 L96,198 C94,200 92,200 90,198 L86,140 C88,138 92,138 96,140 Z" },
+  { id: "erector-R", muscle: "BACK", d: "M104,140 L104,198 C106,200 108,200 110,198 L114,140 C112,138 108,138 104,140 Z" },
+
+  // ── Triceps (lateral + long head) ──
+  { id: "tri-L", muscle: "TRICEPS", d: "M38,120 C34,128 30,142 30,160 C30,176 34,188 38,194 L48,190 C50,176 50,156 48,138 C46,130 44,124 42,120 Z" },
+  { id: "tri-R", muscle: "TRICEPS", d: "M162,120 C166,128 170,142 170,160 C170,176 166,188 162,194 L152,190 C150,176 150,156 152,138 C154,130 156,124 158,120 Z" },
+
+  // ── Glutes (gluteus maximus — rounded) ──
+  { id: "glute-L", muscle: "GLUTES", d: "M96,204 C86,204 70,210 62,222 C56,234 56,248 62,258 L86,262 C92,254 96,242 96,228 L96,204 Z" },
+  { id: "glute-R", muscle: "GLUTES", d: "M104,204 C114,204 130,210 138,222 C144,234 144,248 138,258 L114,262 C108,254 104,242 104,228 L104,204 Z" },
+
+  // ── Hamstrings (biceps femoris + semitendinosus) ──
+  { id: "ham-outer-L", muscle: "HAMSTRINGS", d: "M62,264 C56,270 52,284 52,302 C52,318 56,330 62,336 L72,334 C74,318 74,298 72,280 C70,272 66,266 62,264 Z" },
+  { id: "ham-inner-L", muscle: "HAMSTRINGS", d: "M90,264 C94,270 96,284 96,302 C96,318 94,330 90,336 L80,334 C78,318 78,298 80,280 C82,272 86,266 90,264 Z" },
+  { id: "ham-outer-R", muscle: "HAMSTRINGS", d: "M138,264 C144,270 148,284 148,302 C148,318 144,330 138,336 L128,334 C126,318 126,298 128,280 C130,272 134,266 138,264 Z" },
+  { id: "ham-inner-R", muscle: "HAMSTRINGS", d: "M110,264 C106,270 104,284 104,302 C104,318 106,330 110,336 L120,334 C122,318 122,298 120,280 C118,272 114,266 110,264 Z" },
+
+  // ── Calves (gastrocnemius — two heads) ──
+  { id: "gastroc-L-out", muscle: "CALVES", d: "M58,340 C54,348 50,364 50,382 C50,398 54,412 60,420 L68,418 C68,402 66,380 66,364 C66,352 64,344 60,340 Z" },
+  { id: "gastroc-L-in", muscle: "CALVES", d: "M80,340 C84,348 86,364 86,382 C86,398 84,412 80,420 L72,418 C72,402 74,380 74,364 C74,352 76,344 80,340 Z" },
+  { id: "gastroc-R-out", muscle: "CALVES", d: "M142,340 C146,348 150,364 150,382 C150,398 146,412 140,420 L132,418 C132,402 134,380 134,364 C134,352 136,344 140,340 Z" },
+  { id: "gastroc-R-in", muscle: "CALVES", d: "M120,340 C116,348 114,364 114,382 C114,398 116,412 120,420 L128,418 C128,402 126,380 126,364 C126,352 124,344 120,340 Z" },
 ];
 
 // ---------------------------------------------------------------------------
-// Static body silhouette paths (head + body outline)
+// Detailed body silhouette outline — proportional to 200×500 viewBox
 // ---------------------------------------------------------------------------
 
-const HEAD = { cx: 100, cy: 30, r: 19 };
+const HEAD_FRONT = "M100,8 C113,8 122,18 122,32 C122,46 113,56 100,56 C87,56 78,46 78,32 C78,18 87,8 100,8 Z";
+const HEAD_BACK = HEAD_FRONT;
 
 const BODY_OUTLINE_FRONT =
-  "M86,50 C60,56 38,64 32,78 L26,108 C24,140 26,172 32,200 C28,222 26,244 30,258 L22,268 C36,264 42,248 42,228 L48,178 C44,160 42,134 44,110 L50,98 C52,128 54,158 56,186 C56,198 56,214 58,234 C60,272 62,310 66,350 C68,372 70,392 74,408 L82,416 L92,414 C90,392 88,362 86,340 C82,300 82,262 86,230 C90,214 96,204 100,200 C104,204 110,214 114,230 C118,262 118,300 114,340 C112,362 110,392 108,414 L118,416 L126,408 C130,392 132,372 134,350 C138,310 140,272 142,234 C144,214 144,198 144,186 C146,158 148,128 150,98 L156,110 C158,134 156,160 152,178 L158,228 C158,248 164,264 178,268 L170,258 C174,244 172,222 168,200 C174,172 176,140 174,108 L168,78 C162,64 140,56 114,50 Z";
+  "M90,56 C86,58 82,62 78,68 C70,72 58,76 48,84 C40,90 36,100 34,112 L30,148 C28,172 30,196 34,216 C32,230 28,252 28,270 L22,284 C18,292 22,296 28,292 L36,280 C38,270 42,258 42,246 L46,218 C46,210 48,202 52,196 L56,200 C56,216 58,236 60,258 C62,286 62,316 64,346 C66,374 68,400 72,424 L78,440 L86,444 L94,442 C92,420 90,394 88,368 C84,328 84,286 86,250 C88,238 92,226 96,218 L100,214 L104,218 C108,226 112,238 114,250 C116,286 116,328 112,368 C110,394 108,420 106,442 L114,444 L122,440 L128,424 C132,400 134,374 136,346 C138,316 138,286 140,258 C142,236 144,216 144,200 L148,196 C152,202 154,210 154,218 L158,246 C158,258 162,270 164,280 L172,292 C178,296 182,292 178,284 L172,270 C172,252 168,230 166,216 C170,196 172,172 170,148 L166,112 C164,100 160,90 152,84 C142,76 130,72 122,68 C118,62 114,58 110,56 Z";
 
 const BODY_OUTLINE_BACK =
-  "M86,50 C60,56 38,64 32,78 L26,108 C24,140 26,172 32,200 C28,222 26,244 30,258 L22,268 C36,264 42,248 42,228 L48,186 C44,160 42,134 44,110 L50,98 C52,128 54,158 56,186 C56,198 56,214 58,234 C60,272 62,310 66,350 C68,372 70,392 74,408 L82,416 L92,414 C90,392 88,362 86,340 C82,300 82,262 86,230 C90,214 96,204 100,200 C104,204 110,214 114,230 C118,262 118,300 114,340 C112,362 110,392 108,414 L118,416 L126,408 C130,392 132,372 134,350 C138,310 140,272 142,234 C144,214 144,198 144,186 C146,158 148,128 150,98 L156,110 C158,134 156,160 152,186 L158,228 C158,248 164,264 178,268 L170,258 C174,244 172,222 168,200 C174,172 176,140 174,108 L168,78 C162,64 140,56 114,50 Z";
+  "M90,56 C86,58 82,62 78,68 C70,72 58,76 48,84 C40,90 36,100 34,112 L30,148 C28,172 30,196 34,216 C32,230 28,252 28,270 L22,284 C18,292 22,296 28,292 L36,280 C38,270 42,258 42,246 L46,218 C46,210 48,202 52,196 L56,200 C56,216 58,236 60,258 C62,286 62,316 64,346 C66,374 68,400 72,424 L78,440 L86,444 L94,442 C92,420 90,394 88,368 C84,328 84,286 86,250 C88,238 92,226 96,218 L100,214 L104,218 C108,226 112,238 114,250 C116,286 116,328 112,368 C110,394 108,420 106,442 L114,444 L122,440 L128,424 C132,400 134,374 136,346 C138,316 138,286 140,258 C142,236 144,216 144,200 L148,196 C152,202 154,210 154,218 L158,246 C158,258 162,270 164,280 L172,292 C178,296 182,292 178,284 L172,270 C172,252 168,230 166,216 C170,196 172,172 170,148 L166,112 C164,100 160,90 152,84 C142,76 130,72 122,68 C118,62 114,58 110,56 Z";
 
 // ---------------------------------------------------------------------------
 // Color system
@@ -99,30 +138,28 @@ const BODY_OUTLINE_BACK =
 type Role = "primary" | "secondary" | "inactive";
 
 const COLORS = {
-  primary: { base: "#3B82F6", bright: "#60A5FA", stroke: "#93C5FD" },
-  secondary: { base: "#F59E0B", bright: "#FBBF24", stroke: "#FCD34D" },
-  inactive: { base: "#27272A", bright: "#3F3F46", stroke: "#52525B" },
+  primary:   { base: "#3B82F6", bright: "#60A5FA", glow: "rgba(59,130,246,0.5)" },
+  secondary: { base: "#F59E0B", bright: "#FBBF24", glow: "rgba(245,158,11,0.45)" },
+  inactive:  { base: "#1E293B", bright: "#334155", glow: "none" },
 } as const;
 
 function getZoneStyle(role: Role, hovered: boolean) {
   const c = COLORS[role];
   if (role === "inactive") {
     return {
-      fill: hovered ? c.bright : c.base,
-      fillOpacity: hovered ? 0.7 : 0.45,
-      stroke: hovered ? c.stroke : "#3F3F46",
-      strokeWidth: hovered ? 1 : 0.5,
-      strokeOpacity: hovered ? 0.8 : 0.3,
+      fill: hovered ? "#334155" : "#1E293B",
+      fillOpacity: hovered ? 0.65 : 0.35,
+      stroke: hovered ? "#475569" : "#1E293B",
+      strokeWidth: hovered ? 0.8 : 0.4,
       filter: undefined as string | undefined,
     };
   }
   return {
     fill: hovered ? c.bright : c.base,
-    fillOpacity: hovered ? 0.9 : 0.7,
-    stroke: hovered ? c.stroke : c.base,
-    strokeWidth: hovered ? 1.5 : 1,
-    strokeOpacity: hovered ? 1 : 0.6,
-    filter: role === "primary" ? "url(#glow-blue)" : "url(#glow-amber)",
+    fillOpacity: hovered ? 0.95 : 0.75,
+    stroke: hovered ? c.bright : c.base,
+    strokeWidth: hovered ? 1.6 : 0.8,
+    filter: role === "primary" ? "url(#glow-primary)" : "url(#glow-secondary)",
   };
 }
 
@@ -133,6 +170,7 @@ function getZoneStyle(role: Role, hovered: boolean) {
 interface BodyViewProps {
   zones: ZoneDef[];
   outline: string;
+  headPath: string;
   primarySet: Set<MuscleGroup>;
   secondarySet: Set<MuscleGroup>;
   label: string;
@@ -146,6 +184,7 @@ interface BodyViewProps {
 function BodyView({
   zones,
   outline,
+  headPath,
   primarySet,
   secondarySet,
   label,
@@ -167,46 +206,49 @@ function BodyView({
         {viewLabel}
       </span>
       <svg
-        viewBox="0 0 200 440"
-        className="w-[155px] h-auto"
+        viewBox="0 0 200 460"
+        className="w-[160px] h-auto"
         role="img"
         aria-label={label}
       >
         <defs>
-          <filter id="glow-blue" x="-40%" y="-40%" width="180%" height="180%">
+          <filter id="glow-primary" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="6" result="blur" />
+            <feFlood floodColor="#3B82F6" floodOpacity="0.4" result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="glow" />
+            <feMerge>
+              <feMergeNode in="glow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="glow-secondary" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="5" result="blur" />
-            <feFlood floodColor="#3B82F6" floodOpacity="0.35" result="color" />
+            <feFlood floodColor="#F59E0B" floodOpacity="0.35" result="color" />
             <feComposite in="color" in2="blur" operator="in" result="glow" />
             <feMerge>
               <feMergeNode in="glow" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-          <filter id="glow-amber" x="-40%" y="-40%" width="180%" height="180%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
-            <feFlood floodColor="#F59E0B" floodOpacity="0.3" result="color" />
-            <feComposite in="color" in2="blur" operator="in" result="glow" />
-            <feMerge>
-              <feMergeNode in="glow" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
+          {/* Subtle muscle separation line effect */}
+          <linearGradient id="muscle-sep" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.06)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+          </linearGradient>
         </defs>
 
-        {/* Body silhouette */}
-        <circle
-          cx={HEAD.cx}
-          cy={HEAD.cy}
-          r={HEAD.r}
-          fill="#1A1A2E"
-          stroke="#2A2A3E"
-          strokeWidth={1}
+        {/* Body silhouette base */}
+        <path
+          d={headPath}
+          fill="#0F172A"
+          stroke="#1E293B"
+          strokeWidth={0.8}
         />
         <path
           d={outline}
-          fill="#1A1A2E"
-          stroke="#2A2A3E"
-          strokeWidth={0.8}
+          fill="#0F172A"
+          stroke="#1E293B"
+          strokeWidth={0.6}
           strokeLinejoin="round"
         />
 
@@ -215,7 +257,6 @@ function BodyView({
           const role = roleOf(z);
           const isHovered = hoveredId === z.id;
           const s = getZoneStyle(role, isHovered);
-          const interactive = role !== "inactive" || isHovered;
           return (
             <path
               key={z.id}
@@ -224,19 +265,27 @@ function BodyView({
               fillOpacity={s.fillOpacity}
               stroke={s.stroke}
               strokeWidth={s.strokeWidth}
-              strokeOpacity={s.strokeOpacity}
               strokeLinejoin="round"
               filter={s.filter}
               style={{
                 cursor: role !== "inactive" ? "pointer" : "default",
-                transition: "fill 0.15s ease, fill-opacity 0.15s ease, stroke 0.15s ease",
+                transition: "fill 0.2s, fill-opacity 0.2s, stroke 0.2s, stroke-width 0.15s",
               }}
               onMouseEnter={(e) => onZoneEnter(z, e)}
-              onMouseMove={interactive ? onZoneMove : undefined}
+              onMouseMove={(role !== "inactive" || isHovered) ? onZoneMove : undefined}
               onMouseLeave={onZoneLeave}
             />
           );
         })}
+
+        {/* Center line (abs separation) for front view only */}
+        {zones === FRONT_ZONES && (
+          <line
+            x1="100" y1="130" x2="100" y2="200"
+            stroke="rgba(255,255,255,0.04)"
+            strokeWidth="0.5"
+          />
+        )}
       </svg>
     </div>
   );
@@ -262,7 +311,7 @@ function Tooltip({ data }: { data: TooltipData }) {
       className="pointer-events-none absolute z-20"
       style={{
         left: data.x,
-        top: data.y - 44,
+        top: data.y - 48,
         transform: "translateX(-50%)",
       }}
     >
@@ -356,12 +405,13 @@ export function ExerciseBodyMapView({ primaryMuscle, secondaryMuscles }: Exercis
 
   return (
     <motion.div {...fadeIn} className="flex flex-col items-center gap-4">
-      <div ref={containerRef} className="relative flex items-start justify-center gap-3">
+      <div ref={containerRef} className="relative flex items-start justify-center gap-4">
         {/* Front view */}
-        <div className={!frontHasActive && backHasActive ? "opacity-50" : ""}>
+        <div className={!frontHasActive && backHasActive ? "opacity-40" : ""}>
           <BodyView
             zones={FRONT_ZONES}
             outline={BODY_OUTLINE_FRONT}
+            headPath={HEAD_FRONT}
             primarySet={primarySet}
             secondarySet={secondarySet}
             label="Vista frontal del cuerpo con músculos marcados"
@@ -374,10 +424,11 @@ export function ExerciseBodyMapView({ primaryMuscle, secondaryMuscles }: Exercis
         </div>
 
         {/* Back view */}
-        <div className={!backHasActive && frontHasActive ? "opacity-50" : ""}>
+        <div className={!backHasActive && frontHasActive ? "opacity-40" : ""}>
           <BodyView
             zones={BACK_ZONES}
             outline={BODY_OUTLINE_BACK}
+            headPath={HEAD_BACK}
             primarySet={primarySet}
             secondarySet={secondarySet}
             label="Vista dorsal del cuerpo con músculos marcados"
@@ -397,14 +448,14 @@ export function ExerciseBodyMapView({ primaryMuscle, secondaryMuscles }: Exercis
       <div className="flex items-center gap-6" aria-label="Leyenda del mapa muscular">
         <span className="flex items-center gap-1.5 text-xs text-[#A1A1AA]">
           <span
-            className="inline-block h-2.5 w-2.5 rounded-full shadow-[0_0_6px_rgba(59,130,246,0.5)]"
+            className="inline-block h-2.5 w-2.5 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.6)]"
             style={{ background: "#3B82F6" }}
           />
           Primario
         </span>
         <span className="flex items-center gap-1.5 text-xs text-[#A1A1AA]">
           <span
-            className="inline-block h-2.5 w-2.5 rounded-full shadow-[0_0_6px_rgba(245,158,11,0.5)]"
+            className="inline-block h-2.5 w-2.5 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.6)]"
             style={{ background: "#F59E0B" }}
           />
           Secundario
