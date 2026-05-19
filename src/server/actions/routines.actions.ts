@@ -125,6 +125,7 @@ function buildSnapshot(routine: RoutineDetail): RoutineSnapshot {
           notes: re.notes,
           slug: re.exercise.slug ?? null,
           thumbnailUrl: re.exercise.thumbnailUrl ?? re.exercise.gifUrl ?? null,
+          nameEn: re.exercise.nameEn || null,
         }),
       ),
   }));

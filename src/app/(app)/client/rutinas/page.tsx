@@ -235,6 +235,7 @@ export default function ClientRutinasPage() {
                                   <ExerciseThumbnail
                                     thumbnailUrl={ex.thumbnailUrl}
                                     slug={ex.slug}
+                                    nameEn={ex.nameEn}
                                     alt={ex.nameEs}
                                     iconSize="sm"
                                   />

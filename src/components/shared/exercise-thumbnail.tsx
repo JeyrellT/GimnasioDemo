@@ -8,9 +8,16 @@ interface ExerciseThumbnailProps {
   thumbnailUrl?: string | null;
   gifUrl?: string | null;
   slug?: string | null;
+  nameEn?: string | null;
   alt: string;
   className?: string;
   iconSize?: "sm" | "md";
+}
+
+function slugify(s: string | null | undefined): string | null {
+  if (!s) return null;
+  return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/['']/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
 function isGoogleDriveUrl(url: string) {
@@ -29,6 +36,7 @@ function buildChain(
   thumbnailUrl: string | null | undefined,
   gifUrl: string | null | undefined,
   slug: string | null | undefined,
+  nameEn: string | null | undefined,
 ): string[] {
   const urls: string[] = [];
   const seen = new Set<string>();
@@ -47,9 +55,18 @@ function buildChain(
     add(`/exercises/${slug}.jpg`);
     add(`/exercises/${slug}.png`);
   }
-  const mapped = slug ? SLUG_IMAGE_MAP[slug] : undefined;
-  if (mapped) {
-    add(`/exercises/${mapped}`);
+  const enSlug = slugify(nameEn);
+  if (enSlug) {
+    add(`/exercises/${enSlug}.jpg`);
+    add(`/exercises/${enSlug}.png`);
+  }
+  const mappedEs = slug ? SLUG_IMAGE_MAP[slug] : undefined;
+  if (mappedEs) {
+    add(`/exercises/${mappedEs}`);
+  }
+  const mappedEn = enSlug ? SLUG_IMAGE_MAP[enSlug] : undefined;
+  if (mappedEn) {
+    add(`/exercises/${mappedEn}`);
   }
   return urls;
 }
@@ -58,19 +75,20 @@ export function ExerciseThumbnail({
   thumbnailUrl,
   gifUrl,
   slug,
+  nameEn,
   alt,
   className = "",
   iconSize = "md",
 }: ExerciseThumbnailProps) {
   const chain = React.useMemo(
-    () => buildChain(thumbnailUrl, gifUrl, slug),
-    [thumbnailUrl, gifUrl, slug],
+    () => buildChain(thumbnailUrl, gifUrl, slug, nameEn),
+    [thumbnailUrl, gifUrl, slug, nameEn],
   );
   const [index, setIndex] = React.useState(0);
 
   React.useEffect(() => {
     setIndex(0);
-  }, [thumbnailUrl, gifUrl, slug]);
+  }, [thumbnailUrl, gifUrl, slug, nameEn]);
 
   const src = index < chain.length ? chain[index] : null;
   const iconCls = iconSize === "sm" ? "h-5 w-5" : "h-8 w-8";

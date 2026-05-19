@@ -180,6 +180,7 @@ export interface ExerciseSearchResult {
   id: string;
   slug: string;
   nameEs: string;
+  nameEn: string | null;
   primaryMuscle: import("@prisma/client").MuscleGroup;
   equipment: import("@prisma/client").ExerciseEquipment;
   difficulty: import("@prisma/client").ExerciseDifficulty;

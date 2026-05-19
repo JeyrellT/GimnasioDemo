@@ -80,6 +80,7 @@ export interface PerformedSetDetail {
   exercise: {
     id: string;
     nameEs: string;
+    nameEn: string | null;
     primaryMuscle: string;
     equipment: string;
     slug: string;
@@ -365,6 +366,7 @@ export async function getSessionDetail(
               select: {
                 id: true,
                 nameEs: true,
+                nameEn: true,
                 primaryMuscle: true,
                 equipment: true,
                 slug: true,
@@ -400,6 +402,7 @@ export async function getSessionDetail(
       exercise: {
         id: s.exercise.id,
         nameEs: s.exercise.nameEs,
+        nameEn: s.exercise.nameEn || null,
         primaryMuscle: s.exercise.primaryMuscle,
         equipment: s.exercise.equipment,
         slug: s.exercise.slug,

@@ -86,4 +86,43 @@ export const SLUG_IMAGE_MAP: Record<string, string> = {
 
   // Full body
   "clean-and-press-mancuernas": "dumbbell-clean-and-press.jpg",
+  "burpee": "barbell-back-squat.jpg",
+
+  // ── Warmups (calentamientos) ──
+  // Cardio
+  "cardio-en-maquina": "barbell-back-squat.jpg",
+  "saltos-de-tijera": "standing-calf-raise.jpg",
+  "rodillas-altas": "barbell-back-squat.jpg",
+  "talones-a-gluteos": "lying-leg-curl.jpg",
+  "saltar-la-cuerda": "standing-calf-raise.jpg",
+  "mountain-climbers": "plank.jpg",
+
+  // Movilidad
+  "circulos-de-hombros": "dumbbell-lateral-raise.jpg",
+  "circulos-de-brazos": "dumbbell-lateral-raise.jpg",
+  "circulos-de-cadera": "hip-thrust.jpg",
+  "circulos-de-tobillos": "standing-calf-raise.jpg",
+  "gato-camello": "plank.jpg",
+  "worlds-greatest-stretch": "barbell-lunge.jpg",
+  "inchworm": "plank.jpg",
+
+  // Activacion
+  "sentadilla-con-peso-corporal": "barbell-back-squat.jpg",
+  "zancadas-caminando": "barbell-lunge.jpg",
+  "puente-de-gluteo": "hip-thrust.jpg",
+  "bird-dog": "plank.jpg",
+  "push-ups-lentos": "dips.jpg",
+  "band-pull-aparts": "dumbbell-lateral-raise.jpg",
+  "face-pulls-con-banda": "dumbbell-lateral-raise.jpg",
+  "monster-walks-con-banda": "hip-thrust.jpg",
+
+  // Estiramientos
+  "estiramiento-cuadriceps-de-pie": "leg-extension.jpg",
+  "estiramiento-isquiotibiales-sentado": "lying-leg-curl.jpg",
+  "estiramiento-gemelos-en-pared": "standing-calf-raise.jpg",
+  "figura-4-supino": "hip-thrust.jpg",
+  "estiramiento-flexor-de-cadera": "leg-extension.jpg",
+  "estiramiento-pecho-en-puerta": "barbell-bench-press.jpg",
+  "postura-del-nino": "plank.jpg",
+  "estiramiento-triceps-sobre-cabeza": "cable-pushdown.jpg",
 };

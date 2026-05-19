@@ -15,6 +15,7 @@ function toSearchResult(ex: DemoExerciseRow): ExerciseSearchResult {
     id: ex.id,
     slug: ex.slug,
     nameEs: ex.nameEs,
+    nameEn: ex.nameEn ?? null,
     primaryMuscle: ex.primaryMuscle as ExerciseSearchResult["primaryMuscle"],
     equipment: ex.equipment as ExerciseSearchResult["equipment"],
     difficulty: ex.difficulty as ExerciseSearchResult["difficulty"],

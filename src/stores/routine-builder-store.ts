@@ -10,6 +10,7 @@ export interface DraftExercise {
   routineExerciseId?: string; // set after save
   exerciseId: string;
   nameEs: string;
+  nameEn?: string | null;
   slug?: string | null;
   thumbnailUrl?: string | null;
   targetSets: number;
@@ -85,6 +86,7 @@ export const useRoutineBuilderStore = create<RoutineBuilderState>()((set) => ({
           routineExerciseId: e.id,
           exerciseId: e.exerciseId,
           nameEs: e.exercise.nameEs,
+          nameEn: e.exercise.nameEn || null,
           slug: e.exercise.slug ?? null,
           thumbnailUrl: e.exercise.thumbnailUrl ?? null,
           targetSets: e.targetSets,

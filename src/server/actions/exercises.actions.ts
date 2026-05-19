@@ -49,6 +49,7 @@ function toSearchResult(ex: Exercise): ExerciseSearchResult {
     id: ex.id,
     slug: ex.slug,
     nameEs: ex.nameEs,
+    nameEn: ex.nameEn ?? null,
     primaryMuscle: ex.primaryMuscle,
     equipment: ex.equipment,
     difficulty: ex.difficulty,
@@ -171,6 +172,7 @@ export async function searchExercises(
         id: string;
         slug: string;
         nameEs: string;
+        nameEn: string | null;
         primaryMuscle: MuscleGroup;
         equipment: ExerciseEquipment;
         difficulty: ExerciseDifficulty;
@@ -201,6 +203,7 @@ export async function searchExercises(
           e.id,
           e.slug,
           e."nameEs",
+          e."nameEn",
           e."primaryMuscle",
           e.equipment,
           e.difficulty,
@@ -234,6 +237,7 @@ export async function searchExercises(
           id: r.id,
           slug: r.slug,
           nameEs: r.nameEs,
+          nameEn: r.nameEn ?? null,
           primaryMuscle: r.primaryMuscle,
           equipment: r.equipment,
           difficulty: r.difficulty,
@@ -262,6 +266,7 @@ export async function searchExercises(
           id: true,
           slug: true,
           nameEs: true,
+          nameEn: true,
           primaryMuscle: true,
           equipment: true,
           difficulty: true,

@@ -82,6 +82,7 @@ export function SessionDetailClient() {
                 <ExerciseThumbnail
                   thumbnailUrl={set.exercise.thumbnailUrl}
                   slug={set.exercise.slug}
+                  nameEn={set.exercise.nameEn}
                   alt={set.exercise.nameEs}
                   iconSize="sm"
                 />

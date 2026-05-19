@@ -183,6 +183,7 @@ function SortableExerciseRow({
             <ExerciseThumbnail
               thumbnailUrl={exercise.thumbnailUrl}
               slug={exercise.slug}
+              nameEn={exercise.nameEn}
               alt={exercise.nameEs}
               iconSize="sm"
             />
@@ -565,6 +566,7 @@ function ExerciseSearchPanel({
       routineExerciseId: result.value.routineExerciseId,
       exerciseId: ex.id,
       nameEs: ex.nameEs,
+      nameEn: ex.nameEn ?? null,
       slug: ex.slug ?? null,
       thumbnailUrl: ex.thumbnailUrl ?? null,
       targetSets: 4,
@@ -653,6 +655,7 @@ function ExerciseSearchPanel({
                 <ExerciseThumbnail
                   thumbnailUrl={ex.thumbnailUrl}
                   slug={ex.slug}
+                  nameEn={ex.nameEn}
                   alt={ex.nameEs}
                   iconSize="sm"
                 />
