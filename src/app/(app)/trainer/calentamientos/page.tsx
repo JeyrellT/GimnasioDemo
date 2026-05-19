@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Library, Search, Plus, Dumbbell, Loader2 } from "lucide-react";
+import { Flame, Search, Plus, Dumbbell, Loader2 } from "lucide-react";
 import { searchExercises } from "@/app/actions/exercises";
 import { PageHeader } from "@/components/shared/page-header";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -19,18 +19,16 @@ const MUSCLE_PILLS = [
   { label: "Tríceps", value: "TRICEPS" },
   { label: "Piernas", value: "QUADS" },
   { label: "Core", value: "ABS" },
+  { label: "Cuerpo completo", value: "FULL_BODY" },
 ] as const;
 
 const EQUIPMENT_PILLS = [
-  { label: "Barra", value: "BARBELL" },
-  { label: "Mancuerna", value: "DUMBBELL" },
-  { label: "Máquina", value: "MACHINE" },
   { label: "Peso corporal", value: "BODYWEIGHT" },
-  { label: "Cable", value: "CABLE" },
   { label: "Banda", value: "BAND" },
+  { label: "Mancuerna", value: "DUMBBELL" },
+  { label: "Barra", value: "BARBELL" },
 ] as const;
 
-// primaryMuscle → color map
 const MUSCLE_COLORS: Record<string, { bg: string; text: string }> = {
   CHEST: { bg: "bg-[#EF4444]/20", text: "text-[#EF4444]" },
   BACK: { bg: "bg-[#3B82F6]/20", text: "text-[#3B82F6]" },
@@ -98,14 +96,14 @@ function DifficultyDots({ level }: { level: string | null }) {
   );
 }
 
-// ── Card thumbnail with error fallback ────────────────────────────────────────
+// ── Card thumbnail ───────────────────────────────────────────────────────────
 
 function CardThumbnail({ src, alt }: { src: string; alt: string }) {
   const [errored, setErrored] = useState(false);
   if (errored) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#27272A] to-[#18181B]">
-        <Dumbbell className="h-8 w-8 text-[#3F3F46]" strokeWidth={1.5} aria-hidden="true" />
+        <Flame className="h-8 w-8 text-[#3F3F46]" strokeWidth={1.5} aria-hidden="true" />
       </div>
     );
   }
@@ -134,12 +132,12 @@ function buildHref(params: {
   if (params.equipment) sp.set("equipment", params.equipment);
   if (params.owner) sp.set("owner", params.owner);
   const qs = sp.toString();
-  return `/trainer/ejercicios${qs ? "?" + qs : ""}`;
+  return `/trainer/calentamientos${qs ? "?" + qs : ""}`;
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function EjerciciosPage() {
+export default function CalentamientosPage() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -154,13 +152,13 @@ export default function EjerciciosPage() {
   const [searchInput, setSearchInput] = useState(q ?? "");
 
   const hasFilters = !!(q || muscle || equipment || owner);
-  const clearHref = "/trainer/ejercicios";
+  const clearHref = "/trainer/calentamientos";
 
   const loadExercises = useCallback(async () => {
     setLoading(true);
     const result = await searchExercises(
       q ?? "",
-      { muscle, equipment },
+      { muscle, equipment, category: "WARMUP" },
       1,
       40,
     );
@@ -177,7 +175,6 @@ export default function EjerciciosPage() {
     loadExercises();
   }, [loadExercises]);
 
-  // Sync search input when URL q param changes
   useEffect(() => {
     setSearchInput(q ?? "");
   }, [q]);
@@ -209,15 +206,15 @@ export default function EjerciciosPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <PageHeader
-          title="Biblioteca de ejercicios"
-          description="Buscá y filtrá ejercicios por grupo muscular o equipo."
+          title="Calentamientos"
+          description="Ejercicios de calentamiento, estiramiento y movilidad para antes de entrenar."
         />
         <Link
-          href="/trainer/ejercicios/nuevo"
+          href="/trainer/calentamientos/nuevo"
           className="flex shrink-0 items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white min-h-[44px] hover:brightness-110 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/60"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
-          Crear ejercicio
+          Crear calentamiento
         </Link>
       </div>
 
@@ -231,7 +228,7 @@ export default function EjerciciosPage() {
           name="q"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          placeholder="Buscar ejercicio..."
+          placeholder="Buscar calentamiento..."
           className="w-full rounded-xl border border-[#3F3F46] bg-[#18181B] pl-9 pr-28 py-3 text-sm text-[#FAFAFA] placeholder:text-[#52525B] focus:outline-none focus:ring-2 focus:ring-brand-primary/60 min-h-[44px] transition-colors"
         />
         <button
@@ -293,17 +290,19 @@ export default function EjerciciosPage() {
         </Link>
       )}
 
-      {/* Exercise grid */}
+      {/* Grid */}
       {loading ? (
         <div className="flex justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-brand-primary" aria-label="Cargando ejercicios" />
+          <Loader2 className="h-6 w-6 animate-spin text-brand-primary" aria-label="Cargando calentamientos" />
         </div>
       ) : exercises.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-[#3F3F46] px-6 py-16 text-center">
-          <Library className="h-10 w-10 text-[#52525B]" strokeWidth={1.5} aria-hidden="true" />
+          <Flame className="h-10 w-10 text-[#52525B]" strokeWidth={1.5} aria-hidden="true" />
           <div>
-            <p className="text-sm font-semibold text-[#FAFAFA]">No se encontraron ejercicios</p>
-            <p className="mt-1 text-xs text-[#71717A]">Probá con otros términos o filtros.</p>
+            <p className="text-sm font-semibold text-[#FAFAFA]">No hay calentamientos aún</p>
+            <p className="mt-1 text-xs text-[#71717A]">
+              Creá tu primer ejercicio de calentamiento o estiramiento.
+            </p>
           </div>
         </div>
       ) : (
@@ -332,7 +331,7 @@ export default function EjerciciosPage() {
                         <CardThumbnail src={thumbnail} alt={ex.nameEs} />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#27272A] to-[#18181B]">
-                          <Dumbbell
+                          <Flame
                             className="h-8 w-8 text-[#3F3F46]"
                             strokeWidth={1.5}
                             aria-hidden="true"

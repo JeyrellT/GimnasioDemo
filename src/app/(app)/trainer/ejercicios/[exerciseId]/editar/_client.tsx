@@ -7,7 +7,7 @@ import { getExerciseDetail } from "@/app/actions/exercises";
 import { ExerciseForm } from "@/components/forms/exercise-form";
 import { PageHeader } from "@/components/shared/page-header";
 import { useAuth } from "@/components/providers/auth-provider";
-import type { Exercise, MuscleGroup, ExerciseEquipment, ExerciseDifficulty } from "@prisma/client";
+import type { Exercise, MuscleGroup, ExerciseEquipment, ExerciseDifficulty, ExerciseCategory } from "@prisma/client";
 
 interface Props {
   exerciseId: string;
@@ -137,6 +137,7 @@ export default function EditarEjercicioClient({ exerciseId }: Props) {
     secondaryMuscles: exercise.secondaryMuscles as MuscleGroup[],
     equipment: exercise.equipment as ExerciseEquipment,
     difficulty: exercise.difficulty as ExerciseDifficulty,
+    category: exercise.category as ExerciseCategory,
     thumbnailUrl: exercise.thumbnailUrl,
     gifUrl: exercise.gifUrl,
     mediaUrl: null,

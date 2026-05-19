@@ -229,29 +229,6 @@ export function BrandingSection() {
           })}
         </div>
 
-        {/* Live preview bar */}
-        <div className="rounded-lg border border-[#3F3F46] bg-[#09090B] p-3">
-          <p className="text-[11px] text-[#52525B] mb-2">Vista previa</p>
-          <div className="flex items-center gap-3">
-            <div
-              className="h-8 w-8 rounded-lg"
-              style={{ backgroundColor: "var(--brand-primary, #3B82F6)" }}
-            />
-            <div
-              className="h-8 flex-1 rounded-lg"
-              style={{
-                background: `linear-gradient(90deg, var(--brand-primary, #3B82F6), var(--brand-accent, #60A5FA))`,
-              }}
-            />
-            <Button
-              size="sm"
-              className="text-white text-xs pointer-events-none"
-              style={{ backgroundColor: "var(--brand-primary, #3B82F6)" }}
-            >
-              Boton ejemplo
-            </Button>
-          </div>
-        </div>
       </SectionCard>
 
       {/* ── Logo personalizado ────────────────────────────────────────────── */}
@@ -264,7 +241,7 @@ export function BrandingSection() {
         {/* Business name */}
         <div className="space-y-2">
           <Label htmlFor="biz-name" className="text-xs text-[#A1A1AA]">
-            Nombre del negocio
+            Nombre del negocio <span className="text-[#52525B] font-normal">(opcional)</span>
           </Label>
           <Input
             id="biz-name"
@@ -276,7 +253,7 @@ export function BrandingSection() {
             className="bg-[#09090B] border-[#3F3F46] text-sm max-w-xs"
           />
           <p className="text-[11px] text-[#52525B]">
-            Se muestra junto al logo en el header (móvil y escritorio).
+            Si lo dejás vacío, solo se verá el logo en el header.
           </p>
         </div>
 

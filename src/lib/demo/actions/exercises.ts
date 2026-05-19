@@ -18,6 +18,7 @@ function toSearchResult(ex: DemoExerciseRow): ExerciseSearchResult {
     primaryMuscle: ex.primaryMuscle as ExerciseSearchResult["primaryMuscle"],
     equipment: ex.equipment as ExerciseSearchResult["equipment"],
     difficulty: ex.difficulty as ExerciseSearchResult["difficulty"],
+    category: ((ex as Record<string, unknown>).category ?? "STRENGTH") as ExerciseSearchResult["category"],
     gifUrl: ex.gifUrl,
     thumbnailUrl: ex.thumbnailUrl,
   };
