@@ -1183,6 +1183,87 @@ export async function getClientRoutines(
 }
 
 // =============================================================================
+// getClientAssignedRoutines — all statuses, for trainer's client profile
+// =============================================================================
+
+export interface ClientAssignedRoutine {
+  id: string;
+  status: string;
+  startsOn: Date;
+  endsOn: Date | null;
+  assignedAt: Date;
+  trainerNotes: string | null;
+  snapshotJson: Prisma.JsonValue;
+}
+
+export async function getClientAssignedRoutines(
+  clientUserId: string,
+): Promise<ActionResult<ClientAssignedRoutine[]>> {
+  return tryCatch(async () => {
+    const user = await requireTrainer();
+    await assertOwnsClient(user.id, clientUserId);
+
+    const assigned = await prisma.assignedRoutine.findMany({
+      where: {
+        clientUserId,
+        deletedAt: null,
+      },
+      orderBy: [{ status: "asc" }, { assignedAt: "desc" }],
+      select: {
+        id: true,
+        status: true,
+        startsOn: true,
+        endsOn: true,
+        assignedAt: true,
+        trainerNotes: true,
+        snapshotJson: true,
+      },
+    });
+
+    return assigned;
+  });
+}
+
+// =============================================================================
+// deleteAssignedRoutine — hard-delete (soft-delete via deletedAt)
+// =============================================================================
+
+export async function deleteAssignedRoutine(
+  assignedRoutineId: string,
+): Promise<ActionResult<{ deleted: true }>> {
+  return tryCatch(async () => {
+    const user = await requireTrainer();
+
+    const assigned = await prisma.assignedRoutine.findUnique({
+      where: { id: assignedRoutineId, deletedAt: null },
+      select: { id: true, clientUserId: true },
+    });
+
+    if (!assigned) {
+      throw new NotFoundError(
+        "ASSIGNED_ROUTINE_NOT_FOUND",
+        "Rutina asignada no encontrada.",
+      );
+    }
+
+    await assertOwnsClient(user.id, assigned.clientUserId);
+
+    await prisma.assignedRoutine.update({
+      where: { id: assignedRoutineId },
+      data: { deletedAt: new Date() },
+    });
+
+    logInfo("routines.deleteAssignedRoutine", {
+      trainerId: user.id,
+      assignedRoutineId,
+      clientId: assigned.clientUserId,
+    });
+
+    return { deleted: true as const };
+  });
+}
+
+// =============================================================================
 // Custom Goals
 // =============================================================================
 

@@ -19,4 +19,7 @@ export {
   getClientRoutines,
   createCustomGoal,
   listCustomGoals,
+  cancelAssignedRoutine,
+  getClientAssignedRoutines,
+  deleteAssignedRoutine,
 } from "@/server/actions/routines.actions";
