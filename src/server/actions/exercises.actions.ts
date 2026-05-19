@@ -553,6 +553,39 @@ export async function updateExercise(
 }
 
 // -----------------------------------------------------------------------------
+// updateExerciseInstructions — any trainer can edit instructions on any exercise
+// -----------------------------------------------------------------------------
+
+export async function updateExerciseInstructions(
+  input: { id: string; instructionsEs: string },
+): Promise<ActionResult<{ updated: true }>> {
+  return tryCatch(async () => {
+    const user = await requireTrainer();
+
+    const exercise = await prisma.exercise.findUnique({
+      where: { id: input.id, deletedAt: null },
+      select: { id: true },
+    });
+
+    if (!exercise) {
+      throw new NotFoundError("EXERCISE_NOT_FOUND", "Ejercicio no encontrado.");
+    }
+
+    await prisma.exercise.update({
+      where: { id: input.id },
+      data: { instructionsEs: input.instructionsEs.trim() },
+    });
+
+    logInfo("exercises.updateExerciseInstructions", {
+      userId: user.id,
+      exerciseId: input.id,
+    });
+
+    return { updated: true as const };
+  });
+}
+
+// -----------------------------------------------------------------------------
 // deleteExercise
 // -----------------------------------------------------------------------------
 

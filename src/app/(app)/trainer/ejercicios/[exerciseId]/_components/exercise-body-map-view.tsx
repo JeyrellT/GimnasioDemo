@@ -249,11 +249,10 @@ function BodySvg({
   return (
     <svg
       viewBox="0 0 360 480"
-      width="160"
-      height="213"
+      className="w-full h-auto"
+      style={{ display: "block", maxWidth: 220 }}
       role="img"
       aria-label={label}
-      style={{ display: "block", flexShrink: 0 }}
     >
       {/* Glow filter for primary muscle */}
       <defs>
@@ -335,15 +334,14 @@ export function ExerciseBodyMapView({ primaryMuscle, secondaryMuscles }: Exercis
 
   const [hoveredZone, setHoveredZone] = useState<BodyZone | null>(null);
 
-  // Resolve the muscle label for the hovered zone
   const hoveredMuscle = hoveredZone ? ZONE_TO_MUSCLE[hoveredZone] : null;
   const tooltipLabel = hoveredMuscle ? (MUSCLE_LABELS[hoveredMuscle] ?? hoveredMuscle) : null;
 
   return (
-    <motion.div {...fadeIn} className="flex flex-col items-center gap-4">
-      {/* Dual view: front + back */}
-      <div className="relative flex items-start justify-center gap-4">
-        <div className="flex flex-col items-center gap-1.5">
+    <motion.div {...fadeIn} className="flex flex-col gap-5">
+      {/* Dual view: front + back — enlarged */}
+      <div className="relative flex items-start justify-center gap-6">
+        <div className="flex flex-col items-center gap-1.5 flex-1 max-w-[220px]">
           <span className="text-[10px] font-medium uppercase tracking-widest text-[#71717A]">
             Frente
           </span>
@@ -358,7 +356,7 @@ export function ExerciseBodyMapView({ primaryMuscle, secondaryMuscles }: Exercis
           />
         </div>
 
-        <div className="flex flex-col items-center gap-1.5">
+        <div className="flex flex-col items-center gap-1.5 flex-1 max-w-[220px]">
           <span className="text-[10px] font-medium uppercase tracking-widest text-[#71717A]">
             Espalda
           </span>
@@ -373,7 +371,6 @@ export function ExerciseBodyMapView({ primaryMuscle, secondaryMuscles }: Exercis
           />
         </div>
 
-        {/* Floating tooltip */}
         {tooltipLabel && (
           <div
             className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
@@ -389,26 +386,51 @@ export function ExerciseBodyMapView({ primaryMuscle, secondaryMuscles }: Exercis
       </div>
 
       {/* Legend */}
-      <div
-        className="flex items-center gap-5"
-        aria-label="Leyenda del mapa muscular"
-      >
+      <div className="flex items-center justify-center gap-5" aria-label="Leyenda">
         <span className="flex items-center gap-1.5 text-xs text-[#A1A1AA]">
-          <span
-            aria-hidden="true"
-            className="inline-block h-2.5 w-2.5 rounded-full"
-            style={{ background: "#3B82F6", flexShrink: 0 }}
-          />
+          <span aria-hidden="true" className="inline-block h-2.5 w-2.5 rounded-full bg-[#3B82F6]" />
           Primario
         </span>
         <span className="flex items-center gap-1.5 text-xs text-[#A1A1AA]">
-          <span
-            aria-hidden="true"
-            className="inline-block h-2.5 w-2.5 rounded-full"
-            style={{ background: "#F59E0B", flexShrink: 0 }}
-          />
+          <span aria-hidden="true" className="inline-block h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
           Secundario
         </span>
+      </div>
+
+      {/* Muscle detail list */}
+      <div className="space-y-3 border-t border-[#27272A] pt-4">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-[#71717A] mb-2">
+            Músculo principal
+          </p>
+          <div className="flex items-center gap-2 rounded-lg bg-[#3B82F6]/10 border border-[#3B82F6]/20 px-3 py-2">
+            <span className="h-2 w-2 rounded-full bg-[#3B82F6] shrink-0" />
+            <span className="text-sm font-semibold text-[#FAFAFA]">
+              {MUSCLE_LABELS[primaryMuscle] ?? primaryMuscle}
+            </span>
+          </div>
+        </div>
+
+        {secondaryMuscles.length > 0 && (
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-[#71717A] mb-2">
+              Músculos secundarios
+            </p>
+            <ul className="space-y-1.5">
+              {secondaryMuscles.map((m) => (
+                <li
+                  key={m}
+                  className="flex items-center gap-2 rounded-lg bg-[#F59E0B]/10 border border-[#F59E0B]/15 px-3 py-2"
+                >
+                  <span className="h-2 w-2 rounded-full bg-[#F59E0B] shrink-0" />
+                  <span className="text-sm text-[#E4E4E7]">
+                    {MUSCLE_LABELS[m] ?? m}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </motion.div>
   );
