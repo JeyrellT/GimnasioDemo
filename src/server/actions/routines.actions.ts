@@ -920,16 +920,6 @@ export async function assignRoutine(
     endsOn.setDate(endsOn.getDate() + routine.durationWeeks * 7);
 
     const result = await prisma.$transaction(async (tx) => {
-      // Cancel any currently ACTIVE assigned routine for this client
-      await tx.assignedRoutine.updateMany({
-        where: {
-          clientUserId: clientId,
-          status: "ACTIVE",
-          deletedAt: null,
-        },
-        data: { status: "CANCELLED" },
-      });
-
       // Create the new assignment
       const assigned = await tx.assignedRoutine.create({
         data: {
