@@ -98,24 +98,36 @@ function DifficultyDots({ level }: { level: string | null }) {
   );
 }
 
-// ── Card thumbnail with error fallback ────────────────────────────────────────
+// ── Card thumbnail with multi-step error fallback ─────────────────────────────
 
-function CardThumbnail({ src, alt }: { src: string; alt: string }) {
-  const [errored, setErrored] = useState(false);
-  if (errored) {
+/**
+ * Fallback chain:
+ *   1. `src`  (thumbnailUrl ?? gifUrl)
+ *   2. `/exercises/${slug}.jpg`
+ *   3. `/exercises/${slug}.png`
+ *   4. Dumbbell placeholder
+ */
+function CardThumbnail({ src, alt, slug }: { src: string; alt: string; slug: string }) {
+  const fallbacks = [`/exercises/${slug}.jpg`, `/exercises/${slug}.png`] as const;
+  const [step, setStep] = useState(0); // 0 = src, 1 = .jpg, 2 = .png, 3 = placeholder
+
+  const currentSrc = step === 0 ? src : fallbacks[step - 1];
+
+  if (step >= 3) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#27272A] to-[#18181B]">
         <Dumbbell className="h-8 w-8 text-[#3F3F46]" strokeWidth={1.5} aria-hidden="true" />
       </div>
     );
   }
+
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={src}
+      src={currentSrc}
       alt={alt}
       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-      onError={() => setErrored(true)}
+      onError={() => setStep((s) => s + 1)}
     />
   );
 }
@@ -334,7 +346,7 @@ export default function EjerciciosPage() {
                     {/* Thumbnail */}
                     <div className="relative aspect-video w-full overflow-hidden bg-[#27272A]">
                       {thumbnail ? (
-                        <CardThumbnail src={thumbnail} alt={ex.nameEs} />
+                        <CardThumbnail src={thumbnail} alt={ex.nameEs} slug={ex.slug} />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#27272A] to-[#18181B]">
                           <Dumbbell

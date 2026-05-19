@@ -220,12 +220,17 @@ export async function seedExercises(
     const difficulty = mapDifficulty(raw.level);
 
     // URLs de media: si hay una imagen la usamos para gif y thumbnail
-    // Prioridad: imagen local en public/exercises/${raw.id}.png, luego la del JSON
-    const localImagePath = `/exercises/${raw.id}.png`;
-    const fullLocalPath = join(__dirname, "../../public", localImagePath);
-    const hasLocalImage = existsSync(fullLocalPath);
-    
-    const firstImage = hasLocalImage ? localImagePath : (raw.images[0] ?? null);
+    // Prioridad: imagen local en public/exercises/ (.jpg primero, luego .png), luego la del JSON
+    const publicDir = join(__dirname, "../../public");
+    let firstImage: string | null = null;
+    for (const ext of [".jpg", ".png"]) {
+      const candidate = `/exercises/${raw.id}${ext}`;
+      if (existsSync(join(publicDir, candidate))) {
+        firstImage = candidate;
+        break;
+      }
+    }
+    if (!firstImage) firstImage = raw.images[0] ?? null;
 
     // instructionsEs: las instrucciones traducidas unidas por doble salto
     // para almacenar en el campo Text de Prisma. El frontend las parte por \n\n.

@@ -18,18 +18,26 @@ const isProduction = process.env.NODE_ENV === "production";
 
 const nextConfig: NextConfig = {
   images: {
-    ...(isProduction && {
-      remotePatterns: [
-        {
-          protocol: "https" as const,
-          hostname: "**.r2.cloudflarestorage.com",
-        },
-        {
-          protocol: "https" as const,
-          hostname: "**.r2.dev",
-        },
-      ],
-    }),
+    remotePatterns: [
+      // Exercise GIFs from open-source dataset (all envs)
+      {
+        protocol: "https" as const,
+        hostname: "cdn.jsdelivr.net",
+      },
+      // Cloudflare R2 storage (production only)
+      ...(isProduction
+        ? [
+            {
+              protocol: "https" as const,
+              hostname: "**.r2.cloudflarestorage.com",
+            },
+            {
+              protocol: "https" as const,
+              hostname: "**.r2.dev",
+            },
+          ]
+        : []),
+    ],
   },
 
   ...(isProduction && {
