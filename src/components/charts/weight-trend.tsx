@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useBranding } from "@/lib/branding/branding-context";
 
 interface DataPoint {
   date: string;
@@ -24,6 +25,7 @@ function formatDate(iso: string): string {
 }
 
 export default function WeightTrend({ data }: WeightTrendProps) {
+  const { palette } = useBranding();
   if (data.length === 0) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -61,10 +63,10 @@ export default function WeightTrend({ data }: WeightTrendProps) {
         <Line
           type="monotone"
           dataKey="weight"
-          stroke="var(--brand-primary)"
+          stroke={palette.primary}
           strokeWidth={2}
           dot={false}
-          activeDot={{ r: 4, fill: "var(--brand-primary)" }}
+          activeDot={{ r: 4, fill: palette.primary }}
         />
       </LineChart>
     </ResponsiveContainer>

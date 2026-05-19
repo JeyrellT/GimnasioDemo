@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
+import { useBranding } from "@/lib/branding/branding-context";
 
 interface DataPoint {
   date: string;
@@ -26,6 +27,7 @@ function formatDate(iso: string): string {
 }
 
 export default function Prediction1RM({ data, exerciseName }: Prediction1RMProps) {
+  const { palette } = useBranding();
   if (data.length === 0) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -54,10 +56,10 @@ export default function Prediction1RM({ data, exerciseName }: Prediction1RMProps
             contentStyle={{ background: "#18181B", border: "1px solid #3F3F46", borderRadius: "8px" }}
             labelFormatter={(v: string) => formatDate(v)}
             formatter={(v: number) => [v.toFixed(1) + " kg", "1RM"]}
-            itemStyle={{ color: "var(--brand-accent)", fontSize: 12 }}
+            itemStyle={{ color: palette.accent, fontSize: 12 }}
           />
-          <ReferenceLine y={latest} stroke="var(--brand-accent)" strokeDasharray="4 2" strokeOpacity={0.4} />
-          <Line type="monotone" dataKey="predicted1rm" stroke="var(--brand-accent)" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: "var(--brand-accent)" }} />
+          <ReferenceLine y={latest} stroke={palette.accent} strokeDasharray="4 2" strokeOpacity={0.4} />
+          <Line type="monotone" dataKey="predicted1rm" stroke={palette.accent} strokeWidth={2} dot={false} activeDot={{ r: 4, fill: palette.accent }} />
         </LineChart>
       </ResponsiveContainer>
     </div>
