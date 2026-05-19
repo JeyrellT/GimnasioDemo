@@ -58,7 +58,8 @@ export default function InvitationEmail({
             <Img
               src={`${appUrl}/images/logo-email.png`}
               alt="Blackline Fitness"
-              width="340"
+              width="180"
+              height="96"
               style={styles.logo_img}
             />
             <Text style={styles.tagline}>Tu línea, tu fuerza.</Text>
@@ -147,13 +148,14 @@ const styles = {
   },
   header: {
     backgroundColor: "#0F1A2E",
-    padding: "32px 40px 24px",
+    padding: "24px 40px 16px",
     textAlign: "center" as const,
   },
   logo_img: {
     display: "block",
     margin: "0 auto 8px",
-    maxWidth: "340px",
+    maxWidth: "180px",
+    height: "auto",
   },
   tagline: {
     color: "#A1A1AA",
