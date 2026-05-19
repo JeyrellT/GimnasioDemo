@@ -6,7 +6,7 @@
 // provisional vía quickAddClient(). El botón lleva al cliente a
 // /client/bienvenida donde se le pide que cambie su contraseña.
 //
-// Tono: voseo CR, dark theme, brand blue #3B82F6.
+// Tono: voseo CR, dark theme, brand blue #2563EB.
 // =============================================================================
 
 import {
@@ -16,6 +16,7 @@ import {
   Head,
   Heading,
   Html,
+  Img,
   Preview,
   Section,
   Text,
@@ -29,11 +30,14 @@ export interface ClientWelcomeEmailProps {
   trainerName: string;
   /** Full URL: ${APP_URL}/client/bienvenida?token=${invitationToken} */
   welcomeUrl: string;
+  /** Base URL of the app, e.g. https://blacklinefitness.app — used to build the logo src */
+  appUrl: string;
 }
 
 export default function ClientWelcomeEmail({
   trainerName,
   welcomeUrl,
+  appUrl,
 }: ClientWelcomeEmailProps) {
   return (
     <Html lang="es-CR">
@@ -45,20 +49,25 @@ export default function ClientWelcomeEmail({
         <Container style={styles.container}>
           {/* Header */}
           <Section style={styles.header}>
-            <Heading style={styles.logo}>{APP_NAME}</Heading>
+            <Img
+              src={`${appUrl}/images/logo-email.png`}
+              alt="Blackline Fitness"
+              width="220"
+              style={styles.logo_img}
+            />
             <Text style={styles.tagline}>Tu línea, tu fuerza.</Text>
           </Section>
 
           {/* Content */}
           <Section style={styles.content}>
             <Heading as="h2" style={styles.title}>
-              ¡Bienvenido a Blackline Fitness!
+              ¡Bienvenido!
             </Heading>
 
             <Text style={styles.body_text}>
-              Tu entrenador{" "}
-              <strong style={styles.highlight}>{trainerName}</strong> creó tu
-              cuenta en{" "}
+              Hola, soy{" "}
+              <strong style={styles.highlight}>{trainerName}</strong>, tu
+              coach. Creé tu cuenta en{" "}
               <strong style={styles.highlight}>{APP_NAME}</strong> — la
               plataforma donde vas a ver tus rutinas, registrar tus sesiones
               y seguir tu progreso.
@@ -132,20 +141,20 @@ const styles = {
     overflow: "hidden",
   },
   header: {
-    backgroundColor: "#1E2A38",
+    backgroundColor: "#0F1A2E",
     padding: "32px 40px 24px",
+    textAlign: "center" as const,
   },
-  logo: {
-    color: "#3B82F6",
-    fontSize: "28px",
-    fontWeight: "700",
-    margin: "0 0 4px",
-    letterSpacing: "-0.02em",
+  logo_img: {
+    display: "block",
+    margin: "0 auto 8px",
+    maxWidth: "220px",
   },
   tagline: {
     color: "#A1A1AA",
     fontSize: "13px",
     margin: "0",
+    textAlign: "center" as const,
   },
   content: {
     padding: "32px 40px",
@@ -170,8 +179,9 @@ const styles = {
     textAlign: "center" as const,
   },
   button: {
-    backgroundColor: "#3B82F6",
+    backgroundColor: "#2563EB",
     borderRadius: "8px",
+    boxShadow: "0 4px 14px rgba(37, 99, 235, 0.4)",
     color: "#FFFFFF",
     display: "inline-block",
     fontSize: "16px",
@@ -195,7 +205,7 @@ const styles = {
     margin: "0 0 8px",
   },
   fallback_link: {
-    color: "#3B82F6",
+    color: "#2563EB",
     fontSize: "12px",
     wordBreak: "break-all" as const,
   },
