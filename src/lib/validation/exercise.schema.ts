@@ -42,6 +42,7 @@ export const searchExercisesSchema = z.object({
     ])
     .optional(),
   difficulty: z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]).optional(),
+  owner: z.enum(["mine", "public"]).optional(),
   limit: z.coerce.number().int().min(1).max(50).default(20),
   offset: z.coerce.number().int().min(0).default(0),
 });

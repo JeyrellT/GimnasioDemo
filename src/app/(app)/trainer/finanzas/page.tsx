@@ -7,14 +7,14 @@
 
 import * as React from "react";
 import { useSearchParams } from "next/navigation";
-import { getFinanceDashboard } from "@/app/actions/finance";
+import { getFinanceDashboardData } from "@/app/actions/finance";
 import { FinanceShell } from "./_components/finance-shell";
 import { FinanceKPIRow } from "./_components/finance-kpi-row";
 import { IncomeBreakdownCard } from "./_components/income-breakdown-card";
 import { ExpenseBreakdownChart } from "./_components/expense-breakdown-chart";
 import { LocationCostTable } from "./_components/location-cost-table";
 import { RecentTransactionsList } from "./_components/recent-transactions-list";
-import type { FinanceSummary } from "@/server/actions/finance.actions";
+import type { FinanceDashboardPayload } from "@/types/finance";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -58,7 +58,7 @@ export default function FinanzasPage() {
   const searchParams = useSearchParams();
   const monthStr = searchParams.get("month") ?? currentMonthStr();
 
-  const [payload, setPayload] = React.useState<FinanceSummary | null>(null);
+  const [payload, setPayload] = React.useState<FinanceDashboardPayload | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
 
@@ -66,11 +66,11 @@ export default function FinanzasPage() {
     setLoading(true);
     setError(null);
 
-    getFinanceDashboard(monthStr).then((result) => {
+    getFinanceDashboardData(monthStr).then((result) => {
       if (!result.ok) {
         setError("Error al cargar el dashboard");
       } else {
-        setPayload(result.value as unknown as FinanceSummary);
+        setPayload(result.value);
       }
       setLoading(false);
     });
@@ -97,28 +97,18 @@ export default function FinanzasPage() {
     );
   }
 
-  // Cast to access optional dashboard fields — these may be undefined until a
-  // dedicated aggregation action is implemented.
-  const dash = payload as unknown as {
-    kpis?: Parameters<typeof FinanceKPIRow>[0]["kpis"];
-    incomeBreakdown?: Parameters<typeof IncomeBreakdownCard>[0]["breakdown"];
-    expenseBreakdown?: Parameters<typeof ExpenseBreakdownChart>[0]["data"];
-    locationCosts?: Parameters<typeof LocationCostTable>[0]["rows"];
-    recentTransactions?: Parameters<typeof RecentTransactionsList>[0]["transactions"];
-  };
-
   return (
     <FinanceShell trainerName="Coach Demo" currentMonth={monthStr}>
-      {dash.kpis && <FinanceKPIRow kpis={dash.kpis} />}
+      <FinanceKPIRow kpis={payload.kpis} />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {dash.incomeBreakdown && <IncomeBreakdownCard breakdown={dash.incomeBreakdown} />}
-        {dash.expenseBreakdown && <ExpenseBreakdownChart data={dash.expenseBreakdown} />}
+        <IncomeBreakdownCard breakdown={payload.incomeBreakdown} />
+        <ExpenseBreakdownChart data={payload.expenseBreakdown} />
       </div>
 
-      {dash.locationCosts && <LocationCostTable rows={dash.locationCosts} />}
+      <LocationCostTable rows={payload.locationCosts} />
 
-      {dash.recentTransactions && <RecentTransactionsList transactions={dash.recentTransactions} />}
+      <RecentTransactionsList transactions={payload.recentTransactions} />
     </FinanceShell>
   );
 }

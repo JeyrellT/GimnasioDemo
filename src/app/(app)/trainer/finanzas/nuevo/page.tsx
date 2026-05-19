@@ -12,6 +12,7 @@ import Link from "next/link";
 import { ArrowLeft, TrendingDown, TrendingUp, Loader2, CheckCircle2 } from "lucide-react";
 import { createExpense, createOneOffSale } from "@/app/actions/finance";
 import type { ExpenseCategory, IncomeCategory } from "@prisma/client";
+import { CurrencyInput } from "@/components/shared/currency-input";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -67,7 +68,7 @@ export default function NuevaEntradaPage() {
   const router = useRouter();
 
   const [mode, setMode] = React.useState<Mode>("gasto");
-  const [amount, setAmount] = React.useState("");
+  const [amount, setAmount] = React.useState(0);
   const [category, setCategory] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [date, setDate] = React.useState(todayLocal());
@@ -87,8 +88,8 @@ export default function NuevaEntradaPage() {
     e.preventDefault();
     setError(null);
 
-    const amountNum = parseFloat(amount.replace(/,/g, ""));
-    if (isNaN(amountNum) || amountNum <= 0) {
+    const amountNum = amount;
+    if (amountNum <= 0) {
       setError("Ingresá un monto válido mayor a 0.");
       return;
     }
@@ -173,19 +174,13 @@ export default function NuevaEntradaPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Amount */}
-          <div>
-            <label className={labelCls}>Monto (₡)</label>
-            <input
-              type="number"
-              min="1"
-              step="500"
-              placeholder="35 000"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className={inputCls}
-              required
-            />
-          </div>
+          <CurrencyInput
+            label="Monto"
+            value={amount}
+            onChange={setAmount}
+            placeholder="35 000"
+            required
+          />
 
           {/* Category */}
           <div>

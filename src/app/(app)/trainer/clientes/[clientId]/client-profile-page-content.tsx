@@ -350,10 +350,7 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
 
   useEffect(() => {
     getClientProfileDetail(clientId).then((result) => {
-      // Cast needed: getClientProfileDetail declares ClientProfile | null but at
-      // runtime returns the full BackendDetail shape. Remove cast once the action
-      // return type is updated to ClientProfileDetail.
-      if (result.ok) setBackendDetail(result.value as unknown as BackendDetail);
+      if (result.ok) setBackendDetail(result.value);
       setLoading(false);
     });
   }, [clientId]);

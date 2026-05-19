@@ -133,9 +133,25 @@ const exerciseFormSchema = z.object({
     required_error: "Seleccioná la dificultad",
   }),
   category: z.enum(CATEGORY_VALUES).default("STRENGTH"),
-  thumbnailUrl: z.string().url("URL inválida").optional().or(z.literal("")),
-  gifUrl: z.string().url("URL inválida").optional().or(z.literal("")),
-  mediaUrl: z.string().url("URL inválida").optional().or(z.literal("")),
+  thumbnailUrl: z
+    .union([
+      z.string().url("URL inválida"),
+      z.string().startsWith("data:", "URL de imagen inválida").max(2_500_000, "La imagen supera el límite de 2.5 MB"),
+      z.literal(""),
+    ])
+    .optional(),
+  gifUrl: z
+    .union([
+      z.string().url("URL inválida"),
+      z.literal(""),
+    ])
+    .optional(),
+  mediaUrl: z
+    .union([
+      z.string().url("URL inválida"),
+      z.literal(""),
+    ])
+    .optional(),
 });
 
 type ExerciseFormValues = z.infer<typeof exerciseFormSchema>;
@@ -209,10 +225,12 @@ export function ExerciseForm({ exercise, defaultCategory, basePath = "/trainer/e
         equipment: values.equipment,
         difficulty: values.difficulty,
         category: values.category,
-        // Normalize empty string → undefined so actions see clean optionals
-        thumbnailUrl: values.thumbnailUrl || undefined,
-        gifUrl: values.gifUrl || undefined,
-        mediaUrl: values.mediaUrl || undefined,
+        // "" means the user cleared the field → send undefined so the action
+        // skips the column (the upload widget already cleared it server-side).
+        // A real URL or data URL passes through unchanged.
+        thumbnailUrl: values.thumbnailUrl !== "" ? values.thumbnailUrl : undefined,
+        gifUrl: values.gifUrl !== "" ? values.gifUrl : undefined,
+        mediaUrl: values.mediaUrl !== "" ? values.mediaUrl : undefined,
       };
 
       if (exercise) {

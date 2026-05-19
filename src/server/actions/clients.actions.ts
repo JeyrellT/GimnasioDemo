@@ -51,18 +51,16 @@ import {
   setGoalSchema,
 } from "@/lib/validation/client.schema";
 
+import type { ActionResult } from "@/types/api";
 import type {
-  ActionResult,
   CreateInvitationResult,
   AcceptInvitationResult,
   ListClientsResult,
   ClientProfileDetail,
-  BodyComposition,
-  BodyZone,
-  ZoneMetric,
 } from "@/types/api";
-import type { ClientListItem, RoutineSnapshot } from "@/types/domain";
-import type { ClientProfile, LpdpRequest } from "@prisma/client";
+import type { BodyComposition, BodyZone } from "@/types/api";
+import type { ClientListItem } from "@/types/domain";
+import type { LpdpRequest } from "@prisma/client";
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -995,13 +993,13 @@ export async function saveClientGoal(
 // =============================================================================
 
 /**
- * Return the ClientProfile record for a client.
+ * Return the full ClientProfileDetail for a client.
  *
  * Access rules (either condition allows the call):
  *   1. Authenticated trainer who owns an ACTIVE link to clientUserId.
  *   2. Authenticated user reading their own profile (clientUserId === session user id).
  *
- * Returns null when the profile has not been created yet (should not happen in
+ * Returns null when the User record does not exist (should not happen in
  * normal flow, but is a valid DB state before onboarding completes).
  */
 export async function getClientProfileDetail(
@@ -1025,142 +1023,187 @@ export async function getClientProfileDetail(
       await assertOwnsClient(user.id, clientUserId);
     }
 
-    // ── 1. User + ClientProfile ──────────────────────────────────────────────
-    const clientUser = await prisma.user.findUnique({
-      where: { id: clientUserId, deletedAt: null },
-    });
-    if (!clientUser) return null;
-
-    const clientProfile = await prisma.clientProfile.findUnique({
-      where: { userId: clientUserId, deletedAt: null },
-    });
-
-    // ── 2. TrainerClient (for notesPrivate + startedAt) ──────────────────────
-    // Only relevant when caller is a trainer; fall back gracefully otherwise.
-    const trainerLink =
-      user.role === "TRAINER"
-        ? await prisma.trainerClient.findFirst({
-            where: {
-              trainerId: user.id,
-              clientId: clientUserId,
-              status: "ACTIVE",
-              deletedAt: null,
-            },
-            orderBy: { startedAt: "desc" },
-          })
-        : null;
-
-    // ── 3. BodyMetrics ───────────────────────────────────────────────────────
-    // Last 12 weeks (≈84 days) ascending; also used for latestMetric + deltas.
+    // ── Parallel data fetch ────────────────────────────────────────────────
     const twelveWeeksAgo = new Date();
     twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 84);
+    const twentyEightDaysAgo = new Date();
+    twentyEightDaysAgo.setDate(twentyEightDaysAgo.getDate() - 28);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const metrics = await prisma.bodyMetric.findMany({
-      where: {
-        clientUserId,
-        deletedAt: null,
-        recordedAt: { gte: twelveWeeksAgo },
-      },
-      orderBy: { recordedAt: "asc" },
-    });
+    const [
+      clientUser,
+      clientProfile,
+      trainerLink,
+      allMetrics,
+      activeRoutineRow,
+      completedSessions,
+    ] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: clientUserId, deletedAt: null },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          dateOfBirth: true,
+          gender: true,
+          avatarUrl: true,
+          createdAt: true,
+        },
+      }),
+      prisma.clientProfile.findUnique({
+        where: { userId: clientUserId, deletedAt: null },
+        select: {
+          parqStatus: true,
+          goal: true,
+          locationCity: true,
+          weightKg: true,
+          heightCm: true,
+        },
+      }),
+      prisma.trainerClient.findFirst({
+        where: { clientId: clientUserId, deletedAt: null },
+        select: { startedAt: true, notesPrivate: true },
+        orderBy: { startedAt: "desc" },
+      }),
+      prisma.bodyMetric.findMany({
+        where: { clientUserId, recordedAt: { gte: twelveWeeksAgo }, deletedAt: null },
+        select: {
+          id: true,
+          recordedAt: true,
+          weightKg: true,
+          bodyFatPct: true,
+          muscleMassKg: true,
+          waistCm: true,
+          hipCm: true,
+          neckCm: true,
+          chestCm: true,
+          armCm: true,
+          thighCm: true,
+        },
+        orderBy: { recordedAt: "asc" },
+      }),
+      prisma.assignedRoutine.findFirst({
+        where: { clientUserId, status: "ACTIVE", deletedAt: null },
+        select: {
+          id: true,
+          startsOn: true,
+          endsOn: true,
+          routineTemplate: {
+            select: { id: true, name: true, splitDays: true, durationWeeks: true },
+          },
+        },
+      }),
+      prisma.workoutSession.findMany({
+        where: { clientUserId, status: "COMPLETED", deletedAt: null },
+        select: {
+          id: true,
+          completedAt: true,
+          totalDurationSec: true,
+          assignedRoutineId: true,
+          performedSets: {
+            where: { deletedAt: null },
+            select: { id: true, exerciseId: true, isPr: true },
+          },
+        },
+        orderBy: { completedAt: "desc" },
+        take: 200, // cap for perf — enough for streak + adherence
+      }),
+    ]);
 
-    const latestMetricRaw = metrics.length > 0 ? metrics[metrics.length - 1] : null;
+    if (!clientUser) {
+      logInfo("client.profile_detail_accessed", { actorId: user.id, clientUserId, found: false });
+      return null;
+    }
 
-    // Map Prisma BodyMetric row → domain BodyMetric (ISO dates, Number() for Decimal).
-    const toBodyMetric = (m: (typeof metrics)[0]) => ({
-      id: m.id,
-      clientUserId: m.clientUserId,
-      recordedAt: m.recordedAt.toISOString(),
-      weightKg: m.weightKg != null ? Number(m.weightKg) : null,
-      bodyFatPct: m.bodyFatPct != null ? Number(m.bodyFatPct) : null,
-      muscleMassKg: m.muscleMassKg != null ? Number(m.muscleMassKg) : null,
-      waistCm: m.waistCm != null ? Number(m.waistCm) : null,
-      hipCm: m.hipCm != null ? Number(m.hipCm) : null,
-      neckCm: m.neckCm != null ? Number(m.neckCm) : null,
-      chestCm: m.chestCm != null ? Number(m.chestCm) : null,
-      armCm: m.armCm != null ? Number(m.armCm) : null,
-      thighCm: m.thighCm != null ? Number(m.thighCm) : null,
-      source: m.source,
-      notes: m.notes ?? null,
-      createdAt: m.createdAt.toISOString(),
-    });
+    // ── Latest metric + 28d anchor ────────────────────────────────────────
+    const latestMetric = allMetrics[allMetrics.length - 1] ?? null;
+    const anchor28 = allMetrics
+      .slice()
+      .reverse()
+      .find((m) => m.recordedAt <= twentyEightDaysAgo) ?? null;
 
-    const metricsHistory = metrics.map(toBodyMetric);
-    const latestMetric = latestMetricRaw ? toBodyMetric(latestMetricRaw) : null;
-
-    // ── 4. bodyComposition ───────────────────────────────────────────────────
-    const lm = latestMetricRaw;
-
-    // BMI: weightKg / (heightCm/100)^2
-    const heightCmNum = clientProfile?.heightCm != null ? Number(clientProfile.heightCm) : null;
-    const weightKgNum = lm?.weightKg != null ? Number(lm.weightKg) : null;
-    const bmi =
-      weightKgNum != null && heightCmNum != null && heightCmNum > 0
-        ? weightKgNum / Math.pow(heightCmNum / 100, 2)
+    const weightDelta28d =
+      latestMetric?.weightKg != null && anchor28?.weightKg != null
+        ? Number(latestMetric.weightKg) - Number(anchor28.weightKg)
+        : null;
+    const bodyFatDelta28d =
+      latestMetric?.bodyFatPct != null && anchor28?.bodyFatPct != null
+        ? Number(latestMetric.bodyFatPct) - Number(anchor28.bodyFatPct)
         : null;
 
-    // Freshness: for each zone, find the most recent metric where the field is non-null.
-    // We walk the metrics array from newest to oldest once per zone field.
-    const metricsDesc = [...metrics].reverse();
+    // ── BMI ───────────────────────────────────────────────────────────────
+    const heightCm = clientProfile?.heightCm ? Number(clientProfile.heightCm) : null;
+    const latestWeightKg = latestMetric?.weightKg ? Number(latestMetric.weightKg) : null;
+    const bmi =
+      latestWeightKg && heightCm && heightCm > 0
+        ? Math.round((latestWeightKg / Math.pow(heightCm / 100, 2)) * 10) / 10
+        : null;
 
-    const findFreshness = (
-      pred: (m: (typeof metrics)[0]) => boolean,
-    ): { lastMeasuredAt: string | null; daysSince: number | null } => {
-      const found = metricsDesc.find(pred);
+    // ── Per-zone freshness helper ─────────────────────────────────────────
+    function zoneFreshness(
+      field: keyof typeof allMetrics[number],
+    ): { lastMeasuredAt: string | null; daysSince: number | null } {
+      const found = [...allMetrics].reverse().find((m) => m[field] != null);
       if (!found) return { lastMeasuredAt: null, daysSince: null };
-      const daysSince = Math.floor(
-        (Date.now() - found.recordedAt.getTime()) / (1000 * 60 * 60 * 24),
-      );
+      const daysSince = Math.floor((Date.now() - found.recordedAt.getTime()) / 86_400_000);
       return { lastMeasuredAt: found.recordedAt.toISOString(), daysSince };
-    };
+    }
+
+    const neckFresh = zoneFreshness("neckCm");
+    const chestFresh = zoneFreshness("chestCm");
+    const bicepFresh = zoneFreshness("armCm");
+    const waistFresh = zoneFreshness("waistCm");
+    const hipFresh = zoneFreshness("hipCm");
+    const thighFresh = zoneFreshness("thighCm");
+    const noFresh: { lastMeasuredAt: null; daysSince: null } = { lastMeasuredAt: null, daysSince: null };
 
     const freshness: BodyComposition["freshness"] = {
-      neck: findFreshness((m) => m.neckCm != null),
-      shoulderLeft: { lastMeasuredAt: null, daysSince: null },
-      shoulderRight: { lastMeasuredAt: null, daysSince: null },
-      chest: findFreshness((m) => m.chestCm != null),
-      bicepLeft: findFreshness((m) => m.armCm != null),
-      bicepRight: findFreshness((m) => m.armCm != null),
-      forearmLeft: { lastMeasuredAt: null, daysSince: null },
-      forearmRight: { lastMeasuredAt: null, daysSince: null },
-      abdomen: { lastMeasuredAt: null, daysSince: null },
-      waist: findFreshness((m) => m.waistCm != null),
-      hip: findFreshness((m) => m.hipCm != null),
-      glute: { lastMeasuredAt: null, daysSince: null },
-      quadLeft: findFreshness((m) => m.thighCm != null),
-      quadRight: findFreshness((m) => m.thighCm != null),
-      hamstringLeft: { lastMeasuredAt: null, daysSince: null },
-      hamstringRight: { lastMeasuredAt: null, daysSince: null },
-      calfLeft: { lastMeasuredAt: null, daysSince: null },
-      calfRight: { lastMeasuredAt: null, daysSince: null },
+      neck: neckFresh,
+      shoulderLeft: noFresh,
+      shoulderRight: noFresh,
+      chest: chestFresh,
+      bicepLeft: bicepFresh,
+      bicepRight: bicepFresh,
+      forearmLeft: noFresh,
+      forearmRight: noFresh,
+      abdomen: noFresh,
+      waist: waistFresh,
+      hip: hipFresh,
+      glute: noFresh,
+      quadLeft: thighFresh,
+      quadRight: thighFresh,
+      hamstringLeft: noFresh,
+      hamstringRight: noFresh,
+      calfLeft: noFresh,
+      calfRight: noFresh,
     };
 
-    const armCmVal = lm?.armCm != null ? Number(lm.armCm) : null;
-    const thighCmVal = lm?.thighCm != null ? Number(lm.thighCm) : null;
-
     const bodyComposition: BodyComposition = {
-      weightKg: weightKgNum,
-      bodyFatPct: lm?.bodyFatPct != null ? Number(lm.bodyFatPct) : null,
-      muscleMassKg: lm?.muscleMassKg != null ? Number(lm.muscleMassKg) : null,
-      visceralFat: null, // pending BodyMetric.visceralFat column
-      basalMetabolicRate: null, // pending BodyMetric.bmrKcal column
+      weightKg: latestWeightKg,
+      bodyFatPct: latestMetric?.bodyFatPct != null ? Number(latestMetric.bodyFatPct) : null,
+      muscleMassKg: latestMetric?.muscleMassKg != null ? Number(latestMetric.muscleMassKg) : null,
+      visceralFat: null,
+      basalMetabolicRate: null,
       bmi,
       circumferences: {
-        neckCm: lm?.neckCm != null ? Number(lm.neckCm) : null,
+        neckCm: latestMetric?.neckCm != null ? Number(latestMetric.neckCm) : null,
         shoulderLeftCm: null,
         shoulderRightCm: null,
-        chestCm: lm?.chestCm != null ? Number(lm.chestCm) : null,
-        leftBicepCm: armCmVal, // MVP: duplicate single armCm
-        rightBicepCm: armCmVal,
+        chestCm: latestMetric?.chestCm != null ? Number(latestMetric.chestCm) : null,
+        leftBicepCm: latestMetric?.armCm != null ? Number(latestMetric.armCm) : null,
+        rightBicepCm: latestMetric?.armCm != null ? Number(latestMetric.armCm) : null,
         leftForearmCm: null,
         rightForearmCm: null,
         abdomenCm: null,
-        waistCm: lm?.waistCm != null ? Number(lm.waistCm) : null,
-        hipCm: lm?.hipCm != null ? Number(lm.hipCm) : null,
+        waistCm: latestMetric?.waistCm != null ? Number(latestMetric.waistCm) : null,
+        hipCm: latestMetric?.hipCm != null ? Number(latestMetric.hipCm) : null,
         leftGluteCm: null,
         rightGluteCm: null,
-        leftThighCm: thighCmVal, // MVP: duplicate single thighCm
-        rightThighCm: thighCmVal,
+        leftThighCm: latestMetric?.thighCm != null ? Number(latestMetric.thighCm) : null,
+        rightThighCm: latestMetric?.thighCm != null ? Number(latestMetric.thighCm) : null,
         leftHamstringCm: null,
         rightHamstringCm: null,
         leftCalfCm: null,
@@ -1169,262 +1212,177 @@ export async function getClientProfileDetail(
       freshness,
     };
 
-    // ── 5. zones (body-map) ──────────────────────────────────────────────────
-    // Build ZoneMetric for each zone that has at least one measurement.
-    const buildZoneMetric = (
-      getValue: (m: (typeof metrics)[0]) => number | null,
-    ): ZoneMetric | null => {
-      const latest = metricsDesc.find((m) => getValue(m) != null);
-      if (!latest) return null;
-      const valueCm = getValue(latest)!;
-      // Find previous measurement for delta
-      const prevIdx = metricsDesc.findIndex((m) => m.id === latest.id);
-      const prev = metricsDesc.slice(prevIdx + 1).find((m) => getValue(m) != null);
-      const deltaCm = prev != null ? valueCm - getValue(prev)! : 0;
-      // Sparkline: up to 12 weekly data points from ascending metrics
-      const trendSparkline = metrics
-        .filter((m) => getValue(m) != null)
-        .slice(-12)
-        .map((m) => getValue(m)!);
+    // ── Zones (body map) ───────────────────────────────────────────────────
+    function buildZone(
+      field: keyof typeof allMetrics[number],
+    ): import("@/types/api").ZoneMetric | null {
+      const withValue = allMetrics.filter((m) => m[field] != null);
+      if (withValue.length === 0) return null;
+      const latest = withValue[withValue.length - 1]!;
+      const prev = withValue.length > 1 ? withValue[withValue.length - 2]! : null;
+      const value = Number(latest[field]);
+      const delta = prev?.[field] != null ? value - Number(prev[field]) : 0;
+      const sparkline = withValue.slice(-12).map((m) => Number(m[field]));
       return {
-        valueCm,
-        deltaCm,
+        valueCm: value,
+        deltaCm: Math.round(delta * 10) / 10,
         measuredAt: latest.recordedAt.toISOString(),
-        trendSparkline,
+        trendSparkline: sparkline,
       };
-    };
+    }
 
-    const zones: Record<BodyZone, ZoneMetric | null> = {
-      neck: buildZoneMetric((m) => (m.neckCm != null ? Number(m.neckCm) : null)),
+    const zones: Record<BodyZone, import("@/types/api").ZoneMetric | null> = {
+      neck: buildZone("neckCm"),
       shoulderLeft: null,
       shoulderRight: null,
-      chest: buildZoneMetric((m) => (m.chestCm != null ? Number(m.chestCm) : null)),
-      bicepLeft: buildZoneMetric((m) => (m.armCm != null ? Number(m.armCm) : null)),
-      bicepRight: buildZoneMetric((m) => (m.armCm != null ? Number(m.armCm) : null)),
+      chest: buildZone("chestCm"),
+      bicepLeft: buildZone("armCm"),
+      bicepRight: buildZone("armCm"),
       forearmLeft: null,
       forearmRight: null,
       abdomen: null,
-      waist: buildZoneMetric((m) => (m.waistCm != null ? Number(m.waistCm) : null)),
-      hip: buildZoneMetric((m) => (m.hipCm != null ? Number(m.hipCm) : null)),
+      waist: buildZone("waistCm"),
+      hip: buildZone("hipCm"),
       glute: null,
-      quadLeft: buildZoneMetric((m) => (m.thighCm != null ? Number(m.thighCm) : null)),
-      quadRight: buildZoneMetric((m) => (m.thighCm != null ? Number(m.thighCm) : null)),
+      quadLeft: buildZone("thighCm"),
+      quadRight: buildZone("thighCm"),
       hamstringLeft: null,
       hamstringRight: null,
       calfLeft: null,
       calfRight: null,
     };
 
-    // ── 6. Active routine ────────────────────────────────────────────────────
-    const activeRoutineRow = await prisma.assignedRoutine.findFirst({
-      where: {
-        clientUserId,
-        status: "ACTIVE",
-        deletedAt: null,
-      },
-      orderBy: { startsOn: "desc" },
-    });
+    // ── Metrics history (serialized for server→client boundary) ───────────
+    const metricsHistory = allMetrics.map((m) => ({
+      id: m.id,
+      recordedAt: m.recordedAt.toISOString(),
+      weightKg: m.weightKg != null ? Number(m.weightKg) : null,
+      bodyFatPct: m.bodyFatPct != null ? Number(m.bodyFatPct) : null,
+      muscleMassKg: m.muscleMassKg != null ? Number(m.muscleMassKg) : null,
+    }));
 
-    let activeRoutine: import("@/types/api").ActiveRoutine | null = null;
+    // ── Active routine ─────────────────────────────────────────────────────
+    let activeRoutine: ClientProfileDetail["activeRoutine"] = null;
     if (activeRoutineRow) {
-      const snapshot = activeRoutineRow.snapshotJson as unknown as RoutineSnapshot;
-      const totalDays = snapshot?.splitDays ?? 0;
-      const startsOnMs = activeRoutineRow.startsOn.getTime();
-      const daysSinceStart = Math.floor((Date.now() - startsOnMs) / (1000 * 60 * 60 * 24));
-      // Current day index within the split cycle (0-based, wraps around).
-      const currentDayIndex = totalDays > 0 ? daysSinceStart % totalDays : 0;
-
-      // completionPct: sessions completed / (splitDays × durationWeeks × ~1 session/day), capped at 1.
-      const totalExpected = totalDays * (snapshot?.durationWeeks ?? 1);
-      const completedCount = await prisma.workoutSession.count({
-        where: {
-          assignedRoutineId: activeRoutineRow.id,
-          status: "COMPLETED",
-          deletedAt: null,
-        },
-      });
-      const completionPct = totalExpected > 0 ? Math.min(completedCount / totalExpected, 1) : 0;
-
+      const rt = activeRoutineRow.routineTemplate;
+      const totalDays = rt.splitDays * rt.durationWeeks;
+      const completedInRoutine = completedSessions.filter(
+        (s) => s.assignedRoutineId === activeRoutineRow.id,
+      ).length;
       activeRoutine = {
         id: activeRoutineRow.id,
-        name: snapshot?.templateName ?? "Rutina",
+        name: rt.name,
         totalDays,
-        currentDayIndex,
-        completionPct,
+        currentDayIndex: completedInRoutine % rt.splitDays,
+        completionPct: Math.min(completedInRoutine / Math.max(totalDays, 1), 1),
         startsOn: activeRoutineRow.startsOn.toISOString(),
-        endsOn: activeRoutineRow.endsOn?.toISOString() ?? null,
+        endsOn: activeRoutineRow.endsOn ? activeRoutineRow.endsOn.toISOString() : null,
       };
     }
 
-    // ── 7. Recent sessions (last 5 completed) ────────────────────────────────
-    const recentSessionRows = await prisma.workoutSession.findMany({
-      where: {
-        clientUserId,
-        status: "COMPLETED",
-        deletedAt: null,
-      },
-      orderBy: { completedAt: "desc" },
-      take: 5,
-      include: {
-        performedSets: {
-          where: { deletedAt: null },
-          select: { exerciseId: true, isPr: true },
-        },
-      },
-    });
-
-    const recentSessions = recentSessionRows.map((s) => {
-      const exercisesCount = new Set(s.performedSets.map((ps) => ps.exerciseId)).size;
-      const prDetected = s.performedSets.some((ps) => ps.isPr);
-      return {
+    // ── Recent sessions (last 5) ───────────────────────────────────────────
+    const recentSessions: ClientProfileDetail["recentSessions"] = completedSessions
+      .slice(0, 5)
+      .map((s) => ({
         id: s.id,
-        date: (s.completedAt ?? s.startedAt).toISOString(),
-        durationSec: s.totalDurationSec ?? null,
-        exercisesCount,
-        prDetected,
-      };
-    });
+        date: (s.completedAt ?? new Date()).toISOString(),
+        durationSec: s.totalDurationSec,
+        exercisesCount: new Set(s.performedSets.map((p) => p.exerciseId)).size,
+        prDetected: s.performedSets.some((p) => p.isPr),
+      }));
 
-    // ── 8. Stats ─────────────────────────────────────────────────────────────
+    // ── Stats ──────────────────────────────────────────────────────────────
     const startedAt = trainerLink?.startedAt ?? clientUser.createdAt;
-    const daysSinceStart = Math.floor(
-      (Date.now() - startedAt.getTime()) / (1000 * 60 * 60 * 24),
+    const daysSinceStart = Math.floor((Date.now() - startedAt.getTime()) / 86_400_000);
+
+    // Streak: consecutive days with at least one completed session up to today
+    const completedDates = new Set(
+      completedSessions
+        .filter((s) => s.completedAt)
+        .map((s) => s.completedAt!.toISOString().slice(0, 10)),
     );
-
-    const totalSessions = await prisma.workoutSession.count({
-      where: { clientUserId, status: "COMPLETED", deletedAt: null },
-    });
-
-    // currentStreak: count consecutive calendar days (backwards from today) with ≥1 completed session.
-    const allCompletedDates = await prisma.workoutSession.findMany({
-      where: { clientUserId, status: "COMPLETED", deletedAt: null },
-      select: { completedAt: true },
-      orderBy: { completedAt: "desc" },
-    });
-
     let currentStreak = 0;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const sessionDaySet = new Set(
-      allCompletedDates
-        .filter((s) => s.completedAt != null)
-        .map((s) => {
-          const d = new Date(s.completedAt!);
-          d.setHours(0, 0, 0, 0);
-          return d.getTime();
-        }),
-    );
-    let cursor = today.getTime();
-    while (sessionDaySet.has(cursor)) {
-      currentStreak++;
-      cursor -= 1000 * 60 * 60 * 24;
-    }
-
-    // weightDelta28d / bodyFatDelta28d: latest vs. closest to 28 days ago.
-    let weightDelta28d: number | null = null;
-    let bodyFatDelta28d: number | null = null;
-    if (latestMetricRaw) {
-      const target28 = new Date(latestMetricRaw.recordedAt.getTime() - 28 * 24 * 60 * 60 * 1000);
-      const metric28 = await prisma.bodyMetric.findFirst({
-        where: {
-          clientUserId,
-          deletedAt: null,
-          recordedAt: { lte: target28 },
-        },
-        orderBy: { recordedAt: "desc" },
-      });
-      if (metric28) {
-        if (latestMetricRaw.weightKg != null && metric28.weightKg != null) {
-          weightDelta28d = Number(latestMetricRaw.weightKg) - Number(metric28.weightKg);
-        }
-        if (latestMetricRaw.bodyFatPct != null && metric28.bodyFatPct != null) {
-          bodyFatDelta28d = Number(latestMetricRaw.bodyFatPct) - Number(metric28.bodyFatPct);
-        }
+    for (let i = 0; i <= 30; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      if (completedDates.has(key)) {
+        currentStreak++;
+      } else if (i > 0) {
+        break;
       }
     }
 
-    // alertsCount: RED parQ status counts as 1 alert; extend here as needed.
-    const alertsCount = clientProfile?.parqStatus === "RED" ? 1 : 0;
+    let alertsCount = 0;
+    if (clientProfile?.parqStatus === "RED" || clientProfile?.parqStatus === "REVIEW") alertsCount++;
+    if (weightDelta28d !== null && clientProfile?.goal != null) {
+      const goal = String(clientProfile.goal);
+      if (goal === "FAT_LOSS" && weightDelta28d > 1.5) alertsCount++;
+      if (goal === "MUSCLE_GAIN" && weightDelta28d < -1.5) alertsCount++;
+    }
 
-    // ── 9. Adherence ─────────────────────────────────────────────────────────
-    // adherence = completed sessions / expected sessions based on splitDays.
+    // ── Adherence ──────────────────────────────────────────────────────────
     let adherence7d: number | null = null;
     let adherence30d: number | null = null;
     if (activeRoutineRow) {
-      const snapshot = activeRoutineRow.snapshotJson as unknown as RoutineSnapshot;
-      const splitDays = snapshot?.splitDays ?? 0;
-      if (splitDays > 0) {
-        const now = Date.now();
-        const window7 = new Date(now - 7 * 24 * 60 * 60 * 1000);
-        const window30 = new Date(now - 30 * 24 * 60 * 60 * 1000);
-
-        const [completed7, completed30] = await Promise.all([
-          prisma.workoutSession.count({
-            where: {
-              clientUserId,
-              status: "COMPLETED",
-              deletedAt: null,
-              completedAt: { gte: window7 },
-            },
-          }),
-          prisma.workoutSession.count({
-            where: {
-              clientUserId,
-              status: "COMPLETED",
-              deletedAt: null,
-              completedAt: { gte: window30 },
-            },
-          }),
-        ]);
-
-        // Expected: splitDays per 7-day week, prorated.
-        const expected7 = splitDays; // exactly 1 week
-        const expected30 = Math.round((splitDays / 7) * 30);
-        adherence7d = expected7 > 0 ? Math.min(completed7 / expected7, 1) : null;
-        adherence30d = expected30 > 0 ? Math.min(completed30 / expected30, 1) : null;
-      }
+      const splitDays = activeRoutineRow.routineTemplate.splitDays;
+      const s7 = completedSessions.filter(
+        (s) => s.completedAt && s.completedAt >= sevenDaysAgo,
+      ).length;
+      const s30 = completedSessions.filter(
+        (s) => s.completedAt && s.completedAt >= thirtyDaysAgo,
+      ).length;
+      adherence7d = Math.min(s7 / Math.max(splitDays, 1), 1);
+      adherence30d = Math.min(s30 / Math.max(splitDays * (30 / 7), 1), 1);
     }
 
-    logInfo("client.profile_detail_accessed", {
-      actorId: user.id,
-      clientUserId,
-    });
+    logInfo("client.profile_detail_accessed", { actorId: user.id, clientUserId });
 
-    // ── 10. Assemble result ──────────────────────────────────────────────────
-    const result: ClientProfileDetail = {
+    const detail: ClientProfileDetail = {
       user: {
         id: clientUser.id,
         name: clientUser.name,
         email: clientUser.email,
-        dateOfBirth: clientUser.dateOfBirth?.toISOString() ?? null,
-        gender: clientUser.gender ?? null,
-        avatarUrl: clientUser.avatarUrl ?? null,
+        dateOfBirth: clientUser.dateOfBirth ? clientUser.dateOfBirth.toISOString() : null,
+        gender: (clientUser.gender ?? null) as ClientProfileDetail["user"]["gender"],
+        avatarUrl: clientUser.avatarUrl,
         createdAt: clientUser.createdAt.toISOString(),
       },
       profile: clientProfile
         ? {
-            parqStatus: clientProfile.parqStatus,
-            goal: clientProfile.goal ?? null,
-            locationCity: clientProfile.locationCity ?? null,
+            parqStatus: clientProfile.parqStatus as "GREEN" | "REVIEW" | "RED" | "NOT_COMPLETED",
+            goal: (clientProfile.goal ?? null) as "FAT_LOSS" | "MUSCLE_GAIN" | "MAINTENANCE" | "PERFORMANCE" | "GENERAL_HEALTH" | null,
+            locationCity: clientProfile.locationCity,
             weightKg: clientProfile.weightKg != null ? Number(clientProfile.weightKg) : null,
             heightCm: clientProfile.heightCm != null ? Number(clientProfile.heightCm) : null,
           }
         : null,
-      // Cast: ClientProfileDetail.latestMetric / metricsHistory type the domain BodyMetric
-      // as the raw Prisma model (Decimal + Date), but server actions must return plain JSON.
-      // The serialized shape (number / ISO string) is what consumers actually read.
-      // TODO: update BodyMetric in ClientProfileDetail to a serialized interface.
-      latestMetric: latestMetric as unknown as import("@prisma/client").BodyMetric | null,
-      metricsHistory: metricsHistory as unknown as import("@prisma/client").BodyMetric[],
+      latestMetric: latestMetric
+        ? {
+            id: latestMetric.id,
+            clientUserId,
+            recordedAt: latestMetric.recordedAt,
+            weightKg: latestMetric.weightKg,
+            bodyFatPct: latestMetric.bodyFatPct,
+            muscleMassKg: latestMetric.muscleMassKg,
+            waistCm: latestMetric.waistCm,
+            hipCm: latestMetric.hipCm,
+            neckCm: latestMetric.neckCm,
+            chestCm: latestMetric.chestCm,
+            armCm: latestMetric.armCm,
+            thighCm: latestMetric.thighCm,
+          } as ClientProfileDetail["latestMetric"]
+        : null,
+      metricsHistory: metricsHistory as unknown as ClientProfileDetail["metricsHistory"],
       bodyComposition,
       zones,
       activeRoutine,
       recentSessions,
       stats: {
         daysSinceStart,
-        totalSessions,
+        totalSessions: completedSessions.length,
         currentStreak,
-        alertsCount,
+        alertsCount: Math.min(alertsCount, 9),
         weightDelta28d,
         bodyFatDelta28d,
       },
@@ -1433,7 +1391,7 @@ export async function getClientProfileDetail(
       trainerNotes: trainerLink?.notesPrivate ?? null,
     };
 
-    return result;
+    return detail;
   });
 }
 

@@ -126,7 +126,9 @@ export default function EjerciciosPage() {
   const q = searchParams.get("q") ?? undefined;
   const muscle = searchParams.get("muscle") ?? undefined;
   const equipment = searchParams.get("equipment") ?? undefined;
-  const owner = searchParams.get("owner") ?? undefined;
+  const ownerRaw = searchParams.get("owner");
+  const owner: "mine" | "public" | undefined =
+    ownerRaw === "mine" || ownerRaw === "public" ? ownerRaw : undefined;
 
   const [exercises, setExercises] = useState<ExerciseSearchResult[]>([]);
   const [loading, setLoading] = useState(true);
@@ -139,7 +141,7 @@ export default function EjerciciosPage() {
     setLoading(true);
     const result = await searchExercises(
       q ?? "",
-      { muscle, equipment },
+      { muscle, equipment, owner },
       1,
       40,
     );
