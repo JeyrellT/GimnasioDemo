@@ -13,6 +13,8 @@ import {
 import { ExerciseThumbnail } from "@/components/shared/exercise-thumbnail";
 import { useAuth } from "@/components/providers/auth-provider";
 import { getMyAssignedRoutines } from "@/app/actions/client-portal";
+import { needsMedicalPrompt } from "@/app/actions/medical-conditions";
+import { MedicalConditionsPrompt } from "@/components/forms/medical-conditions-prompt";
 import type { MyAssignedRoutine } from "@/server/actions/client-portal.actions";
 import type {
   RoutineSnapshot,
@@ -48,15 +50,24 @@ export default function ClientRutinasPage() {
   const [cards, setCards] = useState<RoutineCard[]>([]);
   const [expandedRoutine, setExpandedRoutine] = useState<string | null>(null);
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
+  const [showMedicalPrompt, setShowMedicalPrompt] = useState(false);
 
   useEffect(() => {
     async function load() {
       if (!user) { setLoading(false); return; }
 
-      const result = await getMyAssignedRoutines();
-      if (!result.ok) { setLoading(false); return; }
+      const [routinesResult, promptResult] = await Promise.all([
+        getMyAssignedRoutines(),
+        needsMedicalPrompt(),
+      ]);
 
-      const loaded: RoutineCard[] = result.value.map((ar) => ({
+      if (promptResult.ok && promptResult.value.shouldShow) {
+        setShowMedicalPrompt(true);
+      }
+
+      if (!routinesResult.ok) { setLoading(false); return; }
+
+      const loaded: RoutineCard[] = routinesResult.value.map((ar) => ({
         assigned: ar,
         snapshot: parseSnapshot(ar.snapshotJson),
       }));
@@ -80,19 +91,30 @@ export default function ClientRutinasPage() {
 
   if (cards.length === 0) {
     return (
-      <div className="max-w-md mx-auto py-12 px-6 text-center space-y-4">
-        <ClipboardList className="h-12 w-12 text-[#52525B] mx-auto" />
-        <h2 className="text-xl font-bold text-[#FAFAFA]">Sin rutinas asignadas</h2>
-        <p className="text-sm text-[#A1A1AA]">
-          Tu entrenador aun no te ha asignado una rutina.
-        </p>
-      </div>
+      <>
+        <MedicalConditionsPrompt
+          open={showMedicalPrompt}
+          onClose={() => setShowMedicalPrompt(false)}
+        />
+        <div className="max-w-md mx-auto py-12 px-6 text-center space-y-4">
+          <ClipboardList className="h-12 w-12 text-[#52525B] mx-auto" />
+          <h2 className="text-xl font-bold text-[#FAFAFA]">Sin rutinas asignadas</h2>
+          <p className="text-sm text-[#A1A1AA]">
+            Tu entrenador aun no te ha asignado una rutina.
+          </p>
+        </div>
+      </>
     );
   }
 
   const activeCount = cards.filter((c) => c.assigned.status === "ACTIVE").length;
 
   return (
+    <>
+      <MedicalConditionsPrompt
+        open={showMedicalPrompt}
+        onClose={() => setShowMedicalPrompt(false)}
+      />
     <div className="space-y-6">
       {/* Header */}
       <div>
@@ -278,5 +300,6 @@ export default function ClientRutinasPage() {
         })}
       </div>
     </div>
+    </>
   );
 }

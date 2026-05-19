@@ -12,6 +12,7 @@ import { KpiHeroCard } from "@/components/shared/kpi-hero-card";
 import { CircumferencesTable } from "@/components/shared/circumferences-table";
 import { MeasurementSheetController } from "./_components/measurement-sheet-controller";
 import { ClientProfileTabsClient } from "./_components/client-profile-tabs";
+import { HealthDeclaredBlock } from "./_components/health-declared-block";
 
 import { BodyMap } from "@/components/charts/body-map";
 import type { BodyZone, ZoneData } from "@/components/charts/body-map";
@@ -478,22 +479,28 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
         </Link>
       </nav>
 
-      {/* 1. Hero */}
-      <ClientHeroCard
-        name={profile.user.name}
-        email={profile.user.email}
-        avatarUrl={profile.user.avatarUrl}
-        ageYears={ageYears}
-        genderLabel={gl}
-        goalLabel={profile.profile.goal}
-        daysSinceStart={profile.stats.daysSinceStart}
-        parqStatus={profile.profile.parqStatus}
-        hasActiveRoutine={profile.activeRoutine !== null}
-        routineHref={routineHref}
-        clientId={clientId}
-      />
+      {/* 1. Hero + Salud declarada — side by side on lg+ */}
+      <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+        <div className="space-y-5">
+          <ClientHeroCard
+            name={profile.user.name}
+            email={profile.user.email}
+            avatarUrl={profile.user.avatarUrl}
+            ageYears={ageYears}
+            genderLabel={gl}
+            goalLabel={profile.profile.goal}
+            daysSinceStart={profile.stats.daysSinceStart}
+            parqStatus={profile.profile.parqStatus}
+            hasActiveRoutine={profile.activeRoutine !== null}
+            routineHref={routineHref}
+            clientId={clientId}
+          />
+          <MeasurementSheetController clientId={clientId} />
+        </div>
 
-      <MeasurementSheetController clientId={clientId} />
+        {/* Salud declarada — right column on desktop, stacked on mobile */}
+        <HealthDeclaredBlock clientId={backendDetail.user.id} />
+      </div>
 
       {/* Banner: sin mediciones */}
       {hasNoMetrics && (

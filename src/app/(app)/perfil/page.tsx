@@ -10,6 +10,13 @@ const ReferralSection = lazy(
   () => import("@/app/(app)/perfil/_components/referral-section"),
 );
 
+const MedicalConditionsEditor = lazy(
+  () =>
+    import("@/app/(app)/perfil/_components/medical-conditions-editor").then(
+      (m) => ({ default: m.MedicalConditionsEditor }),
+    ),
+);
+
 function roleLabel(role: string): string {
   if (role === "SUPER_ADMIN") return "Super Admin";
   if (role === "TRAINER") return "Entrenador";
@@ -106,6 +113,28 @@ export default function PerfilPage() {
         <Suspense fallback={null}>
           <ReferralSection />
         </Suspense>
+      )}
+
+      {/* Medical conditions editor — clients only */}
+      {user.role === "CLIENT" && (
+        <>
+          {/* Visual divider */}
+          <div
+            aria-hidden="true"
+            className="h-px w-full"
+            style={{
+              background:
+                "linear-gradient(90deg, transparent 0%, rgba(63,63,70,0.6) 20%, rgba(63,63,70,0.6) 80%, transparent 100%)",
+            }}
+          />
+          <Suspense
+            fallback={
+              <div className="h-20 animate-pulse rounded-xl bg-[#27272A]/40" />
+            }
+          >
+            <MedicalConditionsEditor />
+          </Suspense>
+        </>
       )}
 
       {/* Actions */}
