@@ -39,6 +39,7 @@ import {
 import { generateOpaqueToken, generateSecureRandomString } from "@/lib/crypto/tokens";
 import { hashPassword } from "@/lib/crypto/passwords";
 import { sendEmail } from "@/lib/email/client";
+import { serverEnv } from "@/server/env";
 import InvitationEmail from "@/lib/email/templates/invitation";
 import ClientWelcomeEmail from "@/lib/email/templates/client-welcome";
 
@@ -362,6 +363,7 @@ export async function createInvitation(
           trainerName,
           invitationUrl,
           expiresAt: expiresAt.toISOString(),
+          appUrl: serverEnv.APP_URL,
         }),
       });
     } catch (e) {
@@ -1301,6 +1303,7 @@ export async function quickAddClient(input: {
         react: React.createElement(ClientWelcomeEmail, {
           trainerName,
           welcomeUrl,
+          appUrl: serverEnv.APP_URL,
         }),
       });
 
