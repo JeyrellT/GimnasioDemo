@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { LineChart, Line, ResponsiveContainer, Dot } from "recharts";
+import { useBranding } from "@/lib/branding/branding-context";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -81,9 +82,13 @@ function DashedPlaceholder({ height }: { height: number }) {
 export function KpiSparkline({
   data,
   height = 32,
-  color = "var(--brand-primary)",
+  color,
   width,
 }: KpiSparklineProps) {
+  // SVG attributes do not resolve var(--brand-primary), so we read the
+  // active palette's literal hex from the branding context.
+  const { palette } = useBranding();
+  const strokeColor = color ?? palette.primary;
   const chartData = useMemo<SparkPoint[]>(
     () => data.map((v, i) => ({ i, v })),
     [data],
@@ -106,7 +111,7 @@ export function KpiSparkline({
     <Line
       type="monotone"
       dataKey="v"
-      stroke={color}
+      stroke={strokeColor}
       strokeWidth={2}
       isAnimationActive={false}
       dot={(props: {
@@ -121,7 +126,7 @@ export function KpiSparkline({
           cy={props.cy}
           index={props.index}
           dataLength={len}
-          color={color}
+          color={strokeColor}
         />
       )}
     />
