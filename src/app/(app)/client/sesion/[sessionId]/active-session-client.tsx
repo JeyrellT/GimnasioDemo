@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Timer, CheckCircle, X, ChevronLeft, ChevronRight, Trophy } from "lucide-react";
+import { CheckCircle, X, ChevronLeft, ChevronRight, Trophy } from "lucide-react";
 import { ExerciseThumbnail } from "@/components/shared/exercise-thumbnail";
 import { useSessionStore } from "@/stores/session-store";
 import { useRestTimer } from "@/hooks/use-rest-timer";
 import { useWakeLock } from "@/hooks/use-wake-lock";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { recordSet, completeSession as completeSessionAction } from "@/app/actions/sessions";
+import { enqueueSet } from "@/lib/offline/queue";
+import { triggerSyncOnReconnect } from "@/lib/offline/sync";
 import { SetInput } from "@/components/forms/set-input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -26,6 +28,7 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
   const setsByExerciseId = useSessionStore((s) => s.setsByExerciseId);
   const setCurrentExerciseIndex = useSessionStore((s) => s.setCurrentExerciseIndex);
   const recordSetStore = useSessionStore((s) => s.recordSet);
+  const markSetSyncedStore = useSessionStore((s) => s.markSetSynced);
   const pendingSyncCount = useSessionStore((s) => s.pendingSyncCount);
   const completeSessionStore = useSessionStore((s) => s.completeSession);
 
@@ -33,6 +36,23 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
 
   // Keep screen awake during session
   useWakeLock(true);
+
+  // Bug 3 fix: register online/visibilitychange listeners once on mount so the
+  // queue drains immediately when the network returns.
+  useEffect(() => {
+    const unsub = triggerSyncOnReconnect();
+    return unsub;
+  }, []);
+
+  // Also drain the queue reactively whenever isOnline flips to true.
+  useEffect(() => {
+    if (isOnline) {
+      void (async () => {
+        const { syncAll } = await import("@/lib/offline/sync");
+        void syncAll();
+      })();
+    }
+  }, [isOnline]);
 
   const [sessionStartTime] = useState(Date.now());
   const [elapsed, setElapsed] = useState(0);
@@ -87,8 +107,10 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
     if (!currentExercise) return;
 
     const setNumber = completedSets + 1;
+    // Bug 1 fix: crypto.randomUUID() is collision-free (ulid not installed).
+    const localSetId = crypto.randomUUID();
     const setRecord = {
-      setId: `temp-${Date.now()}`,
+      setId: localSetId,
       exerciseId: currentExercise.exerciseId,
       setNumber,
       weightKg: weight,
@@ -101,6 +123,22 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
     };
 
     recordSetStore(setRecord);
+
+    // Bug 2 fix: always persist to IndexedDB so the sync engine can pick it up
+    // on reconnect even if this tab crashes or goes offline before server ack.
+    void enqueueSet({
+      localSessionId: session.id,
+      exerciseId: currentExercise.exerciseId,
+      setNumber,
+      weightKg: weight,
+      reps,
+      rpe,
+      restTakenSec: null,
+      notes: null,
+      isWarmup: false,
+      failed: false,
+      performedAt: new Date(),
+    });
 
     // Auto-start rest timer
     if (currentExercise.restSeconds > 0) {
@@ -117,11 +155,16 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
         rpe: rpe ?? undefined,
       });
 
-      if (result.ok && result.value.isPr) {
-        toast.success(`Nuevo PR en ${currentExercise.nameEs}`, {
-          icon: "🏆",
-          duration: 4000,
-        });
+      if (result.ok) {
+        // Mark synced in the Zustand store so the offline counter drops to 0.
+        markSetSyncedStore(currentExercise.exerciseId, localSetId);
+
+        if (result.value.isPr) {
+          toast.success(`Nuevo PR en ${currentExercise.nameEs}`, {
+            icon: "🏆",
+            duration: 4000,
+          });
+        }
       }
     } else {
       toast.message("Set guardado offline. Se sincronizará cuando vuelva la red.");

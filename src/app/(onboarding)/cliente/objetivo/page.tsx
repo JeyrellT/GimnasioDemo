@@ -7,6 +7,7 @@ import {
   Dumbbell,
   Minus,
   Zap,
+  Heart,
   ArrowRight,
 } from "lucide-react";
 import { saveClientGoal } from "@/app/actions/clients";
@@ -21,22 +22,28 @@ const goals = [
     description: "Reducir porcentaje de grasa corporal manteniendo músculo.",
   },
   {
-    id: "HYPERTROPHY" as const,
+    id: "MUSCLE_GAIN" as const,
     icon: Dumbbell,
     label: "Ganar músculo",
     description: "Aumentar masa muscular con entrenamiento de fuerza.",
   },
   {
-    id: "GENERAL" as const,
+    id: "MAINTENANCE" as const,
     icon: Minus,
     label: "Mantenimiento",
     description: "Mantener composición corporal actual y mejorar salud.",
   },
   {
-    id: "ENDURANCE" as const,
+    id: "PERFORMANCE" as const,
     icon: Zap,
     label: "Rendimiento",
     description: "Mejorar fuerza, resistencia o capacidad atlética.",
+  },
+  {
+    id: "GENERAL_HEALTH" as const,
+    icon: Heart,
+    label: "Salud general",
+    description: "Hábitos saludables, bienestar general y calidad de vida.",
   },
 ] as const;
 
@@ -74,7 +81,7 @@ export default function ObjetivoPage() {
       </div>
 
       {/* Goal selector */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {goals.map(({ id, icon: Icon, label, description }) => (
           <button
             key={id}

@@ -98,6 +98,12 @@ function parseCategory(value: string | undefined): ExerciseCategory | undefined 
     : undefined;
 }
 
+/** Validate the owner filter value. */
+function parseOwner(value: string | undefined): "mine" | "public" | undefined {
+  if (value === "mine" || value === "public") return value;
+  return undefined;
+}
+
 // -----------------------------------------------------------------------------
 // searchExercises
 // -----------------------------------------------------------------------------
@@ -109,6 +115,7 @@ export interface SearchExercisesInput {
   difficulty?: string;
   category?: string;
   muscle?: string;
+  owner?: "mine" | "public";
   page?: number;
   limit?: number;
 }
@@ -131,6 +138,7 @@ export async function searchExercises(
     equipment?: string;
     difficulty?: string;
     category?: string;
+    owner?: "mine" | "public";
   },
   page = 1,
   limit = 20,
@@ -140,7 +148,7 @@ export async function searchExercises(
     const inp = queryOrInput;
     return searchExercises(
       inp.query ?? "",
-      { muscle: inp.primaryMuscle ?? inp.muscle, equipment: inp.equipment, difficulty: inp.difficulty, category: inp.category },
+      { muscle: inp.primaryMuscle ?? inp.muscle, equipment: inp.equipment, difficulty: inp.difficulty, category: inp.category, owner: inp.owner },
       inp.page ?? 1,
       inp.limit ?? 20,
     );
@@ -154,6 +162,7 @@ export async function searchExercises(
     const equipment = parseEquipment(filters?.equipment);
     const difficulty = parseDifficulty(filters?.difficulty);
     const category = parseCategory(filters?.category);
+    const owner = parseOwner(filters?.owner);
 
     if (query.trim().length > 0) {
       // Sanitize query: replace non-alphanumeric/space with space, join tokens
@@ -197,6 +206,11 @@ export async function searchExercises(
       const categorySql = category
         ? Prisma.sql`AND e."category" = ${category}::"ExerciseCategory"`
         : Prisma.empty;
+      const ownerSql = owner === "mine"
+        ? Prisma.sql`AND e."createdById" = ${user.id}`
+        : owner === "public"
+          ? Prisma.sql`AND e."isPublic" = true`
+          : Prisma.sql`AND (e."isPublic" = true OR e."createdById" = ${user.id})`;
 
       const rows = await prisma.$queryRaw<RawRow[]>`
         SELECT
@@ -213,7 +227,7 @@ export async function searchExercises(
           COUNT(*) OVER () AS count
         FROM "Exercise" e
         WHERE e."deletedAt" IS NULL
-          AND (e."isPublic" = true OR e."createdById" = ${user.id})
+          ${ownerSql}
           AND e."searchVector" @@ to_tsquery('spanish', ${sanitized})
           ${muscleSql}
           ${equipmentSql}
@@ -250,9 +264,16 @@ export async function searchExercises(
     }
 
     // No query: use Prisma findMany with filters
+    const visibilityFilter: Prisma.ExerciseWhereInput =
+      owner === "mine"
+        ? { createdById: user.id }
+        : owner === "public"
+          ? { isPublic: true }
+          : { OR: [{ isPublic: true }, { createdById: user.id }] };
+
     const where: Prisma.ExerciseWhereInput = {
       deletedAt: null,
-      OR: [{ isPublic: true }, { createdById: user.id }],
+      ...visibilityFilter,
       ...(muscle && { primaryMuscle: muscle }),
       ...(equipment && { equipment }),
       ...(difficulty && { difficulty }),
@@ -541,13 +562,16 @@ export async function updateExercise(
     if (cat) patch.category = cat;
 
     const mediaUrl = typed ? typed.mediaUrl : fd?.get("mediaUrl")?.toString();
-    if (mediaUrl !== undefined) patch.mediaUrl = mediaUrl || null;
+    // undefined  → omit (don't touch DB column)
+    // null / ""  → explicit clear, set to NULL
+    // non-empty  → set to that value
+    if (mediaUrl !== undefined) patch.mediaUrl = (mediaUrl === "" || mediaUrl === null) ? null : mediaUrl;
 
     const gifUrl = typed ? typed.gifUrl : fd?.get("gifUrl")?.toString();
-    if (gifUrl !== undefined) patch.gifUrl = gifUrl || null;
+    if (gifUrl !== undefined) patch.gifUrl = (gifUrl === "" || gifUrl === null) ? null : gifUrl;
 
     const thumbnailUrl = typed ? typed.thumbnailUrl : fd?.get("thumbnailUrl")?.toString();
-    if (thumbnailUrl !== undefined) patch.thumbnailUrl = thumbnailUrl || null;
+    if (thumbnailUrl !== undefined) patch.thumbnailUrl = (thumbnailUrl === "" || thumbnailUrl === null) ? null : thumbnailUrl;
 
     await prisma.exercise.update({ where: { id }, data: patch });
 
