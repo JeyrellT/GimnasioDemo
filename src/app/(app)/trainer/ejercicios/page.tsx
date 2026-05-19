@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Library, Search, Plus, Dumbbell, Loader2 } from "lucide-react";
+import { Library, Search, Plus, Loader2 } from "lucide-react";
+import { ExerciseThumbnail } from "@/components/shared/exercise-thumbnail";
 import { searchExercises } from "@/app/actions/exercises";
 import { PageHeader } from "@/components/shared/page-header";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -95,28 +96,6 @@ function DifficultyDots({ level }: { level: string | null }) {
         />
       ))}
     </span>
-  );
-}
-
-// ── Card thumbnail with error fallback ────────────────────────────────────────
-
-function CardThumbnail({ src, alt }: { src: string; alt: string }) {
-  const [errored, setErrored] = useState(false);
-  if (errored) {
-    return (
-      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#27272A] to-[#18181B]">
-        <Dumbbell className="h-8 w-8 text-[#3F3F46]" strokeWidth={1.5} aria-hidden="true" />
-      </div>
-    );
-  }
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={src}
-      alt={alt}
-      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-      onError={() => setErrored(true)}
-    />
   );
 }
 
@@ -319,7 +298,6 @@ export default function EjerciciosPage() {
               };
               const muscleLabel = MUSCLE_LABELS[ex.primaryMuscle ?? ""] ?? ex.primaryMuscle ?? "";
               const equipLabel = EQUIPMENT_LABELS[ex.equipment ?? ""] ?? ex.equipment ?? "";
-              const thumbnail = ex.thumbnailUrl ?? ex.gifUrl;
 
               return (
                 <li key={ex.id}>
@@ -328,17 +306,12 @@ export default function EjerciciosPage() {
                     className="group relative flex flex-col overflow-hidden rounded-xl border border-[#3F3F46] bg-[#18181B]/80 backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:scale-[1.02] hover:border-brand-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/60 cursor-pointer"
                   >
                     <div className="relative aspect-video w-full overflow-hidden bg-[#27272A]">
-                      {thumbnail ? (
-                        <CardThumbnail src={thumbnail} alt={ex.nameEs} />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#27272A] to-[#18181B]">
-                          <Dumbbell
-                            className="h-8 w-8 text-[#3F3F46]"
-                            strokeWidth={1.5}
-                            aria-hidden="true"
-                          />
-                        </div>
-                      )}
+                      <ExerciseThumbnail
+                        thumbnailUrl={ex.thumbnailUrl}
+                        gifUrl={ex.gifUrl}
+                        slug={ex.slug}
+                        alt={ex.nameEs}
+                      />
                     </div>
 
                     <div className="flex flex-col gap-3 p-4">

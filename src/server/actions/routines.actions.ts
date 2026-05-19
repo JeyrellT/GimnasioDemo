@@ -76,6 +76,7 @@ export interface RoutineDetail {
       notes: string | null;
       exercise: {
         id: string;
+        slug: string;
         nameEs: string;
         nameEn: string;
         primaryMuscle: string;
@@ -122,6 +123,8 @@ function buildSnapshot(routine: RoutineDetail): RoutineSnapshot {
           tempo: re.tempo,
           supersetGroup: re.supersetGroup,
           notes: re.notes,
+          slug: re.exercise.slug ?? null,
+          thumbnailUrl: re.exercise.thumbnailUrl ?? re.exercise.gifUrl ?? null,
         }),
       ),
   }));
@@ -148,6 +151,7 @@ const ROUTINE_INCLUDE = {
           exercise: {
             select: {
               id: true,
+              slug: true,
               nameEs: true,
               nameEn: true,
               primaryMuscle: true,

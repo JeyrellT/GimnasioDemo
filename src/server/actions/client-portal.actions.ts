@@ -82,6 +82,8 @@ export interface PerformedSetDetail {
     nameEs: string;
     primaryMuscle: string;
     equipment: string;
+    slug: string;
+    thumbnailUrl: string | null;
   };
 }
 
@@ -365,6 +367,8 @@ export async function getSessionDetail(
                 nameEs: true,
                 primaryMuscle: true,
                 equipment: true,
+                slug: true,
+                thumbnailUrl: true,
               },
             },
           },
@@ -398,6 +402,8 @@ export async function getSessionDetail(
         nameEs: s.exercise.nameEs,
         primaryMuscle: s.exercise.primaryMuscle,
         equipment: s.exercise.equipment,
+        slug: s.exercise.slug,
+        thumbnailUrl: s.exercise.thumbnailUrl,
       },
     }));
 

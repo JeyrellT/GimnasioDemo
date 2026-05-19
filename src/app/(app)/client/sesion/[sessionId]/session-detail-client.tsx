@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Loader2, Dumbbell } from "lucide-react";
+import { ExerciseThumbnail } from "@/components/shared/exercise-thumbnail";
 import { useAuth } from "@/components/providers/auth-provider";
 import { getSessionDetail } from "@/app/actions/client-portal";
 import type { MySessionDetail } from "@/server/actions/client-portal.actions";
@@ -77,11 +78,17 @@ export function SessionDetailClient() {
               key={set.id}
               className="flex items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-900 px-4 py-3"
             >
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-800 text-xs font-bold text-neutral-400">
-                {set.setNumber}
+              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-neutral-800">
+                <ExerciseThumbnail
+                  thumbnailUrl={set.exercise.thumbnailUrl}
+                  slug={set.exercise.slug}
+                  alt={set.exercise.nameEs}
+                  iconSize="sm"
+                />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-neutral-200 truncate">
+                  <span className="text-neutral-500 mr-1">#{set.setNumber}</span>
                   {set.exercise.nameEs}
                 </p>
                 <p className="text-xs text-neutral-500">
