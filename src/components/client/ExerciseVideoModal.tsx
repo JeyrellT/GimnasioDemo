@@ -476,7 +476,7 @@ export function ExerciseVideoModal({
                         </h3>
                         <div className="flex flex-wrap gap-1.5">
                           <MuscleBadge muscle={exercise.primaryMuscle} />
-                          {exercise.secondaryMuscles.map((m) => (
+                          {(exercise.secondaryMuscles ?? []).map((m) => (
                             <MuscleBadge key={m} muscle={m} faded />
                           ))}
                         </div>
