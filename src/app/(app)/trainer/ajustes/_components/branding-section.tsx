@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useBranding } from "@/lib/branding/branding-context";
-import { PALETTE_PRESETS } from "@/lib/branding/presets";
+import { PALETTE_PRESETS, HEX_COLOR_REGEX, isCustomPalette, customHexFromId, customIdFromHex } from "@/lib/branding/presets";
 import { BlacklineFitnessLogo } from "@/components/shared/blackline-fitness-logo";
 
 // -----------------------------------------------------------------------------
@@ -165,6 +165,9 @@ export function BrandingSection() {
   const [localName, setLocalName] = useState(branding.businessName);
   const [savingPalette, setSavingPalette] = useState(false);
   const [savingLogo, setSavingLogo] = useState(false);
+  const [hexInput, setHexInput] = useState(() => customHexFromId(branding.paletteId) ?? "");
+  const hexValid = hexInput.length > 0 && HEX_COLOR_REGEX.test(hexInput);
+  const activeCustomHex = customHexFromId(branding.paletteId);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -227,7 +230,10 @@ export function BrandingSection() {
               <button
                 key={preset.id}
                 type="button"
-                onClick={() => update({ paletteId: preset.id })}
+                onClick={() => {
+                  update({ paletteId: preset.id });
+                  setHexInput("");
+                }}
                 className="group flex flex-col items-center gap-1.5"
                 aria-label={`Paleta ${preset.label}`}
                 aria-pressed={isActive}
@@ -252,29 +258,62 @@ export function BrandingSection() {
           })}
         </div>
 
-        {/* Live preview bar */}
-        <div className="rounded-lg border border-[#3F3F46] bg-[#09090B] p-3">
-          <p className="text-[11px] text-[#52525B] mb-2">Vista previa</p>
-          <div className="flex items-center gap-3">
-            <div
-              className="h-8 w-8 rounded-lg"
-              style={{ backgroundColor: "var(--brand-primary, #3B82F6)" }}
-            />
-            <div
-              className="h-8 flex-1 rounded-lg"
-              style={{
-                background: `linear-gradient(90deg, var(--brand-primary, #3B82F6), var(--brand-accent, #60A5FA))`,
-              }}
-            />
-            <Button
-              size="sm"
-              className="text-white text-xs pointer-events-none"
-              style={{ backgroundColor: "var(--brand-primary, #3B82F6)" }}
-            >
-              Boton ejemplo
-            </Button>
+        {/* Custom hex color input */}
+        <div className="flex items-end gap-2">
+          <div className="space-y-1.5 flex-1 max-w-[200px]">
+            <Label htmlFor="custom-hex" className="text-xs text-[#A1A1AA]">
+              Color personalizado
+            </Label>
+            <div className="relative">
+              <div
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 h-5 w-5 rounded border border-[#3F3F46]"
+                style={{
+                  backgroundColor: hexValid ? hexInput : "#27272A",
+                }}
+              />
+              <Input
+                id="custom-hex"
+                type="text"
+                value={hexInput}
+                onChange={(e) => {
+                  let v = e.target.value.trim();
+                  if (v && !v.startsWith("#")) v = "#" + v;
+                  setHexInput(v.slice(0, 7));
+                }}
+                placeholder="#FF5500"
+                maxLength={7}
+                spellCheck={false}
+                className="bg-[#09090B] border-[#3F3F46] text-sm font-mono pl-10 uppercase"
+              />
+            </div>
           </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              if (!hexValid) {
+                toast.error("Ingresá un código hex válido (ej: #FF5500).");
+                return;
+              }
+              update({ paletteId: customIdFromHex(hexInput) });
+              toast.success("Color personalizado aplicado.");
+            }}
+            disabled={!hexValid}
+            className="border-[#3F3F46] text-[#FAFAFA] hover:bg-[#27272A] disabled:opacity-40"
+          >
+            Aplicar
+          </Button>
         </div>
+
+        {activeCustomHex && (
+          <div className="flex items-center gap-2 text-xs text-[#A1A1AA]">
+            <div
+              className="h-4 w-4 rounded-full border border-white/30"
+              style={{ backgroundColor: activeCustomHex }}
+            />
+            <span>Color activo: <span className="font-mono text-[#FAFAFA]">{activeCustomHex}</span></span>
+          </div>
+        )}
       </SectionCard>
 
       {/* ── Logo personalizado ────────────────────────────────────────────── */}
