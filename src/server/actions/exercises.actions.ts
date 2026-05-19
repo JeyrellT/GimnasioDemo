@@ -52,7 +52,7 @@ function toSearchResult(ex: Exercise): ExerciseSearchResult {
     primaryMuscle: ex.primaryMuscle,
     equipment: ex.equipment,
     difficulty: ex.difficulty,
-    category: ex.category,
+    category: ex.category ?? "STRENGTH",
     gifUrl: ex.gifUrl,
     thumbnailUrl: ex.thumbnailUrl,
   };
@@ -237,7 +237,7 @@ export async function searchExercises(
           primaryMuscle: r.primaryMuscle,
           equipment: r.equipment,
           difficulty: r.difficulty,
-          category: r.category,
+          category: r.category ?? "STRENGTH",
           gifUrl: r.gifUrl,
           thumbnailUrl: r.thumbnailUrl,
         })),

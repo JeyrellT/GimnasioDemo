@@ -188,7 +188,7 @@ export default function ExerciseDetailClient({ exerciseId, basePath = "/trainer/
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <MuscleBadge muscle={exercise.primaryMuscle} />
 
-          {exercise.secondaryMuscles.map((m) => {
+          {(exercise.secondaryMuscles ?? []).map((m) => {
             const colors = MUSCLE_COLORS[m] ?? { bg: "bg-[#27272A]", text: "text-[#A1A1AA]" };
             return (
               <span
