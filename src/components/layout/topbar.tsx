@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { LogOut, User, ArrowLeftRight, Settings } from "lucide-react";
+import { LogOut, User, Settings } from "lucide-react";
 import { BlacklineFitnessLogo } from "@/components/shared/blackline-fitness-logo";
 import { useBranding } from "@/lib/branding/branding-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,8 +13,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
 interface UserShape {
   name: string | null;
@@ -39,7 +36,6 @@ function getInitials(name: string | null | undefined): string {
 }
 
 export function Topbar({ user, userName, userAvatarUrl }: TopbarProps) {
-  const router = useRouter();
   const displayName = user?.name ?? userName ?? null;
   const displayAvatar = user?.avatarUrl ?? userAvatarUrl ?? null;
   const { branding } = useBranding();
@@ -130,23 +126,9 @@ export function Topbar({ user, userName, userAvatarUrl }: TopbarProps) {
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          {IS_DEMO && (
-            <DropdownMenuItem
-              onSelect={() => router.push("/ingresar")}
-            >
-              <ArrowLeftRight className="h-4 w-4" aria-hidden="true" />
-              Cambiar perfil
-            </DropdownMenuItem>
-          )}
           <DropdownMenuItem
             className="text-[#EF4444] focus:text-[#EF4444]"
-            onSelect={() => {
-              if (IS_DEMO) {
-                router.push("/ingresar");
-              } else {
-                signOut({ callbackUrl: "/ingresar" });
-              }
-            }}
+            onSelect={() => signOut({ callbackUrl: "/ingresar" })}
           >
             <LogOut className="h-4 w-4" aria-hidden="true" />
             Cerrar sesion

@@ -21,83 +21,6 @@ import type { TrainerSearchResult } from "@/app/actions/auth";
 import { useDebounce } from "@/hooks/use-debounce";
 
 // ---------------------------------------------------------------------------
-// Demo: selector de perfiles (sin auth real)
-// ---------------------------------------------------------------------------
-
-const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
-
-interface DemoProfile {
-  id: string;
-  name: string;
-  email: string;
-  role: "TRAINER" | "CLIENT";
-  avatarInitials: string;
-}
-
-const DEMO_PROFILES: DemoProfile[] = [
-  { id: "trainer-demo-001", name: "Coach Demo", email: "demo@blacklinefitness.app", role: "TRAINER", avatarInitials: "CD" },
-  { id: "client-ana", name: "Ana Solis Mora", email: "ana.solis@demo.local", role: "CLIENT", avatarInitials: "AS" },
-  { id: "client-bruno", name: "Bruno Jimenez Rojas", email: "bruno.jimenez@demo.local", role: "CLIENT", avatarInitials: "BJ" },
-  { id: "client-diana", name: "Diana Mora Quesada", email: "diana.mora@demo.local", role: "CLIENT", avatarInitials: "DM" },
-];
-
-function DemoProfileSelector() {
-  function handleSelect(profile: DemoProfile) {
-    localStorage.setItem("blackline-fitness-demo-profile", JSON.stringify(profile.id));
-    window.location.href = profile.role === "TRAINER" ? "/inicio" : "/client/rutinas";
-  }
-
-  return (
-    <div className="space-y-8">
-      <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-bold text-[#FAFAFA]">Blackline Fitness Demo</h1>
-        <p className="text-sm text-[#71717A]">
-          Elegí un perfil para explorar la demo. Tus datos se guardan solo en
-          este navegador.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-3">
-        {DEMO_PROFILES.map((profile) => (
-          <button
-            key={profile.id}
-            onClick={() => handleSelect(profile)}
-            className="group flex items-center gap-4 rounded-xl border border-[#3F3F46] bg-[#27272A]/60 px-4 py-3.5 text-left transition-all hover:border-[#3B82F6]/50 hover:bg-[#27272A]/80"
-          >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#3F3F46] text-sm font-semibold text-[#D4D4D8] group-hover:bg-[#3B82F6]/20 group-hover:text-[#3B82F6]">
-              {profile.avatarInitials}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-[#FAFAFA]">{profile.name}</p>
-              <p className="text-xs text-[#71717A]">
-                {profile.role === "TRAINER" ? (
-                  <span className="inline-flex items-center gap-1">
-                    <Dumbbell className="h-3 w-3" />
-                    Entrenador
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1">
-                    <User className="h-3 w-3" />
-                    Cliente
-                  </span>
-                )}
-                <span className="mx-1.5">&middot;</span>
-                {profile.email}
-              </p>
-            </div>
-            <ArrowRight className="h-4 w-4 shrink-0 text-[#52525B] transition-colors group-hover:text-[#3B82F6]" />
-          </button>
-        ))}
-      </div>
-
-      <p className="text-center text-[11px] text-[#52525B]">
-        Versión demo &middot; Sin servidor &middot; Datos en localStorage
-      </p>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Schema de validación para el registro
 // ---------------------------------------------------------------------------
 
@@ -743,6 +666,5 @@ function ProdHub() {
 // ---------------------------------------------------------------------------
 
 export default function IngresarPage() {
-  if (IS_DEMO) return <DemoProfileSelector />;
   return <ProdHub />;
 }

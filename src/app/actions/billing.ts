@@ -8,10 +8,8 @@
 // markChargePaid, generateInvoiceXml, getMyTrainerInvoices) that the onboarding
 // and facturacion pages depend on.
 //
-// BREAKING CHANGE from demo stub:
-//   - All functions now call real Prisma / server actions instead of returning
-//     DEMO_MODE errors.
-//   - requireTrainer() comes from @/server/guards (real auth), not the demo stub.
+// All functions call real Prisma / server actions.
+// requireTrainer() comes from @/server/guards.
 // =============================================================================
 
 import { prisma } from "@/server/db";

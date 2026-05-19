@@ -6,7 +6,6 @@
 // Zod at module import time. If a required variable is missing the process
 // fails loud and early — never silently in the middle of a request.
 //
-// Client-side / build-time env stays in src/env.ts (the demo stub).
 // This module is server-only; never import it in client components.
 // =============================================================================
 
@@ -31,12 +30,6 @@ const envSchema = z.object({
 
   // ── App ───────────────────────────────────────────────────────────────────
   APP_URL: z.string().url("APP_URL must be a valid URL"),
-
-  /**
-   * When true, all server modules fall back to demo stubs instead of hitting
-   * real external services. Set in local dev to avoid burning API quotas.
-   */
-  DEMO_MODE: boolFlag,
 
   // ── Database ──────────────────────────────────────────────────────────────
   /** Prisma connection URL (pooled via PgBouncer on Railway). */
@@ -130,38 +123,7 @@ export type ServerEnv = z.infer<typeof envSchema>;
 // Parse and export
 // -----------------------------------------------------------------------------
 
-/**
- * In GitHub Pages / demo builds (static export), server modules are compiled
- * but never executed at runtime. Skip validation and return safe defaults
- * so the build does not crash on missing env vars.
- */
-const isDemoBuild =
-  process.env.NEXT_PUBLIC_DEMO_MODE === "true" ||
-  process.env.GITHUB_PAGES === "true";
-
 function parseEnv(): ServerEnv {
-  if (isDemoBuild) {
-    // Return minimal defaults — these are never used at runtime in demo mode.
-    return {
-      NODE_ENV: "production",
-      APP_URL: "https://demo.localhost",
-      DEMO_MODE: true,
-      DATABASE_URL: "postgresql://demo:demo@localhost:5432/demo",
-      DIRECT_URL: "postgresql://demo:demo@localhost:5432/demo",
-      NEXTAUTH_URL: "https://demo.localhost",
-      NEXTAUTH_SECRET: "demo-secret-not-used-in-static-export-00",
-      ENCRYPTION_KEY_PRIMARY: "demo-key-not-used-in-static-export-0000",
-      PAYMENT_PROVIDER_LIVE: false,
-      BILLING_LIVE: false,
-      AI_ASSIST_LIVE: false,
-      MEDIAPIPE_POSTURE_BETA: false,
-      GEMINI_MODEL_OCR: "gemini-2.0-flash-lite",
-      GEMINI_MODEL_REASONING: "gemini-2.0-flash",
-      R2_BUCKET_PHOTOS: "blackline-fitness-photos",
-      R2_BUCKET_DOCUMENTS: "blackline-fitness-documents",
-    } as ServerEnv;
-  }
-
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
@@ -181,7 +143,6 @@ function parseEnv(): ServerEnv {
 /**
  * Validated server environment.
  * Throws on first import if any required variable is missing or invalid.
- * In demo/GitHub Pages builds, returns safe defaults (never used at runtime).
  */
 export const serverEnv: ServerEnv = parseEnv();
 
