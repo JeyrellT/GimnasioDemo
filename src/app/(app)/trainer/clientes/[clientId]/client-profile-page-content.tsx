@@ -183,7 +183,7 @@ function adaptToFrontend(b: BackendDetail): FrontendDetail {
       }
     : null;
 
-  const recentSessions: FrontendSession[] = b.recentSessions.map((s) => ({
+  const recentSessions: FrontendSession[] = (b.recentSessions ?? []).map((s) => ({
     id: s.id,
     date: new Date(s.date),
     durationSec: s.durationSec ?? 0,
