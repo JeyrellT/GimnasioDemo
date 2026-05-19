@@ -1175,18 +1175,20 @@ export async function changeSubscriptionPlan(input: {
 const extendSubscriptionPeriodSchema = z.object({
   subscriptionId: z.string().cuid(),
   days: z.number().int().min(1).max(365),
+  reason: z.string().min(5, "Justificá la extensión"),
 });
 
 export async function extendSubscriptionPeriod(input: {
   subscriptionId: string;
   days: number;
+  reason: string;
 }): Promise<
   ActionResult<{ updated: true; newCurrentPeriodEnd: Date }>
 > {
   return tryCatch(async () => {
     const actor = await requireSuperAdmin();
 
-    const { subscriptionId, days } =
+    const { subscriptionId, days, reason } =
       extendSubscriptionPeriodSchema.parse(input);
 
     const sub = await prisma.trainerSubscription.findUnique({
@@ -1224,6 +1226,7 @@ export async function extendSubscriptionPeriod(input: {
       subscriptionId,
       {
         days,
+        reason,
         newCurrentPeriodEnd: newCurrentPeriodEnd.toISOString(),
         trainerUserId: sub.trainerUserId,
       },

@@ -45,7 +45,11 @@ export function Step3Workout({
   aiConsentAlreadyGranted,
   extractionUsed,
 }: Step3WorkoutProps) {
-  const { goNext, goBack, setStepData, payload } = useOnboardingStore();
+  // Bug 10: granular selectors
+  const goNext = useOnboardingStore((s) => s.goNext);
+  const goBack = useOnboardingStore((s) => s.goBack);
+  const setStepData = useOnboardingStore((s) => s.setStepData);
+  const payload = useOnboardingStore((s) => s.payload);
 
   const existing = payload.step3;
   const [photos, setPhotos] = useState<UploadedImage[]>(() =>

@@ -40,7 +40,11 @@ const KEY_MAP: Record<View, keyof OnboardingStep6Data> = {
 };
 
 export function Step6Photos({ draftId }: Step6PhotosProps) {
-  const { goNext, goBack, setStepData, payload } = useOnboardingStore();
+  // Bug 10: granular selectors
+  const goNext = useOnboardingStore((s) => s.goNext);
+  const goBack = useOnboardingStore((s) => s.goBack);
+  const setStepData = useOnboardingStore((s) => s.setStepData);
+  const payload = useOnboardingStore((s) => s.payload);
   const existing = payload.step6;
 
   const [photos, setPhotos] = useState<Partial<Record<View, UploadedImage>>>(

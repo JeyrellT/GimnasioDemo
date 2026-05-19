@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Loader2, UserPlus, Users } from "lucide-react";
+import { Loader2, Search, UserPlus, Users } from "lucide-react";
 import { listMyClients } from "@/app/actions/clients";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { QuickAddClientDialog } from "@/components/forms/quick-add-client-dialog";
+import { useDebounce } from "@/hooks/use-debounce";
 import { formatDateCR } from "@/lib/utils";
 import type { ClientListItem } from "@/types/domain";
 
@@ -14,9 +15,11 @@ export default function ClientesPage() {
   const [clients, setClients] = useState<ClientListItem[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
-  const loadClients = useCallback(() => {
-    listMyClients().then((result) => {
+  const loadClients = useCallback((search?: string) => {
+    listMyClients(search || undefined).then((result) => {
       setClients(result.ok ? result.value.clients : []);
       setLoading(false);
     });
@@ -25,6 +28,10 @@ export default function ClientesPage() {
   useEffect(() => {
     loadClients();
   }, [loadClients]);
+
+  useEffect(() => {
+    loadClients(debouncedSearch);
+  }, [debouncedSearch, loadClients]);
 
   if (loading) {
     return (
@@ -62,6 +69,21 @@ export default function ClientesPage() {
           </div>
         }
       />
+
+      {/* Search input */}
+      <div className="relative">
+        <Search
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#71717A]"
+          aria-hidden="true"
+        />
+        <input
+          type="search"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Buscar por nombre o correo..."
+          className="w-full rounded-lg border border-[#3F3F46] bg-[#18181B] py-2.5 pl-9 pr-4 text-sm text-[#FAFAFA] placeholder-[#71717A] outline-none transition-colors focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
+        />
+      </div>
 
       {list.length === 0 ? (
         <EmptyState

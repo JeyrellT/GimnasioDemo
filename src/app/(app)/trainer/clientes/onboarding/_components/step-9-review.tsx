@@ -91,7 +91,11 @@ function Row({ label, value }: { label: string; value?: string | null }) {
 
 export function Step9Review({ draftId, trainerId }: Step9ReviewProps) {
   const router = useRouter();
-  const { goBack, goToStep, payload, reset } = useOnboardingStore();
+  // Bug 10: granular selectors
+  const goBack = useOnboardingStore((s) => s.goBack);
+  const goToStep = useOnboardingStore((s) => s.goToStep);
+  const payload = useOnboardingStore((s) => s.payload);
+  const reset = useOnboardingStore((s) => s.reset);
   const [creating, setCreating] = useState(false);
 
   const s1 = payload.step1;

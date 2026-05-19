@@ -143,6 +143,10 @@ const snapshotExerciseSchema = z.object({
   tempo: z.string().nullable(),
   supersetGroup: z.number().int().nullable(),
   notes: z.string().nullable(),
+  // Bug #3: fields built by buildSnapshot() and stored in RoutineSnapshotExercise
+  slug: z.string().nullable().optional(),
+  thumbnailUrl: z.string().nullable().optional(),
+  nameEn: z.string().nullable().optional(),
 });
 
 const snapshotDaySchema = z.object({

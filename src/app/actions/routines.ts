@@ -19,7 +19,5 @@ export {
   getClientRoutines,
   createCustomGoal,
   listCustomGoals,
-  cancelAssignedRoutine,
-  getClientAssignedRoutines,
-  deleteAssignedRoutine,
+  getActiveRoutineForClient,
 } from "@/server/actions/routines.actions";

@@ -1,11 +1,13 @@
 // =============================================================================
-// BLACKLINE FITNESS — Trainer branding: types + defaults
-// The actual persistence is handled by server actions (branding.actions.ts).
-// This file defines the shared type, defaults, and a localStorage cache layer
-// for instant hydration before the DB response arrives.
+// BLACKLINE FITNESS — Trainer branding: localStorage persistence
+// Stores palette selection + custom logos (base64) per trainer.
+// In production this would sync to the database; in demo mode it's local-only.
 // =============================================================================
 
+import { toast } from "sonner";
 import { DEFAULT_PALETTE_ID } from "./presets";
+
+const STORAGE_KEY = "blackline-fitness_trainer_branding";
 
 // -----------------------------------------------------------------------------
 // Types
@@ -34,16 +36,14 @@ export const DEFAULT_BRANDING: TrainerBranding = {
 };
 
 // -----------------------------------------------------------------------------
-// localStorage cache (instant hydration before DB responds)
+// Read / Write
 // -----------------------------------------------------------------------------
 
-const CACHE_KEY = "blackline-fitness_branding_cache";
-
-export function getCachedBranding(): TrainerBranding | null {
-  if (typeof window === "undefined") return null;
+export function getBranding(): TrainerBranding {
+  if (typeof window === "undefined") return DEFAULT_BRANDING;
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return null;
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return DEFAULT_BRANDING;
     const parsed = JSON.parse(raw) as Partial<TrainerBranding>;
     return {
       paletteId: parsed.paletteId ?? DEFAULT_BRANDING.paletteId,
@@ -52,21 +52,25 @@ export function getCachedBranding(): TrainerBranding | null {
       businessName: parsed.businessName ?? DEFAULT_BRANDING.businessName,
     };
   } catch {
-    return null;
+    return DEFAULT_BRANDING;
   }
 }
 
-export function setCachedBranding(branding: TrainerBranding): void {
+export function saveBranding(branding: TrainerBranding): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(branding));
-  } catch {
-    // quota exceeded — ignore
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(branding));
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "QuotaExceededError") {
+      toast.error("No hay espacio suficiente en el navegador. Probá con un logo más pequeño.");
+    } else {
+      toast.error("No se pudo guardar la configuración.");
+    }
+    throw err;
   }
 }
 
-export function clearCachedBranding(): void {
+export function clearBranding(): void {
   if (typeof window === "undefined") return;
-  localStorage.removeItem(CACHE_KEY);
-  localStorage.removeItem("blackline-fitness_trainer_branding");
+  localStorage.removeItem(STORAGE_KEY);
 }

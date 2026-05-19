@@ -8,6 +8,10 @@ import { SkipForward, ArrowRight } from "lucide-react";
 import { saveTrainerBillingData } from "@/app/actions/billing";
 import { toast } from "sonner";
 
+// Bug 3: stricter regex — física: 1-9999-9999, jurídica: 3-999-999999
+const CEDULA_FISICA_RE = /^\d{1,2}-\d{4}-\d{4}$/;
+const CEDULA_JURIDICA_RE = /^\d{1}-\d{3}-\d{6}$/;
+
 const schema = z.object({
   cedulaType: z.enum(["FISICA", "JURIDICA"], {
     required_error: "Seleccioná el tipo de cédula",
@@ -15,9 +19,11 @@ const schema = z.object({
   cedulaNumber: z
     .string()
     .trim()
-    .min(9, "Mínimo 9 dígitos")
-    .max(12, "Máximo 12 dígitos")
-    .regex(/^\d[-\d]*$/, "Solo números y guiones"),
+    .min(1, "Requerido")
+    .refine(
+      (val) => CEDULA_FISICA_RE.test(val) || CEDULA_JURIDICA_RE.test(val),
+      "Formato inválido. Física: 1-1234-5678 · Jurídica: 3-123-123456",
+    ),
   haciendaId: z
     .string()
     .trim()
@@ -68,11 +74,11 @@ export default function EntrenadorFacturacionPage() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-        {/* Cedula type */}
-        <div className="space-y-1.5">
-          <p className="block text-sm font-medium text-[#FAFAFA]">
+        {/* Cedula type — Bug 2: fieldset + legend for accessible radio group */}
+        <fieldset className="space-y-1.5 border-0 m-0 p-0">
+          <legend className="block text-sm font-medium text-[#FAFAFA] mb-1.5">
             Tipo de cédula
-          </p>
+          </legend>
           <div className="flex gap-3">
             {[
               { value: "FISICA", label: "Física" },
@@ -94,7 +100,7 @@ export default function EntrenadorFacturacionPage() {
               </label>
             ))}
           </div>
-        </div>
+        </fieldset>
 
         {/* Cedula number */}
         <div className="space-y-1.5">

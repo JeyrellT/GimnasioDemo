@@ -7,6 +7,8 @@
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { requireSuperAdmin } from "@/server/guards";
+import { ForbiddenError, AuthError } from "@/lib/errors";
+
 export default async function SuperAdminLayout({
   children,
 }: {
@@ -14,8 +16,11 @@ export default async function SuperAdminLayout({
 }) {
   try {
     await requireSuperAdmin();
-  } catch {
-    redirect("/inicio");
+  } catch (err) {
+    if (err instanceof ForbiddenError || err instanceof AuthError) {
+      redirect("/inicio");
+    }
+    throw err;
   }
 
   return (

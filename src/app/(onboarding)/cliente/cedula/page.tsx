@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, Upload, CheckCircle, SkipForward } from "lucide-react";
 import { toast } from "sonner";
@@ -20,12 +20,25 @@ export default function CedulaPage() {
   const [ocrResult, setOcrResult] = useState<OcrResult | null>(null);
   const [edited, setEdited] = useState<Partial<OcrResult>>({});
 
+  // Bug 4: revoke previous blob URL when preview changes or on unmount
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
+
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
       toast.error("El archivo debe ser una imagen.");
+      return;
+    }
+
+    // Bug 4: file-size guard before upload
+    if (file.size > 10_485_760) {
+      toast.error("Imagen muy grande (máx 10MB).");
       return;
     }
 

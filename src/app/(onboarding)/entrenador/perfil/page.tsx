@@ -10,7 +10,12 @@ import { toast } from "sonner";
 
 const schema = z.object({
   tradeName: z.string().trim().min(2, "Mínimo 2 caracteres").max(100),
-  specialty: z.string().trim().min(2, "Mínimo 2 caracteres").max(100),
+  // Bug 8: was .min(2) which gives "Mínimo 2 caracteres" for unselected dropdown
+  specialty: z
+    .string()
+    .trim()
+    .min(1, "Seleccioná una especialidad")
+    .max(100),
   bio: z.string().trim().max(280, "Máximo 280 caracteres").optional(),
 });
 

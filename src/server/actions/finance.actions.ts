@@ -218,7 +218,7 @@ export async function listLocations(): Promise<
     const trainer = await requireTrainer();
 
     const rows = await prisma.trainerLocation.findMany({
-      where: { trainerUserId: trainer.id },
+      where: { trainerUserId: trainer.id, deletedAt: null },
       orderBy: { name: "asc" },
     });
 
@@ -784,7 +784,7 @@ export async function listExpenses(filters?: ListExpensesInput): Promise<ActionR
         include: {
           location: { select: { name: true } },
         },
-        take: 200,
+        take: 1000,
       }),
       prisma.trainerExpense.count({ where }),
     ]);
@@ -928,7 +928,7 @@ export async function listOneOffSales(filters?: ListOneOffSalesInput): Promise<A
         include: {
           client: { select: { name: true } },
         },
-        take: 200,
+        take: 1000,
       }),
       prisma.oneOffSale.count({ where }),
     ]);

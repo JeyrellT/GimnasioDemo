@@ -72,7 +72,16 @@ export default function ClientRutinasPage() {
         snapshot: parseSnapshot(ar.snapshotJson),
       }));
 
-      setCards(loaded);
+      const sorted = loaded.sort((a, b) => {
+        if (a.assigned.status === "ACTIVE" && b.assigned.status !== "ACTIVE") return -1;
+        if (b.assigned.status === "ACTIVE" && a.assigned.status !== "ACTIVE") return 1;
+        return (
+          new Date(b.assigned.assignedAt).getTime() -
+          new Date(a.assigned.assignedAt).getTime()
+        );
+      });
+
+      setCards(sorted);
       // Auto-expand active routine
       const active = loaded.find((c) => c.assigned.status === "ACTIVE");
       if (active) setExpandedRoutine(active.assigned.id);

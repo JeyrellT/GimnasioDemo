@@ -1,23 +1,37 @@
+"use client";
+
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { BlacklineFitnessLogo } from "@/components/shared/blackline-fitness-logo";
 
 interface OnboardingLayoutProps {
   children: ReactNode;
 }
 
-// Steps shown in the wizard progress bar
-const STEPS = [
-  "Consentimientos",
-  "Identidad",
-  "PAR-Q",
-  "Medidas",
-  "Objetivo",
-  "Fotos",
-  "Resumen",
+// Steps shown in the wizard progress bar — ordered by pathname segment
+const STEP_PATHS = [
+  "/onboarding/cliente/consentimientos",
+  "/onboarding/cliente/cedula",
+  "/onboarding/cliente/parq",
+  "/onboarding/cliente/antropometria",
+  "/onboarding/cliente/objetivo",
+  "/onboarding/cliente/foto-inicial",
+  "/onboarding/cliente/resumen",
 ];
 
+const TOTAL_STEPS = STEP_PATHS.length;
+
+function deriveStep(pathname: string): number {
+  const idx = STEP_PATHS.findIndex((p) => pathname.startsWith(p));
+  return idx >= 0 ? idx + 1 : 1;
+}
+
 export default function OnboardingLayout({ children }: OnboardingLayoutProps) {
+  const pathname = usePathname();
+  const currentStep = deriveStep(pathname);
+  const progressPct = Math.round((currentStep / TOTAL_STEPS) * 100);
+
   return (
     <div className="flex min-h-dvh flex-col bg-[#09090B]">
       {/* Top bar */}
@@ -25,22 +39,25 @@ export default function OnboardingLayout({ children }: OnboardingLayoutProps) {
         <Link href="/" aria-label="Blackline Fitness — inicio">
           <BlacklineFitnessLogo variant="mark" size={28} />
         </Link>
-        <p className="text-xs text-[#71717A]">Configuración inicial</p>
+        <p className="text-xs text-[#71717A]">
+          Paso {currentStep} de {TOTAL_STEPS}
+        </p>
         {/* Spacer */}
         <div className="w-7" aria-hidden="true" />
       </header>
 
-      {/* Progress bar — visual only, steps counted per page */}
+      {/* Progress bar */}
       <div
         aria-label="Progreso del registro"
         className="h-1 bg-[#27272A]"
         role="progressbar"
         aria-valuemin={0}
-        aria-valuemax={STEPS.length}
+        aria-valuemax={TOTAL_STEPS}
+        aria-valuenow={currentStep}
       >
         <div
           className="h-full bg-brand-primary transition-all duration-500"
-          style={{ width: "14.28%" }}
+          style={{ width: `${progressPct}%` }}
         />
       </div>
 
