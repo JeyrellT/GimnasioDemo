@@ -12,10 +12,13 @@
 // =============================================================================
 
 import * as React from "react";
-import { Loader2, CheckCircle } from "lucide-react";
+import { Loader2, CheckCircle, Upload, AlertTriangle, Settings } from "lucide-react";
+import Link from "next/link";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import type { ScaleData } from "@/types/profile";
+import { hasGeminiKey } from "@/lib/demo/settings-store";
+import type { MeasurementsExtraction } from "@/lib/ai/ocr-measurements";
 
 // Lazy-loaded heavy modules — fetched only when the sheet mounts (i.e. when the
 // user actually opens it). Each dynamic import creates a separate chunk so
@@ -33,6 +36,13 @@ const LazyDialogShell = React.lazy(() =>
 const LazyDrawerShell = React.lazy(() =>
   import("./measurement-sheet-drawer").then((m) => ({ default: m.MeasurementDrawerShell })),
 );
+
+// Lazy import of the measurements OCR extractor — pulls in @google/generative-ai
+// only when the user opens the Antropometría or Composición tab OCR zone.
+const extractMeasurementsBrowserModule = () =>
+  import("@/lib/demo/ocr-measurements-browser").then(
+    (m) => m.extractMeasurementsBrowser,
+  );
 
 // TODO(backend-api): recordBodyMetric ya existe en actions/metrics.ts
 import { recordBodyMetric } from "@/app/actions/metrics";
@@ -157,6 +167,44 @@ function MeasurementContent({
     }));
   }
 
+  function handleAnthroOcr(data: MeasurementsExtraction) {
+    setOcrUsed(true);
+    setForm((prev) => ({
+      ...prev,
+      neckCm: data.neckCm?.toString() ?? prev.neckCm,
+      shoulderLeftCm: data.shoulderLeftCm?.toString() ?? prev.shoulderLeftCm,
+      shoulderRightCm: data.shoulderRightCm?.toString() ?? prev.shoulderRightCm,
+      chestCm: data.chestCm?.toString() ?? prev.chestCm,
+      abdomenCm: data.abdomenCm?.toString() ?? prev.abdomenCm,
+      waistCm: data.waistCm?.toString() ?? prev.waistCm,
+      hipCm: data.hipCm?.toString() ?? prev.hipCm,
+      gluteLeftCm: data.gluteLeftCm?.toString() ?? prev.gluteLeftCm,
+      gluteRightCm: data.gluteRightCm?.toString() ?? prev.gluteRightCm,
+      bicepLeftCm: data.bicepLeftCm?.toString() ?? prev.bicepLeftCm,
+      bicepRightCm: data.bicepRightCm?.toString() ?? prev.bicepRightCm,
+      forearmLeftCm: data.forearmLeftCm?.toString() ?? prev.forearmLeftCm,
+      forearmRightCm: data.forearmRightCm?.toString() ?? prev.forearmRightCm,
+      thighLeftCm: data.thighLeftCm?.toString() ?? prev.thighLeftCm,
+      thighRightCm: data.thighRightCm?.toString() ?? prev.thighRightCm,
+      hamstringLeftCm: data.hamstringLeftCm?.toString() ?? prev.hamstringLeftCm,
+      hamstringRightCm: data.hamstringRightCm?.toString() ?? prev.hamstringRightCm,
+      calfLeftCm: data.calfLeftCm?.toString() ?? prev.calfLeftCm,
+      calfRightCm: data.calfRightCm?.toString() ?? prev.calfRightCm,
+    }));
+  }
+
+  function handleComposicionOcr(data: MeasurementsExtraction) {
+    setOcrUsed(true);
+    setForm((prev) => ({
+      ...prev,
+      weightKg: data.weightKg?.toString() ?? prev.weightKg,
+      bodyFatPct: data.bodyFatPct?.toString() ?? prev.bodyFatPct,
+      muscleMassKg: data.muscleMassKg?.toString() ?? prev.muscleMassKg,
+      visceralFat: data.visceralFat?.toString() ?? prev.visceralFat,
+      basalMetabolicRate: data.basalMetabolicRate?.toString() ?? prev.basalMetabolicRate,
+    }));
+  }
+
   async function handleSave() {
     setSaveState("saving");
     setErrorMsg(null);
@@ -256,6 +304,8 @@ function MeasurementContent({
           aria-labelledby="tab-antropometria"
           hidden={activeTab !== "antropometria"}
         >
+          <MeasurementOcrZone onExtracted={handleAnthroOcr} />
+
           {/* Sub-tabs */}
           <div
             role="tablist"
@@ -355,6 +405,8 @@ function MeasurementContent({
           aria-labelledby="tab-composicion"
           hidden={activeTab !== "composicion"}
         >
+          <MeasurementOcrZone onExtracted={handleComposicionOcr} />
+
           <AnthroFieldGrid
             fields={[
               { key: "weightKg", label: "Peso (kg)", unit: "kg" },
@@ -461,6 +513,197 @@ function AnthroFieldGrid({ fields, form, setField }: AnthroFieldGridProps) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// -----------------------------------------------------------------------------
+// Sub-componente: zona compacta de OCR para medidas (Antropometría / Composición)
+// -----------------------------------------------------------------------------
+
+type OcrZoneState =
+  | { phase: "idle" }
+  | { phase: "processing" }
+  | { phase: "success"; confidence: number }
+  | { phase: "error"; message: string };
+
+interface MeasurementOcrZoneProps {
+  onExtracted: (data: MeasurementsExtraction) => void;
+}
+
+function MeasurementOcrZone({ onExtracted }: MeasurementOcrZoneProps) {
+  const [state, setState] = React.useState<OcrZoneState>({ phase: "idle" });
+  const [dragging, setDragging] = React.useState(false);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const isDraggingOver = React.useRef(false);
+  const geminiReady = hasGeminiKey();
+
+  async function processFile(file: File) {
+    if (!file.type.startsWith("image/")) {
+      setState({ phase: "error", message: "Solo se aceptan imágenes (JPG, PNG, WEBP)." });
+      return;
+    }
+
+    setState({ phase: "processing" });
+
+    try {
+      const extractor = await extractMeasurementsBrowserModule();
+      const { data, confidence } = await extractor(file);
+      onExtracted(data);
+      setState({ phase: "success", confidence });
+    } catch (e) {
+      const msg =
+        e instanceof Error ? e.message : "No se pudieron detectar las medidas.";
+      setState({ phase: "error", message: msg });
+    }
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setDragging(false);
+    isDraggingOver.current = false;
+    const file = e.dataTransfer.files[0];
+    if (file) processFile(file);
+  }
+
+  function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    if (!isDraggingOver.current) {
+      isDraggingOver.current = true;
+      setDragging(true);
+    }
+  }
+
+  function handleDragLeave() {
+    isDraggingOver.current = false;
+    setDragging(false);
+  }
+
+  function handleReset() {
+    setState({ phase: "idle" });
+    if (inputRef.current) inputRef.current.value = "";
+  }
+
+  return (
+    <div className="mb-4 flex flex-col gap-2">
+      {/* No Gemini key warning */}
+      {!geminiReady && (
+        <div
+          role="alert"
+          className="flex items-start gap-2 rounded-lg border border-[rgba(245,158,11,0.4)] bg-[rgba(245,158,11,0.08)] px-3 py-2"
+        >
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#F59E0B]" aria-hidden="true" />
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <p className="text-xs text-[#F59E0B]">
+              Configurá tu API key de Gemini para detectar medidas automáticamente.
+            </p>
+            <Link
+              href="/trainer/ajustes"
+              className="inline-flex items-center gap-1 text-xs font-medium text-[#F59E0B] underline underline-offset-2 hover:text-[#FBBF24]"
+            >
+              <Settings className="h-3 w-3" aria-hidden="true" />
+              Ir a Ajustes
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Drop zone — only shown when Gemini is ready and not yet processed */}
+      {geminiReady && state.phase !== "success" && (
+        <>
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label="Arrastrá o seleccioná una foto para detectar medidas automáticamente"
+            onClick={() => {
+              if (state.phase !== "processing") inputRef.current?.click();
+            }}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onKeyDown={(e) => {
+              if ((e.key === "Enter" || e.key === " ") && state.phase !== "processing") {
+                e.preventDefault();
+                inputRef.current?.click();
+              }
+            }}
+            className={cn(
+              "flex min-h-[72px] cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed px-4 py-3 transition-all duration-150",
+              "focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2",
+              state.phase === "processing" && "cursor-default opacity-70",
+              dragging
+                ? "border-[#3B82F6] bg-[#27272A]"
+                : "border-[#3F3F46] bg-[#18181B] hover:border-[#3B82F6] hover:bg-[#27272A]",
+            )}
+          >
+            {state.phase === "processing" ? (
+              <>
+                <Loader2 className="h-5 w-5 shrink-0 animate-spin text-[#3B82F6]" aria-hidden="true" />
+                <span className="text-xs text-[#A1A1AA]">Detectando medidas...</span>
+              </>
+            ) : (
+              <>
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#27272A]">
+                  <Upload className="h-4 w-4 text-[#71717A]" aria-hidden="true" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-[#FAFAFA]">
+                    Subí una foto para detectar medidas automáticamente
+                  </p>
+                  <p className="mt-0.5 text-xs text-[#71717A]">JPG, PNG, WEBP</p>
+                </div>
+              </>
+            )}
+          </div>
+
+          {state.phase === "error" && (
+            <div
+              role="alert"
+              className="flex items-start gap-2 rounded-lg border border-[rgba(239,68,68,0.4)] bg-[rgba(239,68,68,0.08)] px-3 py-2"
+            >
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#EF4444]" aria-hidden="true" />
+              <p className="text-xs text-[#EF4444]">{state.message}</p>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Success banner */}
+      {geminiReady && state.phase === "success" && (
+        <div className="flex items-center justify-between rounded-lg border border-[rgba(34,197,94,0.3)] bg-[rgba(34,197,94,0.08)] px-3 py-2">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="h-3.5 w-3.5 shrink-0 text-[#22C55E]" aria-hidden="true" />
+            <p className="text-xs text-[#22C55E]">
+              Medidas detectadas — confianza{" "}
+              <span className="font-semibold">
+                {Math.round((state as { phase: "success"; confidence: number }).confidence * 100)}%
+              </span>
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="ml-3 shrink-0 text-xs text-[#71717A] underline underline-offset-2 hover:text-[#A1A1AA]"
+          >
+            Otra foto
+          </button>
+        </div>
+      )}
+
+      {/* Hidden file input */}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="sr-only"
+        aria-hidden="true"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) processFile(file);
+          e.target.value = "";
+        }}
+      />
     </div>
   );
 }
