@@ -46,11 +46,11 @@ const GOAL_CONFIG: Record<GoalKey, GoalConfig> = {
   HYPERTROPHY: {
     label: "Hipertrofia",
     icon: Flame,
-    borderColor: "border-l-[#A855F7]",
-    iconBg: "bg-[#A855F7]/10",
-    iconColor: "text-[#A855F7]",
-    gradientFrom: "from-[#A855F7]/8",
-    labelColor: "text-[#A855F7]",
+    borderColor: "border-l-brand-primary",
+    iconBg: "bg-brand-primary/10",
+    iconColor: "text-brand-primary",
+    gradientFrom: "from-brand-primary/8",
+    labelColor: "text-brand-primary",
   },
   STRENGTH: {
     label: "Fuerza",
@@ -73,11 +73,11 @@ const GOAL_CONFIG: Record<GoalKey, GoalConfig> = {
   ENDURANCE: {
     label: "Resistencia",
     icon: Wind,
-    borderColor: "border-l-[#06B6D4]",
-    iconBg: "bg-[#06B6D4]/10",
-    iconColor: "text-[#06B6D4]",
-    gradientFrom: "from-[#06B6D4]/8",
-    labelColor: "text-[#06B6D4]",
+    borderColor: "border-l-brand-primary",
+    iconBg: "bg-brand-primary/10",
+    iconColor: "text-brand-primary",
+    gradientFrom: "from-brand-primary/8",
+    labelColor: "text-brand-primary",
   },
   GENERAL: {
     label: "General",
@@ -282,37 +282,43 @@ export default function RutinasPage() {
                     className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${cfg.gradientFrom} via-transparent to-transparent`}
                   />
 
-                  <div className="flex flex-col gap-3 p-4 pr-[4.5rem]">
-                    <div className="flex items-start gap-3 min-w-0">
-                      <div
-                        className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${cfg.iconBg}`}
-                      >
-                        <GoalIcon
-                          className={`h-4 w-4 ${cfg.iconColor}`}
-                          strokeWidth={1.75}
-                          aria-hidden="true"
-                        />
-                      </div>
+                  <div className="flex flex-col gap-3 p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div
+                          className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${cfg.iconBg}`}
+                        >
+                          <GoalIcon
+                            className={`h-4 w-4 ${cfg.iconColor}`}
+                            strokeWidth={1.75}
+                            aria-hidden="true"
+                          />
+                        </div>
 
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
+                        <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-[#FAFAFA] leading-snug">
                             {r.name}
                           </p>
-                          {r.isArchived ? (
-                            <span className="shrink-0 rounded-full border border-[#3F3F46] bg-[#27272A] px-2 py-0.5 text-[10px] text-[#71717A]">
-                              Archivada
-                            </span>
-                          ) : (
-                            <span className="shrink-0 flex items-center gap-1 rounded-full bg-[#22C55E]/10 px-2 py-0.5 text-[10px] font-medium text-[#22C55E]">
-                              <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#22C55E]" />
-                              Activa
-                            </span>
-                          )}
+                          <p className={`mt-0.5 text-xs font-medium ${cfg.labelColor}`}>
+                            {cfg.label}
+                          </p>
                         </div>
-                        <p className={`mt-0.5 text-xs font-medium ${cfg.labelColor}`}>
-                          {cfg.label}
-                        </p>
+                      </div>
+
+                      <div className="flex shrink-0 items-center gap-2">
+                        {r.isArchived ? (
+                          <span className="rounded-full border border-[#3F3F46] bg-[#27272A] px-2 py-0.5 text-xs text-[#71717A]">
+                            Archivada
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1.5 text-xs text-[#71717A]">
+                            <span
+                              className="inline-block h-1.5 w-1.5 rounded-full bg-[#22C55E]"
+                              aria-label="Activa"
+                            />
+                            Activa
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -321,9 +327,11 @@ export default function RutinasPage() {
                       <MetaChip label={`${r.durationWeeks} sem`} />
                     </div>
 
-                    <p className="text-xs text-[#52525B]">
-                      Actualizada {formatDateCR(r.updatedAt, "d MMM yyyy")}
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-[#52525B]">
+                        Actualizada {formatDateCR(r.updatedAt, "d MMM yyyy")}
+                      </p>
+                    </div>
                   </div>
                 </Link>
 

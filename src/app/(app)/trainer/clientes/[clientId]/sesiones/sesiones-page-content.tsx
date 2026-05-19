@@ -230,7 +230,7 @@ export default function SesionesPageContent({ clientId }: { clientId: string }) 
             style={{
               bottom: "12px",
               background:
-                "linear-gradient(to bottom, var(--brand-primary, #3B82F6) 0%, var(--brand-primary, #3B82F6) 60%, transparent 100%)",
+                "linear-gradient(to bottom, var(--brand-primary) 0%, var(--brand-primary) 60%, transparent 100%)",
             }}
             aria-hidden="true"
           />

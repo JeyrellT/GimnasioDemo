@@ -12,7 +12,7 @@ export interface KpiSparklineProps {
   data: number[];
   /** Container height in px. Defaults to 32. */
   height?: number;
-  /** Stroke color. Defaults to brand-primary CSS variable with #3B82F6 fallback. */
+  /** Stroke color. Defaults to brand-primary CSS var. */
   color?: string;
   /**
    * Fixed pixel width. When omitted the chart fills its parent via
@@ -81,7 +81,7 @@ function DashedPlaceholder({ height }: { height: number }) {
 export function KpiSparkline({
   data,
   height = 32,
-  color = "var(--brand-primary, #3B82F6)",
+  color = "var(--brand-primary)",
   width,
 }: KpiSparklineProps) {
   const chartData = useMemo<SparkPoint[]>(

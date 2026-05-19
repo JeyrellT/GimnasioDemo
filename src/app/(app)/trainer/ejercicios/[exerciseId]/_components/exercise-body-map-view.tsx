@@ -138,7 +138,7 @@ const BODY_OUTLINE_BACK =
 type Role = "primary" | "secondary" | "inactive";
 
 const COLORS = {
-  primary:   { base: "#3B82F6", bright: "#60A5FA", glow: "rgba(59,130,246,0.5)" },
+  primary:   { base: "var(--brand-primary)", bright: "var(--brand-accent)", glow: "rgba(59,130,246,0.5)" },
   secondary: { base: "#F59E0B", bright: "#FBBF24", glow: "rgba(245,158,11,0.45)" },
   inactive:  { base: "#1E293B", bright: "#334155", glow: "none" },
 } as const;
@@ -214,7 +214,7 @@ function BodyView({
         <defs>
           <filter id="glow-primary" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="6" result="blur" />
-            <feFlood floodColor="#3B82F6" floodOpacity="0.4" result="color" />
+            <feFlood floodColor="var(--brand-primary)" floodOpacity="0.4" result="color" />
             <feComposite in="color" in2="blur" operator="in" result="glow" />
             <feMerge>
               <feMergeNode in="glow" />
@@ -304,7 +304,7 @@ interface TooltipData {
 
 function Tooltip({ data }: { data: TooltipData }) {
   const roleLabel = data.role === "primary" ? "Primario" : data.role === "secondary" ? "Secundario" : null;
-  const dotColor = data.role === "primary" ? "#3B82F6" : data.role === "secondary" ? "#F59E0B" : null;
+  const dotColor = data.role === "primary" ? "var(--brand-primary)" : data.role === "secondary" ? "#F59E0B" : null;
 
   return (
     <div
@@ -449,7 +449,7 @@ export function ExerciseBodyMapView({ primaryMuscle, secondaryMuscles }: Exercis
         <span className="flex items-center gap-1.5 text-xs text-[#A1A1AA]">
           <span
             className="inline-block h-2.5 w-2.5 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.6)]"
-            style={{ background: "#3B82F6" }}
+            style={{ background: "var(--brand-primary)" }}
           />
           Primario
         </span>

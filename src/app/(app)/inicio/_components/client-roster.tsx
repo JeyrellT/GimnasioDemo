@@ -122,7 +122,7 @@ interface RosterAvatarProps {
 function RosterAvatar({ src, name }: RosterAvatarProps) {
   const initials = getInitials(name);
   return (
-    <div className="relative h-8 w-8 shrink-0 rounded-full bg-gradient-to-br from-brand-primary to-brand-deep p-[1.5px]">
+    <div className="relative h-8 w-8 shrink-0 rounded-full bg-gradient-to-br from-brand-primary to-brand-primary-hover p-[1.5px]">
       <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-[#1C1C1F]">
         {src ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -380,7 +380,7 @@ export function ClientRoster({ items, className }: ClientRosterProps) {
         </div>
         <Link
           href="/trainer/clientes"
-          className="shrink-0 text-xs font-medium text-brand-primary transition-colors hover:text-brand-deep focus-visible:outline-none focus-visible:underline"
+          className="shrink-0 text-xs font-medium text-brand-primary transition-colors hover:text-brand-primary-hover focus-visible:outline-none focus-visible:underline"
         >
           Ver todos
         </Link>

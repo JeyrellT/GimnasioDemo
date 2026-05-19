@@ -79,7 +79,7 @@ export default function ClientesPage() {
                 className="flex items-center gap-4 rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 hover:bg-[#27272A] transition-colors"
               >
                 {/* Avatar */}
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-secondary text-sm font-bold text-brand-accent">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#1E2A38] text-sm font-bold text-brand-accent">
                   {(client.name ?? "?").slice(0, 2).toUpperCase()}
                 </div>
 

@@ -257,13 +257,13 @@ function PhotoPanel({
           type="button"
           onClick={triggerFilePicker}
           disabled={uploading}
-          className="group flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#3F3F46] bg-[#09090B] px-6 text-center transition-colors hover:border-[#3B82F6] hover:bg-[#3B82F6]/5 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="group flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#3F3F46] bg-[#09090B] px-6 text-center transition-colors hover:border-brand-primary hover:bg-brand-primary/5 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {uploading ? (
-            <Loader2 className="h-8 w-8 animate-spin text-[#3B82F6]" aria-hidden="true" />
+            <Loader2 className="h-8 w-8 animate-spin text-brand-primary" aria-hidden="true" />
           ) : (
             <>
-              <Upload className="h-8 w-8 text-[#52525B] transition-colors group-hover:text-[#3B82F6]" strokeWidth={1.5} aria-hidden="true" />
+              <Upload className="h-8 w-8 text-[#52525B] transition-colors group-hover:text-brand-primary" strokeWidth={1.5} aria-hidden="true" />
               <p className="text-sm font-medium text-[#71717A] group-hover:text-[#FAFAFA]">Agregar foto</p>
               <p className="text-[11px] text-[#52525B]">JPG/PNG · máx 8MB</p>
             </>
@@ -304,7 +304,7 @@ function PhotoPanel({
             onClick={triggerFilePicker}
             disabled={uploading}
             aria-label={hasCustomPhoto ? "Cambiar foto" : "Agregar foto"}
-            className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full border border-[#3F3F46] bg-[#18181B] text-[#A1A1AA] shadow-md transition-colors hover:border-[#3B82F6]/60 hover:bg-[#27272A] hover:text-[#3B82F6] focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/40 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full border border-[#3F3F46] bg-[#18181B] text-[#A1A1AA] shadow-md transition-colors hover:border-brand-primary/60 hover:bg-[#27272A] hover:text-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/40 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {uploading ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />

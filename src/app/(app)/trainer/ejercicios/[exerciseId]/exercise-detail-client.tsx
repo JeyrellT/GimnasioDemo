@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Pencil, Dumbbell, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { getExerciseDetail, updateExerciseInstructions } from "@/app/actions/exercises";
+import { getExerciseDetail, updateExercise } from "@/app/actions/exercises";
 import { ExerciseBodyMapView } from "./_components/exercise-body-map-view";
 import { ExerciseMediaGallery } from "./_components/exercise-media-gallery";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -131,7 +131,7 @@ export default function ExerciseDetailClient({ exerciseId, basePath = "/trainer/
     if (!exercise) return;
     setSavingInstructions(true);
     try {
-      const result = await updateExerciseInstructions({ id: exercise.id, instructionsEs: instructionsDraft });
+      const result = await updateExercise({ id: exercise.id, instructionsEs: instructionsDraft });
       if (result.ok) {
         setExercise((prev) => prev ? { ...prev, instructionsEs: instructionsDraft } : prev);
         setEditingInstructions(false);
@@ -246,62 +246,57 @@ export default function ExerciseDetailClient({ exerciseId, basePath = "/trainer/
             />
           </div>
 
-          {/* Instructions — editable by any trainer */}
+          {/* Instructions */}
           <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-2 flex items-center gap-2">
               <h2 className="text-sm font-semibold text-[#FAFAFA]">Instrucciones</h2>
-              {!editingInstructions && (
+              {isOwner && !editingInstructions && (
                 <button
                   type="button"
                   onClick={handleEditInstructions}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#3F3F46] bg-[#27272A] px-2.5 py-1 text-[11px] font-medium text-[#A1A1AA] transition-colors hover:border-brand-primary/40 hover:text-[#FAFAFA]"
+                  aria-label="Editar instrucciones"
+                  className="rounded p-0.5 text-[#52525B] transition-colors hover:text-[#A1A1AA] focus:outline-none focus:ring-1 focus:ring-brand-primary"
                 >
-                  <Pencil className="h-3 w-3" aria-hidden="true" />
-                  Editar
+                  <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                 </button>
               )}
             </div>
 
             {editingInstructions ? (
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2">
                 <textarea
                   value={instructionsDraft}
                   onChange={(e) => setInstructionsDraft(e.target.value)}
-                  className="w-full rounded-lg border border-[#3F3F46] bg-[#09090B] px-3 py-2.5 text-sm text-[#FAFAFA] leading-relaxed placeholder-[#52525B] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary resize-y min-h-[180px]"
-                  placeholder="Describí los pasos del ejercicio...&#10;&#10;Cada párrafo separado por un enter doble se muestra como un paso distinto."
+                  className="w-full rounded-lg border border-[#3F3F46] bg-[#09090B] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary resize-y min-h-[120px]"
+                  placeholder="Describe los pasos del ejercicio..."
                   autoFocus
                 />
-                <p className="text-[11px] text-[#52525B]">
-                  Podés editar el texto predeterminado o escribir tus propias instrucciones.
-                </p>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={handleSaveInstructions}
                     disabled={savingInstructions}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-brand-primary px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-brand-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#16A34A] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#15803D] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {savingInstructions && (
                       <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
                     )}
-                    Guardar cambios
+                    Guardar
                   </button>
                   <button
                     type="button"
                     onClick={handleCancelInstructions}
                     disabled={savingInstructions}
-                    className="inline-flex items-center rounded-lg border border-[#3F3F46] bg-transparent px-4 py-2 text-xs font-medium text-[#A1A1AA] transition-colors hover:border-[#52525B] hover:text-[#FAFAFA] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center rounded-lg border border-[#3F3F46] bg-transparent px-3 py-1.5 text-xs font-medium text-[#A1A1AA] transition-colors hover:border-[#52525B] hover:text-[#FAFAFA] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancelar
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="whitespace-pre-wrap text-sm leading-relaxed text-[#A1A1AA]">
-                {exercise.instructionsEs || (
-                  <p className="italic text-[#52525B]">Sin instrucciones. Hacé clic en Editar para agregar.</p>
-                )}
-              </div>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#A1A1AA]">
+                {exercise.instructionsEs}
+              </p>
             )}
           </div>
         </div>

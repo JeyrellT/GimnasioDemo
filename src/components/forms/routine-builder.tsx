@@ -89,16 +89,16 @@ type MetaValues = z.infer<typeof metaSchema>;
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const GOALS: Array<{ value: string; label: string; color: string }> = [
-  { value: "HYPERTROPHY", label: "Hipertrofia",        color: "#A855F7" },
-  { value: "STRENGTH",    label: "Fuerza",             color: "#EF4444" },
+  { value: "HYPERTROPHY", label: "Hipertrofia",        color: "var(--brand-primary)" },
+  { value: "STRENGTH",    label: "Fuerza",             color: "var(--brand-primary)" },
   { value: "ENDURANCE",   label: "Resistencia",        color: "#22C55E" },
   { value: "FAT_LOSS",    label: "Pérdida de grasa",   color: "#F59E0B" },
   { value: "GENERAL",     label: "General / Mantenimiento", color: "#A855F7" },
 ];
 
 const DAY_COLORS = [
-  "#3B82F6", // Day 1 — orange
-  "#3B82F6", // Day 2 — blue
+  "var(--brand-primary)", // Day 1
+  "var(--brand-primary)", // Day 2
   "#22C55E", // Day 3 — green
   "#A855F7", // Day 4 — purple
   "#F59E0B", // Day 5 — amber
@@ -455,7 +455,7 @@ function DayCard({
 
 const MUSCLE_LABELS: Record<string, { label: string; color: string }> = {
   CHEST:       { label: "Pecho",         color: "#EF4444" },
-  BACK:        { label: "Espalda",       color: "#3B82F6" },
+  BACK:        { label: "Espalda",       color: "var(--brand-primary)" },
   SHOULDERS:   { label: "Hombros",       color: "#F59E0B" },
   BICEPS:      { label: "Bíceps",        color: "#A855F7" },
   TRICEPS:     { label: "Tríceps",       color: "#EC4899" },

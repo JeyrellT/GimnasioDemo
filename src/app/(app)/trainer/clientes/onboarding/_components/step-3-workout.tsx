@@ -251,7 +251,7 @@ export function Step3Workout({
 
         {/* Summary */}
         {summary && (
-          <div className="rounded-xl border border-brand-primary/30 bg-brand-primary/5 p-4 space-y-3">
+          <div className="rounded-xl border border-brand-primary/30 bg-[rgba(255,106,26,0.05)] p-4 space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold uppercase tracking-wide text-brand-primary">
                 Resultado IA

@@ -212,7 +212,7 @@ export function Step1Basic({ draftId }: Step1BasicProps) {
                       onClick={() => field.onChange(value)}
                       className={`rounded-lg border py-2.5 text-xs font-semibold transition-colors min-h-[44px] ${
                         field.value === value
-                          ? "border-brand-primary bg-brand-primary/15 text-brand-primary"
+                          ? "border-brand-primary bg-[rgba(255,106,26,0.15)] text-brand-primary"
                           : "border-[#3F3F46] bg-[#27272A] text-[#A1A1AA] hover:border-[#52525B]"
                       }`}
                       aria-pressed={field.value === value}

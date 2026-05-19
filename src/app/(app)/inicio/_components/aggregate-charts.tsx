@@ -49,7 +49,7 @@ const TOKEN = {
   canvas: "#09090B",
   card: "#18181B",
   hover: "#27272A",
-  primary: "var(--brand-primary, #3B82F6)",
+  primary: "var(--brand-primary)",
   primaryBand: "rgba(255,106,26,0.15)",
   text: "#FAFAFA",
   muted: "#71717A",

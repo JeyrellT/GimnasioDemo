@@ -281,7 +281,7 @@ export default function NuevaRutinaPage() {
           className={[
             "flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white",
             "min-h-[48px] transition-all duration-200",
-            "bg-brand-primary",
+            "bg-gradient-to-r from-brand-primary to-brand-primary-hover",
             "shadow-[0_0_20px_rgba(255,106,26,0.30)]",
             "hover:shadow-[0_0_28px_rgba(255,106,26,0.45)] hover:brightness-110",
             "active:scale-[0.98]",

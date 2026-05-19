@@ -333,11 +333,11 @@ function ZoneHotspot({
   // Visual colors per state
   const fillColor =
     state === "primary"
-      ? "var(--brand-primary, #3B82F6)"
+      ? "var(--brand-primary)"
       : state === "secondary"
         ? "#F59E0B"
         : hovered
-          ? "var(--brand-primary, #3B82F6)"
+          ? "var(--brand-primary)"
           : "#3F3F46";
 
   const fillOpacity =
@@ -672,7 +672,7 @@ export function BodyMapPicker({
       <div className="flex flex-wrap gap-x-4 gap-y-1.5">
         {(
           [
-            { color: "var(--brand-primary, #3B82F6)", label: "Principal" },
+            { color: "var(--brand-primary)", label: "Principal" },
             { color: "#F59E0B", label: "Secundario" },
           ] as const
         ).map(({ color, label }) => (

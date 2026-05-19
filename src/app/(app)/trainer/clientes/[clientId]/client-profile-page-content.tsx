@@ -12,7 +12,6 @@ import { KpiHeroCard } from "@/components/shared/kpi-hero-card";
 import { CircumferencesTable } from "@/components/shared/circumferences-table";
 import { MeasurementSheetController } from "./_components/measurement-sheet-controller";
 import { ClientProfileTabsClient } from "./_components/client-profile-tabs";
-import { HealthDeclaredBlock } from "./_components/health-declared-block";
 
 import { BodyMap } from "@/components/charts/body-map";
 import type { BodyZone, ZoneData } from "@/components/charts/body-map";
@@ -479,38 +478,38 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
         </Link>
       </nav>
 
-      {/* 1. Hero + Salud declarada — side by side on lg+ */}
-      <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
-        <div className="space-y-5">
-          <ClientHeroCard
-            name={profile.user.name}
-            email={profile.user.email}
-            avatarUrl={profile.user.avatarUrl}
-            ageYears={ageYears}
-            genderLabel={gl}
-            goalLabel={profile.profile.goal}
-            daysSinceStart={profile.stats.daysSinceStart}
-            parqStatus={profile.profile.parqStatus}
-            hasActiveRoutine={profile.activeRoutine !== null}
-            routineHref={routineHref}
-            clientId={clientId}
-          />
-          <MeasurementSheetController clientId={clientId} />
-        </div>
+      {/* 1. Hero */}
+      <ClientHeroCard
+        name={profile.user.name}
+        email={profile.user.email}
+        avatarUrl={profile.user.avatarUrl}
+        ageYears={ageYears}
+        genderLabel={gl}
+        goalLabel={profile.profile.goal}
+        daysSinceStart={profile.stats.daysSinceStart}
+        parqStatus={profile.profile.parqStatus}
+        hasActiveRoutine={profile.activeRoutine !== null}
+        routineHref={routineHref}
+        clientId={clientId}
+      />
 
-        {/* Salud declarada — right column on desktop, stacked on mobile */}
-        <HealthDeclaredBlock clientId={backendDetail.user.id} />
-      </div>
+      <MeasurementSheetController clientId={clientId} />
 
       {/* Banner: sin mediciones */}
       {hasNoMetrics && (
         <div
           role="alert"
-          className="rounded-xl border border-[rgba(245,158,11,0.4)] bg-[rgba(245,158,11,0.08)] px-5 py-4"
+          className="flex items-center justify-between gap-4 rounded-xl border border-[rgba(245,158,11,0.4)] bg-[rgba(245,158,11,0.08)] px-5 py-4"
         >
           <p className="text-sm text-[#F59E0B]">
-            Aún no tenés mediciones de {profile.user.name}. Tomá la primera desde el botón de arriba.
+            Aún no tenés mediciones de {profile.user.name}. Tomá la primera ahora.
           </p>
+          <Link
+            href={`/trainer/clientes/${clientId}/metricas`}
+            className="shrink-0 rounded-lg bg-[#F59E0B] px-3 py-1.5 text-xs font-semibold text-[#09090B] transition-colors hover:bg-[#D97706] focus-visible:outline-2 focus-visible:outline-brand-primary"
+          >
+            + Nueva medición
+          </Link>
         </div>
       )}
 
@@ -546,7 +545,7 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
       {/* 3. Composición corporal */}
       <section aria-label="Composición corporal">
         <div className="mb-5 flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-primary/12 border border-brand-primary/20">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[rgba(255,106,26,0.12)] border border-[rgba(255,106,26,0.2)]">
             <Dumbbell className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
           </div>
           <h2 className="text-sm font-bold uppercase tracking-[0.1em] text-[#A1A1AA]">

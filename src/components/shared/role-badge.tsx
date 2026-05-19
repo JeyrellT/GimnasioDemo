@@ -12,7 +12,7 @@ const roleConfig: Record<
 > = {
   TRAINER: {
     label: "Entrenador",
-    className: "bg-brand-secondary text-brand-accent border border-brand-accent/20",
+    className: "bg-[#1E2A38] text-brand-accent border border-brand-accent/20",
   },
   CLIENT: {
     label: "Cliente",

@@ -307,7 +307,7 @@ export function Step2Cedula({
 
         {/* Extraction result */}
         {hasExtraction && (
-          <div className="rounded-xl border border-brand-primary/30 bg-brand-primary/5 p-4 space-y-4">
+          <div className="rounded-xl border border-brand-primary/30 bg-[rgba(255,106,26,0.05)] p-4 space-y-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-brand-primary">
               Datos extraídos — revisá y confirmá
             </p>

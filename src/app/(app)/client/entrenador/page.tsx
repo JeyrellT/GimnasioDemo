@@ -65,7 +65,7 @@ export default function ClientEntrenadorPage() {
               className="h-14 w-14 rounded-full object-cover"
             />
           ) : (
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary to-[#1D4ED8] text-xl font-bold text-white">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary to-brand-primary-hover text-xl font-bold text-white">
               {initials}
             </div>
           )}

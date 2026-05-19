@@ -141,7 +141,7 @@ export function BodyMapPopover({
           <KpiSparkline
             data={sparkData}
             height={48}
-            color="var(--brand-primary, #3B82F6)"
+            color="var(--brand-primary)"
             width={208}
           />
         </div>

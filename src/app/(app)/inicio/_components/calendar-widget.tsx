@@ -33,7 +33,7 @@ const INTENSITY_COLOR: Record<CalendarHeatDay["intensity"], string> = {
   none: "#27272A",
   low: "rgba(255,106,26,0.30)",
   medium: "rgba(255,106,26,0.60)",
-  high: "var(--brand-primary, #3B82F6)",
+  high: "var(--brand-primary)",
 };
 
 // Max bars to show before collapsing into "ESTA SEMANA" summary

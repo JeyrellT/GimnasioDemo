@@ -88,8 +88,8 @@ export function CircumferencesTable({
   const groups: CircGroup[] = [
     {
       title: "Tronco",
-      accentClass: "border-l-2 border-l-[rgba(59,130,246,0.6)]",
-      headerBg: "bg-[rgba(59,130,246,0.06)]",
+      accentClass: "border-l-2 border-l-brand-primary/60",
+      headerBg: "bg-brand-primary/[0.06]",
       rows: [
         { zone: "neck", label: "Cuello", value: c.neckCm },
         { zone: "shoulderL", label: "Hombro izq.", value: c.shoulderLeftCm },

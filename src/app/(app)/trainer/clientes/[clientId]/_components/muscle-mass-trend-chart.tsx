@@ -7,7 +7,6 @@
 // =============================================================================
 
 import * as React from "react";
-import { useMemo } from "react";
 import {
   XAxis,
   YAxis,
@@ -23,6 +22,7 @@ import {
 // Constants
 // -----------------------------------------------------------------------------
 
+const LINE_COLOR = "var(--brand-primary)";
 const GRADIENT_ID = "muscleMassGradient";
 
 // -----------------------------------------------------------------------------
@@ -72,15 +72,11 @@ function LastPointDot({ cx, cy, index, dataLength }: CustomDotProps) {
   if (index !== (dataLength ?? 0) - 1 || cx === undefined || cy === undefined) {
     return null;
   }
-  const color =
-    typeof window !== "undefined"
-      ? (getComputedStyle(document.documentElement).getPropertyValue("--brand-primary").trim() || "#3B82F6")
-      : "#3B82F6";
   return (
     <g>
-      <circle cx={cx} cy={cy} r={9} fill={color} fillOpacity={0.15} />
-      <circle cx={cx} cy={cy} r={6} fill={color} fillOpacity={0.3} />
-      <circle cx={cx} cy={cy} r={4} fill={color} strokeWidth={0} />
+      <circle cx={cx} cy={cy} r={9} fill={LINE_COLOR} fillOpacity={0.15} />
+      <circle cx={cx} cy={cy} r={6} fill={LINE_COLOR} fillOpacity={0.3} />
+      <circle cx={cx} cy={cy} r={4} fill={LINE_COLOR} strokeWidth={0} />
     </g>
   );
 }
@@ -116,7 +112,7 @@ function CustomTooltip({ active, payload, label, startMass }: TooltipProps) {
       <p
         className="text-xs"
         style={{
-          color: delta >= 0 ? "var(--brand-primary, #3B82F6)" : "#F87171",
+          color: delta >= 0 ? "var(--brand-primary)" : "#F87171",
           fontFeatureSettings: "'tnum' 1",
         }}
       >
@@ -131,15 +127,6 @@ function CustomTooltip({ active, payload, label, startMass }: TooltipProps) {
 // -----------------------------------------------------------------------------
 
 export function MuscleMassTrendChart({ data }: MuscleMassTrendChartProps) {
-  const lineColor = useMemo(() => {
-    if (typeof window === "undefined") return "#3B82F6";
-    return (
-      getComputedStyle(document.documentElement)
-        .getPropertyValue("--brand-primary")
-        .trim() || "#3B82F6"
-    );
-  }, []);
-
   const chartData = buildChartData(data);
   const startMass = data[0] ?? 0;
   const values = data.filter((v) => Number.isFinite(v));
@@ -159,8 +146,8 @@ export function MuscleMassTrendChart({ data }: MuscleMassTrendChartProps) {
         >
           <defs>
             <linearGradient id={GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={lineColor} stopOpacity={0.3} />
-              <stop offset="100%" stopColor={lineColor} stopOpacity={0} />
+              <stop offset="0%" stopColor={LINE_COLOR} stopOpacity={0.3} />
+              <stop offset="100%" stopColor={LINE_COLOR} stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid
@@ -208,7 +195,7 @@ export function MuscleMassTrendChart({ data }: MuscleMassTrendChartProps) {
           <Area
             type="monotone"
             dataKey="musculo"
-            stroke={lineColor}
+            stroke={LINE_COLOR}
             strokeWidth={2}
             fill={`url(#${GRADIENT_ID})`}
             dot={(props: CustomDotProps & { index: number }) => (
@@ -220,7 +207,7 @@ export function MuscleMassTrendChart({ data }: MuscleMassTrendChartProps) {
                 dataLength={chartData.length}
               />
             )}
-            activeDot={{ r: 4, fill: lineColor, strokeWidth: 0 }}
+            activeDot={{ r: 4, fill: LINE_COLOR, strokeWidth: 0 }}
             isAnimationActive={false}
           />
         </AreaChart>
