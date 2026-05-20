@@ -102,11 +102,35 @@ export class GeminiKeyMissingError extends ValidationError {
 
 const MODEL_NAMES: Record<ModelKind, string> = {
   ocr: "gemini-2.5-flash",
+  reasoning: "gemini-2.5-pro",
+};
+
+/**
+ * Fallback ids for when the primary model is rejected with "model not found"
+ * or 404. Empty string means "no fallback". OCR stays on Flash regardless.
+ */
+const MODEL_FALLBACKS: Record<ModelKind, string> = {
+  ocr: "",
   reasoning: "gemini-2.5-flash",
 };
 
 function resolveModelId(kind: ModelKind): string {
   return MODEL_NAMES[kind];
+}
+
+/**
+ * True when the error message looks like "the requested model does not exist
+ * or you don't have access" — typical 404 from the Gemini REST endpoint.
+ */
+function isModelNotFound(e: unknown): boolean {
+  const x = (e ?? {}) as UnknownErrorShape;
+  const status = x.status ?? x.statusCode;
+  if (status === 404) return true;
+  const msg = String(x.message ?? "").toLowerCase();
+  if (msg.includes("model not found")) return true;
+  if (msg.includes("model") && msg.includes("not found")) return true;
+  if (msg.includes("model") && msg.includes("404")) return true;
+  return false;
 }
 
 // -----------------------------------------------------------------------------
@@ -484,6 +508,12 @@ export type ChatWithToolsResult =
       attempts: number;
       latencyMs: number;
       modelId: string;
+      /**
+       * Raw finishReason from Gemini (`STOP`, `MAX_TOKENS`, `SAFETY`,
+       * `TOOL_CALLS`, ...). Typed as `string` so callers don't have to import
+       * the SDK enum.
+       */
+      finishReason?: string;
     }
   | {
       kind: "tool_calls";
@@ -492,6 +522,7 @@ export type ChatWithToolsResult =
       attempts: number;
       latencyMs: number;
       modelId: string;
+      finishReason?: string;
     };
 
 export async function chatWithTools(
@@ -502,13 +533,18 @@ export async function chatWithTools(
     systemInstruction,
     history,
     tools,
-    temperature = 0.4,
+    // Tool calling is deterministic-ish; 0.4 made Flash narrate instead of
+    // emitting a function_call. 0.2 keeps a hair of variability for natural
+    // phrasing in the text branch.
+    temperature = 0.2,
     timeoutMs = 45_000,
-    maxAttempts = 2,
+    // Aligned with generateStructured; transient 5xx/429 deserve a third shot.
+    maxAttempts = 3,
     requestId,
   } = args;
 
-  const modelId = resolveModelId(model);
+  const primaryModelId = resolveModelId(model);
+  const fallbackModelId = MODEL_FALLBACKS[model] || "";
 
   // Map our ChatTurn[] into the SDK's Content[] shape.
   const contents: Content[] = history.map((turn) => ({
@@ -516,13 +552,20 @@ export async function chatWithTools(
     parts: turn.parts,
   }));
 
-  let handle: GenerativeModel;
-  try {
-    handle = getSdk().getGenerativeModel({
-      model: modelId,
+  // Build a handle for a given concrete model id. Throws GeminiKeyMissingError
+  // if the API key is gone. We split this out so the model-not-found fallback
+  // can rebuild against a different id without duplicating init code.
+  const buildHandle = (concreteModelId: string): GenerativeModel =>
+    getSdk().getGenerativeModel({
+      model: concreteModelId,
       systemInstruction,
       tools: tools.length > 0 ? [{ functionDeclarations: tools }] : undefined,
     });
+
+  let modelId = primaryModelId;
+  let handle: GenerativeModel;
+  try {
+    handle = buildHandle(modelId);
   } catch (e) {
     if (e instanceof GeminiKeyMissingError) return err(e);
     return err(
@@ -536,6 +579,7 @@ export async function chatWithTools(
 
   const start = Date.now();
   let lastError: unknown = null;
+  let fallbackUsed = false;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
@@ -557,6 +601,9 @@ export async function chatWithTools(
       const latencyMs = Date.now() - start;
 
       const functionCalls = response.response.functionCalls() ?? [];
+      const finishReason = response.response.candidates?.[0]?.finishReason as
+        | string
+        | undefined;
 
       logger.info(
         {
@@ -567,11 +614,43 @@ export async function chatWithTools(
           promptTokens: usage?.promptTokenCount,
           candidateTokens: usage?.candidatesTokenCount,
           totalTokens: usage?.totalTokenCount,
-          finishReason: response.response.candidates?.[0]?.finishReason,
+          finishReason,
           toolCallCount: functionCalls.length,
         },
         "gemini.chat_with_tools.success",
       );
+
+      // SAFETY: Gemini blocked the candidate. text() will be empty and there
+      // won't be function calls. Surface a coach-friendly explanation instead
+      // of letting downstream code render "" or silently retry.
+      if (finishReason === "SAFETY" && functionCalls.length === 0) {
+        logger.warn(
+          { requestId, modelId, attempt, finishReason },
+          "gemini.chat_with_tools.safety_blocked",
+        );
+        return err(
+          new ExternalServiceError(
+            "GEMINI_SAFETY_BLOCKED",
+            "El modelo bloqueó la respuesta por filtros de seguridad. Reformulá la pregunta sin referencias clínicas detalladas o derivá a un médico/nutricionista.",
+          ),
+        );
+      }
+
+      // MAX_TOKENS: response was truncated. text() may be partial JSON or a
+      // half-sentence. Treat as recoverable but distinct from a transient
+      // failure — the caller decides whether to continue or shrink scope.
+      if (finishReason === "MAX_TOKENS" && functionCalls.length === 0) {
+        logger.warn(
+          { requestId, modelId, attempt, finishReason },
+          "gemini.chat_with_tools.max_tokens",
+        );
+        return err(
+          new ExternalServiceError(
+            "GEMINI_MAX_TOKENS",
+            "El asistente alcanzó su límite de tokens en este turno. Pedile que continúe o acotá el alcance.",
+          ),
+        );
+      }
 
       if (functionCalls.length > 0) {
         return ok({
@@ -581,9 +660,11 @@ export async function chatWithTools(
           attempts: attempt,
           latencyMs,
           modelId,
+          finishReason,
         });
       }
 
+      // STOP with empty text is handled downstream (PR #7). We pass through.
       const text = response.response.text();
       return ok({
         kind: "text",
@@ -592,9 +673,39 @@ export async function chatWithTools(
         attempts: attempt,
         latencyMs,
         modelId,
+        finishReason,
       });
     } catch (e) {
       lastError = e;
+
+      // Model-not-found fallback: try once with the configured fallback id.
+      // Counts as the *same* attempt so we don't burn retries on a config
+      // mismatch (e.g. account without access to gemini-2.5-pro).
+      if (!fallbackUsed && fallbackModelId && isModelNotFound(e)) {
+        logger.warn(
+          {
+            requestId,
+            fromModelId: modelId,
+            toModelId: fallbackModelId,
+            attempt,
+            error: shortError(e),
+          },
+          "gemini.model_fallback",
+        );
+        try {
+          handle = buildHandle(fallbackModelId);
+          modelId = fallbackModelId;
+          fallbackUsed = true;
+          // Re-enter the loop body for this same attempt index by decrementing.
+          attempt--;
+          continue;
+        } catch (initErr) {
+          if (initErr instanceof GeminiKeyMissingError) return err(initErr);
+          lastError = initErr;
+          break;
+        }
+      }
+
       const transient = isTransient(e);
       logger.warn(
         {
