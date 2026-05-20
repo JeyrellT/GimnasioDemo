@@ -115,6 +115,85 @@ const TAG_KEYWORDS: Array<{ tag: string; keywords: RegExp }> = [
 		tag: "taxonomia",
 		keywords: /\btaxonom[íi]a|squat|hinge|push|pull|lunge|carry|patrones\b/i,
 	},
+	// ── Tags del dominio del producto (manual blackline-app-guide-v1) ─────────
+	{
+		tag: "rutas-app",
+		keywords:
+			/\/trainer\/|\/client\/|src\/app\/|page\.tsx|portal\s+del\s+(coach|cliente|trainer)/i,
+	},
+	{
+		tag: "flujo-onboarding",
+		keywords:
+			/\bonboarding|wizard|9\s+pasos|OnboardingDraft|quickAddClient|invitar|TRAINER_SIDE\b/i,
+	},
+	{
+		tag: "rutinas-app",
+		keywords:
+			/\bRoutineTemplate|RoutineDay|RoutineExercise|AssignedRoutine|snapshotJson|splitDays|durationWeeks\b/i,
+	},
+	{
+		tag: "sesion-gym",
+		keywords:
+			/\bWorkoutSession|PerformedSet|IN_PROGRESS|isFreeWorkout|sync\s+offline|dexie|PR\s+detect/i,
+	},
+	{
+		tag: "mediciones-app",
+		keywords:
+			/\bBodyMetric|MeasurementSheet|ScaleOcrUploader|ProgressPhoto|presigned|MAX_PHOTO_SIZE|quota\s+(mensual|semanal)|MEASUREMENT_QUOTA|recordBodyMetric\b/i,
+	},
+	{
+		tag: "finanzas-app",
+		keywords:
+			/\bClientCharge|Invoice|OneOffSale|TrainerExpense|TrainerLocation|LocationVisit|Hacienda|facturaci[óo]n\s+electr[óo]nica|CABYS|IVA\s+13\b/i,
+	},
+	{
+		tag: "subscripciones",
+		keywords:
+			/\bSubscriptionPlan|TrainerSubscription|tier\s+SOLO|\bSOLO\b|\bPRO\b|\bSTUDIO\b|MAX_CLIENTS_BY_TIER|TRIAL_DAYS|READ_ONLY|PAST_DUE|TIER_LIMIT\b/i,
+	},
+	{
+		tag: "reglas-negocio",
+		keywords:
+			/\bROUTINE_MAX_|MAX_PHOTO_SIZE|requireActiveSubscription|assertOwnsClient|l[íi]mite\s+(de|por)|cuota|hard\s+cap\b/i,
+	},
+	{
+		tag: "ocr-pipelines",
+		keywords:
+			/\bocr-cedula|ocr-measurements|ocr-scale|ocr-routine|extract-workout-photos|anonymizer|extractScale|extractCedula|extractRoutineFromImage\b/i,
+	},
+	{
+		// PAR-Q tratado como concepto/ciencia (en fitness-base-cr-v1).
+		tag: "parq",
+		keywords:
+			/\bPAR-Q\+?|PAR-Med-X|Warburton|cuestionario\s+(de\s+)?salud\b/i,
+	},
+	{
+		// parqStatus como estado del modelo (en blackline-app-guide-v1).
+		tag: "parq-app",
+		keywords:
+			/\bparqStatus|\bGREEN\b|\bREVIEW\b|\bRED\b|NOT_COMPLETED|bandera\s+roja|derivaci[óo]n\s+m[ée]dica\b/i,
+	},
+	{
+		tag: "asistente-app",
+		keywords:
+			/\basistente\s+IA|chat-engine|tool-registry|sticky\s+client|ConfirmationCard|runAgent|resumeAgent|search_knowledge|Gemini\s+2\.5|confirmation\s+card|pendingConfirmation\b/i,
+	},
+	{
+		// Capacidades / límites del asistente vs UI directa.
+		tag: "asistente-policy",
+		keywords:
+			/\bcapacidades\s+del\s+asistente|requiere\s+UI\s+directa|NO\s+tiene\s+tool|derivar\s+(al?|a\s+la?)\s+UI|lo\s+que\s+el\s+asistente\s+(puede|no\s+puede)\b/i,
+	},
+	{
+		tag: "modelos-prisma",
+		keywords:
+			/\bUser|TrainerClient|ClientProfile|TrainerProfile|Consent|MedicalCondition|Notification|LpdpRequest\b/i,
+	},
+	{
+		tag: "lpdp",
+		keywords:
+			/\bLpdpRequest|LPDP|Ley\s+8968|CONSENT_VERSIONS|aiConsentGranted|EXPORT|consentimientos?\b/i,
+	},
 ];
 
 // Marcadores explícitos de fortaleza de evidencia en el corpus actual.
