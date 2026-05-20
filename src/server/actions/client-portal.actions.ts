@@ -499,8 +499,8 @@ export async function recordBodyMetric(
   return tryCatch(async () => {
     const user = await requireClient();
 
-    // ── Monthly limit: clients can record max 2 measurements per month ──
-    const MONTHLY_LIMIT = 2;
+    // ── Rate limits: max 4/month, max 1/week ──────────────────────────
+    const MONTHLY_LIMIT = 4;
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
@@ -516,6 +516,28 @@ export async function recordBodyMetric(
       throw new ValidationError(
         "MONTHLY_LIMIT_REACHED",
         `Ya registraste ${MONTHLY_LIMIT} mediciones este mes. Podrás agregar más el próximo mes.`,
+      );
+    }
+
+    // Weekly limit: 1 per calendar week (Mon–Sun)
+    const day = now.getDay(); // 0=Sun … 6=Sat
+    const diffToMonday = day === 0 ? 6 : day - 1;
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMonday);
+    weekStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+
+    const countThisWeek = await prisma.bodyMetric.count({
+      where: {
+        clientUserId: user.id,
+        recordedAt: { gte: weekStart, lt: weekEnd },
+      },
+    });
+
+    if (countThisWeek >= 1) {
+      throw new ValidationError(
+        "WEEKLY_LIMIT_REACHED",
+        "Ya registraste una medición esta semana. Podrás agregar otra la próxima semana.",
       );
     }
 
@@ -609,10 +631,15 @@ export interface MeasurementQuota {
   limit: number;
   remaining: number;
   canRecord: boolean;
+  /** true when the client already recorded one this week */
+  weeklyUsed: boolean;
+  /** Human-readable reason when canRecord is false */
+  reason: string | null;
 }
 
 /**
- * Returns how many measurements the client has used this month vs the limit.
+ * Returns how many measurements the client has used this month vs the limit,
+ * plus whether they already used this week's slot.
  */
 export async function getMonthlyMeasurementQuota(): Promise<
   ActionResult<MeasurementQuota>
@@ -620,7 +647,7 @@ export async function getMonthlyMeasurementQuota(): Promise<
   return tryCatch(async () => {
     const user = await requireClient();
 
-    const MONTHLY_LIMIT = 2;
+    const MONTHLY_LIMIT = 4;
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
@@ -632,13 +659,39 @@ export async function getMonthlyMeasurementQuota(): Promise<
       },
     });
 
+    // Weekly check (Mon–Sun)
+    const day = now.getDay();
+    const diffToMonday = day === 0 ? 6 : day - 1;
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMonday);
+    weekStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+
+    const countThisWeek = await prisma.bodyMetric.count({
+      where: {
+        clientUserId: user.id,
+        recordedAt: { gte: weekStart, lt: weekEnd },
+      },
+    });
+
     const remaining = Math.max(0, MONTHLY_LIMIT - used);
+    const weeklyUsed = countThisWeek >= 1;
+    const canRecord = remaining > 0 && !weeklyUsed;
+
+    let reason: string | null = null;
+    if (remaining <= 0) {
+      reason = `Alcanzaste el límite de ${MONTHLY_LIMIT} mediciones este mes.`;
+    } else if (weeklyUsed) {
+      reason = "Ya registraste tu medición de esta semana. Volvé la próxima.";
+    }
 
     return {
       used,
       limit: MONTHLY_LIMIT,
       remaining,
-      canRecord: remaining > 0,
+      canRecord,
+      weeklyUsed,
+      reason,
     };
   });
 }

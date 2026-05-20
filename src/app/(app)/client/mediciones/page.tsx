@@ -65,36 +65,38 @@ export default function ClientMedicionesPage() {
         </button>
       </div>
 
-      {/* ── Monthly quota indicator ──────────────────────────────────────── */}
+      {/* ── Quota indicator (4/month, 1/week) ─────────────────────────── */}
       {quota && (
         <div
-          className={`rounded-xl border px-4 py-3 flex items-center justify-between ${
+          className={`rounded-xl border px-4 py-3 space-y-2 ${
             quota.canRecord
               ? "border-[#3F3F46] bg-[#18181B]"
               : "border-[#F59E0B]/30 bg-[#F59E0B]/5"
           }`}
         >
-          <div className="flex items-center gap-2">
-            {!quota.canRecord && (
-              <Lock className="h-4 w-4 text-[#F59E0B] shrink-0" />
-            )}
-            <p className="text-xs text-[#A1A1AA]">
-              {quota.canRecord
-                ? `Mediciones este mes: ${quota.used} de ${quota.limit}`
-                : `Alcanzaste el límite de ${quota.limit} mediciones este mes`}
-            </p>
-          </div>
-          <div className="flex gap-1">
-            {Array.from({ length: quota.limit }).map((_, i) => (
-              <div
-                key={i}
-                className={`h-2.5 w-2.5 rounded-full ${
-                  i < quota.used
-                    ? "bg-brand-primary"
-                    : "bg-[#3F3F46]"
-                }`}
-              />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {!quota.canRecord && (
+                <Lock className="h-4 w-4 text-[#F59E0B] shrink-0" />
+              )}
+              <p className="text-xs text-[#A1A1AA]">
+                {quota.reason
+                  ? quota.reason
+                  : `Mediciones este mes: ${quota.used} de ${quota.limit} (1 por semana)`}
+              </p>
+            </div>
+            <div className="flex gap-1.5">
+              {Array.from({ length: quota.limit }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-2.5 w-2.5 rounded-full ${
+                    i < quota.used
+                      ? "bg-brand-primary"
+                      : "bg-[#3F3F46]"
+                  }`}
+                />
             ))}
+            </div>
           </div>
         </div>
       )}
