@@ -49,24 +49,14 @@ export default function ClientesPage() {
         title="Mis clientes"
         description={`${list.length} cliente${list.length !== 1 ? "s" : ""} activo${list.length !== 1 ? "s" : ""}`}
         actions={
-          <div className="flex items-center gap-2">
-            {/* Primary CTA */}
-            <button
-              type="button"
-              onClick={() => setDialogOpen(true)}
-              className="flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white min-h-[44px] hover:bg-brand-primary-hover transition-colors"
-            >
-              <UserPlus className="h-4 w-4" aria-hidden="true" />
-              Agregar cliente
-            </button>
-            {/* Secondary: full onboarding wizard */}
-            <Link
-              href="/trainer/clientes/invitar"
-              className="flex items-center gap-1.5 rounded-lg border border-[#3F3F46] px-3 py-2 text-sm text-[#A1A1AA] min-h-[44px] hover:border-[#71717A] hover:text-[#FAFAFA] transition-colors"
-            >
-              Onboarding completo
-            </Link>
-          </div>
+          <button
+            type="button"
+            onClick={() => setDialogOpen(true)}
+            className="flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white min-h-[44px] hover:bg-brand-primary-hover transition-colors"
+          >
+            <UserPlus className="h-4 w-4" aria-hidden="true" />
+            Agregar cliente
+          </button>
         }
       />
 
@@ -90,7 +80,7 @@ export default function ClientesPage() {
           icon={Users}
           title="No tenés clientes todavía"
           description="Agregá al primero para empezar a trabajar."
-          action={{ label: "Agregar cliente", href: "/trainer/clientes/invitar" }}
+          action={{ label: "Agregar cliente", onClick: () => setDialogOpen(true) }}
         />
       ) : (
         <ul className="space-y-2">
