@@ -616,7 +616,7 @@ function MessageBubble({ message }: { message: AssistantMessage }) {
           <div
             className={`rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap ${
               isUser
-                ? "bg-brand-primary text-black"
+                ? "bg-brand-primary text-white"
                 : "bg-[#27272A] text-[#FAFAFA]"
             }`}
           >
