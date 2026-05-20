@@ -76,6 +76,41 @@ function newId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+/**
+ * Cierra cualquier toolCall que quedó en estado "running" en mensajes
+ * rehydrateados desde IndexedDB.
+ *
+ * Por qué importa: si el coach cierra el tab (o refresca) mientras una tool
+ * estaba ejecutando, su `ToolCallRecord.status` queda en "running" en IDB. Al
+ * volver, `messagesToHistory` serializaba ese call como functionCall +
+ * functionResponse{ error: "" }, y Gemini rechazaba la siguiente llamada con
+ * "Invalid Content" porque el functionResponse no tiene contenido útil.
+ *
+ * Acá los convertimos a "error" con un mensaje legible. El history queda
+ * coherente (cada functionCall del modelo tiene su functionResponse), y el
+ * modelo entiende en el siguiente turno que la acción se cortó.
+ */
+function sanitizeMessages(messages: AssistantMessage[]): AssistantMessage[] {
+  let changed = false;
+  const out = messages.map((m) => {
+    if (m.role !== "tool" || !m.toolCall) return m;
+    if (m.toolCall.status !== "running") return m;
+    changed = true;
+    const finishedAt = m.toolCall.finishedAt ?? Date.now();
+    return {
+      ...m,
+      toolCall: {
+        ...m.toolCall,
+        status: "error" as const,
+        resultText:
+          "Acción interrumpida — el coach cerró la conversación antes de que terminara.",
+        finishedAt,
+      },
+    };
+  });
+  return changed ? out : messages;
+}
+
 // Build the callbacks object once — they only read store-set actions so we
 // don't need to recreate them each call.
 function makeCallbacks(
@@ -227,12 +262,17 @@ export const useAssistantStore = create<AssistantState>()(
           createdAt: Date.now(),
         };
 
-        set((s) => ({
-          messages: [...s.messages, userMessage],
+        // Defensa: sanear cualquier running zombie que haya sobrevivido al
+        // rehydrate (race condition rara: si onRehydrateStorage no corrió
+        // antes del primer click). Idempotente.
+        const sanitized = sanitizeMessages(get().messages);
+
+        set({
+          messages: [...sanitized, userMessage],
           pendingAttachments: [],
           isThinking: true,
           lastError: null,
-        }));
+        });
 
         await runAgent({
           messages: get().messages,
@@ -278,8 +318,12 @@ export const useAssistantStore = create<AssistantState>()(
         stickyClient: state.stickyClient,
       }),
       onRehydrateStorage: () => (state) => {
-        // Marca el flag para que la UI sepa que ya cargó desde IDB.
-        if (state) state.hasHydrated = true;
+        if (!state) return;
+        // Cerrar tool calls "running" que quedaron zombies en IDB de un turno
+        // previo que se cortó (refresh, cierre de tab). Sin esto, Gemini
+        // rechaza la siguiente llamada con history malformed.
+        state.messages = sanitizeMessages(state.messages);
+        state.hasHydrated = true;
       },
       version: 1,
     },

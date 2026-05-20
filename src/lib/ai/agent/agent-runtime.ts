@@ -82,12 +82,35 @@ function messagesToHistory(messages: AssistantMessage[]): ChatTurn[] {
         role: "model",
         parts: [{ functionCall: { name: call.name, args: call.args } }],
       });
-      const response =
-        call.status === "success"
-          ? (safeParseJson(call.resultText) ?? { result: call.resultText })
-          : call.status === "rejected"
-            ? { error: "El coach canceló esta acción.", cancelled: true }
-            : { error: call.resultText };
+      // Mapeo de status → response object enviado a Gemini.
+      // - success: el JSON real del tool (o un wrapper si no parseó).
+      // - rejected: el coach canceló la confirmation card.
+      // - error: la tool tiró excepción o validación falló.
+      // - running: BUG defensivo — no debería llegar acá (sanitizeMessages
+      //   en el store los cierra). Si pasa, lo tratamos como error con
+      //   mensaje claro en vez de mandar functionResponse vacío que rompe
+      //   la API de Gemini.
+      const response: Record<string, unknown> = (() => {
+        if (call.status === "success") {
+          return (safeParseJson(call.resultText) as Record<string, unknown>) ?? {
+            result: call.resultText,
+          };
+        }
+        if (call.status === "rejected") {
+          return { error: "El coach canceló esta acción.", cancelled: true };
+        }
+        if (call.status === "running") {
+          return {
+            error:
+              "La acción quedó incompleta — la conversación se interrumpió antes de obtener el resultado.",
+            interrupted: true,
+          };
+        }
+        // "error"
+        return {
+          error: call.resultText || "La herramienta falló sin mensaje específico.",
+        };
+      })();
       history.push({
         role: "function",
         parts: [{ functionResponse: { name: call.name, response } }],

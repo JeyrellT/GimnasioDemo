@@ -634,10 +634,28 @@ export async function chatWithTools(
       ),
     );
   }
+  // History malformed — típicamente "Invalid Content", "function call without
+  // function response" o similares. Causa raíz: tool calls zombies del turno
+  // anterior. Damos un mensaje accionable al coach.
+  if (
+    msg.includes("invalid content") ||
+    msg.includes("function call") ||
+    msg.includes("function response") ||
+    msg.includes("invalid_argument") ||
+    msg.includes("malformed")
+  ) {
+    return err(
+      new ExternalServiceError(
+        "GEMINI_HISTORY_MALFORMED",
+        `La conversación tiene un estado inconsistente (probablemente un turno previo se interrumpió). Tocá "Nueva conversación" arriba a la derecha para empezar limpio. Detalle: ${shortError(lastError)}`,
+        lastError,
+      ),
+    );
+  }
   return err(
     new ExternalServiceError(
       "GEMINI_FAILED",
-      "El asistente no respondió. Reintentá en unos minutos.",
+      `El asistente no respondió. Detalle: ${shortError(lastError)}`,
       lastError,
     ),
   );
