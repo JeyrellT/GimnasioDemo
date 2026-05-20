@@ -121,28 +121,12 @@ export default function ClientesPage() {
                       </span>
                     )}
                   </div>
-                  <div className="mt-1 flex items-center gap-3 text-xs text-[#71717A]">
-                    <span>
-                      Adherencia:{" "}
-                      <span
-                        className={
-                          client.adherencePct7d >= 80
-                            ? "text-[#22C55E]"
-                            : client.adherencePct7d >= 50
-                              ? "text-[#F59E0B]"
-                              : "text-[#EF4444]"
-                        }
-                      >
-                        {client.adherencePct7d}%
-                      </span>
-                    </span>
-                    {client.lastSessionAt && (
-                      <span>
-                        Últ. sesión:{" "}
-                        {formatDateCR(client.lastSessionAt, "d MMM")}
-                      </span>
-                    )}
-                  </div>
+                  {client.lastSessionAt && (
+                    <p className="mt-1 text-xs text-[#71717A]">
+                      Ult. sesion:{" "}
+                      {formatDateCR(client.lastSessionAt, "d MMM")}
+                    </p>
+                  )}
                 </div>
 
                 {/* Próximo cobro */}
