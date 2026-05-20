@@ -391,7 +391,6 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
   const gl = genderLabel(profile.user.gender);
   const bc = profile.bodyComposition;
   const bodyMapZones = buildBodyMapZones(bc);
-  const hasNoMetrics = bc.weightKg === null && bc.bodyFatPct === null;
 
   const weightDelta = backendDetail.stats.weightDelta28d;
   const bodyFatDelta = backendDetail.stats.bodyFatDelta28d;
@@ -491,24 +490,6 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
       />
 
       <MeasurementSheetController clientId={clientId} />
-
-      {/* Banner: sin mediciones */}
-      {hasNoMetrics && (
-        <div
-          role="alert"
-          className="flex items-center justify-between gap-4 rounded-xl border border-[rgba(245,158,11,0.4)] bg-[rgba(245,158,11,0.08)] px-5 py-4"
-        >
-          <p className="text-sm text-[#F59E0B]">
-            Aún no tenés mediciones de {profile.user.name}. Tomá la primera ahora.
-          </p>
-          <Link
-            href={`/trainer/clientes/${clientId}/metricas`}
-            className="shrink-0 rounded-lg bg-[#F59E0B] px-3 py-1.5 text-xs font-semibold text-[#09090B] transition-colors hover:bg-[#D97706] focus-visible:outline-2 focus-visible:outline-brand-primary"
-          >
-            + Nueva medición
-          </Link>
-        </div>
-      )}
 
       {/* 2. KPI strip */}
       <section aria-label="Indicadores de estado actual">
