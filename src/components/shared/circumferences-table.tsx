@@ -8,6 +8,7 @@
 // =============================================================================
 
 import * as React from "react";
+import { Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { BodyComposition } from "@/types/profile";
 
@@ -19,6 +20,7 @@ interface CircumferencesTableProps {
   data: BodyComposition;
   selectedZone?: string | null;
   onZoneClick?: (zone: string) => void;
+  onEditZone?: (zone: string) => void;
   className?: string;
 }
 
@@ -81,6 +83,7 @@ export function CircumferencesTable({
   data,
   selectedZone,
   onZoneClick,
+  onEditZone,
   className,
 }: CircumferencesTableProps) {
   const c = data.circumferences;
@@ -149,6 +152,7 @@ export function CircumferencesTable({
                   <th scope="col">Zona</th>
                   <th scope="col">Valor</th>
                   <th scope="col">Cambio</th>
+                  {onEditZone && <th scope="col">Editar</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-[rgba(39,39,42,0.8)]">
@@ -211,6 +215,26 @@ export function CircumferencesTable({
                       <td className="w-16 text-right">
                         <DeltaBadge delta={row.delta} />
                       </td>
+                      {onEditZone && (
+                        <td className="w-9 text-right">
+                          <button
+                            type="button"
+                            aria-label={`Editar ${row.label}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEditZone(row.zone);
+                            }}
+                            className={cn(
+                              "inline-flex h-7 w-7 items-center justify-center rounded-md",
+                              "text-[#71717A] transition-colors",
+                              "hover:bg-[#3F3F46]/40 hover:text-brand-primary",
+                              "focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-[-2px]",
+                            )}
+                          >
+                            <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}

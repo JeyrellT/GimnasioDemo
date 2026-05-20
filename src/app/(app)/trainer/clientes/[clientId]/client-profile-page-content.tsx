@@ -13,8 +13,17 @@ import { CircumferencesTable } from "@/components/shared/circumferences-table";
 import { MeasurementSheetController } from "./_components/measurement-sheet-controller";
 import { ClientProfileTabsClient } from "./_components/client-profile-tabs";
 
-import { BodyMap } from "@/components/charts/body-map";
-import type { BodyZone, ZoneData } from "@/components/charts/body-map";
+// Body map: usamos la versión anatómica (paths musculares detallados) que
+// reemplaza visualmente al body-map iconográfico previo manteniendo la misma
+// API (BodyZone / ZoneData / BodyMapProps son re-exportados desde el módulo
+// nuevo, así el resto del archivo no necesita cambiar).
+import { BodyMapAnatomical as BodyMap } from "@/components/charts/body-map-anatomical";
+import type { BodyZone, ZoneData } from "@/components/charts/body-map-anatomical";
+
+import {
+  useMeasurementSheetStore,
+  type SheetFocus,
+} from "@/stores/measurement-sheet-store";
 
 import type {
   ClientProfileDetail as FrontendDetail,
@@ -342,11 +351,37 @@ function buildBodyMapZones(bc: FrontendComposition): Record<BodyZone, ZoneData |
 // Component
 // -----------------------------------------------------------------------------
 
+// Mapping de zona de tabla → foco del MeasurementSheet. El coach clickea el
+// lápiz en una fila de Circunferencias y el sheet se abre directamente en la
+// sub-pestaña correcta con el input ya enfocado.
+const ZONE_TO_SHEET_FOCUS: Record<string, SheetFocus> = {
+  neck:       { anthroTab: "tronco",  field: "neckCm" },
+  shoulderL:  { anthroTab: "tronco",  field: "shoulderLeftCm" },
+  shoulderR:  { anthroTab: "tronco",  field: "shoulderRightCm" },
+  chest:      { anthroTab: "tronco",  field: "chestCm" },
+  abdomen:    { anthroTab: "tronco",  field: "abdomenCm" },
+  waist:      { anthroTab: "tronco",  field: "waistCm" },
+  hip:        { anthroTab: "tronco",  field: "hipCm" },
+  gluteL:     { anthroTab: "tronco",  field: "gluteLeftCm" },
+  gluteR:     { anthroTab: "tronco",  field: "gluteRightCm" },
+  bicepL:     { anthroTab: "brazos",  field: "bicepLeftCm" },
+  bicepR:     { anthroTab: "brazos",  field: "bicepRightCm" },
+  forearmL:   { anthroTab: "brazos",  field: "forearmLeftCm" },
+  forearmR:   { anthroTab: "brazos",  field: "forearmRightCm" },
+  quadL:      { anthroTab: "piernas", field: "thighLeftCm" },
+  quadR:      { anthroTab: "piernas", field: "thighRightCm" },
+  hamstringL: { anthroTab: "piernas", field: "hamstringLeftCm" },
+  hamstringR: { anthroTab: "piernas", field: "hamstringRightCm" },
+  calfL:      { anthroTab: "piernas", field: "calfLeftCm" },
+  calfR:      { anthroTab: "piernas", field: "calfRightCm" },
+};
+
 export default function ClientProfilePageContent({ clientId }: { clientId: string }) {
   const [loading, setLoading] = useState(true);
   const [backendDetail, setBackendDetail] = useState<BackendDetail | null>(null);
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [bodyView, setBodyView] = useState<"front" | "back">("front");
+  const openSheetWithFocus = useMeasurementSheetStore((s) => s.openWithFocus);
 
   useEffect(() => {
     getClientProfileDetail(clientId).then((result) => {
@@ -367,6 +402,17 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
   function handleBodyZoneClick(zone: BodyZone) {
     const tableZone = bodyZoneToTableZone(zone);
     setSelectedZone((prev) => (prev === tableZone ? null : tableZone));
+  }
+
+  /**
+   * Lápiz de edición de una circunferencia en la tabla → abre el sheet con
+   * foco en el campo correcto (sub-pestaña + scrollIntoView + autofocus).
+   * El mapping vive en ZONE_TO_SHEET_FOCUS arriba.
+   */
+  function handleEditZone(zone: string) {
+    const focus = ZONE_TO_SHEET_FOCUS[zone];
+    if (!focus) return;
+    openSheetWithFocus(clientId, focus);
   }
 
   if (loading) {
@@ -549,6 +595,7 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
               data={bc}
               selectedZone={selectedZone}
               onZoneClick={handleTableZoneClick}
+              onEditZone={handleEditZone}
             />
           </div>
         </div>
