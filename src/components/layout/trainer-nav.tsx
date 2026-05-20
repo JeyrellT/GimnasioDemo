@@ -11,6 +11,7 @@ import {
   Wallet,
   Settings,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,6 +23,7 @@ const navItems = [
   { href: "/trainer/rutinas", label: "Rutinas", icon: Dumbbell },
   { href: "/trainer/ejercicios", label: "Ejercicios", icon: Library },
   { href: "/trainer/calentamientos", label: "Calentamientos", icon: Flame },
+  { href: "/trainer/asistente", label: "Asistente", icon: Sparkles },
   { href: "/trainer/finanzas", label: "Finanzas", icon: Wallet },
   { href: "/trainer/ajustes", label: "Ajustes", icon: Settings },
 ] as const;

@@ -19,6 +19,7 @@ import { hashPassword } from "../../src/lib/crypto/passwords";
 // NOTE: implementación a cargo de python-data-engineer.
 // Firma actual: `(prisma: PrismaClient) => Promise<{ created: number; skipped: number }>`.
 import { seedExercises } from "./exercises";
+import { seedKnowledge } from "./knowledge";
 
 // Demo password used by all 4 demo accounts (trainer, 2 clients, admin).
 // Override with DEMO_PASSWORD env var if needed.
@@ -1554,6 +1555,13 @@ async function main(): Promise<void> {
   const exResult = await seedExercises(prisma);
   console.log(
     `  ok  exercises  ${exResult.created} created, ${exResult.skipped} skipped`,
+  );
+
+  // Knowledge base for the AI assistant — RAG corpus.
+  console.log("[seed] Knowledge chunks (RAG corpus)...");
+  const kbResult = await seedKnowledge(prisma);
+  console.log(
+    `  ok  knowledge  ${kbResult.created} created, ${kbResult.updated} updated, ${kbResult.skipped} skipped`,
   );
 
   if (process.env.SEED_DEMO === "true") {

@@ -30,6 +30,10 @@ import {
   ROUTINE_MAX_DAYS_PER_WEEK,
   ROUTINE_MAX_EXERCISES_PER_DAY,
 } from "@/lib/consts";
+import {
+  inferExerciseMetadata,
+  type CatalogExercise,
+} from "@/server/lib/exercise-inference";
 import type { ActionResult, CreateRoutineResult, AssignRoutineResult } from "@/types/api";
 import type {
   RoutineSnapshot,
@@ -1400,6 +1404,21 @@ export async function createRoutineFromOcr(
 
     const goal = parseGoal(input.goal);
 
+    // Snapshot of the catalog used to infer metadata for any exercise that
+    // doesn't match. Loaded once, reused across the whole import. We pull only
+    // the columns the inference helper actually needs to keep the payload small
+    // even on a large catalog.
+    const catalogSnapshot: CatalogExercise[] = await prisma.exercise.findMany({
+      where: { deletedAt: null },
+      select: {
+        nameEs: true,
+        primaryMuscle: true,
+        equipment: true,
+        difficulty: true,
+        category: true,
+      },
+    });
+
     const result = await prisma.$transaction(async (tx) => {
       // 1. Create the RoutineTemplate
       const template = await tx.routineTemplate.create({
@@ -1433,6 +1452,8 @@ export async function createRoutineFromOcr(
 
       // 4. Resolve + link exercises
       let totalExercises = 0;
+      let autoCreatedFromNeighbors = 0;
+      let autoCreatedFromDefaults = 0;
 
       for (let di = 0; di < input.days.length; di++) {
         const dayInput = input.days[di]!;
@@ -1467,23 +1488,50 @@ export async function createRoutineFromOcr(
             if (fuzzy) {
               matchedExerciseId = fuzzy.id;
             } else {
-              // 4c. Create a new private exercise
+              // 4c. Create a new private exercise — infer metadata from the
+              // most similar exercises in the catalog (token-overlap +
+              // majority vote, with equipment-keyword override). Falls back
+              // to safe defaults when the catalog has no useful neighbors.
+              const inferred = inferExerciseMetadata(
+                exercise.nameEs,
+                catalogSnapshot,
+              );
+
               const created = await tx.exercise.create({
                 data: {
                   slug: slugify(exercise.nameEs),
                   nameEs: exercise.nameEs,
-                  nameEn: exercise.nameEs, // fallback
-                  instructionsEs: "", // placeholder — trainer can fill in later
-                  primaryMuscle: "FULL_BODY", // safe default
-                  equipment: "OTHER",
-                  difficulty: "INTERMEDIATE",
-                  category: "STRENGTH",
+                  nameEn: exercise.nameEs, // fallback — trainer can correct later
+                  instructionsEs: "", // intentionally blank — copying from a
+                                      // similar exercise would be misleading
+                  primaryMuscle: inferred.primaryMuscle,
+                  equipment: inferred.equipment,
+                  difficulty: inferred.difficulty,
+                  category: inferred.category,
                   isPublic: false,
                   createdById: user.id,
                 },
                 select: { id: true },
               });
               matchedExerciseId = created.id;
+
+              if (inferred.source === "neighbors") {
+                autoCreatedFromNeighbors++;
+              } else {
+                autoCreatedFromDefaults++;
+              }
+
+              logInfo("routines.createRoutineFromOcr.autoCreated", {
+                userId: user.id,
+                nameEs: exercise.nameEs,
+                primaryMuscle: inferred.primaryMuscle,
+                equipment: inferred.equipment,
+                difficulty: inferred.difficulty,
+                category: inferred.category,
+                source: inferred.source,
+                topScore: inferred.topScore,
+                neighborCount: inferred.neighborCount,
+              });
             }
           }
 
@@ -1505,7 +1553,13 @@ export async function createRoutineFromOcr(
         }
       }
 
-      return { template, dayCount: input.days.length, totalExercises };
+      return {
+        template,
+        dayCount: input.days.length,
+        totalExercises,
+        autoCreatedFromNeighbors,
+        autoCreatedFromDefaults,
+      };
     });
 
     logInfo("routines.createRoutineFromOcr", {
@@ -1513,6 +1567,9 @@ export async function createRoutineFromOcr(
       routineId: result.template.id,
       dayCount: result.dayCount,
       totalExercises: result.totalExercises,
+      autoCreatedFromNeighbors: result.autoCreatedFromNeighbors,
+      autoCreatedFromDefaults: result.autoCreatedFromDefaults,
+      catalogSize: catalogSnapshot.length,
     });
 
     return { routineId: result.template.id, name: result.template.name };
