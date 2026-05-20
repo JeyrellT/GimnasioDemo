@@ -1,31 +1,33 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Scale, TrendingDown, TrendingUp, Minus, Plus } from "lucide-react";
+import { Loader2, Scale, TrendingDown, TrendingUp, Minus, Plus, Lock } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
-import { getMyMetrics } from "@/app/actions/client-portal";
-import type { MyBodyMetric } from "@/server/actions/client-portal.actions";
+import { getMyMetrics, getMonthlyMeasurementQuota } from "@/app/actions/client-portal";
+import type { MyBodyMetric, MeasurementQuota } from "@/server/actions/client-portal.actions";
 import { MeasurementSheet } from "@/components/forms/measurement-sheet";
 
 export default function ClientMedicionesPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<MyBodyMetric[]>([]);
+  const [quota, setQuota] = useState<MeasurementQuota | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  function loadMetrics() {
+  function loadData() {
     if (!user) { setLoading(false); return; }
-    getMyMetrics().then((result) => {
-      if (result.ok) {
-        // Server returns ordered by recordedAt DESC already; no re-sort needed.
-        setMetrics(result.value);
-      }
+    Promise.all([
+      getMyMetrics(),
+      getMonthlyMeasurementQuota(),
+    ]).then(([metricsResult, quotaResult]) => {
+      if (metricsResult.ok) setMetrics(metricsResult.value);
+      if (quotaResult.ok) setQuota(quotaResult.value);
       setLoading(false);
     });
   }
 
   useEffect(() => {
-    loadMetrics();
+    loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
@@ -51,20 +53,59 @@ export default function ClientMedicionesPage() {
         <button
           type="button"
           onClick={() => setSheetOpen(true)}
-          className="inline-flex items-center gap-2 rounded-xl bg-brand-primary px-4 py-2.5 text-sm font-semibold text-[#09090B] transition-colors hover:bg-brand-primary-hover focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-2 min-h-[44px]"
+          disabled={!quota?.canRecord}
+          className="inline-flex items-center gap-2 rounded-xl bg-brand-primary px-4 py-2.5 text-sm font-semibold text-[#09090B] transition-colors hover:bg-brand-primary-hover focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-2 min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-brand-primary"
         >
-          <Plus className="h-4 w-4" aria-hidden="true" />
+          {quota?.canRecord ? (
+            <Plus className="h-4 w-4" aria-hidden="true" />
+          ) : (
+            <Lock className="h-4 w-4" aria-hidden="true" />
+          )}
           Nueva medición
         </button>
       </div>
+
+      {/* ── Monthly quota indicator ──────────────────────────────────────── */}
+      {quota && (
+        <div
+          className={`rounded-xl border px-4 py-3 flex items-center justify-between ${
+            quota.canRecord
+              ? "border-[#3F3F46] bg-[#18181B]"
+              : "border-[#F59E0B]/30 bg-[#F59E0B]/5"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {!quota.canRecord && (
+              <Lock className="h-4 w-4 text-[#F59E0B] shrink-0" />
+            )}
+            <p className="text-xs text-[#A1A1AA]">
+              {quota.canRecord
+                ? `Mediciones este mes: ${quota.used} de ${quota.limit}`
+                : `Alcanzaste el límite de ${quota.limit} mediciones este mes`}
+            </p>
+          </div>
+          <div className="flex gap-1">
+            {Array.from({ length: quota.limit }).map((_, i) => (
+              <div
+                key={i}
+                className={`h-2.5 w-2.5 rounded-full ${
+                  i < quota.used
+                    ? "bg-brand-primary"
+                    : "bg-[#3F3F46]"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       <MeasurementSheet
         clientId={user.id}
         open={sheetOpen}
         onOpenChange={(open) => {
           setSheetOpen(open);
-          // Reload metrics after the sheet closes (new record may have been saved)
-          if (!open) loadMetrics();
+          // Reload metrics + quota after the sheet closes
+          if (!open) loadData();
         }}
       />
 

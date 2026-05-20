@@ -7,4 +7,5 @@ export {
   getSessionDetail,
   getMyMetrics,
   recordBodyMetric,
+  getMonthlyMeasurementQuota,
 } from "@/server/actions/client-portal.actions";

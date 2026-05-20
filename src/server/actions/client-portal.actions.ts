@@ -499,6 +499,26 @@ export async function recordBodyMetric(
   return tryCatch(async () => {
     const user = await requireClient();
 
+    // ── Monthly limit: clients can record max 2 measurements per month ──
+    const MONTHLY_LIMIT = 2;
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    const countThisMonth = await prisma.bodyMetric.count({
+      where: {
+        clientUserId: user.id,
+        recordedAt: { gte: monthStart, lt: monthEnd },
+      },
+    });
+
+    if (countThisMonth >= MONTHLY_LIMIT) {
+      throw new ValidationError(
+        "MONTHLY_LIMIT_REACHED",
+        `Ya registraste ${MONTHLY_LIMIT} mediciones este mes. Podrás agregar más el próximo mes.`,
+      );
+    }
+
     // Validate: at least one numeric measurement must be present and finite.
     const measurementKeys: (keyof RecordBodyMetricInput)[] = [
       "weightKg",
@@ -576,6 +596,49 @@ export async function recordBodyMetric(
       thighCm: created.thighCm !== null ? Number(created.thighCm) : null,
       source: created.source,
       notes: created.notes,
+    };
+  });
+}
+
+// =============================================================================
+// 8. getMonthlyMeasurementQuota
+// =============================================================================
+
+export interface MeasurementQuota {
+  used: number;
+  limit: number;
+  remaining: number;
+  canRecord: boolean;
+}
+
+/**
+ * Returns how many measurements the client has used this month vs the limit.
+ */
+export async function getMonthlyMeasurementQuota(): Promise<
+  ActionResult<MeasurementQuota>
+> {
+  return tryCatch(async () => {
+    const user = await requireClient();
+
+    const MONTHLY_LIMIT = 2;
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    const used = await prisma.bodyMetric.count({
+      where: {
+        clientUserId: user.id,
+        recordedAt: { gte: monthStart, lt: monthEnd },
+      },
+    });
+
+    const remaining = Math.max(0, MONTHLY_LIMIT - used);
+
+    return {
+      used,
+      limit: MONTHLY_LIMIT,
+      remaining,
+      canRecord: remaining > 0,
     };
   });
 }
