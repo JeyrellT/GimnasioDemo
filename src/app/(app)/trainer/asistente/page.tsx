@@ -59,6 +59,7 @@ export default function AsistentePage() {
   const lastError = useAssistantStore((s) => s.lastError);
   const stickyClient = useAssistantStore((s) => s.stickyClient);
   const hasHydrated = useAssistantStore((s) => s.hasHydrated);
+  const lastUserInput = useAssistantStore((s) => s.lastUserInput);
   const sendMessage = useAssistantStore((s) => s.sendMessage);
   const addAttachment = useAssistantStore((s) => s.addAttachment);
   const removeAttachment = useAssistantStore((s) => s.removeAttachment);
@@ -67,10 +68,15 @@ export default function AsistentePage() {
   const rejectPending = useAssistantStore((s) => s.rejectPending);
   const reset = useAssistantStore((s) => s.reset);
   const dismissError = useAssistantStore((s) => s.dismissError);
+  const retryLastMessage = useAssistantStore((s) => s.retryLastMessage);
+  const forceHydrated = useAssistantStore((s) => s.forceHydrated);
 
   const [input, setInput] = useState("");
   const [hasKey, setHasKey] = useState<boolean | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  // Verdadero cuando isThinking lleva más de 60s sin que messages.length cambie.
+  // Muestra un aviso extra debajo del ThinkingIndicator.
+  const [thinkingTooLong, setThinkingTooLong] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounterRef = useRef(0);
@@ -105,6 +111,28 @@ export default function AsistentePage() {
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);
   }, [addAttachment]);
+
+  // Fallback hasHydrated: si IDB está vacía (primera visita o store limpio),
+  // onRehydrateStorage nunca dispara y el skeleton quedaría pegado para siempre.
+  // Después de 200ms forzamos hasHydrated = true para liberar la UI.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: solo corre una vez al montar
+  useEffect(() => {
+    if (hasHydrated) return;
+    const id = setTimeout(() => {
+      forceHydrated();
+    }, 200);
+    return () => clearTimeout(id);
+  }, []);
+
+  // Aviso "tardando demasiado": si isThinking lleva >60s sin que lleguen
+  // mensajes nuevos, mostramos un texto de ayuda debajo del spinner.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: messages.length es el trigger relevante
+  useEffect(() => {
+    setThinkingTooLong(false);
+    if (!isThinking) return;
+    const id = setTimeout(() => setThinkingTooLong(true), 60_000);
+    return () => clearTimeout(id);
+  }, [isThinking, messages.length]);
 
   // -- No API key guard --------------------------------------------------
   if (hasKey === false) {
@@ -238,7 +266,7 @@ export default function AsistentePage() {
           messages.map((m) => <MessageBubble key={m.id} message={m} />)
         )}
         {isThinking && (
-          <ThinkingIndicator messages={messages} />
+          <ThinkingIndicator messages={messages} tooLong={thinkingTooLong} />
         )}
       </div>
 
@@ -256,10 +284,24 @@ export default function AsistentePage() {
         <div className="flex items-start gap-3 rounded-xl border border-[#7F1D1D] bg-[#2D1414] px-4 py-3">
           <AlertTriangle className="h-5 w-5 text-[#F87171] flex-shrink-0 mt-0.5" />
           <p className="text-sm text-[#FCA5A5] flex-1">{lastError}</p>
+          {/* Reintentar solo aparece si hay un último mensaje guardado — si el
+              error fue de validación (archivo muy grande, etc.) no tiene sentido. */}
+          {lastUserInput !== null && (
+            <button
+              type="button"
+              onClick={() => {
+                dismissError();
+                void retryLastMessage();
+              }}
+              className="text-xs text-[#FCA5A5] hover:text-[#FAFAFA] border border-[#7F1D1D] hover:border-[#FCA5A5] rounded-md px-2 py-1 flex-shrink-0"
+            >
+              Reintentar
+            </button>
+          )}
           <button
             type="button"
             onClick={dismissError}
-            className="text-[#A1A1AA] hover:text-[#FAFAFA]"
+            className="text-[#A1A1AA] hover:text-[#FAFAFA] flex-shrink-0"
           >
             <X className="h-4 w-4" />
           </button>
@@ -607,7 +649,13 @@ function countCurrentTurnToolCalls(messages: AssistantMessage[]): number {
   return count;
 }
 
-function ThinkingIndicator({ messages }: { messages: AssistantMessage[] }) {
+function ThinkingIndicator({
+  messages,
+  tooLong,
+}: {
+  messages: AssistantMessage[];
+  tooLong: boolean;
+}) {
   const toolCallsInTurn = countCurrentTurnToolCalls(messages);
   const label =
     toolCallsInTurn >= 2
@@ -616,9 +664,18 @@ function ThinkingIndicator({ messages }: { messages: AssistantMessage[] }) {
         ? "Ejecutando…"
         : "Pensando…";
   return (
-    <div className="flex items-center gap-2 text-sm text-[#A1A1AA] pl-1">
-      <Loader2 className="h-4 w-4 animate-spin" />
-      {label}
+    <div className="flex flex-col gap-1 pl-1">
+      <div className="flex items-center gap-2 text-sm text-[#A1A1AA]">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        {label}
+      </div>
+      {/* Aviso extra si la respuesta tarda más de 60 segundos. Ayuda al coach
+          a entender que puede resetear en lugar de esperar indefinidamente. */}
+      {tooLong && (
+        <p className="text-xs text-[#71717A] pl-6">
+          Está tardando más de lo normal — si no responde, tocá Nueva conversación arriba a la derecha.
+        </p>
+      )}
     </div>
   );
 }

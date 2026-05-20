@@ -27,9 +27,21 @@
 
 import type { StateStorage } from "zustand/middleware";
 
+import { logger } from "@/lib/logger";
+
 const DB_NAME = "blackline-assistant";
 const DB_VERSION = 1;
 const STORE_NAME = "state";
+
+// Avoid spamming the console on every set — log once per session per failure
+// type. The coach typically sees these only when IDB is genuinely unavailable
+// (private mode, anti-tracking heuristics, quota exceeded, etc.).
+const loggedFailures = new Set<string>();
+function logOnce(key: string, ctx: Record<string, unknown>, event: string) {
+  if (loggedFailures.has(key)) return;
+  loggedFailures.add(key);
+  logger.warn(ctx, event);
+}
 
 // -----------------------------------------------------------------------------
 // DB connection — opened lazily and cached. Re-resolves on browser eviction.
@@ -127,23 +139,49 @@ export const idbStorage: StateStorage =
               s.get(name) as IDBRequest<string | undefined>,
             );
             return value ?? null;
-          } catch {
+          } catch (e) {
+            // Antes era silent. Si IDB falla acá, la conversación se rehidrata
+            // como vacía y el coach piensa que "no persiste nada". Loguear una
+            // vez para que se vea en producción.
+            logOnce(`get:${name}`, { name, error: e instanceof Error ? e.message : String(e) }, "idb.get_failed");
             return null;
           }
         },
         setItem: async (name: string, value: string) => {
           try {
             await tx("readwrite", (s) => s.put(value, name));
-          } catch {
-            // Silent — Zustand persist already handles failures gracefully.
+          } catch (e) {
+            // Antes era silent. La causa más común es quota exceeded por
+            // attachments base64 muy grandes, o tracking prevention en Safari.
+            // Sin este log, "no persiste nada" se vuelve un misterio.
+            logOnce(
+              `set:${name}`,
+              {
+                name,
+                size: value.length,
+                error: e instanceof Error ? e.message : String(e),
+              },
+              "idb.set_failed",
+            );
           }
         },
         removeItem: async (name: string) => {
           try {
             await tx("readwrite", (s) => s.delete(name));
-          } catch {
-            // Silent.
+          } catch (e) {
+            logOnce(`del:${name}`, { name, error: e instanceof Error ? e.message : String(e) }, "idb.delete_failed");
           }
         },
       }
-    : memoryStorage();
+    : (() => {
+        // SSR o navegador sin IDB (modo incógnito muy estricto, etc.). Cae a
+        // memoria — la app funciona pero NO persiste entre refreshes. Loguear
+        // una vez para que sea diagnosticable.
+        if (typeof window !== "undefined") {
+          logger.warn(
+            { reason: "indexedDB undefined in browser context" },
+            "idb.unavailable_fallback_to_memory",
+          );
+        }
+        return memoryStorage();
+      })();

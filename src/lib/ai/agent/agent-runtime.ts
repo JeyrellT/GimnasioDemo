@@ -19,7 +19,9 @@
 //     a snapshot of the remaining calls + working messages. The store
 //     surfaces a card; on user action we re-enter via resumeAgent.
 //
-// MAX_TOOL_ITERATIONS caps a single chain at 5 Gemini round-trips.
+// MAX_TOOL_ITERATIONS caps a single chain at 15 Gemini round-trips.
+// On hit we surface a recoverable assistant message ("Pausé acá…") so the
+// coach can say "continuá" and the model picks up where it stopped.
 // =============================================================================
 
 "use client";
@@ -55,66 +57,101 @@ const MAX_TOOL_ITERATIONS = 15;
 function messagesToHistory(messages: AssistantMessage[]): ChatTurn[] {
   const history: ChatTurn[] = [];
   for (const msg of messages) {
-    if (msg.role === "user") {
-      // Images go first so the model anchors text instructions to the visible
-      // content; this matches Google's published guidance for multimodal turns.
-      const parts: ChatTurn["parts"] = [];
-      if (msg.attachments?.length) {
-        for (const att of msg.attachments) {
-          parts.push({
-            inlineData: { data: att.data, mimeType: att.mimeType },
-          });
+    // Guard defensiva: si un mensaje viene corrupto (rehydrate fallido,
+    // shape inválida después de migración de store), lo saltamos en vez
+    // de hacer crashear el turno entero. Loguearmos para detectarlo.
+    if (!msg || typeof msg !== "object" || typeof msg.role !== "string") {
+      logger.warn(
+        { messageId: (msg as { id?: unknown })?.id ?? null },
+        "agent.skipped_invalid_message",
+      );
+      continue;
+    }
+
+    try {
+      if (msg.role === "user") {
+        // Images go first so the model anchors text instructions to the visible
+        // content; this matches Google's published guidance for multimodal turns.
+        const parts: ChatTurn["parts"] = [];
+        if (msg.attachments?.length) {
+          for (const att of msg.attachments) {
+            parts.push({
+              inlineData: { data: att.data, mimeType: att.mimeType },
+            });
+          }
         }
-      }
-      // Always include a text part — Gemini rejects user turns with zero text
-      // when images are present. Fall back to a generic prompt.
-      const text = msg.content.trim() ||
-        (msg.attachments?.length ? "Mirá esta imagen y decime qué ves." : "");
-      parts.push({ text });
-      history.push({ role: "user", parts });
-    } else if (msg.role === "assistant") {
-      if (msg.content.trim()) {
-        history.push({ role: "model", parts: [{ text: msg.content }] });
-      }
-    } else if (msg.role === "tool" && msg.toolCall) {
-      const call = msg.toolCall;
-      history.push({
-        role: "model",
-        parts: [{ functionCall: { name: call.name, args: call.args } }],
-      });
-      // Mapeo de status → response object enviado a Gemini.
-      // - success: el JSON real del tool (o un wrapper si no parseó).
-      // - rejected: el coach canceló la confirmation card.
-      // - error: la tool tiró excepción o validación falló.
-      // - running: BUG defensivo — no debería llegar acá (sanitizeMessages
-      //   en el store los cierra). Si pasa, lo tratamos como error con
-      //   mensaje claro en vez de mandar functionResponse vacío que rompe
-      //   la API de Gemini.
-      const response: Record<string, unknown> = (() => {
-        if (call.status === "success") {
-          return (safeParseJson(call.resultText) as Record<string, unknown>) ?? {
-            result: call.resultText,
-          };
+        // Always include a text part — Gemini rejects user turns with zero text
+        // when images are present. Fall back to a generic prompt.
+        const text = (msg.content ?? "").trim() ||
+          (msg.attachments?.length ? "Mirá esta imagen y decime qué ves." : "");
+        parts.push({ text });
+        history.push({ role: "user", parts });
+      } else if (msg.role === "assistant") {
+        if ((msg.content ?? "").trim()) {
+          history.push({ role: "model", parts: [{ text: msg.content }] });
         }
-        if (call.status === "rejected") {
-          return { error: "El coach canceló esta acción.", cancelled: true };
+      } else if (msg.role === "tool" && msg.toolCall) {
+        const call = msg.toolCall;
+        if (!call.name || typeof call.name !== "string") {
+          logger.warn(
+            { messageId: msg.id, callName: call.name ?? null },
+            "agent.skipped_invalid_message",
+          );
+          continue;
         }
-        if (call.status === "running") {
+        history.push({
+          role: "model",
+          parts: [{ functionCall: { name: call.name, args: call.args } }],
+        });
+        // Mapeo de status → response object enviado a Gemini.
+        // - success: el JSON real del tool (o un wrapper si no parseó).
+        // - rejected: el coach canceló la confirmation card.
+        // - error: la tool tiró excepción o validación falló.
+        // - running: BUG defensivo — no debería llegar acá (sanitizeMessages
+        //   en el store los cierra). Si pasa, lo tratamos como error con
+        //   mensaje claro en vez de mandar functionResponse vacío que rompe
+        //   la API de Gemini.
+        const response: Record<string, unknown> = (() => {
+          if (call.status === "success") {
+            return (safeParseJson(call.resultText) as Record<string, unknown>) ?? {
+              result: call.resultText,
+            };
+          }
+          if (call.status === "rejected") {
+            return { error: "El coach canceló esta acción.", cancelled: true };
+          }
+          if (call.status === "running") {
+            return {
+              error:
+                "La acción quedó incompleta — la conversación se interrumpió antes de obtener el resultado.",
+              interrupted: true,
+            };
+          }
+          // "error"
           return {
-            error:
-              "La acción quedó incompleta — la conversación se interrumpió antes de obtener el resultado.",
-            interrupted: true,
+            error: call.resultText || "La herramienta falló sin mensaje específico.",
           };
-        }
-        // "error"
-        return {
-          error: call.resultText || "La herramienta falló sin mensaje específico.",
-        };
-      })();
-      history.push({
-        role: "function",
-        parts: [{ functionResponse: { name: call.name, response } }],
-      });
+        })();
+        history.push({
+          role: "function",
+          parts: [{ functionResponse: { name: call.name, response } }],
+        });
+      } else {
+        // Rol no reconocido o tool-msg sin toolCall — skip silently con warn.
+        logger.warn(
+          { messageId: msg.id, role: msg.role, hasToolCall: Boolean(msg.toolCall) },
+          "agent.skipped_invalid_message",
+        );
+      }
+    } catch (e) {
+      logger.warn(
+        {
+          messageId: msg.id,
+          role: msg.role,
+          error: e instanceof Error ? e.message : String(e),
+        },
+        "agent.skipped_invalid_message",
+      );
     }
   }
   return history;
@@ -172,14 +209,27 @@ export interface ResumeAgentArgs {
 
 export async function runAgent(args: RunAgentArgs): Promise<void> {
   const { messages, callbacks, stickyClient, requestId } = args;
-  await drive({
-    workingMessages: [...messages],
-    pendingCalls: null,
-    iterationStart: 0,
-    callbacks,
-    stickyClient: stickyClient ?? null,
-    requestId,
-  });
+  // Try/catch externo: garantiza que el caller SIEMPRE reciba un terminal
+  // callback. Sin esto, si messagesToHistory u otro código fuera del inner
+  // try lanza, la excepción se propaga al store y deja isThinking colgado.
+  try {
+    await drive({
+      workingMessages: [...messages],
+      pendingCalls: null,
+      iterationStart: 0,
+      callbacks,
+      stickyClient: stickyClient ?? null,
+      requestId,
+    });
+  } catch (e) {
+    logger.error(
+      { requestId, error: e instanceof Error ? e.message : String(e) },
+      "agent.unhandled_throw",
+    );
+    callbacks.onError(
+      "Algo se rompió internamente mientras procesaba tu mensaje. Probá de nuevo; si persiste, recargá la página.",
+    );
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -188,36 +238,48 @@ export async function runAgent(args: RunAgentArgs): Promise<void> {
 
 export async function resumeAgent(args: ResumeAgentArgs): Promise<void> {
   const { decision, saved, callbacks, stickyClient, requestId } = args;
-  let workingMessages = [...saved.workingMessages];
+  // Try/catch externo: ver runAgent. Sin esto un throw acá deja al store
+  // sin terminal callback y la UI se cuelga con isThinking=true.
+  try {
+    let workingMessages = [...saved.workingMessages];
 
-  // 1. Execute (or skip) the pending call itself.
-  if (decision === "approve") {
-    const next = await executeCall(saved.pendingCall, workingMessages, callbacks);
-    workingMessages = next;
-  } else {
-    const rejected = makeRejectedRecord(saved.pendingCall);
-    callbacks.onToolStart(rejected);
-    callbacks.onToolFinish(rejected);
-    workingMessages = appendToolToHistory(workingMessages, rejected);
+    // 1. Execute (or skip) the pending call itself.
+    if (decision === "approve") {
+      const next = await executeCall(saved.pendingCall, workingMessages, callbacks);
+      workingMessages = next;
+    } else {
+      const rejected = makeRejectedRecord(saved.pendingCall);
+      callbacks.onToolStart(rejected);
+      callbacks.onToolFinish(rejected);
+      workingMessages = appendToolToHistory(workingMessages, rejected);
+    }
+
+    // 2. Process the rest of the calls from the same Gemini turn (if any).
+    const result = await processCalls(saved.remainingCalls, workingMessages, callbacks);
+    if (result.kind === "needs_confirmation") {
+      callbacks.onPendingConfirmation(result.pending);
+      return;
+    }
+    workingMessages = result.workingMessages;
+
+    // 3. Continue the main loop from the next iteration onwards.
+    await drive({
+      workingMessages,
+      pendingCalls: null,
+      iterationStart: saved.iteration + 1,
+      callbacks,
+      stickyClient: stickyClient ?? null,
+      requestId,
+    });
+  } catch (e) {
+    logger.error(
+      { requestId, error: e instanceof Error ? e.message : String(e) },
+      "agent.unhandled_throw",
+    );
+    callbacks.onError(
+      "Algo se rompió internamente al retomar la acción. Probá de nuevo; si persiste, recargá la página.",
+    );
   }
-
-  // 2. Process the rest of the calls from the same Gemini turn (if any).
-  const result = await processCalls(saved.remainingCalls, workingMessages, callbacks);
-  if (result.kind === "needs_confirmation") {
-    callbacks.onPendingConfirmation(result.pending);
-    return;
-  }
-  workingMessages = result.workingMessages;
-
-  // 3. Continue the main loop from the next iteration onwards.
-  await drive({
-    workingMessages,
-    pendingCalls: null,
-    iterationStart: saved.iteration + 1,
-    callbacks,
-    stickyClient: stickyClient ?? null,
-    requestId,
-  });
 }
 
 // -----------------------------------------------------------------------------
@@ -274,14 +336,18 @@ async function drive(args: DriveArgs): Promise<void> {
       // Empty text from the model = UX dead-end. Lo logueamos para detectarlo
       // en telemetría y la UI tiene un placeholder visual (page.tsx). El system
       // prompt regla #8 instruye al modelo a NUNCA cerrar con texto vacío,
-      // pero si pasa, igual lo capturamos.
+      // pero si pasa, igual lo capturamos. Subimos el nivel a `info` (no es
+      // un bug, es esperable cuando el modelo cierra con MAX_TOKENS o SAFETY)
+      // y agregamos finishReason cuando viene en el result para diagnóstico.
       if (!result.text || result.text.trim().length === 0) {
-        logger.warn(
+        logger.info(
           {
             requestId,
             iteration,
             modelId: result.modelId,
             latencyMs: result.latencyMs,
+            reason: "empty_text_with_no_tool_calls",
+            finishReason: (result as { finishReason?: string }).finishReason ?? undefined,
           },
           "agent.empty_assistant_text",
         );
@@ -314,8 +380,12 @@ async function drive(args: DriveArgs): Promise<void> {
     { requestId, iterations: MAX_TOOL_ITERATIONS },
     "agent.iteration_cap_hit",
   );
-  callbacks.onError(
-    `Se alcanzó el límite de ${MAX_TOOL_ITERATIONS} pasos automáticos en este turno. Si el flujo no terminó, escribime "continuá" y sigo donde quedé. Si lo querés acotar, dame el siguiente paso específico.`,
+  // Antes era onError → banner rojo SIN turno en el historial; "continuá"
+  // no funcionaba porque el modelo no tenía contexto. Ahora lo emitimos
+  // como turno del asistente: queda en la conversación y el system prompt
+  // (regla #9) le dice al modelo cómo retomar cuando ve este mensaje.
+  callbacks.onAssistantText(
+    `Pausé acá después de ${MAX_TOOL_ITERATIONS} pasos automáticos para no consumir todo el turno. Si querés que siga, decime "continuá" o pasame el siguiente paso específico.`,
   );
 }
 

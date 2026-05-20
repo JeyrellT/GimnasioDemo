@@ -14,6 +14,14 @@
 // Estado NO persistido (partialize):
 //   - pendingAttachments (transient: lo que está por enviarse).
 //   - isThinking, pendingConfirmation, lastError (lifecycle de una vuelta).
+//
+// Fase 5 — resiliencia:
+//   - try/finally en sendMessage / confirmPending / rejectPending garantiza que
+//     isThinking nunca queda colgado aunque el runtime reviente sin llamar onError.
+//   - lastUserInput persiste el último par (text, attachments) para el botón
+//     "Reintentar" de la UI — no requiere bump de versión (campo nullable).
+//   - forceHydrated: setter público mínimo para que page.tsx libere el skeleton
+//     cuando IDB está vacío y onRehydrateStorage no dispara.
 // =============================================================================
 
 "use client";
@@ -59,6 +67,12 @@ interface AssistantState {
   stickyClient: StickyClient | null;
   /** Marcado true cuando IDB terminó de rehydratear. Útil para mostrar skeleton. */
   hasHydrated: boolean;
+  /**
+   * Último input del coach (texto + adjuntos ya comprimidos). Persiste en IDB
+   * para que el botón "Reintentar" funcione incluso después de un refresh.
+   * Es null cuando no hay nada que reintentar (inicio, o luego de reset).
+   */
+  lastUserInput: { text: string; attachments: AssistantAttachment[] } | null;
 
   sendMessage: (text: string) => Promise<void>;
   /** Validate, compress, base64-encode, and queue a file for the next turn. */
@@ -70,6 +84,16 @@ interface AssistantState {
   rejectPending: () => Promise<void>;
   reset: () => void;
   dismissError: () => void;
+  /**
+   * Re-envía el último mensaje del coach. No-op si lastUserInput es null.
+   * Restaura pendingAttachments con los adjuntos guardados y llama sendMessage.
+   */
+  retryLastMessage: () => Promise<void>;
+  /**
+   * Setter mínimo para que page.tsx libere el skeleton cuando IDB está vacío
+   * y onRehydrateStorage no dispara (ej.: primera visita, IDB limpia).
+   */
+  forceHydrated: () => void;
 }
 
 function newId(prefix: string): string {
@@ -183,6 +207,7 @@ export const useAssistantStore = create<AssistantState>()(
       lastError: null,
       stickyClient: null,
       hasHydrated: false,
+      lastUserInput: null,
 
       reset: () => {
         set({
@@ -191,11 +216,13 @@ export const useAssistantStore = create<AssistantState>()(
           isThinking: false,
           pendingConfirmation: null,
           lastError: null,
+          lastUserInput: null,
           // stickyClient se mantiene — el coach probablemente sigue trabajando
           // con la misma persona aunque empiece una conversación nueva.
         });
       },
       dismissError: () => set({ lastError: null }),
+      forceHydrated: () => set({ hasHydrated: true }),
 
       setStickyClient: (client) => set({ stickyClient: client }),
 
@@ -267,45 +294,102 @@ export const useAssistantStore = create<AssistantState>()(
         // antes del primer click). Idempotente.
         const sanitized = sanitizeMessages(get().messages);
 
+        // Guardamos el input ANTES del set para que sea atómico con la
+        // mutación de messages. Si el usuario refresca justo después del set
+        // tenemos el par (text, attachments) disponible para "Reintentar".
         set({
           messages: [...sanitized, userMessage],
           pendingAttachments: [],
           isThinking: true,
           lastError: null,
+          lastUserInput: { text, attachments: queued },
         });
 
-        await runAgent({
-          messages: get().messages,
-          stickyClient: get().stickyClient,
-          requestId: newId("req"),
-          callbacks: makeCallbacks(set),
-        });
+        try {
+          await runAgent({
+            messages: get().messages,
+            stickyClient: get().stickyClient,
+            requestId: newId("req"),
+            callbacks: makeCallbacks(set),
+          });
+        } catch (e) {
+          // Doble cinturón: si el runtime no llamó onError (ej.: lanzó antes
+          // de llegar al bloque try interno del runtime), seteamos el error acá
+          // para que la UI no quede muda.
+          const message = e instanceof Error ? e.message : String(e);
+          set({ lastError: `Fallo inesperado del asistente: ${message}` });
+        } finally {
+          // Garantía absoluta: isThinking no puede quedar colgado aunque el
+          // runtime o el bloque catch exploten.
+          if (get().isThinking) set({ isThinking: false });
+        }
       },
 
       confirmPending: async () => {
         const saved = get().pendingConfirmation;
         if (!saved) return;
-        set({ pendingConfirmation: null, isThinking: true });
-        await resumeAgent({
-          decision: "approve",
-          saved,
-          stickyClient: get().stickyClient,
-          requestId: newId("req"),
-          callbacks: makeCallbacks(set),
+
+        // Sanitizamos antes de resumir por si el coach refrescó la página
+        // entre que el modelo pidió confirmación y él respondió.
+        const sanitized = sanitizeMessages(get().messages);
+        set({
+          messages: sanitized,
+          pendingConfirmation: null,
+          isThinking: true,
         });
+
+        try {
+          await resumeAgent({
+            decision: "approve",
+            saved,
+            stickyClient: get().stickyClient,
+            requestId: newId("req"),
+            callbacks: makeCallbacks(set),
+          });
+        } catch (e) {
+          const message = e instanceof Error ? e.message : String(e);
+          set({ lastError: `Fallo inesperado al confirmar: ${message}` });
+        } finally {
+          if (get().isThinking) set({ isThinking: false });
+        }
       },
 
       rejectPending: async () => {
         const saved = get().pendingConfirmation;
         if (!saved) return;
-        set({ pendingConfirmation: null, isThinking: true });
-        await resumeAgent({
-          decision: "reject",
-          saved,
-          stickyClient: get().stickyClient,
-          requestId: newId("req"),
-          callbacks: makeCallbacks(set),
+
+        // Misma defensa que confirmPending.
+        const sanitized = sanitizeMessages(get().messages);
+        set({
+          messages: sanitized,
+          pendingConfirmation: null,
+          isThinking: true,
         });
+
+        try {
+          await resumeAgent({
+            decision: "reject",
+            saved,
+            stickyClient: get().stickyClient,
+            requestId: newId("req"),
+            callbacks: makeCallbacks(set),
+          });
+        } catch (e) {
+          const message = e instanceof Error ? e.message : String(e);
+          set({ lastError: `Fallo inesperado al rechazar: ${message}` });
+        } finally {
+          if (get().isThinking) set({ isThinking: false });
+        }
+      },
+
+      retryLastMessage: async () => {
+        const last = get().lastUserInput;
+        if (!last) return;
+        // Restauramos los adjuntos al queue y re-disparamos sendMessage con
+        // el mismo texto. sendMessage sobreescribirá lastUserInput con el
+        // mismo valor → idempotente.
+        set({ pendingAttachments: last.attachments });
+        await get().sendMessage(last.text);
       },
     }),
     {
@@ -313,9 +397,15 @@ export const useAssistantStore = create<AssistantState>()(
       storage: createJSONStorage(() => idbStorage),
       // Solo persistir cosas estables — el estado transitorio (isThinking,
       // pendingConfirmation, lastError, pendingAttachments) no debe rehydratearse.
+      // lastUserInput sí se persiste: el botón "Reintentar" debe funcionar
+      // aunque el coach refresque la página después de un error.
+      // pendingConfirmation NO se persiste: si el coach reabre el tab con una
+      // confirmación pendiente, el runtime no tiene el contexto para resumir —
+      // es más seguro pedirle al modelo que replantee la acción.
       partialize: (state) => ({
         messages: state.messages,
         stickyClient: state.stickyClient,
+        lastUserInput: state.lastUserInput,
       }),
       onRehydrateStorage: () => (state) => {
         if (!state) return;
