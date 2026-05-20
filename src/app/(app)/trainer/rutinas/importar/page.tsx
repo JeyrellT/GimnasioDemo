@@ -7,7 +7,7 @@
 // Flow:
 //   1. Trainer uploads an image (photo, screenshot, scan of a routine).
 //   2. Gemini extracts the routine structure via OCR.
-//   3. Trainer previews the extracted routine (editable name).
+//   3. Trainer reviews & edits the extracted routine (fully editable).
 //   4. Trainer confirms → server action creates template + days + exercises.
 //   5. Redirect to routine detail page for fine-tuning.
 // =============================================================================
@@ -26,6 +26,7 @@ import {
   Pencil,
   RotateCcw,
   Sparkles,
+  Trash2,
   Upload,
   X,
 } from "lucide-react";
@@ -33,7 +34,11 @@ import { toast } from "sonner";
 import Link from "next/link";
 
 import { extractRoutineFromImage } from "@/lib/ai/ocr-routine";
-import type { OcrRoutineResult } from "@/lib/ai/ocr-routine";
+import type {
+  OcrRoutineResult,
+  OcrRoutineDay,
+  OcrRoutineExercise,
+} from "@/lib/ai/ocr-routine";
 import { createRoutineFromOcr } from "@/app/actions/routines";
 import { hasGeminiKey } from "@/lib/demo/settings-store";
 import { PageHeader } from "@/components/shared/page-header";
@@ -42,13 +47,17 @@ import { PageHeader } from "@/components/shared/page-header";
 // Goal display helpers
 // ---------------------------------------------------------------------------
 
-const GOAL_LABELS: Record<string, string> = {
-  HYPERTROPHY: "Hipertrofia",
-  STRENGTH: "Fuerza",
-  ENDURANCE: "Resistencia",
-  FAT_LOSS: "Perdida de grasa",
-  GENERAL: "General",
-};
+const GOAL_OPTIONS = [
+  { value: "HYPERTROPHY", label: "Hipertrofia" },
+  { value: "STRENGTH", label: "Fuerza" },
+  { value: "ENDURANCE", label: "Resistencia" },
+  { value: "FAT_LOSS", label: "Perdida de grasa" },
+  { value: "GENERAL", label: "General" },
+] as const;
+
+const GOAL_LABELS: Record<string, string> = Object.fromEntries(
+  GOAL_OPTIONS.map((g) => [g.value, g.label]),
+);
 
 const GOAL_COLORS: Record<string, string> = {
   HYPERTROPHY: "text-brand-primary",
@@ -59,10 +68,32 @@ const GOAL_COLORS: Record<string, string> = {
 };
 
 // ---------------------------------------------------------------------------
+// Shared input styles
+// ---------------------------------------------------------------------------
+
+const miniInputCls =
+  "rounded-md border border-[#3F3F46] bg-[#27272A] px-2 py-1 text-xs text-[#FAFAFA] " +
+  "focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary/30 " +
+  "transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
+
+const textInputCls =
+  "w-full rounded-md border border-[#3F3F46] bg-[#27272A] px-2.5 py-1.5 text-sm text-[#FAFAFA] " +
+  "placeholder-[#52525B] " +
+  "focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary/30 transition-colors";
+
+// ---------------------------------------------------------------------------
 // Step type
 // ---------------------------------------------------------------------------
 
 type Step = "upload" | "processing" | "preview" | "saving";
+
+// ---------------------------------------------------------------------------
+// Deep-clone helper
+// ---------------------------------------------------------------------------
+
+function cloneResult(r: OcrRoutineResult): OcrRoutineResult {
+  return JSON.parse(JSON.stringify(r));
+}
 
 // ---------------------------------------------------------------------------
 // Page component
@@ -74,20 +105,26 @@ export default function ImportarRutinaPage() {
 
   const [step, setStep] = useState<Step>("upload");
   const [preview, setPreview] = useState<string | null>(null);
-  const [result, setResult] = useState<OcrRoutineResult | null>(null);
-  const [editedName, setEditedName] = useState("");
-  const [editingName, setEditingName] = useState(false);
+  // Editable copy of OCR result — all mutations happen here.
+  const [data, setData] = useState<OcrRoutineResult | null>(null);
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set());
   const [dragOver, setDragOver] = useState(false);
-
-  // ── Gemini key check ────────────────────────────────────────────────────
+  // Track which exercise is in inline-edit mode: "dayIdx-exIdx" or null
+  const [editingExKey, setEditingExKey] = useState<string | null>(null);
+  // Track which day name is being edited
+  const [editingDayIdx, setEditingDayIdx] = useState<number | null>(null);
 
   const hasKey = hasGeminiKey();
+
+  // ── Computed stats ──────────────────────────────────────────────────────
+
+  const totalExercises = data
+    ? data.days.reduce((acc, d) => acc + d.exercises.length, 0)
+    : 0;
 
   // ── File handling ───────────────────────────────────────────────────────
 
   const processFile = useCallback(async (file: File) => {
-    // Show image preview
     const url = URL.createObjectURL(file);
     setPreview(url);
     setStep("processing");
@@ -102,10 +139,8 @@ export default function ImportarRutinaPage() {
       return;
     }
 
-    const routine = extractionResult.value;
-    setResult(routine);
-    setEditedName(routine.name);
-    // Expand all days by default
+    const routine = cloneResult(extractionResult.value);
+    setData(routine);
     setExpandedDays(new Set(routine.days.map((_, i) => i)));
     setStep("preview");
   }, []);
@@ -113,7 +148,6 @@ export default function ImportarRutinaPage() {
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (file) processFile(file);
-    // Reset so the same file can be re-uploaded
     e.target.value = "";
   }
 
@@ -138,19 +172,19 @@ export default function ImportarRutinaPage() {
     setDragOver(false);
   }
 
-  // ── Reset flow ──────────────────────────────────────────────────────────
+  // ── Reset ───────────────────────────────────────────────────────────────
 
   function handleReset() {
     if (preview) URL.revokeObjectURL(preview);
     setPreview(null);
-    setResult(null);
-    setEditedName("");
-    setEditingName(false);
+    setData(null);
     setExpandedDays(new Set());
+    setEditingExKey(null);
+    setEditingDayIdx(null);
     setStep("upload");
   }
 
-  // ── Expand/collapse days ────────────────────────────────────────────────
+  // ── Day/exercise expand ─────────────────────────────────────────────────
 
   function toggleDay(index: number) {
     setExpandedDays((prev) => {
@@ -161,20 +195,122 @@ export default function ImportarRutinaPage() {
     });
   }
 
+  // ── Mutation helpers (immutable updates) ────────────────────────────────
+
+  function updateRoutineField<K extends keyof OcrRoutineResult>(
+    field: K,
+    value: OcrRoutineResult[K],
+  ) {
+    setData((prev) => (prev ? { ...prev, [field]: value } : prev));
+  }
+
+  function updateDayName(dayIdx: number, name: string) {
+    setData((prev) => {
+      if (!prev) return prev;
+      const days = prev.days.map((d, i) =>
+        i === dayIdx ? { ...d, name } : d,
+      );
+      return { ...prev, days };
+    });
+  }
+
+  function deleteDay(dayIdx: number) {
+    setData((prev) => {
+      if (!prev) return prev;
+      const days = prev.days.filter((_, i) => i !== dayIdx);
+      if (days.length === 0) {
+        toast.error("La rutina necesita al menos un dia.");
+        return prev;
+      }
+      return { ...prev, days, splitDays: days.length };
+    });
+    // Adjust expanded set
+    setExpandedDays((prev) => {
+      const next = new Set<number>();
+      for (const idx of prev) {
+        if (idx < dayIdx) next.add(idx);
+        else if (idx > dayIdx) next.add(idx - 1);
+      }
+      return next;
+    });
+    setEditingDayIdx(null);
+  }
+
+  function updateExercise(
+    dayIdx: number,
+    exIdx: number,
+    patch: Partial<OcrRoutineExercise>,
+  ) {
+    setData((prev) => {
+      if (!prev) return prev;
+      const days = prev.days.map((d, di) => {
+        if (di !== dayIdx) return d;
+        const exercises = d.exercises.map((ex, ei) =>
+          ei === exIdx ? { ...ex, ...patch } : ex,
+        );
+        return { ...d, exercises };
+      });
+      return { ...prev, days };
+    });
+  }
+
+  function deleteExercise(dayIdx: number, exIdx: number) {
+    setData((prev) => {
+      if (!prev) return prev;
+      const days = prev.days.map((d, di) => {
+        if (di !== dayIdx) return d;
+        const exercises = d.exercises.filter((_, ei) => ei !== exIdx);
+        return { ...d, exercises };
+      });
+      // Remove day if empty
+      const filtered = days.filter((d) => d.exercises.length > 0);
+      if (filtered.length < days.length) {
+        toast("Dia sin ejercicios eliminado.");
+      }
+      return {
+        ...prev,
+        days: filtered.length > 0 ? filtered : days, // keep at least one day
+        splitDays: filtered.length > 0 ? filtered.length : days.length,
+      };
+    });
+    setEditingExKey(null);
+  }
+
   // ── Confirm and create ──────────────────────────────────────────────────
 
   async function handleConfirm() {
-    if (!result) return;
+    if (!data) return;
+
+    // Validate before sending
+    if (!data.name.trim()) {
+      toast.error("El nombre de la rutina no puede estar vacio.");
+      return;
+    }
+    for (let di = 0; di < data.days.length; di++) {
+      const day = data.days[di]!;
+      if (day.exercises.length === 0) {
+        toast.error(`${day.name} no tiene ejercicios.`);
+        return;
+      }
+      for (let ei = 0; ei < day.exercises.length; ei++) {
+        const ex = day.exercises[ei]!;
+        if (!ex.nameEs.trim()) {
+          toast.error(`Ejercicio ${ei + 1} en ${day.name} no tiene nombre.`);
+          return;
+        }
+      }
+    }
 
     setStep("saving");
-    const finalName = editedName.trim() || result.name;
+    setEditingExKey(null);
+    setEditingDayIdx(null);
 
     const createResult = await createRoutineFromOcr({
-      name: finalName,
-      goal: result.goal,
-      splitDays: result.splitDays,
-      durationWeeks: result.durationWeeks,
-      days: result.days,
+      name: data.name.trim(),
+      goal: data.goal,
+      splitDays: data.days.length,
+      durationWeeks: data.durationWeeks,
+      days: data.days,
     });
 
     if (createResult.ok) {
@@ -262,15 +398,16 @@ export default function ImportarRutinaPage() {
               : "border-[#3F3F46] hover:border-[#52525B] hover:bg-[#27272A]/40",
           ].join(" ")}
         >
-          {/* Radial glow */}
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 flex items-center justify-center"
           >
-            <div className={[
-              "h-48 w-48 rounded-full blur-3xl transition-colors duration-300",
-              dragOver ? "bg-brand-primary/10" : "bg-brand-primary/5",
-            ].join(" ")} />
+            <div
+              className={[
+                "h-48 w-48 rounded-full blur-3xl transition-colors duration-300",
+                dragOver ? "bg-brand-primary/10" : "bg-brand-primary/5",
+              ].join(" ")}
+            />
           </div>
 
           <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl border border-[#3F3F46] bg-[#27272A] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
@@ -286,7 +423,8 @@ export default function ImportarRutinaPage() {
               {dragOver ? "Soltar imagen" : "Subir imagen de rutina"}
             </h3>
             <p className="max-w-xs text-sm text-[#A1A1AA] text-balance">
-              Arrastra una imagen o haz clic para seleccionar. Acepta fotos, screenshots, escaneos de rutinas.
+              Arrastra una imagen o haz clic para seleccionar. Acepta fotos,
+              screenshots, escaneos de rutinas.
             </p>
           </div>
 
@@ -311,7 +449,6 @@ export default function ImportarRutinaPage() {
       {/* ─── STEP: Processing ────────────────────────────────────────── */}
       {step === "processing" && (
         <div className="flex flex-col items-center gap-6 rounded-2xl border border-[#3F3F46] bg-[#18181B]/80 px-8 py-16 text-center">
-          {/* Image preview thumbnail */}
           {preview && (
             <div className="relative h-32 w-32 overflow-hidden rounded-xl border border-[#3F3F46]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -341,153 +478,430 @@ export default function ImportarRutinaPage() {
         </div>
       )}
 
-      {/* ─── STEP: Preview ───────────────────────────────────────────── */}
-      {(step === "preview" || step === "saving") && result && (
+      {/* ─── STEP: Preview (fully editable) ──────────────────────────── */}
+      {(step === "preview" || step === "saving") && data && (
         <div className="space-y-4">
-          {/* Routine header card */}
+          {/* ── Routine header card (editable) ────────────────────────── */}
           <div className="rounded-2xl border border-[#3F3F46] bg-[#18181B]/80 backdrop-blur-sm p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-start gap-3 min-w-0 flex-1">
-                {/* Thumbnail */}
-                {preview && (
-                  <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-[#3F3F46]">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={preview}
-                      alt="Imagen original"
-                      className="h-full w-full object-cover"
+            <div className="flex items-start gap-3">
+              {/* Thumbnail */}
+              {preview && (
+                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-[#3F3F46]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={preview}
+                    alt="Imagen original"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              )}
+
+              <div className="min-w-0 flex-1 space-y-3">
+                {/* Routine name */}
+                <div>
+                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-[#52525B]">
+                    Nombre
+                  </label>
+                  <input
+                    type="text"
+                    value={data.name}
+                    onChange={(e) => updateRoutineField("name", e.target.value)}
+                    maxLength={100}
+                    className={textInputCls}
+                    placeholder="Nombre de la rutina"
+                  />
+                </div>
+
+                {/* Goal + Duration row */}
+                <div className="flex flex-wrap gap-3">
+                  {/* Goal selector */}
+                  <div className="flex-1 min-w-[140px]">
+                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-[#52525B]">
+                      Objetivo
+                    </label>
+                    <select
+                      value={data.goal}
+                      onChange={(e) =>
+                        updateRoutineField(
+                          "goal",
+                          e.target.value as OcrRoutineResult["goal"],
+                        )
+                      }
+                      className={`${textInputCls} cursor-pointer`}
+                    >
+                      {GOAL_OPTIONS.map((g) => (
+                        <option key={g.value} value={g.value}>
+                          {g.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Duration */}
+                  <div className="w-24">
+                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-[#52525B]">
+                      Semanas
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={52}
+                      value={data.durationWeeks}
+                      onChange={(e) =>
+                        updateRoutineField(
+                          "durationWeeks",
+                          Math.max(1, Math.min(52, Number(e.target.value) || 1)),
+                        )
+                      }
+                      className={textInputCls}
                     />
                   </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  {/* Editable name */}
-                  {editingName ? (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={editedName}
-                        onChange={(e) => setEditedName(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") setEditingName(false);
-                          if (e.key === "Escape") {
-                            setEditedName(result.name);
-                            setEditingName(false);
-                          }
-                        }}
-                        autoFocus
-                        maxLength={100}
-                        className="w-full rounded-md border border-brand-primary/50 bg-[#27272A] px-2 py-1 text-sm font-semibold text-[#FAFAFA] focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setEditingName(false)}
-                        className="rounded-md p-1 text-[#22C55E] hover:bg-[#22C55E]/10"
-                      >
-                        <Check className="h-4 w-4" />
-                      </button>
+                </div>
+
+                {/* Stats summary */}
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <span className={GOAL_COLORS[data.goal] ?? "text-[#A1A1AA]"}>
+                    {GOAL_LABELS[data.goal] ?? data.goal}
+                  </span>
+                  <span className="text-[#3F3F46]">|</span>
+                  <span className="text-[#71717A]">
+                    {data.days.length} dias/sem
+                  </span>
+                  <span className="text-[#3F3F46]">|</span>
+                  <span className="text-[#71717A]">
+                    {totalExercises} ejercicios
+                  </span>
+                  <div className="ml-auto">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-primary/10">
+                      <Sparkles className="h-3.5 w-3.5 text-brand-primary" />
                     </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setEditingName(true)}
-                      className="group flex items-center gap-1.5 text-left"
-                    >
-                      <h3 className="truncate text-base font-semibold text-[#FAFAFA] group-hover:text-brand-primary transition-colors">
-                        {editedName || result.name}
-                      </h3>
-                      <Pencil className="h-3 w-3 shrink-0 text-[#52525B] group-hover:text-brand-primary transition-colors" />
-                    </button>
-                  )}
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
-                    <span className={GOAL_COLORS[result.goal] ?? "text-[#A1A1AA]"}>
-                      {GOAL_LABELS[result.goal] ?? result.goal}
-                    </span>
-                    <span className="text-[#3F3F46]">|</span>
-                    <span className="text-[#71717A]">{result.splitDays} dias/sem</span>
-                    <span className="text-[#3F3F46]">|</span>
-                    <span className="text-[#71717A]">{result.durationWeeks} semanas</span>
-                    <span className="text-[#3F3F46]">|</span>
-                    <span className="text-[#71717A]">
-                      {result.days.reduce((acc, d) => acc + d.exercises.length, 0)} ejercicios
-                    </span>
                   </div>
                 </div>
-              </div>
-
-              {/* Sparkle badge */}
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-primary/10">
-                <Sparkles className="h-4 w-4 text-brand-primary" />
               </div>
             </div>
           </div>
 
-          {/* Days accordion */}
+          {/* ── Days accordion (fully editable) ───────────────────────── */}
           <div className="space-y-2">
-            {result.days.map((day, dayIndex) => {
-              const isExpanded = expandedDays.has(dayIndex);
+            {data.days.map((day, dayIdx) => {
+              const isExpanded = expandedDays.has(dayIdx);
+              const isEditingDay = editingDayIdx === dayIdx;
+
               return (
                 <div
-                  key={dayIndex}
+                  key={dayIdx}
                   className="rounded-xl border border-[#3F3F46] bg-[#18181B]/80 overflow-hidden"
                 >
-                  {/* Day header — clickable */}
-                  <button
-                    type="button"
-                    onClick={() => toggleDay(dayIndex)}
-                    className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-[#27272A]/60 transition-colors"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-primary/10 text-xs font-bold text-brand-primary">
-                        {dayIndex + 1}
+                  {/* Day header */}
+                  <div className="flex items-center gap-2 px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => toggleDay(dayIdx)}
+                      className="flex flex-1 items-center gap-2.5 text-left hover:opacity-80 transition-opacity"
+                    >
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-brand-primary/10 text-xs font-bold text-brand-primary">
+                        {dayIdx + 1}
                       </span>
-                      <span className="text-sm font-medium text-[#FAFAFA]">
-                        {day.name}
+
+                      {isEditingDay ? (
+                        <input
+                          type="text"
+                          value={day.name}
+                          onChange={(e) =>
+                            updateDayName(dayIdx, e.target.value)
+                          }
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === "Escape")
+                              setEditingDayIdx(null);
+                          }}
+                          onBlur={() => setEditingDayIdx(null)}
+                          onClick={(e) => e.stopPropagation()}
+                          autoFocus
+                          maxLength={80}
+                          className={`${textInputCls} max-w-[300px]`}
+                        />
+                      ) : (
+                        <span className="text-sm font-medium text-[#FAFAFA] truncate">
+                          {day.name}
+                        </span>
+                      )}
+
+                      <span className="text-xs text-[#52525B] shrink-0">
+                        {day.exercises.length} ej.
                       </span>
-                      <span className="text-xs text-[#52525B]">
-                        {day.exercises.length} ejercicio{day.exercises.length !== 1 ? "s" : ""}
-                      </span>
+                    </button>
+
+                    {/* Day actions */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingDayIdx(
+                            isEditingDay ? null : dayIdx,
+                          );
+                        }}
+                        className="rounded-md p-1.5 text-[#52525B] hover:text-brand-primary hover:bg-brand-primary/10 transition-colors"
+                        title="Editar nombre del dia"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      {data.days.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteDay(dayIdx);
+                          }}
+                          className="rounded-md p-1.5 text-[#52525B] hover:text-[#EF4444] hover:bg-[#EF4444]/10 transition-colors"
+                          title="Eliminar dia"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => toggleDay(dayIdx)}
+                        className="rounded-md p-1.5 text-[#52525B] hover:text-[#FAFAFA] transition-colors"
+                      >
+                        {isExpanded ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
-                    {isExpanded ? (
-                      <ChevronUp className="h-4 w-4 text-[#52525B]" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-[#52525B]" />
-                    )}
-                  </button>
+                  </div>
 
                   {/* Exercises list */}
                   {isExpanded && (
                     <div className="border-t border-[#27272A] divide-y divide-[#27272A]">
-                      {day.exercises.map((ex, exIndex) => (
-                        <div
-                          key={exIndex}
-                          className="flex items-center gap-3 px-4 py-2.5"
-                        >
-                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#27272A] text-xs font-medium text-[#71717A]">
-                            {exIndex + 1}
+                      {day.exercises.map((ex, exIdx) => {
+                        const exKey = `${dayIdx}-${exIdx}`;
+                        const isEditing = editingExKey === exKey;
+
+                        return (
+                          <div key={exIdx} className="group">
+                            {/* ── Compact row (read mode) ─────────── */}
+                            {!isEditing && (
+                              <div className="flex items-center gap-3 px-4 py-2.5">
+                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#27272A] text-xs font-medium text-[#71717A]">
+                                  {exIdx + 1}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-sm text-[#FAFAFA]">
+                                    {ex.nameEs}
+                                  </p>
+                                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                                    <span className="text-xs text-[#22C55E] font-medium">
+                                      {ex.targetSets}x
+                                      {ex.targetRepsMin === ex.targetRepsMax
+                                        ? ex.targetRepsMin
+                                        : `${ex.targetRepsMin}-${ex.targetRepsMax}`}
+                                    </span>
+                                    <span className="text-xs text-[#52525B]">
+                                      {ex.restSeconds}s desc
+                                    </span>
+                                    {ex.notes && (
+                                      <span className="text-xs text-brand-primary/70 italic truncate max-w-[200px]">
+                                        {ex.notes}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Edit / Delete buttons */}
+                                <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingExKey(exKey)}
+                                    className="rounded-md p-1.5 text-[#52525B] hover:text-brand-primary hover:bg-brand-primary/10 transition-colors"
+                                    title="Editar ejercicio"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      deleteExercise(dayIdx, exIdx)
+                                    }
+                                    className="rounded-md p-1.5 text-[#52525B] hover:text-[#EF4444] hover:bg-[#EF4444]/10 transition-colors"
+                                    title="Eliminar ejercicio"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* ── Expanded edit form ──────────────── */}
+                            {isEditing && (
+                              <div className="bg-[#1E1E22] px-4 py-3 space-y-2.5">
+                                {/* Exercise name */}
+                                <div>
+                                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-[#52525B]">
+                                    Ejercicio
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={ex.nameEs}
+                                    onChange={(e) =>
+                                      updateExercise(dayIdx, exIdx, {
+                                        nameEs: e.target.value,
+                                      })
+                                    }
+                                    className={textInputCls}
+                                    placeholder="Nombre del ejercicio"
+                                    autoFocus
+                                  />
+                                </div>
+
+                                {/* Sets / Reps / Rest row */}
+                                <div className="flex flex-wrap gap-3">
+                                  <div className="w-16">
+                                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-[#52525B]">
+                                      Series
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min={1}
+                                      max={20}
+                                      value={ex.targetSets}
+                                      onChange={(e) =>
+                                        updateExercise(dayIdx, exIdx, {
+                                          targetSets: Math.max(
+                                            1,
+                                            Math.min(
+                                              20,
+                                              Number(e.target.value) || 1,
+                                            ),
+                                          ),
+                                        })
+                                      }
+                                      className={miniInputCls + " w-full text-center"}
+                                    />
+                                  </div>
+                                  <div className="w-16">
+                                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-[#52525B]">
+                                      Reps min
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min={1}
+                                      max={100}
+                                      value={ex.targetRepsMin}
+                                      onChange={(e) =>
+                                        updateExercise(dayIdx, exIdx, {
+                                          targetRepsMin: Math.max(
+                                            1,
+                                            Math.min(
+                                              100,
+                                              Number(e.target.value) || 1,
+                                            ),
+                                          ),
+                                        })
+                                      }
+                                      className={miniInputCls + " w-full text-center"}
+                                    />
+                                  </div>
+                                  <div className="w-16">
+                                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-[#52525B]">
+                                      Reps max
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min={1}
+                                      max={100}
+                                      value={ex.targetRepsMax}
+                                      onChange={(e) =>
+                                        updateExercise(dayIdx, exIdx, {
+                                          targetRepsMax: Math.max(
+                                            1,
+                                            Math.min(
+                                              100,
+                                              Number(e.target.value) || 1,
+                                            ),
+                                          ),
+                                        })
+                                      }
+                                      className={miniInputCls + " w-full text-center"}
+                                    />
+                                  </div>
+                                  <div className="w-20">
+                                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-[#52525B]">
+                                      Descanso
+                                    </label>
+                                    <div className="relative">
+                                      <input
+                                        type="number"
+                                        min={0}
+                                        max={600}
+                                        value={ex.restSeconds}
+                                        onChange={(e) =>
+                                          updateExercise(dayIdx, exIdx, {
+                                            restSeconds: Math.max(
+                                              0,
+                                              Math.min(
+                                                600,
+                                                Number(e.target.value) || 0,
+                                              ),
+                                            ),
+                                          })
+                                        }
+                                        className={miniInputCls + " w-full text-center pr-5"}
+                                      />
+                                      <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-[#52525B]">
+                                        s
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Notes */}
+                                <div>
+                                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-[#52525B]">
+                                    Notas
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={ex.notes ?? ""}
+                                    onChange={(e) =>
+                                      updateExercise(dayIdx, exIdx, {
+                                        notes: e.target.value || null,
+                                      })
+                                    }
+                                    placeholder="Ej: Drop set, tempo 3-1-1, RPE 8..."
+                                    maxLength={200}
+                                    className={textInputCls}
+                                  />
+                                </div>
+
+                                {/* Close + Delete row */}
+                                <div className="flex items-center justify-between pt-1">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      deleteExercise(dayIdx, exIdx)
+                                    }
+                                    className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs text-[#EF4444] hover:bg-[#EF4444]/10 transition-colors"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                    Eliminar
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingExKey(null)}
+                                    className="flex items-center gap-1.5 rounded-md bg-brand-primary/10 px-3 py-1.5 text-xs font-medium text-brand-primary hover:bg-brand-primary/20 transition-colors"
+                                  >
+                                    <Check className="h-3 w-3" />
+                                    Listo
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm text-[#FAFAFA]">
-                              {ex.nameEs}
-                            </p>
-                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
-                              <span className="text-xs text-[#71717A]">
-                                {ex.targetSets}x{ex.targetRepsMin === ex.targetRepsMax
-                                  ? ex.targetRepsMin
-                                  : `${ex.targetRepsMin}-${ex.targetRepsMax}`}
-                              </span>
-                              <span className="text-xs text-[#52525B]">
-                                {ex.restSeconds}s desc
-                              </span>
-                              {ex.notes && (
-                                <span className="text-xs text-brand-primary/70 italic truncate max-w-[180px]">
-                                  {ex.notes}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <Dumbbell className="h-3.5 w-3.5 shrink-0 text-[#3F3F46]" />
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -495,7 +909,7 @@ export default function ImportarRutinaPage() {
             })}
           </div>
 
-          {/* Action buttons */}
+          {/* ── Action buttons ─────────────────────────────────────────── */}
           <div className="flex gap-3">
             <button
               type="button"
@@ -534,9 +948,9 @@ export default function ImportarRutinaPage() {
             </button>
           </div>
 
-          {/* Disclaimer */}
+          {/* Hint */}
           <p className="text-center text-xs text-[#52525B]">
-            Despues de crear, podras ajustar los ejercicios, series y repeticiones desde el editor.
+            Toca el lapiz en cualquier ejercicio para editarlo antes de crear.
           </p>
         </div>
       )}
