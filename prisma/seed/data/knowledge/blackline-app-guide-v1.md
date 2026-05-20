@@ -769,7 +769,35 @@ NOT_COMPLETED → GREEN → REVIEW → RED, donde el orden indica creciente ries
 | "Tengo que registrar 19 circunferencias con foto" | `MeasurementSheet` en `/client/mediciones` o perfil del cliente |
 | "Mostrame mi flujo de caja del mes" | `/trainer/finanzas` |
 | "Quiero cambiar mi precio mensual default" | `/trainer/ajustes` |
-| "Edit ar ejercicio X del día Y de la rutina Z" | El editor visual en `/trainer/rutinas/[routineId]` |
+| "Editar ejercicio X del día Y de la rutina Z" | El editor visual en `/trainer/rutinas/[routineId]` |
+
+#### 16.4 Modo agéntico — cómo iterás en un mismo turno
+
+El asistente NO está limitado a 1 tool call por turno del coach. Para tareas multi-step (ej: "asignale esta rutina a todos mis clientes activos") el runtime te deja encadenar hasta **15 vueltas tool→respuesta→tool** en un solo turno del coach.
+
+Reglas del modo agéntico (definidas en el system prompt):
+- **Planificá la secuencia entera antes de emitir el primer call** — no la publiques al coach, ejecutala.
+- **Ejecutá hasta terminar antes de responder texto** — el coach ve cada tool card en vivo en pantalla mientras corrés; no necesita un "voy a hacer X" intermedio.
+- **Nunca narrés intención sin acción**. Si decís "ahora voy a buscar tus clientes", el call a `list_my_clients` tiene que salir en el mismo turno. Sin excepciones.
+- **Auto-recuperación en errores de validación**: si una tool falla con enum inválido, faltante o rango fuera de bounds, reintentá la MISMA tool con params corregidos. No molestés al coach con cosas que podés deducir.
+- **Batch sequential**: para N items, llamá la misma tool N veces seguidas. El runtime es secuencial; el coach ve aparecer cada tool card una por una.
+- **Cap duro de 15 calls por turno** — si vas a >10 sin estar cerca de terminar, pausá y pedile al coach que acote el alcance.
+
+#### 16.5 Casos típicos de modo agéntico
+
+| Pedido del coach | Secuencia esperada |
+|---|---|
+| "Asignale la rutina X a Pedro, María y Luis con fecha 2026-06-01" | `assign_routine_to_client` × 3 (sequential, una card por cliente) → texto final con resumen |
+| "Creá una rutina PPL hipertrofia 6 días y asignásela a mi último cliente" | `create_routine` → `list_my_clients` → `assign_routine_to_client` → texto |
+| "Listame mis clientes con peso registrado en el último mes" | `list_my_clients` → loop interno: `get_client_profile` para cada uno → filtro mental → texto con tabla |
+| "Importé esta rutina por foto, ahora asignala a todos mis clientes activos" | `create_routine_from_ocr` (1) → `list_my_clients` (2) → `assign_routine_to_client` × N (3..N+2) → texto |
+
+#### 16.6 Lo que NO debe hacer el modo agéntico
+
+- Pedir confirmación al coach EN TEXTO antes de un write — la confirmation card del runtime ya lo hace.
+- Pausar para "confirmarte que voy bien" cuando todavía hay pasos pendientes — solo se pausa por (a) flujo completo, (b) dato faltante real, (c) decisión sensible.
+- Encadenar más de 3 writes destructivos consecutivos (delete, end_relationship) sin chequear con el coach — esos sí requieren confirmación de bloque.
+- Inventar resultados de pasos que NO ejecutaste. Si pensaste hacer X pero no lo hiciste, no le digas al coach que lo hiciste.
 
 ---
 

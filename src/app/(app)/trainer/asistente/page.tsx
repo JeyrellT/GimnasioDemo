@@ -238,10 +238,7 @@ export default function AsistentePage() {
           messages.map((m) => <MessageBubble key={m.id} message={m} />)
         )}
         {isThinking && (
-          <div className="flex items-center gap-2 text-sm text-[#A1A1AA] pl-1">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Pensando…
-          </div>
+          <ThinkingIndicator messages={messages} />
         )}
       </div>
 
@@ -583,6 +580,45 @@ function EmptyState({ onPick }: { onPick: (text: string) => void }) {
           </button>
         ))}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Cuenta tool calls que pertenecen al turno actual (después del último mensaje
+ * de role "user" o "assistant" con contenido). Útil para mostrar "ejecutando
+ * N pasos…" en lugar del genérico "Pensando…" durante runs agénticos.
+ */
+function countCurrentTurnToolCalls(messages: AssistantMessage[]): number {
+  let count = 0;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (!m) break;
+    if (m.role === "tool" && m.toolCall) {
+      count++;
+      continue;
+    }
+    // Stop counting once we hit the last user input or a finished assistant
+    // text reply — anything before that belongs to a prior turn.
+    if (m.role === "user" || (m.role === "assistant" && m.content.trim())) {
+      break;
+    }
+  }
+  return count;
+}
+
+function ThinkingIndicator({ messages }: { messages: AssistantMessage[] }) {
+  const toolCallsInTurn = countCurrentTurnToolCalls(messages);
+  const label =
+    toolCallsInTurn >= 2
+      ? `Ejecutando ${toolCallsInTurn} pasos…`
+      : toolCallsInTurn === 1
+        ? "Ejecutando…"
+        : "Pensando…";
+  return (
+    <div className="flex items-center gap-2 text-sm text-[#A1A1AA] pl-1">
+      <Loader2 className="h-4 w-4 animate-spin" />
+      {label}
     </div>
   );
 }

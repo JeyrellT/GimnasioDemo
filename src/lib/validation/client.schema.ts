@@ -110,8 +110,14 @@ export type UpdateClientProfileInput = z.infer<typeof updateClientProfileSchema>
 
 // ── Client list + filter ──────────────────────────────────────────────────────
 
+// `status: "ALL"` se acepta como alias de no-filter (lo emite naturalmente el
+// asistente IA cuando el coach pide "todos mis clientes"). Lo normalizamos a
+// undefined en transform — el handler termina ignorando el filtro.
 export const listClientsSchema = z.object({
-  status: z.enum(["ACTIVE", "PAUSED", "ENDED", "PENDING"]).optional(),
+  status: z
+    .enum(["ACTIVE", "PAUSED", "ENDED", "PENDING", "ALL"])
+    .optional()
+    .transform((v) => (v === "ALL" ? undefined : v)),
   search: z.string().trim().max(100).optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
   offset: z.coerce.number().int().min(0).default(0),
