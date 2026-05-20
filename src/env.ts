@@ -24,8 +24,8 @@ export const env = {
 
   // AI — placeholder; real key comes from localStorage in browser
   GEMINI_API_KEY: "",
-  GEMINI_MODEL_OCR: "gemini-2.0-flash-lite",
-  GEMINI_MODEL_REASONING: "gemini-2.0-flash",
+  GEMINI_MODEL_OCR: "gemini-2.5-flash",
+  GEMINI_MODEL_REASONING: "gemini-2.5-flash",
 
   // R2/MinIO (unused)
   R2_ACCOUNT_ID: "demo",

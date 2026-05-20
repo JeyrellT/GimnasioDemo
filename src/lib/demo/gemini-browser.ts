@@ -98,8 +98,8 @@ export class GeminiKeyMissingError extends ValidationError {
 // -----------------------------------------------------------------------------
 
 const MODEL_NAMES: Record<ModelKind, string> = {
-  ocr: "gemini-2.0-flash-lite",
-  reasoning: "gemini-2.0-flash",
+  ocr: "gemini-2.5-flash",
+  reasoning: "gemini-2.5-flash",
 };
 
 function resolveModelId(kind: ModelKind): string {

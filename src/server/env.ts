@@ -67,8 +67,8 @@ const envSchema = z.object({
 
   // ── AI — Gemini (optional until AI features are activated) ─────────────────
   GEMINI_API_KEY: z.string().optional(),
-  GEMINI_MODEL_OCR: z.string().default("gemini-2.0-flash-lite"),
-  GEMINI_MODEL_REASONING: z.string().default("gemini-2.0-flash"),
+  GEMINI_MODEL_OCR: z.string().default("gemini-2.5-flash"),
+  GEMINI_MODEL_REASONING: z.string().default("gemini-2.5-flash"),
 
   // ── Storage — Cloudflare R2 (optional until photo uploads are activated) ───
   R2_ACCOUNT_ID: z.string().optional(),
