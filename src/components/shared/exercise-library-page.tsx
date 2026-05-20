@@ -9,11 +9,9 @@
 import { useEffect, useState, useCallback, type ReactNode } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, Plus, Loader2 } from "lucide-react";
-import { ExerciseThumbnail } from "@/components/shared/exercise-thumbnail";
+import { Search, Plus, Loader2, Dumbbell } from "lucide-react";
 import { searchExercises } from "@/app/actions/exercises";
 import { PageHeader } from "@/components/shared/page-header";
-import { useAuth } from "@/components/providers/auth-provider";
 import {
   MUSCLE_COLORS,
   MUSCLE_LABELS,
@@ -134,7 +132,6 @@ export function ExerciseLibraryPage({
   loadingLabel,
   emptyIcon,
 }: ExerciseLibraryPageProps) {
-  const { user: _user } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -317,14 +314,18 @@ export function ExerciseLibraryPage({
                     href={`${basePath}/${ex.id}`}
                     className="group relative flex flex-col overflow-hidden rounded-xl border border-[#3F3F46] bg-[#18181B]/80 backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:scale-[1.02] hover:border-brand-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/60 cursor-pointer"
                   >
-                    <div className="relative aspect-video w-full overflow-hidden bg-[#27272A]">
-                      <ExerciseThumbnail
-                        thumbnailUrl={ex.thumbnailUrl}
-                        gifUrl={ex.gifUrl}
-                        slug={ex.slug}
-                        nameEn={ex.nameEn}
-                        alt={ex.nameEs}
-                      />
+                    <div className="relative aspect-video w-full overflow-hidden bg-[#27272A] flex items-center justify-center">
+                      {(ex.thumbnailUrl || ex.gifUrl) ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={ex.thumbnailUrl ?? ex.gifUrl ?? ""}
+                          alt={ex.nameEs}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <Dumbbell className="h-10 w-10 text-[#3F3F46]" strokeWidth={1.5} />
+                      )}
                     </div>
 
                     <div className="flex flex-col gap-3 p-4">
