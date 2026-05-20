@@ -259,8 +259,8 @@ export default function AjustesPage() {
         description="Personalizá tu marca y configurá tu cuenta."
       />
 
-      {/* ── Branding ────────────────────────────────────────────────────────── */}
-      <BrandingSection />
+      {/* ── Branding — solo coaches ──────────────────────────────────────── */}
+      {isTrainer && <BrandingSection />}
 
       {/* ── AI Integration — solo coaches ──────────────────────────────────── */}
       {isTrainer && (
