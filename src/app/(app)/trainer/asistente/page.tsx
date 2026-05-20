@@ -631,6 +631,12 @@ function MessageBubble({ message }: { message: AssistantMessage }) {
   const isUser = message.role === "user";
   const hasAttachments = !!message.attachments?.length;
   const hasText = message.content.trim().length > 0;
+  // Caso defensivo: Gemini ocasionalmente devuelve texto vacío para un turno
+  // de assistant (típicamente cuando solo emitió tool calls que ya rendereamos
+  // por separado y luego no agregó texto de cierre). Sin placeholder, el
+  // bubble queda invisible y el coach piensa que el chat dejó de funcionar.
+  const isEmptyAssistant =
+    message.role === "assistant" && !hasText && !hasAttachments;
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
@@ -646,6 +652,11 @@ function MessageBubble({ message }: { message: AssistantMessage }) {
                 className="max-w-[200px] max-h-[200px] rounded-xl object-cover border border-[#27272A]"
               />
             ))}
+          </div>
+        )}
+        {isEmptyAssistant && (
+          <div className="rounded-2xl px-4 py-3 text-sm italic text-[#A1A1AA] bg-[#18181B] border border-[#27272A]">
+            El asistente terminó el turno sin texto. Si quedó algo pendiente, pedile que continúe.
           </div>
         )}
         {hasText && (

@@ -271,6 +271,21 @@ async function drive(args: DriveArgs): Promise<void> {
     const result: ChatWithToolsResult = callResult.value;
 
     if (result.kind === "text") {
+      // Empty text from the model = UX dead-end. Lo logueamos para detectarlo
+      // en telemetría y la UI tiene un placeholder visual (page.tsx). El system
+      // prompt regla #8 instruye al modelo a NUNCA cerrar con texto vacío,
+      // pero si pasa, igual lo capturamos.
+      if (!result.text || result.text.trim().length === 0) {
+        logger.warn(
+          {
+            requestId,
+            iteration,
+            modelId: result.modelId,
+            latencyMs: result.latencyMs,
+          },
+          "agent.empty_assistant_text",
+        );
+      }
       callbacks.onAssistantText(result.text);
       logger.info(
         { requestId, iteration, latencyMs: result.latencyMs, finishKind: "text" },
