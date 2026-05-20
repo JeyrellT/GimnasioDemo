@@ -10,6 +10,7 @@ import { ClientBottomNav, ClientSidebar } from "@/components/layout/client-nav";
 import { AdminSuperNav } from "@/app/(app)/admin/_components/admin-super-nav";
 import { AdminBottomNav } from "@/components/layout/admin-bottom-nav";
 import { OfflineBanner } from "@/components/shared/offline-banner";
+import { CoachAssistant } from "@/components/chat/coach-assistant";
 
 function AppShell({ children }: { children: ReactNode }) {
   const { user, avatarUrl, isLoading, isAuthenticated } = useAuth();
@@ -53,6 +54,9 @@ function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       <BottomNav />
+
+      {/* Coach AI assistant — only for trainers */}
+      {isTrainer && <CoachAssistant />}
     </div>
   );
 }
