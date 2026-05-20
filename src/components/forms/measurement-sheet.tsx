@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import type { ScaleData } from "@/types/profile";
 import { hasGeminiKey } from "@/lib/demo/settings-store";
 import type { MeasurementsExtraction } from "@/lib/ai/ocr-measurements";
+import { useMeasurementSheetStore } from "@/stores/measurement-sheet-store";
 
 // Lazy-loaded heavy modules — fetched only when the sheet mounts (i.e. when the
 // user actually opens it). Each dynamic import creates a separate chunk so
@@ -149,6 +150,36 @@ function MeasurementContent({
   const [saveState, setSaveState] = React.useState<SaveState>("idle");
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
   const [ocrUsed, setOcrUsed] = React.useState(false);
+
+  const focus = useMeasurementSheetStore((s) => s.focus);
+  const clearFocus = useMeasurementSheetStore((s) => s.clearFocus);
+
+  // Apply store focus: switch tabs, scroll to field, then clear so re-opens
+  // manuales no reaplican el viejo foco.
+  React.useEffect(() => {
+    if (!focus) return;
+
+    setActiveTab(focus.tab ?? "antropometria");
+    if (focus.anthroTab) {
+      setAnthroTab(focus.anthroTab);
+    }
+
+    // Wait one tick for the tab panel to become visible before focusing.
+    const raf = requestAnimationFrame(() => {
+      if (focus.field) {
+        const el = document.getElementById(`anthro-${focus.field}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.focus();
+        }
+      }
+      clearFocus();
+    });
+
+    return () => cancelAnimationFrame(raf);
+    // clearFocus es estable (Zustand store getter), agregarlo a deps es
+    // cero-coste y satisface biome lint/correctness/useExhaustiveDependencies.
+  }, [focus, clearFocus]);
 
   function setField(key: keyof MeasurementFormData, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
