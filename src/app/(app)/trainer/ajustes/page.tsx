@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Eye,
-  EyeOff,
   Sparkles,
   Database,
   User,
@@ -100,8 +99,9 @@ export default function AjustesPage() {
   const router = useRouter();
 
   // --- Gemini key state ---
-  const [apiKey, setApiKeyState] = useState("");
-  const [showKey, setShowKey] = useState(false);
+  const [keySaved, setKeySaved] = useState(false);
+  const [editingKey, setEditingKey] = useState(false);
+  const [newKey, setNewKey] = useState("");
   const [testing, setTesting] = useState(false);
 
   // --- Demo data state ---
@@ -125,44 +125,63 @@ export default function AjustesPage() {
     };
   }, [imgPreview]);
 
-  // Load persisted key on mount
+  // Check if key exists on mount (never read the actual value into state)
   useEffect(() => {
     const stored = getGeminiKey();
-    if (stored) setApiKeyState(stored);
+    setKeySaved(!!stored);
+    if (!stored) setEditingKey(true); // auto-show input if no key
   }, []);
-
-  // Auto-save with 500 ms debounce
-  useEffect(() => {
-    if (!apiKey) {
-      clearGeminiKey();
-      return;
-    }
-    const timer = setTimeout(() => {
-      setGeminiKey(apiKey);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [apiKey]);
 
   // -------------------------------------------------------------------------
   // Gemini handlers
   // -------------------------------------------------------------------------
 
-  const handleTestKey = async () => {
-    const trimmed = apiKey.trim();
+  const handleSaveKey = () => {
+    const trimmed = newKey.trim();
     if (!trimmed) {
       toast.error("Ingresá una API key primero.");
       return;
     }
-
     setGeminiKey(trimmed);
-    setTesting(true);
+    setKeySaved(true);
+    setEditingKey(false);
+    setNewKey("");
+    toast.success("API key guardada.");
+  };
 
+  const handleDeleteKey = () => {
+    if (!confirm("¿Eliminar tu API key de Gemini? Las funciones de IA dejarán de funcionar.")) return;
+    clearGeminiKey();
+    setKeySaved(false);
+    setEditingKey(true);
+    setNewKey("");
+    setImgFile(null);
+    setImgPreview(null);
+    setImgResult(null);
+    toast.success("API key eliminada.");
+  };
+
+  const handleStartEditing = () => {
+    setEditingKey(true);
+    setNewKey("");
+  };
+
+  const handleCancelEditing = () => {
+    setEditingKey(false);
+    setNewKey("");
+  };
+
+  const handleTestKey = async () => {
+    if (!keySaved) {
+      toast.error("Guardá una API key primero.");
+      return;
+    }
+    setTesting(true);
     try {
       const { pingGeminiKey } = await import("@/lib/demo/gemini-browser");
       const result = await pingGeminiKey();
-
       if (result.ok) {
-        toast.success("API key valida. La IA esta lista para usar.");
+        toast.success("API key válida. La IA está lista para usar.");
       } else {
         const msg =
           result.error instanceof Error
@@ -172,18 +191,11 @@ export default function AjustesPage() {
       }
     } catch (err) {
       const msg =
-        err instanceof Error ? err.message : "modulo de IA no disponible aun.";
+        err instanceof Error ? err.message : "Módulo de IA no disponible aún.";
       toast.error("Error al probar la clave: " + msg);
     } finally {
       setTesting(false);
     }
-  };
-
-  const handleClearKey = () => {
-    if (!confirm("Estas seguro de eliminar tu API key?")) return;
-    clearGeminiKey();
-    setApiKeyState("");
-    toast.success("API key eliminada.");
   };
 
   // -------------------------------------------------------------------------
@@ -226,12 +238,7 @@ export default function AjustesPage() {
   };
 
   const handleImageTest = async () => {
-    if (!imgFile) return;
-    const trimmed = apiKey.trim();
-    if (!trimmed) {
-      toast.error("Ingresá una API key primero.");
-      return;
-    }
+    if (!imgFile || !keySaved) return;
     setImgTesting(true);
     setImgResult(null);
     try {
@@ -442,161 +449,206 @@ export default function AjustesPage() {
       {/* ── AI Integration ─────────────────────────────────────────────────── */}
       <Section icon={Sparkles} label="Integracion con IA">
         <p className="text-xs text-[#71717A]">
-          Las extracciones de cedula y analisis de fotos de entrenamientos usan
-          tu clave de Gemini directamente desde el navegador. La clave nunca
-          sale de tu equipo.
+          Tu clave de Gemini permite extraer datos de fotos (báscula, medidas,
+          cédula). Se guarda localmente en tu navegador y nunca sale de tu equipo.
         </p>
 
-        <div className="space-y-2">
-          <Label htmlFor="api-key" className="text-xs text-[#A1A1AA]">
-            API Key de Gemini
-          </Label>
-          <div className="relative">
-            <Input
-              id="api-key"
-              type={showKey ? "text" : "password"}
-              value={apiKey}
-              onChange={(e) => setApiKeyState(e.target.value)}
-              placeholder="AIzaSy..."
-              className="pr-10 bg-[#09090B] border-[#3F3F46] focus:border-brand-primary font-mono text-sm"
+        {/* ── Key saved state: badge + actions ──────────────────────────── */}
+        {keySaved && !editingKey && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 rounded-lg border border-[#22C55E]/30 bg-[#22C55E]/5 px-4 py-3">
+              <CheckCircle2 className="h-5 w-5 text-[#22C55E] shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-[#FAFAFA]">
+                  API key configurada
+                </p>
+                <p className="text-xs text-[#71717A]">
+                  La clave está guardada de forma segura en este navegador.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={handleTestKey}
+                disabled={testing}
+                size="sm"
+                className="bg-brand-primary hover:bg-brand-primary-hover text-white disabled:opacity-50"
+              >
+                {testing ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                ) : (
+                  <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+                )}
+                Probar conexión
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleStartEditing}
+                className="border-[#3F3F46] text-[#A1A1AA] hover:text-[#FAFAFA]"
+              >
+                <Eye className="h-3.5 w-3.5 mr-1.5" />
+                Cambiar clave
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDeleteKey}
+                className="border-[#EF4444]/30 text-[#EF4444] hover:bg-[#EF4444]/10"
+              >
+                Eliminar
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Editing / first-time state: input to enter key ────────────── */}
+        {editingKey && (
+          <div className="space-y-3">
+            {keySaved && (
+              <div className="flex items-start gap-2 rounded-lg border border-[#F59E0B]/30 bg-[#F59E0B]/5 px-3 py-2">
+                <AlertTriangle className="h-4 w-4 text-[#F59E0B] shrink-0 mt-0.5" />
+                <p className="text-xs text-[#F59E0B]">
+                  Ingresá la nueva clave. Al guardar se reemplazará la anterior.
+                </p>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="api-key" className="text-xs text-[#A1A1AA]">
+                {keySaved ? "Nueva API Key de Gemini" : "API Key de Gemini"}
+              </Label>
+              <Input
+                id="api-key"
+                type="password"
+                value={newKey}
+                onChange={(e) => setNewKey(e.target.value)}
+                placeholder="AIzaSy..."
+                autoComplete="off"
+                className="bg-[#09090B] border-[#3F3F46] focus:border-brand-primary font-mono text-sm"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={handleSaveKey}
+                disabled={!newKey.trim()}
+                size="sm"
+                className="bg-brand-primary hover:bg-brand-primary-hover text-white disabled:opacity-50"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+                Guardar clave
+              </Button>
+              {keySaved && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCancelEditing}
+                  className="border-[#3F3F46] text-[#A1A1AA] hover:text-[#FAFAFA]"
+                >
+                  Cancelar
+                </Button>
+              )}
+            </div>
+
+            <div className="rounded-md bg-brand-primary/5 border border-brand-primary/20 p-3 text-xs text-[#A1A1AA] space-y-1">
+              <p>
+                La clave es gratuita. Cada extracción de foto consume ~500 tokens
+                en tu cuota de Gemini.
+              </p>
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-brand-primary hover:underline"
+              >
+                Obtené tu clave en Google AI Studio
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* ── Image vision test (only when key is saved) ────────────────── */}
+        {keySaved && !editingKey && (
+          <div className="rounded-md border border-[#3F3F46] bg-[#09090B] p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <ImageIcon className="h-4 w-4 text-[#A1A1AA] shrink-0" />
+              <span className="text-xs font-semibold text-[#FAFAFA]">
+                Probar con imagen
+              </span>
+            </div>
+            <p className="text-xs text-[#71717A]">
+              Subí una foto y Gemini la analizará. Sirve para confirmar que la
+              clave funciona con visión.
+            </p>
+
+            <input
+              ref={imgInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageSelected}
+              disabled={imgTesting}
+              className="hidden"
+              aria-label="Seleccionar imagen para probar"
             />
             <button
               type="button"
-              onClick={() => setShowKey((prev) => !prev)}
-              aria-label={showKey ? "Ocultar clave" : "Mostrar clave"}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#71717A] hover:text-[#FAFAFA] transition-colors"
+              onClick={() => imgInputRef.current?.click()}
+              disabled={imgTesting}
+              className="w-full min-h-[44px] rounded-md border border-dashed border-[#3F3F46] bg-[#18181B] hover:border-brand-primary hover:bg-brand-primary/5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex flex-col items-center justify-center gap-1.5 px-4 py-3"
             >
-              {showKey ? (
-                <EyeOff className="h-4 w-4" />
+              {imgPreview ? (
+                <span className="text-xs text-[#A1A1AA]">
+                  {imgFile?.name ?? "imagen seleccionada"} — click para cambiar
+                </span>
               ) : (
-                <Eye className="h-4 w-4" />
+                <>
+                  <Upload className="h-4 w-4 text-[#52525B]" />
+                  <span className="text-xs text-[#71717A]">
+                    Seleccioná una imagen (máx. 5 MB)
+                  </span>
+                </>
               )}
             </button>
-          </div>
-        </div>
 
-        <div className="flex flex-wrap gap-2">
-          <Button
-            onClick={handleTestKey}
-            disabled={testing || !apiKey.trim()}
-            size="sm"
-            className="bg-brand-primary hover:bg-brand-primary-hover text-white disabled:opacity-50"
-          >
-            {testing ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-            ) : (
-              <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
-            )}
-            Probar clave
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleClearKey}
-            disabled={!apiKey}
-            className="border-[#3F3F46] text-[#A1A1AA] hover:text-[#FAFAFA] disabled:opacity-50"
-          >
-            Limpiar
-          </Button>
-        </div>
-
-        <div className="rounded-md bg-brand-primary/5 border border-brand-primary/20 p-3 text-xs text-[#A1A1AA] space-y-1">
-          <p>
-            Cada extraccion de cedula consume aproximadamente 500 tokens en tu
-            cuota de Gemini.
-          </p>
-          <a
-            href="https://aistudio.google.com/app/apikey"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-brand-primary hover:underline"
-          >
-            Obtene tu clave gratuita en Google AI Studio
-            <ExternalLink className="h-3 w-3" />
-          </a>
-        </div>
-
-        {/* ── Image vision test ──────────────────────────────────────────── */}
-        <div className="rounded-md border border-[#3F3F46] bg-[#09090B] p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <ImageIcon className="h-4 w-4 text-[#A1A1AA] shrink-0" />
-            <span className="text-xs font-semibold text-[#FAFAFA]">
-              Probar con imagen
-            </span>
-          </div>
-          <p className="text-xs text-[#71717A]">
-            Subí cualquier imagen y Gemini la describirá. Sirve para confirmar
-            que tu clave funciona con vision/multimodal.
-          </p>
-
-          {/* Drop zone / file picker */}
-          <input
-            ref={imgInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleImageSelected}
-            disabled={!apiKey.trim() || imgTesting}
-            className="hidden"
-            aria-label="Seleccionar imagen para probar"
-          />
-          <button
-            type="button"
-            onClick={() => imgInputRef.current?.click()}
-            disabled={!apiKey.trim() || imgTesting}
-            className="w-full min-h-[44px] rounded-md border border-dashed border-[#3F3F46] bg-[#18181B] hover:border-brand-primary hover:bg-brand-primary/5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex flex-col items-center justify-center gap-1.5 px-4 py-3"
-          >
-            {imgPreview ? (
-              <span className="text-xs text-[#A1A1AA]">
-                {imgFile?.name ?? "imagen seleccionada"} — click para cambiar
-              </span>
-            ) : (
-              <>
-                <Upload className="h-4 w-4 text-[#52525B]" />
-                <span className="text-xs text-[#71717A]">
-                  Seleccioná una imagen (máx. 5 MB)
-                </span>
-              </>
-            )}
-          </button>
-
-          {/* Preview + analyze button */}
-          {imgPreview && (
-            <div className="space-y-3">
-              <div className="rounded-md overflow-hidden border border-[#27272A] bg-[#18181B] flex items-center justify-center max-h-48">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={imgPreview}
-                  alt="Vista previa"
-                  className="max-h-48 w-auto object-contain"
-                />
+            {imgPreview && (
+              <div className="space-y-3">
+                <div className="rounded-md overflow-hidden border border-[#27272A] bg-[#18181B] flex items-center justify-center max-h-48">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={imgPreview}
+                    alt="Vista previa"
+                    className="max-h-48 w-auto object-contain"
+                  />
+                </div>
+                <Button
+                  onClick={handleImageTest}
+                  disabled={imgTesting}
+                  size="sm"
+                  className="bg-brand-primary hover:bg-brand-primary-hover text-white disabled:opacity-50 min-h-[44px]"
+                >
+                  {imgTesting ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                  )}
+                  {imgTesting ? "Analizando..." : "Analizar con Gemini"}
+                </Button>
               </div>
+            )}
 
-              <Button
-                onClick={handleImageTest}
-                disabled={imgTesting || !apiKey.trim()}
-                size="sm"
-                className="bg-brand-primary hover:bg-brand-primary-hover text-white disabled:opacity-50 min-h-[44px]"
-              >
-                {imgTesting ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                ) : (
-                  <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-                )}
-                {imgTesting ? "Analizando..." : "Analizar con Gemini"}
-              </Button>
-            </div>
-          )}
-
-          {/* AI response */}
-          {imgResult && (
-            <div className="rounded-md border border-[#3F3F46] bg-[#18181B] p-3 space-y-1">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#52525B]">
-                Respuesta de Gemini
-              </p>
-              <p className="text-sm text-[#FAFAFA] leading-relaxed">{imgResult}</p>
-            </div>
-          )}
-        </div>
+            {imgResult && (
+              <div className="rounded-md border border-[#3F3F46] bg-[#18181B] p-3 space-y-1">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#52525B]">
+                  Respuesta de Gemini
+                </p>
+                <p className="text-sm text-[#FAFAFA] leading-relaxed">{imgResult}</p>
+              </div>
+            )}
+          </div>
+        )}
       </Section>
 
       {/* ── Demo Data ──────────────────────────────────────────────────────── */}
