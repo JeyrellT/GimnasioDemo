@@ -41,7 +41,12 @@ import type {
   ToolCallRecord,
 } from "./types";
 
-const MAX_TOOL_ITERATIONS = 5;
+// Hasta cuántas vueltas de chat→tool→chat puede hacer el agente en un mismo
+// turno del coach. 5 era muy bajo para flujos batch (ej: asignar una rutina a
+// 5 clientes son 6 calls antes del texto final). 15 deja margen para tareas
+// agénticas reales sin permitir runaway. El system prompt instruye al modelo
+// a converger; este cap es el cinturón de seguridad.
+const MAX_TOOL_ITERATIONS = 15;
 
 // -----------------------------------------------------------------------------
 // AssistantMessage[] → ChatTurn[] (Gemini Content shape)
@@ -272,7 +277,7 @@ async function drive(args: DriveArgs): Promise<void> {
     "agent.iteration_cap_hit",
   );
   callbacks.onError(
-    `El asistente llamó a más de ${MAX_TOOL_ITERATIONS} herramientas sin converger. Probá una pregunta más específica.`,
+    `Se alcanzó el límite de ${MAX_TOOL_ITERATIONS} pasos automáticos en este turno. Si el flujo no terminó, escribime "continuá" y sigo donde quedé. Si lo querés acotar, dame el siguiente paso específico.`,
   );
 }
 
