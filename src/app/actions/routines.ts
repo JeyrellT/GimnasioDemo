@@ -20,4 +20,5 @@ export {
   createCustomGoal,
   listCustomGoals,
   getActiveRoutineForClient,
+  createRoutineFromOcr,
 } from "@/server/actions/routines.actions";

@@ -93,6 +93,17 @@ export interface RoutineDetail {
 // Helpers
 // =============================================================================
 
+/** Slugify a string for use as an exercise slug (local copy — mirrors exercises.actions.ts). */
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 80);
+}
+
 /** Validate a goal string (built-in or custom). */
 function parseGoal(raw: string | undefined | null): string {
   const trimmed = raw?.trim();
@@ -1325,6 +1336,186 @@ export async function listCustomGoals(): Promise<
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     });
+  });
+}
+
+// =============================================================================
+// OCR → Routine creation (bulk import from image extraction)
+// =============================================================================
+
+export interface OcrExerciseInput {
+  nameEs: string;
+  targetSets: number;
+  targetRepsMin: number;
+  targetRepsMax: number;
+  restSeconds: number;
+  notes: string | null;
+}
+
+export interface OcrDayInput {
+  name: string;
+  exercises: OcrExerciseInput[];
+}
+
+export interface CreateRoutineFromOcrInput {
+  name: string;
+  goal: string;
+  splitDays: number;
+  durationWeeks: number;
+  days: OcrDayInput[];
+}
+
+/**
+ * Bulk-create a RoutineTemplate from OCR-extracted data.
+ *
+ * Exercise resolution order:
+ *   1. Exact case-insensitive match on nameEs.
+ *   2. Case-insensitive CONTAINS match on nameEs.
+ *   3. Create a new private exercise (isPublic: false) owned by the trainer.
+ *
+ * Everything runs inside a single $transaction — either the full routine
+ * is created or nothing is.
+ */
+export async function createRoutineFromOcr(
+  input: CreateRoutineFromOcrInput,
+): Promise<ActionResult<CreateRoutineResult>> {
+  return tryCatch(async () => {
+    const user = await requireTrainer();
+
+    const name = input.name?.trim();
+    if (!name) {
+      throw new ValidationError("NAME_REQUIRED", "El nombre de la rutina es obligatorio.");
+    }
+
+    if (!Array.isArray(input.days) || input.days.length === 0) {
+      throw new ValidationError("DAYS_REQUIRED", "La rutina debe tener al menos un día.");
+    }
+
+    if (input.splitDays !== input.days.length) {
+      throw new ValidationError(
+        "SPLIT_DAYS_MISMATCH",
+        `splitDays (${input.splitDays}) debe coincidir con el número de días enviados (${input.days.length}).`,
+      );
+    }
+
+    const goal = parseGoal(input.goal);
+
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Create the RoutineTemplate
+      const template = await tx.routineTemplate.create({
+        data: {
+          trainerId: user.id,
+          name,
+          goal,
+          splitDays: input.splitDays,
+          durationWeeks: input.durationWeeks,
+          isArchived: false,
+          isPublic: false,
+        },
+        select: { id: true, name: true },
+      });
+
+      // 2. Create RoutineDay rows using OCR-detected names
+      await tx.routineDay.createMany({
+        data: input.days.map((day, i) => ({
+          routineId: template.id,
+          dayIndex: i,
+          name: day.name?.trim() || `Día ${i + 1}`,
+        })),
+      });
+
+      // 3. Fetch created days to get their IDs (ordered by dayIndex)
+      const dayRecords = await tx.routineDay.findMany({
+        where: { routineId: template.id },
+        orderBy: { dayIndex: "asc" },
+        select: { id: true, dayIndex: true },
+      });
+
+      // 4. Resolve + link exercises
+      let totalExercises = 0;
+
+      for (let di = 0; di < input.days.length; di++) {
+        const dayInput = input.days[di]!;
+        const dayRecord = dayRecords[di]!;
+
+        for (let ei = 0; ei < dayInput.exercises.length; ei++) {
+          const exercise = dayInput.exercises[ei]!;
+
+          // 4a. Exact case-insensitive match
+          let matchedExerciseId: string | null = null;
+
+          const match = await tx.exercise.findFirst({
+            where: {
+              nameEs: { equals: exercise.nameEs, mode: "insensitive" },
+              deletedAt: null,
+            },
+            select: { id: true },
+          });
+
+          if (match) {
+            matchedExerciseId = match.id;
+          } else {
+            // 4b. Fuzzy CONTAINS match
+            const fuzzy = await tx.exercise.findFirst({
+              where: {
+                nameEs: { contains: exercise.nameEs, mode: "insensitive" },
+                deletedAt: null,
+              },
+              select: { id: true },
+            });
+
+            if (fuzzy) {
+              matchedExerciseId = fuzzy.id;
+            } else {
+              // 4c. Create a new private exercise
+              const created = await tx.exercise.create({
+                data: {
+                  slug: slugify(exercise.nameEs),
+                  nameEs: exercise.nameEs,
+                  nameEn: exercise.nameEs, // fallback
+                  instructionsEs: "", // placeholder — trainer can fill in later
+                  primaryMuscle: "FULL_BODY", // safe default
+                  equipment: "OTHER",
+                  difficulty: "INTERMEDIATE",
+                  category: "STRENGTH",
+                  isPublic: false,
+                  createdById: user.id,
+                },
+                select: { id: true },
+              });
+              matchedExerciseId = created.id;
+            }
+          }
+
+          // 4d. Link the exercise to the day
+          await tx.routineExercise.create({
+            data: {
+              routineDayId: dayRecord.id,
+              exerciseId: matchedExerciseId,
+              order: ei,
+              targetSets: exercise.targetSets || 3,
+              targetRepsMin: exercise.targetRepsMin || 8,
+              targetRepsMax: exercise.targetRepsMax || 12,
+              restSeconds: exercise.restSeconds || 90,
+              notes: exercise.notes || null,
+            },
+          });
+
+          totalExercises++;
+        }
+      }
+
+      return { template, dayCount: input.days.length, totalExercises };
+    });
+
+    logInfo("routines.createRoutineFromOcr", {
+      userId: user.id,
+      routineId: result.template.id,
+      dayCount: result.dayCount,
+      totalExercises: result.totalExercises,
+    });
+
+    return { routineId: result.template.id, name: result.template.name };
   });
 }
 

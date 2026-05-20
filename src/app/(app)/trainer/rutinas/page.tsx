@@ -14,6 +14,7 @@ import {
   Loader2,
   Trash2,
   Users,
+  ImagePlus,
 } from "lucide-react";
 import { listMyRoutines, deleteRoutine } from "@/app/actions/routines";
 import { PageHeader } from "@/components/shared/page-header";
@@ -162,13 +163,22 @@ export default function RutinasPage() {
         title="Mis rutinas"
         description="Plantillas de entrenamiento que podés asignar a tus clientes."
         actions={
-          <Link
-            href="/trainer/rutinas/nueva"
-            className="flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white min-h-[44px] hover:bg-brand-primary-hover transition-colors shadow-[0_0_16px_rgba(255,106,26,0.25)]"
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            Nueva rutina
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/trainer/rutinas/importar"
+              className="flex items-center gap-2 rounded-lg border border-[#3F3F46] bg-[#27272A] px-4 py-2 text-sm font-medium text-[#A1A1AA] min-h-[44px] hover:text-[#FAFAFA] hover:border-brand-primary/40 hover:bg-brand-primary/5 transition-colors"
+            >
+              <ImagePlus className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Importar</span>
+            </Link>
+            <Link
+              href="/trainer/rutinas/nueva"
+              className="flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white min-h-[44px] hover:bg-brand-primary-hover transition-colors shadow-[0_0_16px_rgba(255,106,26,0.25)]"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Nueva rutina
+            </Link>
+          </div>
         }
       />
 
@@ -246,13 +256,22 @@ export default function RutinasPage() {
           </div>
 
           {activeFilter === "todas" && (
-            <Link
-              href="/trainer/rutinas/nueva"
-              className="relative mt-2 inline-flex items-center gap-2 rounded-lg bg-brand-primary px-5 py-2.5 text-sm font-semibold text-white min-h-[44px] hover:bg-brand-primary-hover transition-colors"
-            >
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              Nueva rutina
-            </Link>
+            <div className="relative mt-2 flex flex-col sm:flex-row items-center gap-2">
+              <Link
+                href="/trainer/rutinas/nueva"
+                className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-5 py-2.5 text-sm font-semibold text-white min-h-[44px] hover:bg-brand-primary-hover transition-colors"
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                Nueva rutina
+              </Link>
+              <Link
+                href="/trainer/rutinas/importar"
+                className="inline-flex items-center gap-2 rounded-lg border border-[#3F3F46] bg-[#27272A] px-5 py-2.5 text-sm font-medium text-[#A1A1AA] min-h-[44px] hover:text-[#FAFAFA] hover:border-brand-primary/40 transition-colors"
+              >
+                <ImagePlus className="h-4 w-4" aria-hidden="true" />
+                Importar desde imagen
+              </Link>
+            </div>
           )}
         </div>
       ) : (
