@@ -17,6 +17,7 @@ import {
   Loader2,
   CheckCircle2,
   AlertTriangle,
+  ImageIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ import {
   setGeminiKey,
   clearGeminiKey,
 } from "@/lib/demo/settings-store";
+import { getModel } from "@/lib/demo/gemini-browser";
 import { resetDemoData } from "@/lib/demo/seed-runner";
 import { db } from "@/lib/offline/db";
 
@@ -106,8 +108,22 @@ export default function AjustesPage() {
   const [resetting, setResetting] = useState(false);
   const [importing, setImporting] = useState(false);
 
+  // --- Image test state ---
+  const [imgFile, setImgFile] = useState<File | null>(null);
+  const [imgPreview, setImgPreview] = useState<string | null>(null);
+  const [imgTesting, setImgTesting] = useState(false);
+  const [imgResult, setImgResult] = useState<string | null>(null);
+  const imgInputRef = useRef<HTMLInputElement>(null);
+
   // File input ref for import
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Cleanup image preview object URL
+  useEffect(() => {
+    return () => {
+      if (imgPreview) URL.revokeObjectURL(imgPreview);
+    };
+  }, [imgPreview]);
 
   // Load persisted key on mount
   useEffect(() => {
@@ -142,10 +158,8 @@ export default function AjustesPage() {
     setTesting(true);
 
     try {
-      // Dynamic import so the page doesn't crash if Agent 4's file isn't
-      // present yet. The import itself may throw if the module is absent.
-      const mod = await import("@/lib/demo/gemini-browser");
-      const result = await mod.pingGeminiKey();
+      const { pingGeminiKey } = await import("@/lib/demo/gemini-browser");
+      const result = await pingGeminiKey();
 
       if (result.ok) {
         toast.success("API key valida. La IA esta lista para usar.");
@@ -170,6 +184,80 @@ export default function AjustesPage() {
     clearGeminiKey();
     setApiKeyState("");
     toast.success("API key eliminada.");
+  };
+
+  // -------------------------------------------------------------------------
+  // Image test handlers
+  // -------------------------------------------------------------------------
+
+  function fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result;
+        if (typeof result !== "string") {
+          reject(new Error("FileReader error"));
+          return;
+        }
+        const base64 = result.split(",")[1];
+        if (!base64) {
+          reject(new Error("Failed to extract base64"));
+          return;
+        }
+        resolve(base64);
+      };
+      reader.onerror = () => reject(reader.error ?? new Error("FileReader error"));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  const handleImageSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("La imagen no puede superar los 5 MB.");
+      e.target.value = "";
+      return;
+    }
+    setImgFile(file);
+    setImgResult(null);
+    const url = URL.createObjectURL(file);
+    setImgPreview(url);
+  };
+
+  const handleImageTest = async () => {
+    if (!imgFile) return;
+    const trimmed = apiKey.trim();
+    if (!trimmed) {
+      toast.error("Ingresá una API key primero.");
+      return;
+    }
+    setImgTesting(true);
+    setImgResult(null);
+    try {
+      const base64 = await fileToBase64(imgFile);
+      const model = getModel({ model: "ocr" });
+      const response = await model.generateContent({
+        contents: [
+          {
+            role: "user",
+            parts: [
+              { inlineData: { data: base64, mimeType: imgFile.type } },
+              {
+                text: "Describí brevemente qué ves en esta imagen en 1-2 oraciones. Respondé en español.",
+              },
+            ],
+          },
+        ],
+      });
+      const text = response.response.text();
+      setImgResult(text);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Error desconocido.";
+      toast.error("Error al analizar la imagen: " + msg);
+    } finally {
+      setImgTesting(false);
+    }
   };
 
   // -------------------------------------------------------------------------
@@ -426,6 +514,88 @@ export default function AjustesPage() {
             Obtene tu clave gratuita en Google AI Studio
             <ExternalLink className="h-3 w-3" />
           </a>
+        </div>
+
+        {/* ── Image vision test ──────────────────────────────────────────── */}
+        <div className="rounded-md border border-[#3F3F46] bg-[#09090B] p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <ImageIcon className="h-4 w-4 text-[#A1A1AA] shrink-0" />
+            <span className="text-xs font-semibold text-[#FAFAFA]">
+              Probar con imagen
+            </span>
+          </div>
+          <p className="text-xs text-[#71717A]">
+            Subí cualquier imagen y Gemini la describirá. Sirve para confirmar
+            que tu clave funciona con vision/multimodal.
+          </p>
+
+          {/* Drop zone / file picker */}
+          <input
+            ref={imgInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageSelected}
+            disabled={!apiKey.trim() || imgTesting}
+            className="hidden"
+            aria-label="Seleccionar imagen para probar"
+          />
+          <button
+            type="button"
+            onClick={() => imgInputRef.current?.click()}
+            disabled={!apiKey.trim() || imgTesting}
+            className="w-full min-h-[44px] rounded-md border border-dashed border-[#3F3F46] bg-[#18181B] hover:border-brand-primary hover:bg-brand-primary/5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex flex-col items-center justify-center gap-1.5 px-4 py-3"
+          >
+            {imgPreview ? (
+              <span className="text-xs text-[#A1A1AA]">
+                {imgFile?.name ?? "imagen seleccionada"} — click para cambiar
+              </span>
+            ) : (
+              <>
+                <Upload className="h-4 w-4 text-[#52525B]" />
+                <span className="text-xs text-[#71717A]">
+                  Seleccioná una imagen (máx. 5 MB)
+                </span>
+              </>
+            )}
+          </button>
+
+          {/* Preview + analyze button */}
+          {imgPreview && (
+            <div className="space-y-3">
+              <div className="rounded-md overflow-hidden border border-[#27272A] bg-[#18181B] flex items-center justify-center max-h-48">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imgPreview}
+                  alt="Vista previa"
+                  className="max-h-48 w-auto object-contain"
+                />
+              </div>
+
+              <Button
+                onClick={handleImageTest}
+                disabled={imgTesting || !apiKey.trim()}
+                size="sm"
+                className="bg-brand-primary hover:bg-brand-primary-hover text-white disabled:opacity-50 min-h-[44px]"
+              >
+                {imgTesting ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                ) : (
+                  <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                )}
+                {imgTesting ? "Analizando..." : "Analizar con Gemini"}
+              </Button>
+            </div>
+          )}
+
+          {/* AI response */}
+          {imgResult && (
+            <div className="rounded-md border border-[#3F3F46] bg-[#18181B] p-3 space-y-1">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#52525B]">
+                Respuesta de Gemini
+              </p>
+              <p className="text-sm text-[#FAFAFA] leading-relaxed">{imgResult}</p>
+            </div>
+          )}
         </div>
       </Section>
 
