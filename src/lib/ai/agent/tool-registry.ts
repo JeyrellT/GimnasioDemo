@@ -20,11 +20,16 @@
 import { SchemaType } from "@google/generative-ai";
 
 import { searchExercises, createPrivateExercise } from "@/app/actions/exercises";
-import { listMyClients, getClientProfileDetail } from "@/app/actions/clients";
+import {
+  listMyClients,
+  getClientProfileDetail,
+  quickAddClient,
+} from "@/app/actions/clients";
 import {
   listMyRoutines,
   getRoutine,
   createRoutineTemplate,
+  createRoutineFromOcr,
   addExerciseToDay,
   assignRoutineToClient,
 } from "@/app/actions/routines";
@@ -789,6 +794,178 @@ const assignRoutineTool: AssistantTool<AssignRoutineArgs> = {
   },
 };
 
+// -----------------------------------------------------------------------------
+// create_routine_from_ocr — heredada del FAB legacy. Permite al modelo crear
+// una rutina completa en una sola llamada cuando ya tiene el dump estructurado
+// de una foto (visión multimodal extrajo días + ejercicios). Ahorra los 5-15
+// round trips que tomaría componer con create_routine + add_exercise_to_day.
+// -----------------------------------------------------------------------------
+
+interface CreateRoutineFromOcrDay {
+  name: string;
+  exercises: Array<{
+    nameEs: string;
+    targetSets: number;
+    targetRepsMin: number;
+    targetRepsMax: number;
+    restSeconds: number;
+    notes: string | null;
+  }>;
+}
+
+interface CreateRoutineFromOcrArgs {
+  name: string;
+  goal: string;
+  splitDays: number;
+  durationWeeks: number;
+  days: CreateRoutineFromOcrDay[];
+}
+
+const createRoutineFromOcrTool: AssistantTool<CreateRoutineFromOcrArgs> = {
+  kind: "write",
+  declaration: {
+    name: "create_routine_from_ocr",
+    description:
+      "Crea una rutina completa en una sola llamada a partir de datos extraídos de una imagen (días + ejercicios con series/reps/descanso). Usalo cuando interpretaste una foto de hoja de rutina y el coach confirma que la cree. Si los datos vienen incompletos o el coach quiere editar ejercicio por ejercicio, usá mejor create_routine + add_exercise_to_day.",
+    parameters: {
+      type: SchemaType.OBJECT,
+      properties: {
+        name: { type: SchemaType.STRING, description: "Nombre de la rutina." },
+        goal: {
+          type: SchemaType.STRING,
+          description:
+            "Objetivo. Valores: HYPERTROPHY, STRENGTH, ENDURANCE, FAT_LOSS, GENERAL — o un objetivo custom del coach.",
+        },
+        splitDays: {
+          type: SchemaType.INTEGER,
+          description: "Cantidad de días únicos (debe coincidir con días.length).",
+        },
+        durationWeeks: {
+          type: SchemaType.INTEGER,
+          description: "Semanas del mesociclo. Default razonable: 8.",
+        },
+        days: {
+          type: SchemaType.ARRAY,
+          description: "Días de la rutina con sus ejercicios ordenados.",
+          items: {
+            type: SchemaType.OBJECT,
+            properties: {
+              name: {
+                type: SchemaType.STRING,
+                description: "Nombre del día (ej: 'Día 1 — Empuje').",
+              },
+              exercises: {
+                type: SchemaType.ARRAY,
+                items: {
+                  type: SchemaType.OBJECT,
+                  properties: {
+                    nameEs: { type: SchemaType.STRING },
+                    targetSets: { type: SchemaType.INTEGER },
+                    targetRepsMin: { type: SchemaType.INTEGER },
+                    targetRepsMax: { type: SchemaType.INTEGER },
+                    restSeconds: { type: SchemaType.INTEGER },
+                    notes: { type: SchemaType.STRING, nullable: true },
+                  },
+                  required: [
+                    "nameEs",
+                    "targetSets",
+                    "targetRepsMin",
+                    "targetRepsMax",
+                    "restSeconds",
+                  ],
+                },
+              },
+            },
+            required: ["name", "exercises"],
+          },
+        },
+      },
+      required: ["name", "goal", "splitDays", "durationWeeks", "days"],
+    },
+  },
+  summarize: (args) => {
+    const totalExercises = args.days.reduce(
+      (acc, d) => acc + (d.exercises?.length ?? 0),
+      0,
+    );
+    return `Crear rutina "${args.name}" desde foto — ${args.goal}, ${args.splitDays} días, ${totalExercises} ejercicios`;
+  },
+  handler: async (args) => {
+    const res = await createRoutineFromOcr({
+      name: args.name,
+      goal: args.goal,
+      splitDays: args.splitDays,
+      durationWeeks: args.durationWeeks,
+      days: args.days,
+    });
+    if (!res.ok) throw new Error(res.error.message);
+    return res.value;
+  },
+  formatResult: (result) => {
+    const r = result as { routineId: string; name: string };
+    return { routineId: r.routineId, name: r.name, created: true };
+  },
+};
+
+// -----------------------------------------------------------------------------
+// quick_add_client — alta rápida de cliente con invitación por email.
+// Heredada del FAB legacy. Es write porque crea User, ClientProfile y la
+// invitación al mismo tiempo.
+// -----------------------------------------------------------------------------
+
+interface QuickAddClientArgs {
+  email: string;
+  name?: string;
+}
+
+const quickAddClientTool: AssistantTool<QuickAddClientArgs> = {
+  kind: "write",
+  declaration: {
+    name: "quick_add_client",
+    description:
+      "Crea un cliente nuevo del coach con email y nombre opcional. Genera contraseña provisional, manda invitación por email y devuelve el welcomeUrl por si el envío falla y el coach quiere compartirlo a mano.",
+    parameters: {
+      type: SchemaType.OBJECT,
+      properties: {
+        email: {
+          type: SchemaType.STRING,
+          description: "Email del cliente. Obligatorio.",
+        },
+        name: {
+          type: SchemaType.STRING,
+          description: "Nombre del cliente. Si se omite, se infiere del email.",
+        },
+      },
+      required: ["email"],
+    },
+  },
+  summarize: (args) =>
+    `Crear cliente — ${args.name ? `"${args.name}" (${args.email})` : args.email}`,
+  handler: async (args) => {
+    const res = await quickAddClient({
+      email: args.email,
+      name: args.name,
+    });
+    if (!res.ok) throw new Error(res.error.message);
+    return res.value;
+  },
+  formatResult: (result) => {
+    const r = result as {
+      clientId: string;
+      invitationId: string;
+      emailSent: boolean;
+      welcomeUrl: string;
+    };
+    return {
+      clientId: r.clientId,
+      invitationId: r.invitationId,
+      emailSent: r.emailSent,
+      welcomeUrl: r.welcomeUrl,
+      created: true,
+    };
+  },
+};
+
 // =============================================================================
 // Registry
 // =============================================================================
@@ -808,10 +985,12 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
   searchKnowledgeTool as unknown as AssistantTool,
   // -- write --
   createRoutineTool as unknown as AssistantTool,
+  createRoutineFromOcrTool as unknown as AssistantTool,
   createPrivateExerciseTool as unknown as AssistantTool,
   addExerciseToDayTool as unknown as AssistantTool,
   recordBodyMetricTool as unknown as AssistantTool,
   assignRoutineTool as unknown as AssistantTool,
+  quickAddClientTool as unknown as AssistantTool,
 ];
 
 export function findTool(name: string): AssistantTool | undefined {
