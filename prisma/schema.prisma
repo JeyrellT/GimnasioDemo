@@ -734,6 +734,51 @@ model Exercise {
 }
 
 // =============================================================================
+// KNOWLEDGE BASE — chunks de documentos científicos para RAG del asistente IA
+//
+// Cada chunk es un fragmento autocontenido de un documento maestro
+// (`sourceDocument`). El asistente lo consulta vía la action searchKnowledge
+// usando full-text search sobre `searchVector` (mantenido por trigger PG).
+//
+// Ingestión: prisma/seed/knowledge.ts parsea los .md en prisma/seed/data/
+// knowledge/ y hace upsert por `slug` (idempotente). Bumpeá `version` cuando
+// edites el contenido para forzar re-indexación.
+// =============================================================================
+
+/// Fragmento indexable de la base de conocimiento del asistente.
+model KnowledgeChunk {
+  id               String                   @id @default(cuid())
+  /// Identificador estable derivado de sourceDocument + path jerárquico
+  /// (ej: "fitness-base-cr-v1__1.2-ciencia-de-la-hipertrofia"). Único.
+  slug             String                   @unique
+  /// Sección de nivel alto a la que pertenece el chunk (ej: "1.2 Ciencia de la hipertrofia").
+  section          String
+  /// Título del chunk; suele coincidir con el último heading del path.
+  title            String
+  /// Contenido completo en markdown.
+  content          String                   @db.Text
+  /// Tags para filtrado: ["hipertrofia", "volumen", "atletas-cr", "principiante", …].
+  tags             String[]                 @default([])
+  /// Marca opcional de fortaleza de evidencia: STRONG | MODERATE | EMERGING | CONTESTED.
+  evidenceStrength String?
+  /// Identifica el documento de origen (permite múltiples fuentes en el futuro).
+  sourceDocument   String                   @default("fitness-base-cr-v1")
+  /// Bumpeá al editar el contenido — el seed re-indexa cuando ve un version mayor.
+  version          Int                      @default(1)
+  /// Largo en palabras (para chunking decisions del RAG y métricas).
+  wordCount        Int                      @default(0)
+  /// Idioma del chunk (ISO BCP 47).
+  locale           String                   @default("es-CR")
+  /// tsvector mantenido por trigger PG sobre title + content + tags.
+  searchVector     Unsupported("tsvector")?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  @@index([sourceDocument])
+  @@index([section])
+}
+
+// =============================================================================
 // ROUTINES — templates owned by trainers, days, exercises
 // =============================================================================
 
