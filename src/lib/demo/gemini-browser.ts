@@ -23,6 +23,9 @@
 
 import {
   GoogleGenerativeAI,
+  type Content,
+  type FunctionCall,
+  type FunctionDeclaration,
   type GenerativeModel,
   type InlineDataPart,
   type ResponseSchema,
@@ -433,4 +436,209 @@ export async function pingGeminiKey(): Promise<
       ),
     );
   }
+}
+
+// =============================================================================
+// chatWithTools — multi-turn chat with native function calling
+// =============================================================================
+//
+// Used by the trainer assistant (src/lib/ai/agent). Wraps Gemini's
+// tool-calling protocol: the caller passes a full message history plus a
+// catalog of FunctionDeclarations; we return either a final assistant text
+// (finishReason "STOP") or the list of function calls the model wants us to
+// run (finishReason "TOOL_CALLS"). The caller is responsible for executing
+// the calls, appending the function responses to history, and calling us
+// again to continue the loop.
+//
+// Why we surface the raw FunctionCall[] instead of running tools here:
+//   - Tool execution touches server actions (auth, mutations) — the agent
+//     runtime owns that policy (e.g., confirmation prompts for writes).
+//   - This file stays a thin SDK wrapper.
+// =============================================================================
+
+export type ChatRole = "user" | "model" | "function";
+
+/** A single turn already in the conversation. Mirrors @google/generative-ai Content. */
+export interface ChatTurn {
+  role: ChatRole;
+  /** Free-form parts — text, inline image, function-call, or function-response. */
+  parts: Content["parts"];
+}
+
+export interface ChatWithToolsArgs {
+  model?: ModelKind;
+  systemInstruction: string;
+  history: ChatTurn[];
+  tools: FunctionDeclaration[];
+  temperature?: number;
+  timeoutMs?: number;
+  maxAttempts?: number;
+  requestId?: string;
+}
+
+export type ChatWithToolsResult =
+  | {
+      kind: "text";
+      text: string;
+      usage?: UsageMetadata;
+      attempts: number;
+      latencyMs: number;
+      modelId: string;
+    }
+  | {
+      kind: "tool_calls";
+      functionCalls: FunctionCall[];
+      usage?: UsageMetadata;
+      attempts: number;
+      latencyMs: number;
+      modelId: string;
+    };
+
+export async function chatWithTools(
+  args: ChatWithToolsArgs,
+): Promise<Result<ChatWithToolsResult, AppError>> {
+  const {
+    model = "reasoning",
+    systemInstruction,
+    history,
+    tools,
+    temperature = 0.4,
+    timeoutMs = 45_000,
+    maxAttempts = 2,
+    requestId,
+  } = args;
+
+  const modelId = resolveModelId(model);
+
+  // Map our ChatTurn[] into the SDK's Content[] shape.
+  const contents: Content[] = history.map((turn) => ({
+    role: turn.role === "function" ? "function" : turn.role,
+    parts: turn.parts,
+  }));
+
+  let handle: GenerativeModel;
+  try {
+    handle = getSdk().getGenerativeModel({
+      model: modelId,
+      systemInstruction,
+      tools: tools.length > 0 ? [{ functionDeclarations: tools }] : undefined,
+    });
+  } catch (e) {
+    if (e instanceof GeminiKeyMissingError) return err(e);
+    return err(
+      new ExternalServiceError(
+        "GEMINI_INIT_FAILED",
+        "No se pudo inicializar el cliente de Gemini.",
+        e,
+      ),
+    );
+  }
+
+  const start = Date.now();
+  let lastError: unknown = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const generation = handle.generateContent({
+        contents,
+        generationConfig: { temperature },
+      });
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        const id = setTimeout(() => {
+          clearTimeout(id);
+          reject(new Error("AI_TIMEOUT"));
+        }, timeoutMs);
+      });
+
+      const response = await Promise.race([generation, timeoutPromise]);
+
+      const usage = response.response.usageMetadata;
+      const latencyMs = Date.now() - start;
+
+      const functionCalls = response.response.functionCalls() ?? [];
+
+      logger.info(
+        {
+          requestId,
+          modelId,
+          attempt,
+          latencyMs,
+          promptTokens: usage?.promptTokenCount,
+          candidateTokens: usage?.candidatesTokenCount,
+          totalTokens: usage?.totalTokenCount,
+          finishReason: response.response.candidates?.[0]?.finishReason,
+          toolCallCount: functionCalls.length,
+        },
+        "gemini.chat_with_tools.success",
+      );
+
+      if (functionCalls.length > 0) {
+        return ok({
+          kind: "tool_calls",
+          functionCalls,
+          usage,
+          attempts: attempt,
+          latencyMs,
+          modelId,
+        });
+      }
+
+      const text = response.response.text();
+      return ok({
+        kind: "text",
+        text,
+        usage,
+        attempts: attempt,
+        latencyMs,
+        modelId,
+      });
+    } catch (e) {
+      lastError = e;
+      const transient = isTransient(e);
+      logger.warn(
+        {
+          requestId,
+          modelId,
+          attempt,
+          maxAttempts,
+          transient,
+          error: shortError(e),
+        },
+        "gemini.chat_with_tools.attempt_failed",
+      );
+
+      if (!transient || attempt >= maxAttempts) break;
+
+      const backoff = BACKOFF_MS[attempt - 1] ?? 2700;
+      await sleep(backoff);
+    }
+  }
+
+  const msg = shortError(lastError).toLowerCase();
+  if (msg.includes("api key") || msg.includes("api_key") || msg.includes("401") || msg.includes("403")) {
+    return err(
+      new ValidationError(
+        "GEMINI_KEY_INVALID",
+        "Tu API key de Gemini no es válida. Revisala en Ajustes.",
+        lastError,
+      ),
+    );
+  }
+  if (msg.includes("quota") || msg.includes("429")) {
+    return err(
+      new ExternalServiceError(
+        "GEMINI_QUOTA",
+        "Excediste tu cuota de Gemini. Esperá unos minutos o revisá tu plan.",
+        lastError,
+      ),
+    );
+  }
+  return err(
+    new ExternalServiceError(
+      "GEMINI_FAILED",
+      "El asistente no respondió. Reintentá en unos minutos.",
+      lastError,
+    ),
+  );
 }

@@ -12,6 +12,7 @@ export {
   generateStructured,
   parseAndValidate,
   pingGeminiKey,
+  chatWithTools,
   GeminiKeyMissingError,
 } from "@/lib/demo/gemini-browser";
 
@@ -21,4 +22,8 @@ export type {
   GeminiSchema,
   GenerateStructuredArgs,
   GenerateStructuredResult,
+  ChatRole,
+  ChatTurn,
+  ChatWithToolsArgs,
+  ChatWithToolsResult,
 } from "@/lib/demo/gemini-browser";
