@@ -1,4 +1,4 @@
-name: Deploy Forja Demo to GitHub Pages
+name: Deploy Blackline Fitness to GitHub Pages
 
 on:
   push:
