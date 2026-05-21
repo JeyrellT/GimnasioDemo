@@ -208,6 +208,7 @@ export default async function AdminUserDetailPage({
         <div>
           <UserActions
             userId={detail.id}
+            userEmail={detail.email}
             currentRole={detail.role}
             isSuspended={isSuspended}
             subscriptionId={sub?.id}
