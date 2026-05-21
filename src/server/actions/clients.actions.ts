@@ -1073,36 +1073,32 @@ export async function getClientProfileDetail(
         select: {
           id: true,
           recordedAt: true,
-          // Composición
           weightKg: true,
           bodyFatPct: true,
           muscleMassKg: true,
-          visceralFat: true,
-          basalMetabolicRate: true,
-          // Tronco
-          neckCm: true,
-          shoulderLeftCm: true,
-          shoulderRightCm: true,
-          chestCm: true,
-          abdomenCm: true,
           waistCm: true,
           hipCm: true,
+          neckCm: true,
+          chestCm: true,
+          armCm: true,
+          thighCm: true,
+          shoulderLeftCm: true,
+          shoulderRightCm: true,
+          abdomenCm: true,
           gluteLeftCm: true,
           gluteRightCm: true,
-          // Brazos
-          armCm: true,
           bicepLeftCm: true,
           bicepRightCm: true,
           forearmLeftCm: true,
           forearmRightCm: true,
-          // Piernas
-          thighCm: true,
-          quadLeftCm: true,
-          quadRightCm: true,
+          thighLeftCm: true,
+          thighRightCm: true,
           hamstringLeftCm: true,
           hamstringRightCm: true,
           calfLeftCm: true,
           calfRightCm: true,
+          visceralFat: true,
+          basalMetabolicRate: true,
         },
         orderBy: { recordedAt: "asc" },
       }),
@@ -1173,77 +1169,92 @@ export async function getClientProfileDetail(
       return { lastMeasuredAt: found.recordedAt.toISOString(), daysSince };
     }
 
-    // Helper: para zones lateralizados, usar el campo L/R si existe, sino
-    // caer al legacy single column como fallback.
-    const freshnessOrFallback = (
-      primary: keyof typeof allMetrics[number],
-      fallback?: keyof typeof allMetrics[number],
-    ): { lastMeasuredAt: string | null; daysSince: number | null } => {
-      const direct = zoneFreshness(primary);
-      if (direct.lastMeasuredAt !== null) return direct;
-      return fallback ? zoneFreshness(fallback) : { lastMeasuredAt: null, daysSince: null };
-    };
+    const neckFresh = zoneFreshness("neckCm");
+    const chestFresh = zoneFreshness("chestCm");
+    const bicepFresh = zoneFreshness("armCm");
+    const waistFresh = zoneFreshness("waistCm");
+    const hipFresh = zoneFreshness("hipCm");
+    const thighFresh = zoneFreshness("thighCm");
+    const shoulderLeftFresh = zoneFreshness("shoulderLeftCm");
+    const shoulderRightFresh = zoneFreshness("shoulderRightCm");
+    const abdomenFresh = zoneFreshness("abdomenCm");
+    const gluteLeftFresh = zoneFreshness("gluteLeftCm");
+    const gluteRightFresh = zoneFreshness("gluteRightCm");
+    const bicepLeftFresh = zoneFreshness("bicepLeftCm");
+    const bicepRightFresh = zoneFreshness("bicepRightCm");
+    const forearmLeftFresh = zoneFreshness("forearmLeftCm");
+    const forearmRightFresh = zoneFreshness("forearmRightCm");
+    const thighLeftFresh = zoneFreshness("thighLeftCm");
+    const thighRightFresh = zoneFreshness("thighRightCm");
+    const hamstringLeftFresh = zoneFreshness("hamstringLeftCm");
+    const hamstringRightFresh = zoneFreshness("hamstringRightCm");
+    const calfLeftFresh = zoneFreshness("calfLeftCm");
+    const calfRightFresh = zoneFreshness("calfRightCm");
+    const noFresh: { lastMeasuredAt: null; daysSince: null } = { lastMeasuredAt: null, daysSince: null };
+
+    // Helper: prefer the new lateralized freshness, fall back to legacy
+    // armCm/thighCm freshness so historical data still pings the heatmap.
+    const pickFresh = (
+      primary: { lastMeasuredAt: string | null; daysSince: number | null },
+      fallback: { lastMeasuredAt: string | null; daysSince: number | null },
+    ) => (primary.lastMeasuredAt != null ? primary : fallback);
 
     const freshness: BodyComposition["freshness"] = {
-      neck: zoneFreshness("neckCm"),
-      shoulderLeft: zoneFreshness("shoulderLeftCm"),
-      shoulderRight: zoneFreshness("shoulderRightCm"),
-      chest: zoneFreshness("chestCm"),
-      bicepLeft: freshnessOrFallback("bicepLeftCm", "armCm"),
-      bicepRight: freshnessOrFallback("bicepRightCm", "armCm"),
-      forearmLeft: zoneFreshness("forearmLeftCm"),
-      forearmRight: zoneFreshness("forearmRightCm"),
-      abdomen: zoneFreshness("abdomenCm"),
-      waist: zoneFreshness("waistCm"),
-      hip: zoneFreshness("hipCm"),
-      glute: freshnessOrFallback("gluteLeftCm"),
-      quadLeft: freshnessOrFallback("quadLeftCm", "thighCm"),
-      quadRight: freshnessOrFallback("quadRightCm", "thighCm"),
-      hamstringLeft: zoneFreshness("hamstringLeftCm"),
-      hamstringRight: zoneFreshness("hamstringRightCm"),
-      calfLeft: zoneFreshness("calfLeftCm"),
-      calfRight: zoneFreshness("calfRightCm"),
+      neck: neckFresh,
+      shoulderLeft: pickFresh(shoulderLeftFresh, noFresh),
+      shoulderRight: pickFresh(shoulderRightFresh, noFresh),
+      chest: chestFresh,
+      bicepLeft: pickFresh(bicepLeftFresh, bicepFresh),
+      bicepRight: pickFresh(bicepRightFresh, bicepFresh),
+      forearmLeft: pickFresh(forearmLeftFresh, noFresh),
+      forearmRight: pickFresh(forearmRightFresh, noFresh),
+      abdomen: pickFresh(abdomenFresh, noFresh),
+      waist: waistFresh,
+      hip: hipFresh,
+      glute: pickFresh(gluteLeftFresh, gluteRightFresh.lastMeasuredAt != null ? gluteRightFresh : noFresh),
+      quadLeft: pickFresh(thighLeftFresh, thighFresh),
+      quadRight: pickFresh(thighRightFresh, thighFresh),
+      hamstringLeft: pickFresh(hamstringLeftFresh, noFresh),
+      hamstringRight: pickFresh(hamstringRightFresh, noFresh),
+      calfLeft: pickFresh(calfLeftFresh, noFresh),
+      calfRight: pickFresh(calfRightFresh, noFresh),
     };
-
-    // Para circunferencias actuales: preferir L/R, sino fallback legacy.
-    const numOrNull = (v: unknown): number | null =>
-      v != null ? Number(v as number | string) : null;
-    const leftBicepCm =
-      numOrNull(latestMetric?.bicepLeftCm) ?? numOrNull(latestMetric?.armCm);
-    const rightBicepCm =
-      numOrNull(latestMetric?.bicepRightCm) ?? numOrNull(latestMetric?.armCm);
-    const leftThighCm =
-      numOrNull(latestMetric?.quadLeftCm) ?? numOrNull(latestMetric?.thighCm);
-    const rightThighCm =
-      numOrNull(latestMetric?.quadRightCm) ?? numOrNull(latestMetric?.thighCm);
 
     const bodyComposition: BodyComposition = {
       weightKg: latestWeightKg,
-      bodyFatPct: numOrNull(latestMetric?.bodyFatPct),
-      muscleMassKg: numOrNull(latestMetric?.muscleMassKg),
+      bodyFatPct: latestMetric?.bodyFatPct != null ? Number(latestMetric.bodyFatPct) : null,
+      muscleMassKg: latestMetric?.muscleMassKg != null ? Number(latestMetric.muscleMassKg) : null,
       visceralFat: latestMetric?.visceralFat ?? null,
       basalMetabolicRate: latestMetric?.basalMetabolicRate ?? null,
       bmi,
       circumferences: {
-        neckCm: numOrNull(latestMetric?.neckCm),
-        shoulderLeftCm: numOrNull(latestMetric?.shoulderLeftCm),
-        shoulderRightCm: numOrNull(latestMetric?.shoulderRightCm),
-        chestCm: numOrNull(latestMetric?.chestCm),
-        leftBicepCm,
-        rightBicepCm,
-        leftForearmCm: numOrNull(latestMetric?.forearmLeftCm),
-        rightForearmCm: numOrNull(latestMetric?.forearmRightCm),
-        abdomenCm: numOrNull(latestMetric?.abdomenCm),
-        waistCm: numOrNull(latestMetric?.waistCm),
-        hipCm: numOrNull(latestMetric?.hipCm),
-        leftGluteCm: numOrNull(latestMetric?.gluteLeftCm),
-        rightGluteCm: numOrNull(latestMetric?.gluteRightCm),
-        leftThighCm,
-        rightThighCm,
-        leftHamstringCm: numOrNull(latestMetric?.hamstringLeftCm),
-        rightHamstringCm: numOrNull(latestMetric?.hamstringRightCm),
-        leftCalfCm: numOrNull(latestMetric?.calfLeftCm),
-        rightCalfCm: numOrNull(latestMetric?.calfRightCm),
+        neckCm: latestMetric?.neckCm != null ? Number(latestMetric.neckCm) : null,
+        shoulderLeftCm: latestMetric?.shoulderLeftCm != null ? Number(latestMetric.shoulderLeftCm) : null,
+        shoulderRightCm: latestMetric?.shoulderRightCm != null ? Number(latestMetric.shoulderRightCm) : null,
+        chestCm: latestMetric?.chestCm != null ? Number(latestMetric.chestCm) : null,
+        leftBicepCm: latestMetric?.bicepLeftCm != null
+          ? Number(latestMetric.bicepLeftCm)
+          : latestMetric?.armCm != null ? Number(latestMetric.armCm) : null,
+        rightBicepCm: latestMetric?.bicepRightCm != null
+          ? Number(latestMetric.bicepRightCm)
+          : latestMetric?.armCm != null ? Number(latestMetric.armCm) : null,
+        leftForearmCm: latestMetric?.forearmLeftCm != null ? Number(latestMetric.forearmLeftCm) : null,
+        rightForearmCm: latestMetric?.forearmRightCm != null ? Number(latestMetric.forearmRightCm) : null,
+        abdomenCm: latestMetric?.abdomenCm != null ? Number(latestMetric.abdomenCm) : null,
+        waistCm: latestMetric?.waistCm != null ? Number(latestMetric.waistCm) : null,
+        hipCm: latestMetric?.hipCm != null ? Number(latestMetric.hipCm) : null,
+        leftGluteCm: latestMetric?.gluteLeftCm != null ? Number(latestMetric.gluteLeftCm) : null,
+        rightGluteCm: latestMetric?.gluteRightCm != null ? Number(latestMetric.gluteRightCm) : null,
+        leftThighCm: latestMetric?.thighLeftCm != null
+          ? Number(latestMetric.thighLeftCm)
+          : latestMetric?.thighCm != null ? Number(latestMetric.thighCm) : null,
+        rightThighCm: latestMetric?.thighRightCm != null
+          ? Number(latestMetric.thighRightCm)
+          : latestMetric?.thighCm != null ? Number(latestMetric.thighCm) : null,
+        leftHamstringCm: latestMetric?.hamstringLeftCm != null ? Number(latestMetric.hamstringLeftCm) : null,
+        rightHamstringCm: latestMetric?.hamstringRightCm != null ? Number(latestMetric.hamstringRightCm) : null,
+        leftCalfCm: latestMetric?.calfLeftCm != null ? Number(latestMetric.calfLeftCm) : null,
+        rightCalfCm: latestMetric?.calfRightCm != null ? Number(latestMetric.calfRightCm) : null,
       },
       freshness,
     };
@@ -1267,36 +1278,25 @@ export async function getClientProfileDetail(
       };
     }
 
-    // Preferir el zone lateralizado; si no hay data en L/R todavía, caer al
-    // legacy single-side column (armCm / thighCm).
-    const buildZoneOrFallback = (
-      primary: keyof typeof allMetrics[number],
-      fallback?: keyof typeof allMetrics[number],
-    ): import("@/types/api").ZoneMetric | null => {
-      const direct = buildZone(primary);
-      if (direct !== null) return direct;
-      return fallback ? buildZone(fallback) : null;
-    };
-
     const zones: Record<BodyZone, import("@/types/api").ZoneMetric | null> = {
       neck: buildZone("neckCm"),
-      shoulderLeft: buildZone("shoulderLeftCm"),
-      shoulderRight: buildZone("shoulderRightCm"),
+      shoulderLeft: null,
+      shoulderRight: null,
       chest: buildZone("chestCm"),
-      bicepLeft: buildZoneOrFallback("bicepLeftCm", "armCm"),
-      bicepRight: buildZoneOrFallback("bicepRightCm", "armCm"),
-      forearmLeft: buildZone("forearmLeftCm"),
-      forearmRight: buildZone("forearmRightCm"),
-      abdomen: buildZone("abdomenCm"),
+      bicepLeft: buildZone("armCm"),
+      bicepRight: buildZone("armCm"),
+      forearmLeft: null,
+      forearmRight: null,
+      abdomen: null,
       waist: buildZone("waistCm"),
       hip: buildZone("hipCm"),
-      glute: buildZone("gluteLeftCm"),
-      quadLeft: buildZoneOrFallback("quadLeftCm", "thighCm"),
-      quadRight: buildZoneOrFallback("quadRightCm", "thighCm"),
-      hamstringLeft: buildZone("hamstringLeftCm"),
-      hamstringRight: buildZone("hamstringRightCm"),
-      calfLeft: buildZone("calfLeftCm"),
-      calfRight: buildZone("calfRightCm"),
+      glute: null,
+      quadLeft: buildZone("thighCm"),
+      quadRight: buildZone("thighCm"),
+      hamstringLeft: null,
+      hamstringRight: null,
+      calfLeft: null,
+      calfRight: null,
     };
 
     // ── Metrics history (serialized for server→client boundary) ───────────
@@ -1405,45 +1405,20 @@ export async function getClientProfileDetail(
           }
         : null,
       latestMetric: latestMetric
-        ? ({
+        ? {
             id: latestMetric.id,
             clientUserId,
             recordedAt: latestMetric.recordedAt,
-
-            // Composición
             weightKg: latestMetric.weightKg,
             bodyFatPct: latestMetric.bodyFatPct,
             muscleMassKg: latestMetric.muscleMassKg,
-            visceralFat: latestMetric.visceralFat,
-            basalMetabolicRate: latestMetric.basalMetabolicRate,
-
-            // Tronco
-            neckCm: latestMetric.neckCm,
-            shoulderLeftCm: latestMetric.shoulderLeftCm,
-            shoulderRightCm: latestMetric.shoulderRightCm,
-            chestCm: latestMetric.chestCm,
-            abdomenCm: latestMetric.abdomenCm,
             waistCm: latestMetric.waistCm,
             hipCm: latestMetric.hipCm,
-            gluteLeftCm: latestMetric.gluteLeftCm,
-            gluteRightCm: latestMetric.gluteRightCm,
-
-            // Brazos
+            neckCm: latestMetric.neckCm,
+            chestCm: latestMetric.chestCm,
             armCm: latestMetric.armCm,
-            bicepLeftCm: latestMetric.bicepLeftCm,
-            bicepRightCm: latestMetric.bicepRightCm,
-            forearmLeftCm: latestMetric.forearmLeftCm,
-            forearmRightCm: latestMetric.forearmRightCm,
-
-            // Piernas
             thighCm: latestMetric.thighCm,
-            quadLeftCm: latestMetric.quadLeftCm,
-            quadRightCm: latestMetric.quadRightCm,
-            hamstringLeftCm: latestMetric.hamstringLeftCm,
-            hamstringRightCm: latestMetric.hamstringRightCm,
-            calfLeftCm: latestMetric.calfLeftCm,
-            calfRightCm: latestMetric.calfRightCm,
-          } as unknown as ClientProfileDetail["latestMetric"])
+          } as ClientProfileDetail["latestMetric"]
         : null,
       metricsHistory: metricsHistory as unknown as ClientProfileDetail["metricsHistory"],
       bodyComposition,

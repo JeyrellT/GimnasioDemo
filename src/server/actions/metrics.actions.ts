@@ -77,43 +77,33 @@ async function writeAuditLog(
 
 export interface RecordBodyMetricInput {
   clientUserId?: string;
-
-  // Composición
   weightKg?: number;
   bodyFatPct?: number;
   muscleMassKg?: number;
-  visceralFat?: number;
-  basalMetabolicRate?: number;
-
-  // Tronco
-  neckCm?: number;
-  shoulderLeftCm?: number;
-  shoulderRightCm?: number;
-  chestCm?: number;
-  abdomenCm?: number;
   waistCm?: number;
   hipCm?: number;
+  neckCm?: number;
+  chestCm?: number;
+  armCm?: number;
+  thighCm?: number;
+  // Extended bilateral circumferences (2026-05 — full OCR coverage)
+  shoulderLeftCm?: number;
+  shoulderRightCm?: number;
+  abdomenCm?: number;
   gluteLeftCm?: number;
   gluteRightCm?: number;
-
-  // Brazos
-  /** Legacy. Si no se envía pero llegan bicepLeftCm/bicepRightCm, se espeja. */
-  armCm?: number;
   bicepLeftCm?: number;
   bicepRightCm?: number;
   forearmLeftCm?: number;
   forearmRightCm?: number;
-
-  // Piernas
-  /** Legacy. Si no se envía pero llegan quadLeftCm/quadRightCm, se espeja. */
-  thighCm?: number;
-  quadLeftCm?: number;
-  quadRightCm?: number;
+  thighLeftCm?: number;
+  thighRightCm?: number;
   hamstringLeftCm?: number;
   hamstringRightCm?: number;
   calfLeftCm?: number;
   calfRightCm?: number;
-
+  visceralFat?: number;
+  basalMetabolicRate?: number;
   source?: BodyMetricSource;
   notes?: string;
   recordedAt?: string;
@@ -145,14 +135,12 @@ export async function recordBodyMetric(
     const weightKg = input.weightKg;
     const bodyFatPct = input.bodyFatPct;
     const muscleMassKg = input.muscleMassKg;
-
-    // Mirror rule: si vienen los pares lateralizados, también escribimos la
-    // columna legacy single-side (armCm, thighCm) para que readers viejos
-    // sigan funcionando. Preferencia: el valor explícito > L > R.
-    const armMirror =
-      input.armCm ?? input.bicepLeftCm ?? input.bicepRightCm;
-    const thighMirror =
-      input.thighCm ?? input.quadLeftCm ?? input.quadRightCm;
+    const waistCm = input.waistCm;
+    const hipCm = input.hipCm;
+    const neckCm = input.neckCm;
+    const chestCm = input.chestCm;
+    const armCm = input.armCm;
+    const thighCm = input.thighCm;
 
     const source: BodyMetricSource = input.source ?? "MANUAL";
     const notesStr = input.notes?.trim() || null;
@@ -161,61 +149,32 @@ export async function recordBodyMetric(
     const metric = await prisma.bodyMetric.create({
       data: {
         clientUserId: targetClientId,
-
-        // Composición
-        ...(weightKg !== undefined && { weightKg }),
-        ...(bodyFatPct !== undefined && { bodyFatPct }),
-        ...(muscleMassKg !== undefined && { muscleMassKg }),
-        ...(input.visceralFat !== undefined && { visceralFat: input.visceralFat }),
-        ...(input.basalMetabolicRate !== undefined && {
-          basalMetabolicRate: input.basalMetabolicRate,
-        }),
-
-        // Tronco
-        ...(input.neckCm !== undefined && { neckCm: input.neckCm }),
-        ...(input.shoulderLeftCm !== undefined && {
-          shoulderLeftCm: input.shoulderLeftCm,
-        }),
-        ...(input.shoulderRightCm !== undefined && {
-          shoulderRightCm: input.shoulderRightCm,
-        }),
-        ...(input.chestCm !== undefined && { chestCm: input.chestCm }),
-        ...(input.abdomenCm !== undefined && { abdomenCm: input.abdomenCm }),
-        ...(input.waistCm !== undefined && { waistCm: input.waistCm }),
-        ...(input.hipCm !== undefined && { hipCm: input.hipCm }),
-        ...(input.gluteLeftCm !== undefined && { gluteLeftCm: input.gluteLeftCm }),
-        ...(input.gluteRightCm !== undefined && {
-          gluteRightCm: input.gluteRightCm,
-        }),
-
-        // Brazos — bicep L/R + espejo a armCm legacy
-        ...(input.bicepLeftCm !== undefined && { bicepLeftCm: input.bicepLeftCm }),
-        ...(input.bicepRightCm !== undefined && {
-          bicepRightCm: input.bicepRightCm,
-        }),
-        ...(armMirror !== undefined && { armCm: armMirror }),
-        ...(input.forearmLeftCm !== undefined && {
-          forearmLeftCm: input.forearmLeftCm,
-        }),
-        ...(input.forearmRightCm !== undefined && {
-          forearmRightCm: input.forearmRightCm,
-        }),
-
-        // Piernas — quad L/R + espejo a thighCm legacy
-        ...(input.quadLeftCm !== undefined && { quadLeftCm: input.quadLeftCm }),
-        ...(input.quadRightCm !== undefined && {
-          quadRightCm: input.quadRightCm,
-        }),
-        ...(thighMirror !== undefined && { thighCm: thighMirror }),
-        ...(input.hamstringLeftCm !== undefined && {
-          hamstringLeftCm: input.hamstringLeftCm,
-        }),
-        ...(input.hamstringRightCm !== undefined && {
-          hamstringRightCm: input.hamstringRightCm,
-        }),
-        ...(input.calfLeftCm !== undefined && { calfLeftCm: input.calfLeftCm }),
-        ...(input.calfRightCm !== undefined && { calfRightCm: input.calfRightCm }),
-
+        weightKg: weightKg !== undefined ? weightKg : undefined,
+        bodyFatPct: bodyFatPct !== undefined ? bodyFatPct : undefined,
+        muscleMassKg: muscleMassKg !== undefined ? muscleMassKg : undefined,
+        waistCm: waistCm !== undefined ? waistCm : undefined,
+        hipCm: hipCm !== undefined ? hipCm : undefined,
+        neckCm: neckCm !== undefined ? neckCm : undefined,
+        chestCm: chestCm !== undefined ? chestCm : undefined,
+        armCm: armCm !== undefined ? armCm : undefined,
+        thighCm: thighCm !== undefined ? thighCm : undefined,
+        shoulderLeftCm: input.shoulderLeftCm !== undefined ? input.shoulderLeftCm : undefined,
+        shoulderRightCm: input.shoulderRightCm !== undefined ? input.shoulderRightCm : undefined,
+        abdomenCm: input.abdomenCm !== undefined ? input.abdomenCm : undefined,
+        gluteLeftCm: input.gluteLeftCm !== undefined ? input.gluteLeftCm : undefined,
+        gluteRightCm: input.gluteRightCm !== undefined ? input.gluteRightCm : undefined,
+        bicepLeftCm: input.bicepLeftCm !== undefined ? input.bicepLeftCm : undefined,
+        bicepRightCm: input.bicepRightCm !== undefined ? input.bicepRightCm : undefined,
+        forearmLeftCm: input.forearmLeftCm !== undefined ? input.forearmLeftCm : undefined,
+        forearmRightCm: input.forearmRightCm !== undefined ? input.forearmRightCm : undefined,
+        thighLeftCm: input.thighLeftCm !== undefined ? input.thighLeftCm : undefined,
+        thighRightCm: input.thighRightCm !== undefined ? input.thighRightCm : undefined,
+        hamstringLeftCm: input.hamstringLeftCm !== undefined ? input.hamstringLeftCm : undefined,
+        hamstringRightCm: input.hamstringRightCm !== undefined ? input.hamstringRightCm : undefined,
+        calfLeftCm: input.calfLeftCm !== undefined ? input.calfLeftCm : undefined,
+        calfRightCm: input.calfRightCm !== undefined ? input.calfRightCm : undefined,
+        visceralFat: input.visceralFat !== undefined ? input.visceralFat : undefined,
+        basalMetabolicRate: input.basalMetabolicRate !== undefined ? input.basalMetabolicRate : undefined,
         source,
         notes: notesStr,
       },

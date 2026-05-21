@@ -134,6 +134,11 @@ function parseOptionalFloat(s: string): number | undefined {
   return s.trim() === "" || Number.isNaN(n) ? undefined : n;
 }
 
+function parseOptionalInt(s: string): number | undefined {
+  const n = Number.parseInt(s, 10);
+  return s.trim() === "" || Number.isNaN(n) ? undefined : n;
+}
+
 // -----------------------------------------------------------------------------
 // Inner content (tab navigation + form)
 // -----------------------------------------------------------------------------
@@ -268,37 +273,45 @@ function MeasurementContent({
     setSaveState("saving");
     setErrorMsg(null);
 
-    const f = parseOptionalFloat;
+    // Parse all 18 circumferences + 5 composition + 2 integers from the form.
+    const bicepLeftCm = parseOptionalFloat(form.bicepLeftCm);
+    const bicepRightCm = parseOptionalFloat(form.bicepRightCm);
+    const thighLeftCm = parseOptionalFloat(form.thighLeftCm);
+    const thighRightCm = parseOptionalFloat(form.thighRightCm);
+
     const result = await recordBodyMetric({
       clientUserId: clientId,
       // Composición
-      weightKg: f(form.weightKg),
-      bodyFatPct: f(form.bodyFatPct),
-      muscleMassKg: f(form.muscleMassKg),
-      visceralFat: f(form.visceralFat),
-      basalMetabolicRate: f(form.basalMetabolicRate),
+      weightKg: parseOptionalFloat(form.weightKg),
+      bodyFatPct: parseOptionalFloat(form.bodyFatPct),
+      muscleMassKg: parseOptionalFloat(form.muscleMassKg),
+      visceralFat: parseOptionalInt(form.visceralFat),
+      basalMetabolicRate: parseOptionalInt(form.basalMetabolicRate),
       // Tronco
-      neckCm: f(form.neckCm),
-      shoulderLeftCm: f(form.shoulderLeftCm),
-      shoulderRightCm: f(form.shoulderRightCm),
-      chestCm: f(form.chestCm),
-      abdomenCm: f(form.abdomenCm),
-      waistCm: f(form.waistCm),
-      hipCm: f(form.hipCm),
-      gluteLeftCm: f(form.gluteLeftCm),
-      gluteRightCm: f(form.gluteRightCm),
-      // Brazos (el backend espeja a armCm legacy automáticamente)
-      bicepLeftCm: f(form.bicepLeftCm),
-      bicepRightCm: f(form.bicepRightCm),
-      forearmLeftCm: f(form.forearmLeftCm),
-      forearmRightCm: f(form.forearmRightCm),
-      // Piernas (el backend espeja a thighCm legacy automáticamente)
-      quadLeftCm: f(form.thighLeftCm),
-      quadRightCm: f(form.thighRightCm),
-      hamstringLeftCm: f(form.hamstringLeftCm),
-      hamstringRightCm: f(form.hamstringRightCm),
-      calfLeftCm: f(form.calfLeftCm),
-      calfRightCm: f(form.calfRightCm),
+      neckCm: parseOptionalFloat(form.neckCm),
+      shoulderLeftCm: parseOptionalFloat(form.shoulderLeftCm),
+      shoulderRightCm: parseOptionalFloat(form.shoulderRightCm),
+      chestCm: parseOptionalFloat(form.chestCm),
+      abdomenCm: parseOptionalFloat(form.abdomenCm),
+      waistCm: parseOptionalFloat(form.waistCm),
+      hipCm: parseOptionalFloat(form.hipCm),
+      gluteLeftCm: parseOptionalFloat(form.gluteLeftCm),
+      gluteRightCm: parseOptionalFloat(form.gluteRightCm),
+      // Brazos
+      bicepLeftCm,
+      bicepRightCm,
+      forearmLeftCm: parseOptionalFloat(form.forearmLeftCm),
+      forearmRightCm: parseOptionalFloat(form.forearmRightCm),
+      // Piernas
+      thighLeftCm,
+      thighRightCm,
+      hamstringLeftCm: parseOptionalFloat(form.hamstringLeftCm),
+      hamstringRightCm: parseOptionalFloat(form.hamstringRightCm),
+      calfLeftCm: parseOptionalFloat(form.calfLeftCm),
+      calfRightCm: parseOptionalFloat(form.calfRightCm),
+      // Legacy single-side fallback (compat con código viejo y dashboards previos)
+      armCm: bicepLeftCm ?? bicepRightCm,
+      thighCm: thighLeftCm ?? thighRightCm,
       source: ocrUsed ? "OCR_SCALE" : "MANUAL",
     });
 

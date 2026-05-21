@@ -642,55 +642,37 @@ model MedicalCondition {
 // =============================================================================
 
 /// Time-series of body measurements. Source can be manual, OCR scale or device.
-///
-/// MVP legacy columns: `armCm` y `thighCm` se mantienen para backward compat
-/// con readers que aún no migraron a los campos lateralizados. El action
-/// `recordBodyMetric` los espeja: si llega `bicepLeftCm` o `bicepRightCm`,
-/// también se escribe en `armCm`; idem `quadLeftCm`/`quadRightCm` → `thighCm`.
-/// Cuando todos los consumidores lean los pares L/R, se pueden deprecar
-/// (drop column) en una migración posterior.
 model BodyMetric {
   id            String           @id @default(cuid())
   clientUserId  String
   recordedAt    DateTime         @default(now())
-
-  // ── Composition ──────────────────────────────────────────────────────────
-  weightKg           Decimal? @db.Decimal(6, 2)
-  bodyFatPct         Decimal? @db.Decimal(4, 1)
-  muscleMassKg       Decimal? @db.Decimal(5, 2)
-  visceralFat        Int?
-  basalMetabolicRate Int?
-
-  // ── Tronco ───────────────────────────────────────────────────────────────
-  neckCm           Decimal? @db.Decimal(4, 1)
+  weightKg      Decimal?         @db.Decimal(6, 2)
+  bodyFatPct    Decimal?         @db.Decimal(4, 1)
+  muscleMassKg  Decimal?         @db.Decimal(5, 2)
+  waistCm       Decimal?         @db.Decimal(4, 1)
+  hipCm         Decimal?         @db.Decimal(4, 1)
+  neckCm        Decimal?         @db.Decimal(4, 1)
+  chestCm       Decimal?         @db.Decimal(4, 1)
+  armCm         Decimal?         @db.Decimal(4, 1)
+  thighCm       Decimal?         @db.Decimal(4, 1)
+  // Extended bilateral circumferences (added 2026-05 for full OCR coverage)
   shoulderLeftCm   Decimal? @db.Decimal(4, 1)
   shoulderRightCm  Decimal? @db.Decimal(4, 1)
-  chestCm          Decimal? @db.Decimal(4, 1)
   abdomenCm        Decimal? @db.Decimal(4, 1)
-  waistCm          Decimal? @db.Decimal(4, 1)
-  hipCm            Decimal? @db.Decimal(4, 1)
   gluteLeftCm      Decimal? @db.Decimal(4, 1)
   gluteRightCm     Decimal? @db.Decimal(4, 1)
-
-  // ── Brazos ───────────────────────────────────────────────────────────────
-  /// Legacy single-arm column. Espejo escrito desde bicepLeftCm o bicepRightCm.
-  armCm            Decimal? @db.Decimal(4, 1)
   bicepLeftCm      Decimal? @db.Decimal(4, 1)
   bicepRightCm     Decimal? @db.Decimal(4, 1)
   forearmLeftCm    Decimal? @db.Decimal(4, 1)
   forearmRightCm   Decimal? @db.Decimal(4, 1)
-
-  // ── Piernas ──────────────────────────────────────────────────────────────
-  /// Legacy single-thigh column. Espejo escrito desde quadLeftCm o quadRightCm.
-  thighCm          Decimal? @db.Decimal(4, 1)
-  quadLeftCm       Decimal? @db.Decimal(4, 1)
-  quadRightCm      Decimal? @db.Decimal(4, 1)
+  thighLeftCm      Decimal? @db.Decimal(4, 1)
+  thighRightCm     Decimal? @db.Decimal(4, 1)
   hamstringLeftCm  Decimal? @db.Decimal(4, 1)
   hamstringRightCm Decimal? @db.Decimal(4, 1)
   calfLeftCm       Decimal? @db.Decimal(4, 1)
   calfRightCm      Decimal? @db.Decimal(4, 1)
-
-  // ── Meta ─────────────────────────────────────────────────────────────────
+  visceralFat      Int?
+  basalMetabolicRate Int?
   source        BodyMetricSource @default(MANUAL)
   notes         String?          @db.Text
   scaleImageKey String?
