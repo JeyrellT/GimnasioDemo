@@ -13,6 +13,7 @@ import { Plus, X, TrendingDown, TrendingUp, MapPin } from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -69,6 +70,12 @@ const FORM_TITLES: Record<ActiveForm, string> = {
   expense: "Registrar gasto",
   sale:    "Registrar venta",
   visit:   "Registrar visita",
+};
+
+const FORM_DESCRIPTIONS: Record<ActiveForm, string> = {
+  expense: "Anotá un gasto puntual o recurrente del negocio.",
+  sale:    "Registrá una venta ad-hoc fuera de la suscripción mensual.",
+  visit:   "Marcá una visita a una ubicación para calcular costos de transporte.",
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -158,6 +165,9 @@ export function FinanceFAB({ locations, visitLocations, clients }: FinanceFABPro
             <DialogTitle>
               {activeForm ? FORM_TITLES[activeForm] : ""}
             </DialogTitle>
+            <DialogDescription>
+              {activeForm ? FORM_DESCRIPTIONS[activeForm] : ""}
+            </DialogDescription>
           </DialogHeader>
 
           {activeForm === "expense" && (
