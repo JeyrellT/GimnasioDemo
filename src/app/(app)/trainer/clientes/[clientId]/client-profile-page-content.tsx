@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, Dumbbell, Loader2, MoreHorizontal } from "lucide-react";
+import { ChevronLeft, Dumbbell, Loader2 } from "lucide-react";
 
 import { getClientProfileDetail } from "@/app/actions/clients";
 
@@ -511,13 +511,12 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
           Clientes
         </Link>
 
-        <Link
-          href={`/trainer/clientes/${clientId}/ajustes`}
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-[#71717A] transition-colors hover:bg-[#27272A] hover:text-[#FAFAFA] focus-visible:outline-2 focus-visible:outline-brand-primary"
-          aria-label="Más acciones para este cliente"
-        >
-          <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
-        </Link>
+        {/*
+         * "Más acciones" link removed: it used to point to
+         * /trainer/clientes/[clientId]/ajustes which was never implemented.
+         * The route returned 404 on every RSC prefetch when the breadcrumb
+         * mounted. Re-add when there is an actual ajustes-by-client page.
+         */}
       </nav>
 
       {/* 1. Hero */}
