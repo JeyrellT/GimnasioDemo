@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Prisma schema
+// BLACKLINE FITNESS — Prisma schema
 // PWA gym management for Costa Rica.
 // Owner: database-architect.
 // All comments in English (per AGENT_BRIEF). All UI copy lives in es-CR voseo.
@@ -972,7 +972,7 @@ model SubscriptionPlan {
   deletedAt  DateTime?
 }
 
-/// Trainer's Forja subscription. One per trainer.
+/// Trainer's Blackline Fitness subscription. One per trainer.
 model TrainerSubscription {
   id                 String             @id @default(cuid())
   trainerUserId      String             @unique
@@ -1207,7 +1207,7 @@ model TrainerExpense {
 
 /// Ad-hoc income outside the recurring monthly subscription (drop-in session,
 /// nutrition plan, group class, product). `clientUserId` is optional because
-/// the buyer may not be a registered Forja user.
+/// the buyer may not be a registered Blackline Fitness user.
 model OneOffSale {
   id            String           @id @default(cuid())
   trainerUserId String
