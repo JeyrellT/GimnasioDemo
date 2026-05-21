@@ -9,7 +9,7 @@
 import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, ShieldCheck, Ban, UserCheck, LogIn } from "lucide-react";
+import { Loader2, ShieldCheck, Ban, UserCheck, LogIn, Trash2 } from "lucide-react";
 import type { UserRole } from "@/types/domain";
 import {
   Dialog,
@@ -24,18 +24,20 @@ import {
   suspendUser,
   unsuspendUser,
   startImpersonation,
+  deleteUser,
 } from "@/server/actions/admin.actions";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface UserActionsProps {
   userId: string;
+  userEmail: string;
   currentRole: UserRole;
   isSuspended: boolean;
   subscriptionId?: string;
 }
 
-type ModalType = "promote" | "suspend" | null;
+type ModalType = "promote" | "suspend" | "delete" | null;
 
 const PROMOTABLE_ROLES: { value: UserRole; label: string }[] = [
   { value: "CLIENT", label: "Cliente" },
@@ -48,6 +50,7 @@ const PROMOTABLE_ROLES: { value: UserRole; label: string }[] = [
 
 export function UserActions({
   userId,
+  userEmail,
   currentRole,
   isSuspended,
   subscriptionId: _subscriptionId,
@@ -58,6 +61,8 @@ export function UserActions({
   const [targetRole, setTargetRole] = useState<UserRole>(currentRole as UserRole);
   const [suspendReason, setSuspendReason] = useState("");
   const [fieldError, setFieldError] = useState<string | null>(null);
+  const [deleteEmailInput, setDeleteEmailInput] = useState("");
+  const [deleteReason, setDeleteReason] = useState("");
 
   // ── Promote ──────────────────────────────────────────────────────────────
 
@@ -135,6 +140,33 @@ export function UserActions({
     });
   };
 
+  // ── Delete ───────────────────────────────────────────────────────────────
+
+  const handleDelete = () => {
+    setFieldError(null);
+    if (deleteReason.trim().length < 5) {
+      setFieldError("Mínimo 5 caracteres en el motivo.");
+      return;
+    }
+    if (deleteEmailInput.trim().toLowerCase() !== userEmail.toLowerCase()) {
+      setFieldError("El email no coincide.");
+      return;
+    }
+    startTransition(async () => {
+      const result = await deleteUser({
+        userId,
+        reason: deleteReason.trim(),
+        confirmEmail: deleteEmailInput.trim(),
+      });
+      if (result.ok) {
+        toast.success("Usuario borrado correctamente.");
+        router.push("/admin/users");
+      } else {
+        setFieldError(result.error.message);
+      }
+    });
+  };
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -205,6 +237,24 @@ export function UserActions({
           Impersonar
         </button>
 
+        {/* Delete */}
+        {currentRole !== "SUPER_ADMIN" && (
+          <button
+            type="button"
+            onClick={() => {
+              setDeleteEmailInput("");
+              setDeleteReason("");
+              setFieldError(null);
+              setModal("delete");
+            }}
+            disabled={isPending}
+            className="w-full flex items-center gap-2.5 rounded-lg border border-[#EF4444]/30 bg-[#EF4444]/5 px-3 py-2.5 text-sm font-medium text-[#EF4444] hover:bg-[#EF4444]/10 transition-colors disabled:opacity-50 min-h-[44px]"
+          >
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
+            Borrar usuario
+          </button>
+        )}
+
         {isPending && (
           <p className="text-xs text-[#71717A] text-center animate-pulse">
             Procesando...
@@ -215,7 +265,9 @@ export function UserActions({
       {/* ── Promote Modal ─────────────────────────────────────────────────── */}
       <Dialog
         open={modal === "promote"}
-        onOpenChange={(open) => !open && setModal(null)}
+        onOpenChange={(open) => {
+          if (!open) setModal(null);
+        }}
       >
         <DialogContent>
           <DialogHeader>
@@ -278,7 +330,9 @@ export function UserActions({
       {/* ── Suspend Modal ─────────────────────────────────────────────────── */}
       <Dialog
         open={modal === "suspend"}
-        onOpenChange={(open) => !open && setModal(null)}
+        onOpenChange={(open) => {
+          if (!open) setModal(null);
+        }}
       >
         <DialogContent>
           <DialogHeader>
@@ -328,6 +382,98 @@ export function UserActions({
                 <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
               )}
               Suspender
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Delete Modal ──────────────────────────────────────────────────── */}
+      <Dialog
+        open={modal === "delete"}
+        onOpenChange={(open) => {
+          if (!open) {
+            setModal(null);
+            setDeleteEmailInput("");
+            setDeleteReason("");
+            setFieldError(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Borrar usuario permanentemente</DialogTitle>
+            <DialogDescription>
+              Esta acción marca la cuenta como eliminada. Los datos quedan en la
+              DB para auditoría LPDP pero el usuario no puede ingresar nunca más.
+              Para confirmar, escribí el email exacto del usuario y un motivo de
+              al menos 5 caracteres.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <label
+                htmlFor="delete-email"
+                className="text-xs font-medium text-[#A1A1AA] uppercase tracking-widest"
+              >
+                Email del usuario
+              </label>
+              <input
+                id="delete-email"
+                type="email"
+                value={deleteEmailInput}
+                onChange={(e) => setDeleteEmailInput(e.target.value)}
+                placeholder="Repetí el email del usuario"
+                autoComplete="off"
+                className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-[#EF4444] focus:outline-none focus:ring-1 focus:ring-[#EF4444]"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label
+                htmlFor="delete-reason"
+                className="text-xs font-medium text-[#A1A1AA] uppercase tracking-widest"
+              >
+                Motivo del borrado
+              </label>
+              <textarea
+                id="delete-reason"
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                placeholder="Describí el motivo del borrado..."
+                rows={3}
+                className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-[#EF4444] focus:outline-none focus:ring-1 focus:ring-[#EF4444] resize-none"
+              />
+            </div>
+
+            {fieldError && (
+              <p className="text-xs text-[#EF4444]">{fieldError}</p>
+            )}
+          </div>
+
+          <DialogFooter>
+            <button
+              type="button"
+              onClick={() => {
+                setModal(null);
+                setDeleteEmailInput("");
+                setDeleteReason("");
+                setFieldError(null);
+              }}
+              className="rounded-lg border border-[#3F3F46] px-4 py-2 text-sm text-[#A1A1AA] hover:bg-[#27272A] transition-colors min-h-[44px]"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={isPending}
+              className="flex items-center gap-2 rounded-lg bg-[#EF4444] px-4 py-2 text-sm font-semibold text-white hover:bg-[#DC2626] transition-colors disabled:opacity-50 min-h-[44px]"
+            >
+              {isPending && (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              )}
+              Borrar
             </button>
           </DialogFooter>
         </DialogContent>

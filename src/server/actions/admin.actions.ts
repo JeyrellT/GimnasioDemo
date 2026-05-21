@@ -13,7 +13,7 @@
 import { z } from "zod";
 import { cookies } from "next/headers";
 
-import { prisma, prismaRaw, Prisma } from "@/server/db";
+import { prisma, prismaRaw, type Prisma } from "@/server/db";
 import { requireSuperAdmin } from "@/server/guards";
 import { tryCatch } from "@/lib/result";
 import {
@@ -107,6 +107,30 @@ export interface AdminSubscriptionItem {
 // Internal: audit helper
 // =============================================================================
 
+/**
+ * Map the human-readable admin action verb (e.g. "DELETE_USER",
+ * "START_IMPERSONATION", "PROMOTE_USER") to the canonical AuditAction enum
+ * value that lives in the DB. The full verb is also persisted into
+ * `metadata.adminAction` so forensic queries can recover the exact operation
+ * even though the enum is coarser.
+ */
+function mapAdminActionToEnum(
+  action: string,
+): "CREATE" | "UPDATE" | "DELETE" | "ACCESS" | "EXPORT" {
+  const upper = action.toUpperCase();
+  if (upper.startsWith("DELETE_")) return "DELETE";
+  if (upper.startsWith("CREATE_")) return "CREATE";
+  if (upper.startsWith("ACCESS_")) return "ACCESS";
+  if (upper.startsWith("EXPORT_")) return "EXPORT";
+  if (
+    upper === "START_IMPERSONATION" ||
+    upper === "STOP_IMPERSONATION"
+  ) {
+    return "ACCESS";
+  }
+  return "UPDATE";
+}
+
 async function writeAdminAuditLog(
   actorUserId: string,
   action: string,
@@ -115,16 +139,21 @@ async function writeAdminAuditLog(
   metadata?: Record<string, unknown>,
 ): Promise<void> {
   try {
+    const enumAction = mapAdminActionToEnum(action);
+    // Persist the full verb in metadata so audit consumers can filter on the
+    // specific operation (e.g. distinguish SUSPEND_USER from PROMOTE_USER even
+    // though both are stored as enum UPDATE).
+    const enrichedMetadata: Record<string, unknown> = {
+      ...(metadata ?? {}),
+      adminAction: action,
+    };
     await prisma.auditLog.create({
       data: {
         actorUserId,
-        // AuditAction enum — UPDATE covers most admin mutations; use ACCESS for reads
-        action: "UPDATE",
+        action: enumAction,
         entityType,
         entityId,
-        metadata: metadata
-          ? (metadata as Prisma.InputJsonValue)
-          : Prisma.JsonNull,
+        metadata: enrichedMetadata as Prisma.InputJsonValue,
       },
     });
   } catch (e) {
@@ -1239,5 +1268,459 @@ export async function extendSubscriptionPeriod(input: {
     });
 
     return { updated: true, newCurrentPeriodEnd };
+  });
+}
+
+// =============================================================================
+// deleteUser
+// =============================================================================
+
+const deleteUserSchema = z.object({
+  userId: z.string().cuid(),
+  reason: z.string().min(5, "Indicá el motivo del borrado"),
+  confirmEmail: z.string().email("Ingresá el email del usuario para confirmar"),
+});
+
+export async function deleteUser(input: {
+  userId: string;
+  reason: string;
+  confirmEmail: string;
+}): Promise<ActionResult<{ deleted: true; userId: string }>> {
+  return tryCatch(async () => {
+    const actor = await requireSuperAdmin();
+
+    const { userId, reason, confirmEmail } = deleteUserSchema.parse(input);
+
+    // Use prismaRaw to bypass soft-delete filters (SUPER_ADMIN investigation)
+    const user = await prismaRaw.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        deletedAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundError("USER_NOT_FOUND", "Usuario no encontrado.");
+    }
+
+    if (confirmEmail.toLowerCase() !== user.email.toLowerCase()) {
+      throw new ValidationError(
+        "EMAIL_MISMATCH",
+        "El email no coincide.",
+      );
+    }
+
+    if (user.role === "SUPER_ADMIN") {
+      throw new ForbiddenError(
+        "CANNOT_DELETE_SUPER_ADMIN",
+        "No podés borrar a otro Super Admin.",
+      );
+    }
+
+    if (userId === actor.id) {
+      throw new ForbiddenError(
+        "SELF_DELETE",
+        "No podés borrarte a vos mismo.",
+      );
+    }
+
+    if (user.deletedAt !== null) {
+      throw new ConflictError(
+        "ALREADY_DELETED",
+        "Este usuario ya estaba borrado.",
+      );
+    }
+
+    const originalEmail = user.email;
+    const now = new Date();
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        deletedAt: now,
+        email: `${originalEmail}+deleted-${Date.now()}@blackline.local`,
+        suspendedAt: now,
+        suspendedReason: `Cuenta eliminada por SUPER_ADMIN: ${reason}`,
+      },
+    });
+
+    await writeAdminAuditLog(actor.id, "DELETE_USER", "User", userId, {
+      reason,
+      role: user.role,
+      originalEmail,
+    });
+
+    logInfo("User soft-deleted", {
+      actorId: actor.id,
+      targetUserId: userId,
+      originalEmail,
+    });
+
+    return { deleted: true, userId };
+  });
+}
+
+// =============================================================================
+// getOperationsSnapshot
+// =============================================================================
+
+export interface OperationsSnapshot {
+  invitationsPending: number;
+  invitationsExpiringSoon: number; // expiresAt within next 48h, not used
+  onboardingDraftsActive: number; // completedAt null, abandonedAt null, expiresAt > now
+  onboardingDraftsExpiringSoon: number; // expiresAt < now + 7d
+  chargesPending: number;
+  chargesOverdue: number;
+  chargesPaidLast7d: number;
+  subscriptionsTrialEndingSoon: number; // status TRIAL and trialEndsAt < now + 7d
+  subscriptionsExpiringSoon: number; // status ACTIVE and currentPeriodEnd < now + 7d
+  subscriptionsPastDue: number;
+  recentInvitations: Array<{
+    id: string;
+    email: string;
+    trainerName: string;
+    trainerEmail: string;
+    expiresAt: Date;
+    usedAt: Date | null;
+    createdAt: Date;
+  }>;
+  upcomingChargeDeadlines: Array<{
+    id: string;
+    clientName: string;
+    clientEmail: string;
+    trainerName: string;
+    amountCRC: string;
+    periodEnd: Date;
+    status: string;
+  }>;
+}
+
+export async function getOperationsSnapshot(): Promise<
+  ActionResult<OperationsSnapshot>
+> {
+  return tryCatch(async () => {
+    await requireSuperAdmin();
+
+    const now = new Date();
+    const in7d = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const in48h = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+    const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const [
+      invitationsPending,
+      invitationsExpiringSoon,
+      onboardingDraftsActive,
+      onboardingDraftsExpiringSoon,
+      chargesPending,
+      chargesOverdue,
+      chargesPaidLast7d,
+      subscriptionsTrialEndingSoon,
+      subscriptionsExpiringSoon,
+      subscriptionsPastDue,
+    ] = await prisma.$transaction([
+      // Invitations not yet used
+      prisma.invitation.count({
+        where: { usedAt: null, deletedAt: null },
+      }),
+      // Invitations expiring within next 48h and not yet used
+      prisma.invitation.count({
+        where: {
+          usedAt: null,
+          deletedAt: null,
+          expiresAt: { lte: in48h, gt: now },
+        },
+      }),
+      // Active onboarding drafts: not completed, not abandoned, not expired
+      prisma.onboardingDraft.count({
+        where: {
+          completedAt: null,
+          abandonedAt: null,
+          expiresAt: { gt: now },
+        },
+      }),
+      // Onboarding drafts expiring within 7 days (active ones only)
+      prisma.onboardingDraft.count({
+        where: {
+          completedAt: null,
+          abandonedAt: null,
+          expiresAt: { gt: now, lt: in7d },
+        },
+      }),
+      prisma.clientCharge.count({
+        where: { status: "PENDING", deletedAt: null },
+      }),
+      prisma.clientCharge.count({
+        where: { status: "OVERDUE", deletedAt: null },
+      }),
+      prisma.clientCharge.count({
+        where: {
+          status: "PAID",
+          deletedAt: null,
+          paidAt: { gte: last7d },
+        },
+      }),
+      prisma.trainerSubscription.count({
+        where: {
+          status: "TRIAL",
+          // Strictly upcoming: between now and now+7d. Already-expired trials
+          // are reported via status PAST_DUE / CANCELLED instead.
+          trialEndsAt: { gt: now, lt: in7d },
+        },
+      }),
+      prisma.trainerSubscription.count({
+        where: {
+          status: "ACTIVE",
+          currentPeriodEnd: { gt: now, lt: in7d },
+        },
+      }),
+      prisma.trainerSubscription.count({
+        where: { status: "PAST_DUE" },
+      }),
+    ]);
+
+    // Top 10 unused invitations ordered by createdAt desc
+    const recentInvitationsRaw = await prisma.invitation.findMany({
+      where: { usedAt: null, deletedAt: null },
+      select: {
+        id: true,
+        email: true,
+        expiresAt: true,
+        usedAt: true,
+        createdAt: true,
+        trainer: { select: { name: true, email: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+    });
+
+    const recentInvitations = recentInvitationsRaw.map((inv) => ({
+      id: inv.id,
+      email: inv.email,
+      trainerName: inv.trainer.name,
+      trainerEmail: inv.trainer.email,
+      expiresAt: inv.expiresAt,
+      usedAt: inv.usedAt,
+      createdAt: inv.createdAt,
+    }));
+
+    // Top 10 pending/overdue charges ordered by periodEnd asc
+    const upcomingChargeDeadlinesRaw = await prisma.clientCharge.findMany({
+      where: {
+        status: { in: ["PENDING", "OVERDUE"] },
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        amountCRC: true,
+        periodEnd: true,
+        status: true,
+        client: { select: { name: true, email: true } },
+        trainer: { select: { name: true } },
+      },
+      orderBy: { periodEnd: "asc" },
+      take: 10,
+    });
+
+    const upcomingChargeDeadlines = upcomingChargeDeadlinesRaw.map((c) => ({
+      id: c.id,
+      clientName: c.client.name,
+      clientEmail: c.client.email,
+      trainerName: c.trainer.name,
+      amountCRC: c.amountCRC.toString(),
+      periodEnd: c.periodEnd,
+      status: c.status,
+    }));
+
+    return {
+      invitationsPending,
+      invitationsExpiringSoon,
+      onboardingDraftsActive,
+      onboardingDraftsExpiringSoon,
+      chargesPending,
+      chargesOverdue,
+      chargesPaidLast7d,
+      subscriptionsTrialEndingSoon,
+      subscriptionsExpiringSoon,
+      subscriptionsPastDue,
+      recentInvitations,
+      upcomingChargeDeadlines,
+    };
+  });
+}
+
+// =============================================================================
+// getMonitoringSnapshot
+// =============================================================================
+
+export interface MonitoringSnapshot {
+  recentAuditLogs: Array<{
+    id: string;
+    actorEmail: string | null;
+    actorName: string | null;
+    action: string;
+    entityType: string;
+    entityId: string | null;
+    createdAt: Date;
+    metadata: unknown;
+  }>;
+  failedPaymentEvents: Array<{
+    id: string;
+    type: string;
+    externalId: string | null;
+    error: string | null;
+    createdAt: Date;
+  }>;
+  unprocessedPaymentEvents: number;
+  openLpdpRequests: Array<{
+    id: string;
+    userEmail: string;
+    userName: string;
+    type: string;
+    status: string;
+    createdAt: Date;
+  }>;
+  openLpdpRequestsCount: number;
+  activeSessionsCount: number; // sessions with expires > now
+  recentLoginsCount: number; // users with lastLoginAt in last 24h
+  suspendedUsersCount: number; // suspendedAt != null
+  deletedUsersLast30dCount: number; // soft-deleted in last 30d
+  totalAuditLogsLast24h: number;
+  errorAuditLogsLast24h: number; // proxy: DELETE action in last 24h
+}
+
+export async function getMonitoringSnapshot(): Promise<
+  ActionResult<MonitoringSnapshot>
+> {
+  return tryCatch(async () => {
+    await requireSuperAdmin();
+
+    const now = new Date();
+    const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const last30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    // Top 30 audit logs with actor info
+    const recentAuditLogsRaw = await prisma.auditLog.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 30,
+      select: {
+        id: true,
+        action: true,
+        entityType: true,
+        entityId: true,
+        createdAt: true,
+        metadata: true,
+        actor: { select: { email: true, name: true } },
+      },
+    });
+
+    const recentAuditLogs = recentAuditLogsRaw.map((log) => ({
+      id: log.id,
+      actorEmail: log.actor?.email ?? null,
+      actorName: log.actor?.name ?? null,
+      action: log.action,
+      entityType: log.entityType,
+      entityId: log.entityId,
+      createdAt: log.createdAt,
+      metadata: log.metadata,
+    }));
+
+    // Last 10 payment events with an error
+    const failedPaymentEventsRaw = await prisma.paymentEvent.findMany({
+      where: { error: { not: null } },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      select: {
+        id: true,
+        type: true,
+        externalId: true,
+        error: true,
+        createdAt: true,
+      },
+    });
+
+    const failedPaymentEvents = failedPaymentEventsRaw.map((e) => ({
+      id: e.id,
+      type: e.type,
+      externalId: e.externalId,
+      error: e.error,
+      createdAt: e.createdAt,
+    }));
+
+    // Open LPDP requests
+    const openLpdpRequestsRaw = await prisma.lpdpRequest.findMany({
+      where: {
+        status: { in: ["PENDING", "IN_PROGRESS"] },
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        type: true,
+        status: true,
+        createdAt: true,
+        user: { select: { email: true, name: true } },
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    const openLpdpRequests = openLpdpRequestsRaw.map((r) => ({
+      id: r.id,
+      userEmail: r.user.email,
+      userName: r.user.name,
+      type: r.type,
+      status: r.status,
+      createdAt: r.createdAt,
+    }));
+
+    const [
+      unprocessedPaymentEvents,
+      openLpdpRequestsCount,
+      activeSessionsCount,
+      recentLoginsCount,
+      suspendedUsersCount,
+      totalAuditLogsLast24h,
+      errorAuditLogsLast24h,
+    ] = await prisma.$transaction([
+      prisma.paymentEvent.count({ where: { processed: false } }),
+      prisma.lpdpRequest.count({
+        where: {
+          status: { in: ["PENDING", "IN_PROGRESS"] },
+          deletedAt: null,
+        },
+      }),
+      prisma.session.count({ where: { expires: { gt: now } } }),
+      prisma.user.count({
+        where: { lastLoginAt: { gte: last24h } },
+      }),
+      prisma.user.count({
+        where: { suspendedAt: { not: null } },
+      }),
+      prisma.auditLog.count({ where: { createdAt: { gte: last24h } } }),
+      // Proxy for error activity: DELETE actions in last 24h
+      prisma.auditLog.count({
+        where: { action: "DELETE", createdAt: { gte: last24h } },
+      }),
+    ]);
+
+    // Soft-deleted users in last 30d — use prismaRaw to see past the filter
+    const deletedUsersLast30dCount = await prismaRaw.user.count({
+      where: { deletedAt: { gte: last30d } },
+    });
+
+    return {
+      recentAuditLogs,
+      failedPaymentEvents,
+      unprocessedPaymentEvents,
+      openLpdpRequests,
+      openLpdpRequestsCount,
+      activeSessionsCount,
+      recentLoginsCount,
+      suspendedUsersCount,
+      deletedUsersLast30dCount,
+      totalAuditLogsLast24h,
+      errorAuditLogsLast24h,
+    };
   });
 }
