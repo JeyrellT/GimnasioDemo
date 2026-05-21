@@ -108,29 +108,84 @@ export interface MyBodyMetric {
   id: string;
   clientUserId: string;
   recordedAt: Date;
+
+  // Composición
   weightKg: number | null;
   bodyFatPct: number | null;
   muscleMassKg: number | null;
+  visceralFat: number | null;
+  basalMetabolicRate: number | null;
+
+  // Tronco
+  neckCm: number | null;
+  shoulderLeftCm: number | null;
+  shoulderRightCm: number | null;
+  chestCm: number | null;
+  abdomenCm: number | null;
   waistCm: number | null;
   hipCm: number | null;
-  neckCm: number | null;
-  chestCm: number | null;
+  gluteLeftCm: number | null;
+  gluteRightCm: number | null;
+
+  // Brazos
+  /** Legacy single-arm value. Espejado desde bicepLeft/bicepRight. */
   armCm: number | null;
+  bicepLeftCm: number | null;
+  bicepRightCm: number | null;
+  forearmLeftCm: number | null;
+  forearmRightCm: number | null;
+
+  // Piernas
+  /** Legacy single-thigh value. Espejado desde quadLeft/quadRight. */
   thighCm: number | null;
+  quadLeftCm: number | null;
+  quadRightCm: number | null;
+  hamstringLeftCm: number | null;
+  hamstringRightCm: number | null;
+  calfLeftCm: number | null;
+  calfRightCm: number | null;
+
   source: string;
   notes: string | null;
 }
 
 export interface RecordBodyMetricInput {
+  // Composición
   weightKg?: number;
   bodyFatPct?: number;
   muscleMassKg?: number;
+  visceralFat?: number;
+  basalMetabolicRate?: number;
+
+  // Tronco
+  neckCm?: number;
+  shoulderLeftCm?: number;
+  shoulderRightCm?: number;
+  chestCm?: number;
+  abdomenCm?: number;
   waistCm?: number;
   hipCm?: number;
-  neckCm?: number;
-  chestCm?: number;
+  gluteLeftCm?: number;
+  gluteRightCm?: number;
+
+  // Brazos
+  /** Legacy. Si no se envía pero llegan bicepLeft/Right, se espeja. */
   armCm?: number;
+  bicepLeftCm?: number;
+  bicepRightCm?: number;
+  forearmLeftCm?: number;
+  forearmRightCm?: number;
+
+  // Piernas
+  /** Legacy. Si no se envía pero llegan quadLeft/Right, se espeja. */
   thighCm?: number;
+  quadLeftCm?: number;
+  quadRightCm?: number;
+  hamstringLeftCm?: number;
+  hamstringRightCm?: number;
+  calfLeftCm?: number;
+  calfRightCm?: number;
+
   notes?: string;
 }
 
@@ -429,8 +484,136 @@ export async function getSessionDetail(
 }
 
 // =============================================================================
-// 6. getMyMetrics
+// 6. getMyMetrics — shared select + mapper
 // =============================================================================
+
+/**
+ * Columnas seleccionadas para los reads de BodyMetric expuestos al cliente.
+ * Centralizado para que `getMyMetrics` y `recordBodyMetric` devuelvan
+ * exactamente el mismo shape.
+ */
+const BODY_METRIC_SELECT = {
+  id: true,
+  clientUserId: true,
+  recordedAt: true,
+
+  // Composición
+  weightKg: true,
+  bodyFatPct: true,
+  muscleMassKg: true,
+  visceralFat: true,
+  basalMetabolicRate: true,
+
+  // Tronco
+  neckCm: true,
+  shoulderLeftCm: true,
+  shoulderRightCm: true,
+  chestCm: true,
+  abdomenCm: true,
+  waistCm: true,
+  hipCm: true,
+  gluteLeftCm: true,
+  gluteRightCm: true,
+
+  // Brazos
+  armCm: true,
+  bicepLeftCm: true,
+  bicepRightCm: true,
+  forearmLeftCm: true,
+  forearmRightCm: true,
+
+  // Piernas
+  thighCm: true,
+  quadLeftCm: true,
+  quadRightCm: true,
+  hamstringLeftCm: true,
+  hamstringRightCm: true,
+  calfLeftCm: true,
+  calfRightCm: true,
+
+  source: true,
+  notes: true,
+} as const;
+
+type BodyMetricRow = {
+  id: string;
+  clientUserId: string;
+  recordedAt: Date;
+  weightKg: import("@prisma/client/runtime/library").Decimal | null;
+  bodyFatPct: import("@prisma/client/runtime/library").Decimal | null;
+  muscleMassKg: import("@prisma/client/runtime/library").Decimal | null;
+  visceralFat: number | null;
+  basalMetabolicRate: number | null;
+  neckCm: import("@prisma/client/runtime/library").Decimal | null;
+  shoulderLeftCm: import("@prisma/client/runtime/library").Decimal | null;
+  shoulderRightCm: import("@prisma/client/runtime/library").Decimal | null;
+  chestCm: import("@prisma/client/runtime/library").Decimal | null;
+  abdomenCm: import("@prisma/client/runtime/library").Decimal | null;
+  waistCm: import("@prisma/client/runtime/library").Decimal | null;
+  hipCm: import("@prisma/client/runtime/library").Decimal | null;
+  gluteLeftCm: import("@prisma/client/runtime/library").Decimal | null;
+  gluteRightCm: import("@prisma/client/runtime/library").Decimal | null;
+  armCm: import("@prisma/client/runtime/library").Decimal | null;
+  bicepLeftCm: import("@prisma/client/runtime/library").Decimal | null;
+  bicepRightCm: import("@prisma/client/runtime/library").Decimal | null;
+  forearmLeftCm: import("@prisma/client/runtime/library").Decimal | null;
+  forearmRightCm: import("@prisma/client/runtime/library").Decimal | null;
+  thighCm: import("@prisma/client/runtime/library").Decimal | null;
+  quadLeftCm: import("@prisma/client/runtime/library").Decimal | null;
+  quadRightCm: import("@prisma/client/runtime/library").Decimal | null;
+  hamstringLeftCm: import("@prisma/client/runtime/library").Decimal | null;
+  hamstringRightCm: import("@prisma/client/runtime/library").Decimal | null;
+  calfLeftCm: import("@prisma/client/runtime/library").Decimal | null;
+  calfRightCm: import("@prisma/client/runtime/library").Decimal | null;
+  source: string;
+  notes: string | null;
+};
+
+function mapBodyMetricRow(r: BodyMetricRow): MyBodyMetric {
+  const dec = (v: BodyMetricRow["weightKg"]) => (v !== null ? Number(v) : null);
+  return {
+    id: r.id,
+    clientUserId: r.clientUserId,
+    recordedAt: r.recordedAt,
+
+    // Composición
+    weightKg: dec(r.weightKg),
+    bodyFatPct: dec(r.bodyFatPct),
+    muscleMassKg: dec(r.muscleMassKg),
+    visceralFat: r.visceralFat,
+    basalMetabolicRate: r.basalMetabolicRate,
+
+    // Tronco
+    neckCm: dec(r.neckCm),
+    shoulderLeftCm: dec(r.shoulderLeftCm),
+    shoulderRightCm: dec(r.shoulderRightCm),
+    chestCm: dec(r.chestCm),
+    abdomenCm: dec(r.abdomenCm),
+    waistCm: dec(r.waistCm),
+    hipCm: dec(r.hipCm),
+    gluteLeftCm: dec(r.gluteLeftCm),
+    gluteRightCm: dec(r.gluteRightCm),
+
+    // Brazos
+    armCm: dec(r.armCm),
+    bicepLeftCm: dec(r.bicepLeftCm),
+    bicepRightCm: dec(r.bicepRightCm),
+    forearmLeftCm: dec(r.forearmLeftCm),
+    forearmRightCm: dec(r.forearmRightCm),
+
+    // Piernas
+    thighCm: dec(r.thighCm),
+    quadLeftCm: dec(r.quadLeftCm),
+    quadRightCm: dec(r.quadRightCm),
+    hamstringLeftCm: dec(r.hamstringLeftCm),
+    hamstringRightCm: dec(r.hamstringRightCm),
+    calfLeftCm: dec(r.calfLeftCm),
+    calfRightCm: dec(r.calfRightCm),
+
+    source: r.source,
+    notes: r.notes,
+  };
+}
 
 /**
  * Return the last 100 body metric records for the calling client,
@@ -445,42 +628,12 @@ export async function getMyMetrics(): Promise<ActionResult<MyBodyMetric[]>> {
         clientUserId: user.id,
         deletedAt: null,
       },
-      select: {
-        id: true,
-        clientUserId: true,
-        recordedAt: true,
-        weightKg: true,
-        bodyFatPct: true,
-        muscleMassKg: true,
-        waistCm: true,
-        hipCm: true,
-        neckCm: true,
-        chestCm: true,
-        armCm: true,
-        thighCm: true,
-        source: true,
-        notes: true,
-      },
+      select: BODY_METRIC_SELECT,
       orderBy: { recordedAt: "desc" },
       take: 100,
     });
 
-    return rows.map((r) => ({
-      id: r.id,
-      clientUserId: r.clientUserId,
-      recordedAt: r.recordedAt,
-      weightKg: r.weightKg !== null ? Number(r.weightKg) : null,
-      bodyFatPct: r.bodyFatPct !== null ? Number(r.bodyFatPct) : null,
-      muscleMassKg: r.muscleMassKg !== null ? Number(r.muscleMassKg) : null,
-      waistCm: r.waistCm !== null ? Number(r.waistCm) : null,
-      hipCm: r.hipCm !== null ? Number(r.hipCm) : null,
-      neckCm: r.neckCm !== null ? Number(r.neckCm) : null,
-      chestCm: r.chestCm !== null ? Number(r.chestCm) : null,
-      armCm: r.armCm !== null ? Number(r.armCm) : null,
-      thighCm: r.thighCm !== null ? Number(r.thighCm) : null,
-      source: r.source,
-      notes: r.notes,
-    }));
+    return rows.map(mapBodyMetricRow);
   });
 }
 
@@ -543,15 +696,36 @@ export async function recordBodyMetric(
 
     // Validate: at least one numeric measurement must be present and finite.
     const measurementKeys: (keyof RecordBodyMetricInput)[] = [
+      // Composición
       "weightKg",
       "bodyFatPct",
       "muscleMassKg",
+      "visceralFat",
+      "basalMetabolicRate",
+      // Tronco
+      "neckCm",
+      "shoulderLeftCm",
+      "shoulderRightCm",
+      "chestCm",
+      "abdomenCm",
       "waistCm",
       "hipCm",
-      "neckCm",
-      "chestCm",
+      "gluteLeftCm",
+      "gluteRightCm",
+      // Brazos
       "armCm",
+      "bicepLeftCm",
+      "bicepRightCm",
+      "forearmLeftCm",
+      "forearmRightCm",
+      // Piernas
       "thighCm",
+      "quadLeftCm",
+      "quadRightCm",
+      "hamstringLeftCm",
+      "hamstringRightCm",
+      "calfLeftCm",
+      "calfRightCm",
     ];
 
     const hasMeasurement = measurementKeys.some(
@@ -565,37 +739,74 @@ export async function recordBodyMetric(
       );
     }
 
+    // Mirror rule: si vienen los pares lateralizados, también escribimos la
+    // columna legacy (armCm / thighCm) para que readers viejos sigan
+    // funcionando. Preferencia explícita > L > R.
+    const armMirror = input.armCm ?? input.bicepLeftCm ?? input.bicepRightCm;
+    const thighMirror = input.thighCm ?? input.quadLeftCm ?? input.quadRightCm;
+
     const created = await prisma.bodyMetric.create({
       data: {
         clientUserId: user.id,
         source: "MANUAL",
+
+        // Composición
         ...(input.weightKg !== undefined && { weightKg: input.weightKg }),
         ...(input.bodyFatPct !== undefined && { bodyFatPct: input.bodyFatPct }),
         ...(input.muscleMassKg !== undefined && { muscleMassKg: input.muscleMassKg }),
+        ...(input.visceralFat !== undefined && { visceralFat: input.visceralFat }),
+        ...(input.basalMetabolicRate !== undefined && {
+          basalMetabolicRate: input.basalMetabolicRate,
+        }),
+
+        // Tronco
+        ...(input.neckCm !== undefined && { neckCm: input.neckCm }),
+        ...(input.shoulderLeftCm !== undefined && {
+          shoulderLeftCm: input.shoulderLeftCm,
+        }),
+        ...(input.shoulderRightCm !== undefined && {
+          shoulderRightCm: input.shoulderRightCm,
+        }),
+        ...(input.chestCm !== undefined && { chestCm: input.chestCm }),
+        ...(input.abdomenCm !== undefined && { abdomenCm: input.abdomenCm }),
         ...(input.waistCm !== undefined && { waistCm: input.waistCm }),
         ...(input.hipCm !== undefined && { hipCm: input.hipCm }),
-        ...(input.neckCm !== undefined && { neckCm: input.neckCm }),
-        ...(input.chestCm !== undefined && { chestCm: input.chestCm }),
-        ...(input.armCm !== undefined && { armCm: input.armCm }),
-        ...(input.thighCm !== undefined && { thighCm: input.thighCm }),
+        ...(input.gluteLeftCm !== undefined && { gluteLeftCm: input.gluteLeftCm }),
+        ...(input.gluteRightCm !== undefined && {
+          gluteRightCm: input.gluteRightCm,
+        }),
+
+        // Brazos — bicep L/R + espejo a armCm legacy
+        ...(input.bicepLeftCm !== undefined && { bicepLeftCm: input.bicepLeftCm }),
+        ...(input.bicepRightCm !== undefined && {
+          bicepRightCm: input.bicepRightCm,
+        }),
+        ...(armMirror !== undefined && { armCm: armMirror }),
+        ...(input.forearmLeftCm !== undefined && {
+          forearmLeftCm: input.forearmLeftCm,
+        }),
+        ...(input.forearmRightCm !== undefined && {
+          forearmRightCm: input.forearmRightCm,
+        }),
+
+        // Piernas — quad L/R + espejo a thighCm legacy
+        ...(input.quadLeftCm !== undefined && { quadLeftCm: input.quadLeftCm }),
+        ...(input.quadRightCm !== undefined && {
+          quadRightCm: input.quadRightCm,
+        }),
+        ...(thighMirror !== undefined && { thighCm: thighMirror }),
+        ...(input.hamstringLeftCm !== undefined && {
+          hamstringLeftCm: input.hamstringLeftCm,
+        }),
+        ...(input.hamstringRightCm !== undefined && {
+          hamstringRightCm: input.hamstringRightCm,
+        }),
+        ...(input.calfLeftCm !== undefined && { calfLeftCm: input.calfLeftCm }),
+        ...(input.calfRightCm !== undefined && { calfRightCm: input.calfRightCm }),
+
         ...(input.notes !== undefined && { notes: input.notes }),
       },
-      select: {
-        id: true,
-        clientUserId: true,
-        recordedAt: true,
-        weightKg: true,
-        bodyFatPct: true,
-        muscleMassKg: true,
-        waistCm: true,
-        hipCm: true,
-        neckCm: true,
-        chestCm: true,
-        armCm: true,
-        thighCm: true,
-        source: true,
-        notes: true,
-      },
+      select: BODY_METRIC_SELECT,
     });
 
     logInfo("client-portal.recordBodyMetric", {
@@ -603,22 +814,7 @@ export async function recordBodyMetric(
       metricId: created.id,
     });
 
-    return {
-      id: created.id,
-      clientUserId: created.clientUserId,
-      recordedAt: created.recordedAt,
-      weightKg: created.weightKg !== null ? Number(created.weightKg) : null,
-      bodyFatPct: created.bodyFatPct !== null ? Number(created.bodyFatPct) : null,
-      muscleMassKg: created.muscleMassKg !== null ? Number(created.muscleMassKg) : null,
-      waistCm: created.waistCm !== null ? Number(created.waistCm) : null,
-      hipCm: created.hipCm !== null ? Number(created.hipCm) : null,
-      neckCm: created.neckCm !== null ? Number(created.neckCm) : null,
-      chestCm: created.chestCm !== null ? Number(created.chestCm) : null,
-      armCm: created.armCm !== null ? Number(created.armCm) : null,
-      thighCm: created.thighCm !== null ? Number(created.thighCm) : null,
-      source: created.source,
-      notes: created.notes,
-    };
+    return mapBodyMetricRow(created);
   });
 }
 

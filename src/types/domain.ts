@@ -195,6 +195,7 @@ export interface RoutineSnapshotExercise {
   notes: string | null;
   slug?: string | null;
   thumbnailUrl?: string | null;
+  gifUrl?: string | null;
   nameEn?: string | null;
 }
 

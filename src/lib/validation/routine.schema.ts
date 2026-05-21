@@ -146,6 +146,7 @@ const snapshotExerciseSchema = z.object({
   // Bug #3: fields built by buildSnapshot() and stored in RoutineSnapshotExercise
   slug: z.string().nullable().optional(),
   thumbnailUrl: z.string().nullable().optional(),
+  gifUrl: z.string().nullable().optional(),
   nameEn: z.string().nullable().optional(),
 });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { AuthProvider, useAuth } from "@/components/providers/auth-provider";
 import { BrandingProvider } from "@/lib/branding/branding-context";
@@ -16,9 +16,22 @@ function AppShell({ children }: { children: ReactNode }) {
   const { user, avatarUrl, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
 
+  // Redirect unauthenticated users to /ingresar. Must run in useEffect:
+  // calling router.replace() during render is a setState-during-render
+  // which React 19 punishes by halting Suspense streaming on subsequent
+  // navigations, leaving the page permanently blank in the browser.
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.replace("/ingresar");
+    }
+  }, [isLoading, isAuthenticated, router]);
+
   if (!isLoading && !isAuthenticated) {
-    router.replace("/ingresar");
-    return null;
+    return (
+      <div className="flex h-screen items-center justify-center bg-canvas text-neutral-400">
+        <p className="text-sm">Redirigiendo…</p>
+      </div>
+    );
   }
 
   if (isLoading || !user) {

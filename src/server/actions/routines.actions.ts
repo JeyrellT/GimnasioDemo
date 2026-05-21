@@ -14,6 +14,7 @@
 // assignment time and never mutated afterwards (frozen prescription).
 // =============================================================================
 
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/server/db";
 import {
   requireTrainer,
@@ -140,6 +141,7 @@ function buildSnapshot(routine: RoutineDetail): RoutineSnapshot {
           notes: re.notes,
           slug: re.exercise.slug ?? null,
           thumbnailUrl: re.exercise.thumbnailUrl ?? re.exercise.gifUrl ?? null,
+          gifUrl: re.exercise.gifUrl ?? null,
           nameEn: re.exercise.nameEn || null,
         }),
       ),
@@ -989,6 +991,13 @@ export async function assignRoutine(
       routineTemplateId,
       assignedRoutineId: result.id,
     });
+
+    // Invalidate any Next.js fetch cache on the client-facing routes so the
+    // client sees the new assignment as soon as they navigate (or React Query
+    // refetches on focus / interval).
+    revalidatePath("/client/rutinas");
+    revalidatePath("/client/sesion");
+    revalidatePath("/inicio");
 
     return {
       assignedRoutineId: result.id,
