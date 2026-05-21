@@ -12,8 +12,9 @@
 // =============================================================================
 
 import * as React from "react";
-import { Loader2, CheckCircle, Upload, AlertTriangle, Settings } from "lucide-react";
+import { Loader2, CheckCircle, AlertTriangle, Settings, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import type { ScaleData } from "@/types/profile";
@@ -158,6 +159,7 @@ function MeasurementContent({
 
   const focus = useMeasurementSheetStore((s) => s.focus);
   const clearFocus = useMeasurementSheetStore((s) => s.clearFocus);
+  const notifySaved = useMeasurementSheetStore((s) => s.notifySaved);
 
   // Apply store focus: switch tabs, scroll to field, then clear so re-opens
   // manuales no reaplican el viejo foco.
@@ -203,42 +205,68 @@ function MeasurementContent({
     }));
   }
 
-  function handleAnthroOcr(data: MeasurementsExtraction) {
+  /**
+   * Aplica los campos de antropometría detectados al formulario.
+   * Devuelve cuántos campos quedaron pre-llenados (para feedback al coach).
+   */
+  function handleAnthroOcr(data: MeasurementsExtraction): number {
     setOcrUsed(true);
-    setForm((prev) => ({
-      ...prev,
-      neckCm: data.neckCm?.toString() ?? prev.neckCm,
-      shoulderLeftCm: data.shoulderLeftCm?.toString() ?? prev.shoulderLeftCm,
-      shoulderRightCm: data.shoulderRightCm?.toString() ?? prev.shoulderRightCm,
-      chestCm: data.chestCm?.toString() ?? prev.chestCm,
-      abdomenCm: data.abdomenCm?.toString() ?? prev.abdomenCm,
-      waistCm: data.waistCm?.toString() ?? prev.waistCm,
-      hipCm: data.hipCm?.toString() ?? prev.hipCm,
-      gluteLeftCm: data.gluteLeftCm?.toString() ?? prev.gluteLeftCm,
-      gluteRightCm: data.gluteRightCm?.toString() ?? prev.gluteRightCm,
-      bicepLeftCm: data.bicepLeftCm?.toString() ?? prev.bicepLeftCm,
-      bicepRightCm: data.bicepRightCm?.toString() ?? prev.bicepRightCm,
-      forearmLeftCm: data.forearmLeftCm?.toString() ?? prev.forearmLeftCm,
-      forearmRightCm: data.forearmRightCm?.toString() ?? prev.forearmRightCm,
-      thighLeftCm: data.thighLeftCm?.toString() ?? prev.thighLeftCm,
-      thighRightCm: data.thighRightCm?.toString() ?? prev.thighRightCm,
-      hamstringLeftCm: data.hamstringLeftCm?.toString() ?? prev.hamstringLeftCm,
-      hamstringRightCm: data.hamstringRightCm?.toString() ?? prev.hamstringRightCm,
-      calfLeftCm: data.calfLeftCm?.toString() ?? prev.calfLeftCm,
-      calfRightCm: data.calfRightCm?.toString() ?? prev.calfRightCm,
-    }));
+    let detected = 0;
+    setForm((prev) => {
+      const next = { ...prev };
+      const apply = (key: keyof MeasurementFormData, val: number | null) => {
+        if (val != null) {
+          next[key] = val.toString();
+          detected++;
+        }
+      };
+      apply("neckCm", data.neckCm);
+      apply("shoulderLeftCm", data.shoulderLeftCm);
+      apply("shoulderRightCm", data.shoulderRightCm);
+      apply("chestCm", data.chestCm);
+      apply("abdomenCm", data.abdomenCm);
+      apply("waistCm", data.waistCm);
+      apply("hipCm", data.hipCm);
+      apply("gluteLeftCm", data.gluteLeftCm);
+      apply("gluteRightCm", data.gluteRightCm);
+      apply("bicepLeftCm", data.bicepLeftCm);
+      apply("bicepRightCm", data.bicepRightCm);
+      apply("forearmLeftCm", data.forearmLeftCm);
+      apply("forearmRightCm", data.forearmRightCm);
+      apply("thighLeftCm", data.thighLeftCm);
+      apply("thighRightCm", data.thighRightCm);
+      apply("hamstringLeftCm", data.hamstringLeftCm);
+      apply("hamstringRightCm", data.hamstringRightCm);
+      apply("calfLeftCm", data.calfLeftCm);
+      apply("calfRightCm", data.calfRightCm);
+      return next;
+    });
+    return detected;
   }
 
-  function handleComposicionOcr(data: MeasurementsExtraction) {
+  /**
+   * Aplica los campos de composición detectados al formulario.
+   * Devuelve cuántos campos quedaron pre-llenados.
+   */
+  function handleComposicionOcr(data: MeasurementsExtraction): number {
     setOcrUsed(true);
-    setForm((prev) => ({
-      ...prev,
-      weightKg: data.weightKg?.toString() ?? prev.weightKg,
-      bodyFatPct: data.bodyFatPct?.toString() ?? prev.bodyFatPct,
-      muscleMassKg: data.muscleMassKg?.toString() ?? prev.muscleMassKg,
-      visceralFat: data.visceralFat?.toString() ?? prev.visceralFat,
-      basalMetabolicRate: data.basalMetabolicRate?.toString() ?? prev.basalMetabolicRate,
-    }));
+    let detected = 0;
+    setForm((prev) => {
+      const next = { ...prev };
+      const apply = (key: keyof MeasurementFormData, val: number | null) => {
+        if (val != null) {
+          next[key] = val.toString();
+          detected++;
+        }
+      };
+      apply("weightKg", data.weightKg);
+      apply("bodyFatPct", data.bodyFatPct);
+      apply("muscleMassKg", data.muscleMassKg);
+      apply("visceralFat", data.visceralFat);
+      apply("basalMetabolicRate", data.basalMetabolicRate);
+      return next;
+    });
+    return detected;
   }
 
   async function handleSave() {
@@ -281,13 +309,14 @@ function MeasurementContent({
       hamstringRightCm: parseOptionalFloat(form.hamstringRightCm),
       calfLeftCm: parseOptionalFloat(form.calfLeftCm),
       calfRightCm: parseOptionalFloat(form.calfRightCm),
-      // Legacy single-side fallback (para compat con código viejo y dashboards previos)
+      // Legacy single-side fallback (compat con código viejo y dashboards previos)
       armCm: bicepLeftCm ?? bicepRightCm,
       thighCm: thighLeftCm ?? thighRightCm,
       source: ocrUsed ? "OCR_SCALE" : "MANUAL",
     });
 
     if (result.ok) {
+      notifySaved();
       setSaveState("success");
       setTimeout(() => {
         onSuccess();
@@ -364,7 +393,7 @@ function MeasurementContent({
           aria-labelledby="tab-antropometria"
           hidden={activeTab !== "antropometria"}
         >
-          <MeasurementOcrZone onExtracted={handleAnthroOcr} />
+          <MeasurementOcrZone scope="antropometria" onExtracted={handleAnthroOcr} />
 
           {/* Sub-tabs */}
           <div
@@ -465,7 +494,7 @@ function MeasurementContent({
           aria-labelledby="tab-composicion"
           hidden={activeTab !== "composicion"}
         >
-          <MeasurementOcrZone onExtracted={handleComposicionOcr} />
+          <MeasurementOcrZone scope="composicion" onExtracted={handleComposicionOcr} />
 
           <AnthroFieldGrid
             fields={[
@@ -578,47 +607,124 @@ function AnthroFieldGrid({ fields, form, setField }: AnthroFieldGridProps) {
 }
 
 // -----------------------------------------------------------------------------
-// Sub-componente: zona compacta de OCR para medidas (Antropometría / Composición)
+// Sub-componente: zona de OCR para medidas (Antropometría / Composición)
+//
+// Diseñado para que sea tan prominente como el dropzone de "Foto báscula" — el
+// coach reportó que no era obvio que las otras tabs también aceptaran fotos.
+// Mostramos preview de la imagen subida + resumen del resultado, y emitimos
+// toasts cuando el OCR completa con confianza baja o warnings del modelo.
 // -----------------------------------------------------------------------------
 
 type OcrZoneState =
   | { phase: "idle" }
-  | { phase: "processing" }
-  | { phase: "success"; confidence: number }
-  | { phase: "error"; message: string };
+  | { phase: "processing"; objectUrl: string }
+  | {
+      phase: "success";
+      objectUrl: string;
+      confidence: number;
+      detectedCount: number;
+      warnings: string[];
+    }
+  | { phase: "error"; message: string; objectUrl?: string };
+
+type OcrScope = "antropometria" | "composicion";
 
 interface MeasurementOcrZoneProps {
-  onExtracted: (data: MeasurementsExtraction) => void;
+  scope: OcrScope;
+  /** Devuelve cuántos campos quedaron pre-llenados tras aplicar la extracción. */
+  onExtracted: (data: MeasurementsExtraction) => number;
 }
 
-function MeasurementOcrZone({ onExtracted }: MeasurementOcrZoneProps) {
+const SCOPE_COPY: Record<
+  OcrScope,
+  { title: string; subtitle: string; toastNoun: string }
+> = {
+  antropometria: {
+    title: "Subí una foto de la cinta métrica u hoja de evaluación",
+    subtitle: "Detectamos circunferencias automáticamente con IA",
+    toastNoun: "circunferencias",
+  },
+  composicion: {
+    title: "Subí una foto del display de la balanza",
+    subtitle: "Detectamos peso, grasa, masa muscular y BMR con IA",
+    toastNoun: "métricas",
+  },
+};
+
+function MeasurementOcrZone({ scope, onExtracted }: MeasurementOcrZoneProps) {
   const [state, setState] = React.useState<OcrZoneState>({ phase: "idle" });
   const [dragging, setDragging] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const isDraggingOver = React.useRef(false);
   const geminiReady = hasGeminiKey();
+  const copy = SCOPE_COPY[scope];
+
+  // Limpieza de object URLs cuando cambia la fase o el componente desmonta.
+  React.useEffect(() => {
+    const url =
+      state.phase === "processing" || state.phase === "success"
+        ? state.objectUrl
+        : state.phase === "error"
+          ? state.objectUrl
+          : undefined;
+    return () => {
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [state]);
 
   async function processFile(file: File) {
     if (!file.type.startsWith("image/")) {
-      setState({ phase: "error", message: "Solo se aceptan imágenes (JPG, PNG, WEBP)." });
+      setState({
+        phase: "error",
+        message: "Solo se aceptan imágenes (JPG, PNG, WEBP).",
+      });
       return;
     }
 
-    setState({ phase: "processing" });
+    const objectUrl = URL.createObjectURL(file);
+    setState({ phase: "processing", objectUrl });
 
     try {
       const extractor = await extractMeasurementsBrowserModule();
       const { data, confidence } = await extractor(file);
-      onExtracted(data);
-      setState({ phase: "success", confidence });
+      const detectedCount = onExtracted(data);
+
+      setState({
+        phase: "success",
+        objectUrl,
+        confidence,
+        detectedCount,
+        warnings: data.warnings,
+      });
+
+      if (detectedCount === 0) {
+        toast.warning(`No detectamos ${copy.toastNoun} en esta foto`, {
+          description:
+            "Probá con una imagen más nítida o ingresá los valores manualmente.",
+        });
+      } else {
+        toast.success(
+          `${detectedCount} ${detectedCount === 1 ? "campo detectado" : "campos detectados"}`,
+          {
+            description: `Confianza ${Math.round(confidence * 100)}%. Revisá los valores antes de guardar.`,
+          },
+        );
+      }
+
+      if (data.warnings.length > 0) {
+        toast.warning("Revisá estas observaciones", {
+          description: data.warnings.slice(0, 3).join(" · "),
+        });
+      }
     } catch (e) {
       const msg =
         e instanceof Error ? e.message : "No se pudieron detectar las medidas.";
-      setState({ phase: "error", message: msg });
+      setState({ phase: "error", message: msg, objectUrl });
+      toast.error("Falló el OCR", { description: msg });
     }
   }
 
-  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+  function handleDrop(e: React.DragEvent<HTMLElement>) {
     e.preventDefault();
     setDragging(false);
     isDraggingOver.current = false;
@@ -626,7 +732,7 @@ function MeasurementOcrZone({ onExtracted }: MeasurementOcrZoneProps) {
     if (file) processFile(file);
   }
 
-  function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
+  function handleDragOver(e: React.DragEvent<HTMLElement>) {
     e.preventDefault();
     if (!isDraggingOver.current) {
       isDraggingOver.current = true;
@@ -643,6 +749,13 @@ function MeasurementOcrZone({ onExtracted }: MeasurementOcrZoneProps) {
     setState({ phase: "idle" });
     if (inputRef.current) inputRef.current.value = "";
   }
+
+  const previewUrl =
+    state.phase === "processing" || state.phase === "success"
+      ? state.objectUrl
+      : state.phase === "error"
+        ? state.objectUrl
+        : undefined;
 
   return (
     <div className="mb-4 flex flex-col gap-2">
@@ -668,96 +781,128 @@ function MeasurementOcrZone({ onExtracted }: MeasurementOcrZoneProps) {
         </div>
       )}
 
-      {/* Drop zone — only shown when Gemini is ready and not yet processed */}
-      {geminiReady && state.phase !== "success" && (
-        <>
-          <div
-            role="button"
-            tabIndex={0}
-            aria-label="Arrastrá o seleccioná una foto para detectar medidas automáticamente"
-            onClick={() => {
-              if (state.phase !== "processing") inputRef.current?.click();
-            }}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onKeyDown={(e) => {
-              if ((e.key === "Enter" || e.key === " ") && state.phase !== "processing") {
-                e.preventDefault();
-                inputRef.current?.click();
-              }
-            }}
-            className={cn(
-              "flex min-h-[72px] cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed px-4 py-3 transition-all duration-150",
-              "focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-2",
-              state.phase === "processing" && "cursor-default opacity-70",
-              dragging
-                ? "border-brand-primary bg-[#27272A]"
-                : "border-[#3F3F46] bg-[#18181B] hover:border-brand-primary hover:bg-[#27272A]",
-            )}
-          >
-            {state.phase === "processing" ? (
-              <>
-                <Loader2 className="h-5 w-5 shrink-0 animate-spin text-brand-primary" aria-hidden="true" />
-                <span className="text-xs text-[#A1A1AA]">Detectando medidas...</span>
-              </>
-            ) : (
-              <>
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#27272A]">
-                  <Upload className="h-4 w-4 text-[#71717A]" aria-hidden="true" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-medium text-[#FAFAFA]">
-                    Subí una foto para detectar medidas automáticamente
-                  </p>
-                  <p className="mt-0.5 text-xs text-[#71717A]">JPG, PNG, WEBP</p>
-                </div>
-              </>
-            )}
-          </div>
-
-          {state.phase === "error" && (
-            <div
-              role="alert"
-              className="flex items-start gap-2 rounded-lg border border-[rgba(239,68,68,0.4)] bg-[rgba(239,68,68,0.08)] px-3 py-2"
-            >
-              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#EF4444]" aria-hidden="true" />
-              <p className="text-xs text-[#EF4444]">{state.message}</p>
-            </div>
+      {/* Drop zone (idle) */}
+      {geminiReady && state.phase === "idle" && (
+        <button
+          type="button"
+          aria-label="Arrastrá o seleccioná una foto para detectar medidas automáticamente"
+          onClick={() => inputRef.current?.click()}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          className={cn(
+            "flex min-h-[140px] w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-4 transition-all duration-150",
+            "focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-2",
+            dragging
+              ? "border-brand-primary bg-[#27272A]"
+              : "border-[#3F3F46] bg-[#18181B] hover:border-brand-primary hover:bg-[#27272A]",
           )}
-        </>
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#27272A]">
+            <Sparkles className="h-5 w-5 text-brand-primary" aria-hidden="true" />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-medium text-[#FAFAFA]">{copy.title}</p>
+            <p className="mt-1 text-xs text-[#71717A]">{copy.subtitle}</p>
+          </div>
+        </button>
       )}
 
-      {/* Success banner */}
-      {geminiReady && state.phase === "success" && (
-        <div className="flex items-center justify-between rounded-lg border border-[rgba(34,197,94,0.3)] bg-[rgba(34,197,94,0.08)] px-3 py-2">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="h-3.5 w-3.5 shrink-0 text-[#22C55E]" aria-hidden="true" />
-            <p className="text-xs text-[#22C55E]">
-              Medidas detectadas — confianza{" "}
-              <span className="font-semibold">
-                {Math.round((state as { phase: "success"; confidence: number }).confidence * 100)}%
-              </span>
-            </p>
+      {/* Preview con spinner durante processing */}
+      {geminiReady && state.phase === "processing" && previewUrl && (
+        <div className="relative overflow-hidden rounded-xl border border-[#3F3F46]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={previewUrl}
+            alt="Vista previa de la foto subida"
+            className="max-h-[180px] w-full bg-[#09090B] object-contain"
+          />
+          <div className="absolute inset-0 flex items-center justify-center gap-2 bg-[rgba(9,9,11,0.7)]">
+            <Loader2 className="h-5 w-5 animate-spin text-brand-primary" aria-hidden="true" />
+            <span className="text-xs font-medium text-[#FAFAFA]">
+              Detectando medidas...
+            </span>
           </div>
-          <button
-            type="button"
-            onClick={handleReset}
-            className="ml-3 shrink-0 text-xs text-[#71717A] underline underline-offset-2 hover:text-[#A1A1AA]"
-          >
-            Otra foto
-          </button>
         </div>
       )}
 
-      {/* Hidden file input */}
+      {/* Success banner — campos detectados + opción de subir otra */}
+      {geminiReady && state.phase === "success" && (
+        <div className="flex flex-col gap-2 rounded-xl border border-[rgba(34,197,94,0.3)] bg-[rgba(34,197,94,0.08)] p-3">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-2">
+              <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#22C55E]" aria-hidden="true" />
+              <div className="flex flex-col gap-0.5">
+                <p className="text-xs font-medium text-[#22C55E]">
+                  {state.detectedCount === 0
+                    ? "Foto procesada — no se detectaron campos"
+                    : state.detectedCount === 1
+                      ? "1 campo detectado y pre-llenado"
+                      : `${state.detectedCount} campos detectados y pre-llenados`}
+                </p>
+                <p className="text-xs text-[#A1A1AA]">
+                  Confianza {Math.round(state.confidence * 100)}%
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="shrink-0 text-xs text-[#A1A1AA] underline underline-offset-2 hover:text-[#FAFAFA]"
+            >
+              Otra foto
+            </button>
+          </div>
+          {state.warnings.length > 0 && (
+            <ul className="ml-6 list-disc space-y-0.5 text-xs text-[#F59E0B]">
+              {state.warnings.slice(0, 3).map((w) => (
+                <li key={w}>{w}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {/* Error inline + opción reintentar */}
+      {geminiReady && state.phase === "error" && (
+        <div className="flex flex-col gap-2">
+          {previewUrl && (
+            <div className="overflow-hidden rounded-xl border border-[#3F3F46]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={previewUrl}
+                alt="Vista previa de la foto subida"
+                className="max-h-[180px] w-full bg-[#09090B] object-contain opacity-60"
+              />
+            </div>
+          )}
+          <div
+            role="alert"
+            className="flex items-start justify-between gap-3 rounded-lg border border-[rgba(239,68,68,0.4)] bg-[rgba(239,68,68,0.08)] px-3 py-2"
+          >
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#EF4444]" aria-hidden="true" />
+              <p className="text-xs text-[#EF4444]">{state.message}</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="shrink-0 text-xs font-medium text-[#FAFAFA] underline underline-offset-2 hover:text-[#FCA5A5]"
+            >
+              Reintentar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden file input — sr-only hides it visually; no aria-hidden so AT
+          can still interact with it if needed (biome a11y rule). */}
       <input
         ref={inputRef}
         type="file"
         accept="image/*"
         capture="environment"
         className="sr-only"
-        aria-hidden="true"
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) processFile(file);

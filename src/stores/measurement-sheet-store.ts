@@ -58,17 +58,27 @@ interface MeasurementSheetState {
   isOpen: boolean;
   clientId: string | null;
   focus: SheetFocus | null;
+  /**
+   * Unix timestamp (Date.now()) set every time a measurement is successfully
+   * saved. Consumers (e.g. ClientProfilePageContent) subscribe to this value
+   * to know they should re-fetch stale data. Null means no save has occurred
+   * in this session.
+   */
+  lastSavedAt: number | null;
   open: (clientId: string) => void;
   openWithFocus: (clientId: string, focus: SheetFocus) => void;
   clearFocus: () => void;
   close: () => void;
   setOpen: (open: boolean) => void;
+  /** Call after a successful recordBodyMetric to signal dependent components. */
+  notifySaved: () => void;
 }
 
 export const useMeasurementSheetStore = create<MeasurementSheetState>((set, get) => ({
   isOpen: false,
   clientId: null,
   focus: null,
+  lastSavedAt: null,
 
   open: (clientId) => set({ isOpen: true, clientId, focus: null }),
 
@@ -76,7 +86,12 @@ export const useMeasurementSheetStore = create<MeasurementSheetState>((set, get)
 
   clearFocus: () => set({ focus: null }),
 
-  close: () => set({ isOpen: false, focus: null }),
+  // Bug fix: clientId DEBE limpiarse al cerrar para evitar data bleed entre
+  // clientes. Si quedaba poblado, un re-open vía `setOpen(true)` (Radix/Vaul
+  // restores) podía persistir la medición al cliente equivocado.
+  close: () => set({ isOpen: false, focus: null, clientId: null }),
+
+  notifySaved: () => set({ lastSavedAt: Date.now() }),
 
   // Used by Radix/Vaul Sheet's onOpenChange to keep the store in sync.
   setOpen: (open) => {
@@ -85,7 +100,7 @@ export const useMeasurementSheetStore = create<MeasurementSheetState>((set, get)
       if (!get().clientId) return;
       set({ isOpen: true });
     } else {
-      set({ isOpen: false, focus: null });
+      set({ isOpen: false, focus: null, clientId: null });
     }
   },
 }));

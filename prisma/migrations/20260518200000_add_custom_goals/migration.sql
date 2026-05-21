@@ -1,6 +1,10 @@
--- AlterTable: change goal from RoutineGoal enum to plain text
+-- AlterTable: change goal from RoutineGoal enum to plain text.
+-- Order matters: DROP DEFAULT first (it depends on the enum type), then
+-- cast the column to TEXT, then set the new TEXT default. Only then is it
+-- safe to DROP the unreferenced enum type.
+ALTER TABLE "RoutineTemplate" ALTER COLUMN "goal" DROP DEFAULT;
+ALTER TABLE "RoutineTemplate" ALTER COLUMN "goal" SET DATA TYPE TEXT USING "goal"::TEXT;
 ALTER TABLE "RoutineTemplate" ALTER COLUMN "goal" SET DEFAULT 'HYPERTROPHY';
-ALTER TABLE "RoutineTemplate" ALTER COLUMN "goal" SET DATA TYPE TEXT;
 
 -- DropEnum (no longer referenced by any column)
 DROP TYPE IF EXISTS "RoutineGoal";

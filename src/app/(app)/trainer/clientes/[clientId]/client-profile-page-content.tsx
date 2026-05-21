@@ -102,6 +102,9 @@ function alignDelta(
 // Adapter: backend → frontend
 // -----------------------------------------------------------------------------
 
+// Note: the backend BodyZone "glute" is a single-column that covers both sides
+// in the current MVP schema. We map it to "gluteL" for freshness; "gluteR" is
+// handled as a copy of the same freshness value in adaptToFrontend below.
 const BACKEND_TO_FRONTEND_ZONE: Record<BackendBodyZone, keyof FrontendComposition["freshness"]> = {
   neck: "neck",
   shoulderLeft: "shoulderL",
@@ -151,10 +154,15 @@ function adaptToFrontend(b: BackendDetail): FrontendDetail {
   for (const [bk, fr] of Object.entries(bc.freshness ?? {})) {
     const fk = BACKEND_TO_FRONTEND_ZONE[bk as BackendBodyZone];
     if (fk && fr) {
-      freshness[fk] = {
+      const converted = {
         lastMeasuredAt: fr.lastMeasuredAt ? new Date(fr.lastMeasuredAt) : null,
         daysSince: fr.daysSince,
       };
+      freshness[fk] = converted;
+      // The backend "glute" zone covers both sides — mirror freshness to gluteR.
+      if (bk === "glute") {
+        freshness.gluteR = converted;
+      }
     }
   }
 
@@ -382,13 +390,57 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [bodyView, setBodyView] = useState<"front" | "back">("front");
   const openSheetWithFocus = useMeasurementSheetStore((s) => s.openWithFocus);
+  const closeSheet = useMeasurementSheetStore((s) => s.close);
+  // Subscribe to measurement saves so we can re-fetch profile data after recording.
+  const lastSavedAt = useMeasurementSheetStore((s) => s.lastSavedAt);
 
+  // Track the latest clientId requested. We use this as a guard inside async
+  // resolution: if the user navigated to another client before the promise
+  // resolved, drop the stale response instead of overwriting the new client's
+  // state with the previous client's data.
+  const latestClientIdRef = React.useRef(clientId);
+  latestClientIdRef.current = clientId;
+
+  // Initial load: reset state immediately when clientId changes so the user
+  // never sees the previous client's body composition while the new fetch is
+  // in flight. The cancellation guard prevents late responses from clobbering
+  // the new client's data.
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setBackendDetail(null);
+    setSelectedZone(null);
+    // If the sheet was open for a previous client, force it closed — its
+    // store.clientId is captured at open() time and would otherwise persist
+    // the next measurement to the wrong client.
+    closeSheet();
+
     getClientProfileDetail(clientId).then((result) => {
+      if (cancelled) return;
+      if (latestClientIdRef.current !== clientId) return;
       if (result.ok) setBackendDetail(result.value);
       setLoading(false);
     });
-  }, [clientId]);
+    return () => {
+      cancelled = true;
+    };
+  }, [clientId, closeSheet]);
+
+  // Silent re-fetch after a measurement is saved from the sheet. Same guard:
+  // ignore the response if the user navigated away mid-flight.
+  useEffect(() => {
+    if (lastSavedAt === null) return;
+    let cancelled = false;
+    const fetchingFor = clientId;
+    getClientProfileDetail(clientId).then((result) => {
+      if (cancelled) return;
+      if (latestClientIdRef.current !== fetchingFor) return;
+      if (result.ok) setBackendDetail(result.value);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [lastSavedAt, clientId]);
 
   function handleTableZoneClick(zone: string) {
     setSelectedZone((prev) => (prev === zone ? null : zone));

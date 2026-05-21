@@ -4,7 +4,8 @@
 //
 // Browser wrapper for anthropometry + composition extraction.
 // Mirrors ocr-scale-browser.ts — uses gemini-browser.ts instead of the
-// server-side gemini-client.ts, and FileReader instead of Node.js Buffer.
+// server-side gemini-client.ts, and compressImage() to shave Gemini token cost
+// before encoding the payload.
 //
 // Public API:
 //   extractMeasurementsBrowser(file: File)
@@ -17,6 +18,7 @@
 
 import type { AppError } from "@/lib/errors";
 import type { Result } from "@/lib/result";
+import { compressImage } from "@/lib/storage/compress-image";
 
 import {
   generateStructured,
@@ -125,7 +127,7 @@ function validateMeasurementsShape(data: unknown): MeasurementsExtraction {
     typeof d.visceralFat === "number" &&
     (d.visceralFat < 1 || d.visceralFat > 59)
   ) {
-    softWarnings.push(`Grasa visceral fuera de rango Tanita (1..59).`);
+    softWarnings.push("Grasa visceral fuera de rango Tanita (1..59).");
   }
   for (const key of ANTHROPOMETRY_KEYS) {
     if (typeof d[key] === "number" && ((d[key] as number) < 5 || (d[key] as number) > 250)) {
@@ -167,33 +169,6 @@ function validateMeasurementsShape(data: unknown): MeasurementsExtraction {
 }
 
 // -----------------------------------------------------------------------------
-// Private: File → base64 via FileReader
-// -----------------------------------------------------------------------------
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result;
-      if (typeof result !== "string") {
-        reject(new Error("FileReader did not return a string."));
-        return;
-      }
-      // result is "data:<mime>;base64,<data>" — strip the prefix
-      const base64 = result.split(",")[1];
-      if (!base64) {
-        reject(new Error("Failed to extract base64 from FileReader result."));
-        return;
-      }
-      resolve(base64);
-    };
-    reader.onerror = () =>
-      reject(reader.error ?? new Error("FileReader error"));
-    reader.readAsDataURL(file);
-  });
-}
-
-// -----------------------------------------------------------------------------
 // Public: extractMeasurementsBrowser
 // -----------------------------------------------------------------------------
 
@@ -203,7 +178,10 @@ const SYSTEM_INSTRUCTION = `${SYSTEM_PROMPT}\n\n${MEASUREMENTS_PROMPT}`;
 export async function extractMeasurementsBrowser(
   file: File,
 ): Promise<{ data: MeasurementsExtraction; confidence: number }> {
-  const base64 = await fileToBase64(file);
+  // Resize + re-encode antes de mandar a Gemini: una foto 12MP de iPhone pasa
+  // de ~4MB a ~300KB y los token costs de visión bajan ~3-5x sin pérdida útil
+  // para OCR a 1500px en el lado largo.
+  const { data: base64, mimeType } = await compressImage(file);
 
   const generationResult: Result<
     GenerateStructuredResult<MeasurementsExtraction>,
@@ -212,7 +190,7 @@ export async function extractMeasurementsBrowser(
     model: "ocr",
     systemInstruction: SYSTEM_INSTRUCTION,
     userParts: [
-      { inlineData: { data: base64, mimeType: file.type } },
+      { inlineData: { data: base64, mimeType } },
       { text: "Extraé las medidas corporales que aparezcan en la imagen:" },
     ],
     schema: measurementsJsonSchema,
