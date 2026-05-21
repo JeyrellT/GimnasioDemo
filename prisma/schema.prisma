@@ -655,6 +655,24 @@ model BodyMetric {
   chestCm       Decimal?         @db.Decimal(4, 1)
   armCm         Decimal?         @db.Decimal(4, 1)
   thighCm       Decimal?         @db.Decimal(4, 1)
+  // Extended bilateral circumferences (added 2026-05 for full OCR coverage)
+  shoulderLeftCm   Decimal? @db.Decimal(4, 1)
+  shoulderRightCm  Decimal? @db.Decimal(4, 1)
+  abdomenCm        Decimal? @db.Decimal(4, 1)
+  gluteLeftCm      Decimal? @db.Decimal(4, 1)
+  gluteRightCm     Decimal? @db.Decimal(4, 1)
+  bicepLeftCm      Decimal? @db.Decimal(4, 1)
+  bicepRightCm     Decimal? @db.Decimal(4, 1)
+  forearmLeftCm    Decimal? @db.Decimal(4, 1)
+  forearmRightCm   Decimal? @db.Decimal(4, 1)
+  thighLeftCm      Decimal? @db.Decimal(4, 1)
+  thighRightCm     Decimal? @db.Decimal(4, 1)
+  hamstringLeftCm  Decimal? @db.Decimal(4, 1)
+  hamstringRightCm Decimal? @db.Decimal(4, 1)
+  calfLeftCm       Decimal? @db.Decimal(4, 1)
+  calfRightCm      Decimal? @db.Decimal(4, 1)
+  visceralFat      Int?
+  basalMetabolicRate Int?
   source        BodyMetricSource @default(MANUAL)
   notes         String?          @db.Text
   scaleImageKey String?

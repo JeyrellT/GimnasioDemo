@@ -86,6 +86,24 @@ export interface RecordBodyMetricInput {
   chestCm?: number;
   armCm?: number;
   thighCm?: number;
+  // Extended bilateral circumferences (2026-05 — full OCR coverage)
+  shoulderLeftCm?: number;
+  shoulderRightCm?: number;
+  abdomenCm?: number;
+  gluteLeftCm?: number;
+  gluteRightCm?: number;
+  bicepLeftCm?: number;
+  bicepRightCm?: number;
+  forearmLeftCm?: number;
+  forearmRightCm?: number;
+  thighLeftCm?: number;
+  thighRightCm?: number;
+  hamstringLeftCm?: number;
+  hamstringRightCm?: number;
+  calfLeftCm?: number;
+  calfRightCm?: number;
+  visceralFat?: number;
+  basalMetabolicRate?: number;
   source?: BodyMetricSource;
   notes?: string;
   recordedAt?: string;
@@ -140,6 +158,23 @@ export async function recordBodyMetric(
         chestCm: chestCm !== undefined ? chestCm : undefined,
         armCm: armCm !== undefined ? armCm : undefined,
         thighCm: thighCm !== undefined ? thighCm : undefined,
+        shoulderLeftCm: input.shoulderLeftCm !== undefined ? input.shoulderLeftCm : undefined,
+        shoulderRightCm: input.shoulderRightCm !== undefined ? input.shoulderRightCm : undefined,
+        abdomenCm: input.abdomenCm !== undefined ? input.abdomenCm : undefined,
+        gluteLeftCm: input.gluteLeftCm !== undefined ? input.gluteLeftCm : undefined,
+        gluteRightCm: input.gluteRightCm !== undefined ? input.gluteRightCm : undefined,
+        bicepLeftCm: input.bicepLeftCm !== undefined ? input.bicepLeftCm : undefined,
+        bicepRightCm: input.bicepRightCm !== undefined ? input.bicepRightCm : undefined,
+        forearmLeftCm: input.forearmLeftCm !== undefined ? input.forearmLeftCm : undefined,
+        forearmRightCm: input.forearmRightCm !== undefined ? input.forearmRightCm : undefined,
+        thighLeftCm: input.thighLeftCm !== undefined ? input.thighLeftCm : undefined,
+        thighRightCm: input.thighRightCm !== undefined ? input.thighRightCm : undefined,
+        hamstringLeftCm: input.hamstringLeftCm !== undefined ? input.hamstringLeftCm : undefined,
+        hamstringRightCm: input.hamstringRightCm !== undefined ? input.hamstringRightCm : undefined,
+        calfLeftCm: input.calfLeftCm !== undefined ? input.calfLeftCm : undefined,
+        calfRightCm: input.calfRightCm !== undefined ? input.calfRightCm : undefined,
+        visceralFat: input.visceralFat !== undefined ? input.visceralFat : undefined,
+        basalMetabolicRate: input.basalMetabolicRate !== undefined ? input.basalMetabolicRate : undefined,
         source,
         notes: notesStr,
       },
