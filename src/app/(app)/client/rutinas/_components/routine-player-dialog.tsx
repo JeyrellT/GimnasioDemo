@@ -17,11 +17,30 @@ import {
   CheckCircle,
   Dumbbell,
   SkipForward,
+  ListTodo,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getVideoLoopEmbed, type LoopEmbed } from "@/lib/media/video-url";
 import { LoopMediaFrame } from "@/components/shared/loop-media-frame";
 import type { RoutineSnapshotExercise } from "@/types/domain";
+import {
+  playRestEnd,
+  playRoutineComplete,
+  vibrate,
+  setMuted,
+  isMuted,
+} from "@/lib/audio/timer-sounds";
+import {
+  usePrepCountdown,
+  defaultPrepCallbacks,
+} from "@/hooks/use-prep-countdown";
+import { ReadyToGoScreen } from "./ready-to-go-screen";
+import { CountdownOverlay } from "./countdown-overlay";
+import { SegmentedProgressBar } from "./segmented-progress-bar";
+import { NextExercisePreview } from "./next-exercise-preview";
+import { ExerciseListSheet } from "./exercise-list-sheet";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -39,48 +58,16 @@ function repsLabel(ex: RoutineSnapshotExercise): string {
     : `${ex.targetRepsMin}-${ex.targetRepsMax} reps`;
 }
 
-function chime() {
-  if (typeof window === "undefined") return;
-  try {
-    const Ctx =
-      (window as unknown as { AudioContext?: typeof AudioContext }).AudioContext ??
-      (window as unknown as { webkitAudioContext?: typeof AudioContext })
-        .webkitAudioContext;
-    if (!Ctx) return;
-    const ctx = new Ctx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = "sine";
-    osc.frequency.value = 880;
-    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.35, ctx.currentTime + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.45);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.5);
-  } catch {
-    // best-effort
-  }
-}
-
-function vibrate() {
-  if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-    try {
-      navigator.vibrate([180, 80, 180]);
-    } catch {
-      // ignore
-    }
-  }
-}
-
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 type Phase =
+  | { kind: "ready" }
+  | { kind: "prep"; reason: "first" | "next-set" | "next-exercise" }
   | { kind: "work" }
-  | { kind: "rest"; nextAdvance: "set" | "exercise" };
+  | { kind: "rest"; nextAdvance: "set" | "exercise" }
+  | { kind: "done" };
 
 interface RoutinePlayerDialogProps {
   open: boolean;
@@ -105,13 +92,15 @@ export function RoutinePlayerDialog({
 }: RoutinePlayerDialogProps) {
   const [currentIndex, setCurrentIndex] = React.useState(startIndex);
   const [currentSet, setCurrentSet] = React.useState(1);
-  const [phase, setPhase] = React.useState<Phase>({ kind: "work" });
+  const [phase, setPhase] = React.useState<Phase>({ kind: "ready" });
   const [restSecondsLeft, setRestSecondsLeft] = React.useState(0);
   const [isPaused, setIsPaused] = React.useState(false);
-  const [completed, setCompleted] = React.useState(false);
+  const [showList, setShowList] = React.useState(false);
+  const [muted, setMutedState] = React.useState(false);
 
   const current = exercises[currentIndex] ?? null;
   const next = exercises[currentIndex + 1] ?? null;
+
   // GIF-mode embed (autoplay+loop+muted) — the video plays silently in the
   // media slot as long as the exercise has a recognized video URL.
   const videoLoopEmbed = React.useMemo<LoopEmbed | null>(
@@ -120,9 +109,15 @@ export function RoutinePlayerDialog({
   );
   // Reset the video error flag when the exercise changes.
   const [videoError, setVideoError] = React.useState(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset on exercise change is the intent
   React.useEffect(() => {
     setVideoError(false);
   }, [current?.exerciseId]);
+
+  // Sync mute state on mount from localStorage.
+  React.useEffect(() => {
+    setMutedState(isMuted());
+  }, []);
 
   // Anchor for drift-free rest countdown.
   const restAnchor = React.useRef<{
@@ -135,15 +130,28 @@ export function RoutinePlayerDialog({
     targetSec: 0,
   });
 
+  // 3-2-1 prep countdown.
+  const prep = usePrepCountdown({
+    seconds: 3,
+    onTick: defaultPrepCallbacks.onTick,
+    onComplete: () => {
+      defaultPrepCallbacks.onComplete?.();
+      setPhase({ kind: "work" });
+    },
+  });
+
   // Reset state when (re)opening or when startIndex changes.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: prep.cancel is a stable callback; including it would cause a render loop
   React.useEffect(() => {
     if (!open) return;
+    prep.cancel();
     setCurrentIndex(startIndex);
     setCurrentSet(1);
-    setPhase({ kind: "work" });
     setRestSecondsLeft(0);
     setIsPaused(false);
-    setCompleted(false);
+    // Always show "Ready to Go" first when the dialog opens, regardless of
+    // which exercise was tapped. This is the "preparación" screen.
+    setPhase({ kind: "ready" });
   }, [open, startIndex]);
 
   // Start the rest countdown anchor whenever phase transitions to "rest".
@@ -159,7 +167,7 @@ export function RoutinePlayerDialog({
     };
     setRestSecondsLeft(target);
     setIsPaused(false);
-    // If the coach configured 0s rest, advance immediately.
+    // If the coach configured 0s rest, jump straight to prep.
     if (target === 0) {
       advanceFromRest(phase.nextAdvance);
     }
@@ -169,7 +177,7 @@ export function RoutinePlayerDialog({
 
   // Rest countdown tick — only runs during rest phase.
   React.useEffect(() => {
-    if (!open || completed) return;
+    if (!open) return;
     if (phase.kind !== "rest") return;
 
     const id = setInterval(() => {
@@ -179,32 +187,40 @@ export function RoutinePlayerDialog({
       const remaining = Math.max(0, a.targetSec - elapsed);
       setRestSecondsLeft(remaining);
       if (remaining === 0) {
-        chime();
-        vibrate();
+        playRestEnd();
+        vibrate([180, 80, 180]);
         advanceFromRest(phase.nextAdvance);
       }
     }, 250);
     return () => clearInterval(id);
     // advanceFromRest is stable via setState callbacks; safe to omit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, completed, phase, isPaused]);
+  }, [open, phase, isPaused]);
 
   function advanceFromRest(target: "set" | "exercise") {
     if (target === "set") {
       setCurrentSet((s) => s + 1);
-      setPhase({ kind: "work" });
+      setPhase({ kind: "prep", reason: "next-set" });
+      prep.start(3);
       return;
     }
     // exercise: move to next, reset set counter
-    setCurrentIndex((i) => {
-      if (i >= exercises.length - 1) {
-        setCompleted(true);
-        return i;
-      }
-      return i + 1;
-    });
+    const isLastExercise = currentIndex >= exercises.length - 1;
+    if (isLastExercise) {
+      playRoutineComplete();
+      vibrate([200, 100, 200, 100, 300]);
+      setPhase({ kind: "done" });
+      return;
+    }
+    setCurrentIndex(currentIndex + 1);
     setCurrentSet(1);
-    setPhase({ kind: "work" });
+    setPhase({ kind: "prep", reason: "next-exercise" });
+    prep.start(3);
+  }
+
+  function handleStartReady() {
+    setPhase({ kind: "prep", reason: "first" });
+    prep.start(3);
   }
 
   function handleDone() {
@@ -220,9 +236,9 @@ export function RoutinePlayerDialog({
     }
     // Last set of this exercise
     if (isLastExercise) {
-      setCompleted(true);
-      chime();
-      vibrate();
+      playRoutineComplete();
+      vibrate([200, 100, 200, 100, 300]);
+      setPhase({ kind: "done" });
       return;
     }
     // Rest between exercises (uses coach-defined restSeconds of the
@@ -250,27 +266,46 @@ export function RoutinePlayerDialog({
     });
   }
 
+  function jumpToExercise(index: number) {
+    if (index < 0 || index >= exercises.length) return;
+    prep.cancel();
+    setCurrentIndex(index);
+    setCurrentSet(1);
+    setPhase({ kind: "prep", reason: "next-exercise" });
+    prep.start(3);
+  }
+
   function handlePrev() {
     if (currentIndex <= 0 && currentSet <= 1) return;
+    prep.cancel();
     if (currentSet > 1) {
       setCurrentSet((s) => s - 1);
-    } else {
-      setCurrentIndex((i) => Math.max(0, i - 1));
-      const prevEx = exercises[Math.max(0, currentIndex - 1)];
-      setCurrentSet(prevEx ? Math.max(1, prevEx.targetSets) : 1);
+      setPhase({ kind: "prep", reason: "next-set" });
+      prep.start(3);
+      return;
     }
-    setPhase({ kind: "work" });
-    setCompleted(false);
+    const targetIdx = Math.max(0, currentIndex - 1);
+    setCurrentIndex(targetIdx);
+    const prevEx = exercises[targetIdx];
+    setCurrentSet(prevEx ? Math.max(1, prevEx.targetSets) : 1);
+    setPhase({ kind: "prep", reason: "next-exercise" });
+    prep.start(3);
   }
 
   function handleNext() {
     if (currentIndex >= exercises.length - 1) {
-      setCompleted(true);
+      playRoutineComplete();
+      vibrate([200, 100, 200, 100, 300]);
+      setPhase({ kind: "done" });
       return;
     }
-    setCurrentIndex((i) => i + 1);
-    setCurrentSet(1);
-    setPhase({ kind: "work" });
+    jumpToExercise(currentIndex + 1);
+  }
+
+  function toggleMute() {
+    const newValue = !muted;
+    setMuted(newValue);
+    setMutedState(newValue);
   }
 
   if (!current) return null;
@@ -285,275 +320,360 @@ export function RoutinePlayerDialog({
     phase.kind === "rest" && phase.nextAdvance === "exercise";
   const restingForSet = phase.kind === "rest" && phase.nextAdvance === "set";
 
+  // Prep context label / next exercise name for the overlay.
+  let prepLabel = "Empezando";
+  const prepName = current.nameEs;
+  if (phase.kind === "prep") {
+    if (phase.reason === "first") {
+      prepLabel = "Empezando rutina";
+    } else if (phase.reason === "next-set") {
+      prepLabel = `Set ${Math.min(currentSet, totalSets)} de ${totalSets}`;
+    } else {
+      prepLabel = `Ejercicio ${currentIndex + 1} de ${exercises.length}`;
+    }
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 overflow-hidden gap-0 sm:max-w-lg">
-        {/* Header */}
-        <div className="border-b border-[#3F3F46] px-5 py-3.5">
-          <DialogTitle className="text-base font-semibold text-[#FAFAFA] pr-8">
-            {routineName}
-          </DialogTitle>
-          <DialogDescription className="text-xs text-[#71717A] mt-0.5">
-            {dayName} · Ejercicio {currentIndex + 1} de {exercises.length}
-            {!completed && (
-              <>
-                {" · "}Set {Math.min(currentSet, totalSets)} de {totalSets}
-              </>
-            )}
-          </DialogDescription>
-        </div>
-
-        {completed ? (
-          <div className="px-6 py-10 flex flex-col items-center gap-4 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#22C55E]/15">
-              <CheckCircle className="h-9 w-9 text-[#22C55E]" />
-            </div>
-            <div>
-              <p className="text-lg font-bold text-[#FAFAFA]">
-                ¡Rutina completada!
-              </p>
-              <p className="mt-1 text-sm text-[#A1A1AA]">
-                Terminaste los {exercises.length} ejercicios del día.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => onOpenChange(false)}
-              className="mt-2 rounded-xl bg-brand-primary px-6 py-3 text-sm font-semibold text-white min-h-[48px] hover:bg-brand-primary-hover transition-colors"
-            >
-              Cerrar
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* Media — GIF-mode (autoplay + loop + muted) when the exercise
-                has a video URL; otherwise the static thumbnail. The rest
-                overlay sits on top via absolute positioning. When the proxy
-                returns 404/415, LoopMediaFrame's onError fires and renders
-                its own "Video no disponible" placeholder. */}
-            <div className="relative w-full bg-[#09090B]">
-              {videoLoopEmbed && !videoError ? (
-                <LoopMediaFrame
-                  embed={videoLoopEmbed}
-                  title={`Demostración: ${current.nameEs}`}
-                  onVideoError={() => setVideoError(true)}
-                  maxAspectRatio={9 / 16}
-                />
-              ) : (
-                <div className="aspect-video w-full">
-                  <ExerciseThumbnail
-                    thumbnailUrl={current.thumbnailUrl}
-                    gifUrl={current.gifUrl}
-                    slug={current.slug}
-                    nameEn={current.nameEn}
-                    alt={current.nameEs}
-                  />
-                </div>
-              )}
-              {phase.kind === "rest" && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/65 backdrop-blur-sm">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-primary">
-                    {restingForExercise
-                      ? "Descanso entre ejercicios"
-                      : "Descanso"}
-                  </span>
-                  <span
-                    aria-live="polite"
-                    className="text-6xl font-bold tabular tabular-nums text-[#FAFAFA]"
-                  >
-                    {formatTime(restSecondsLeft)}
-                  </span>
-                  {isPaused && (
-                    <span className="rounded-full bg-[#18181B] px-3 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#A1A1AA] border border-[#3F3F46]">
-                      En pausa
-                    </span>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-md p-0 overflow-hidden gap-0 sm:max-w-lg">
+          {/* Header */}
+          <div className="border-b border-[#3F3F46] px-5 py-3.5">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1 pr-8">
+                <DialogTitle className="text-base font-semibold text-[#FAFAFA] truncate">
+                  {routineName}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-[#71717A] mt-0.5">
+                  {dayName}
+                  {phase.kind !== "ready" && phase.kind !== "done" && (
+                    <>
+                      {" · "}Ejercicio {currentIndex + 1} de {exercises.length}
+                      {" · "}Set {Math.min(currentSet, totalSets)} de {totalSets}
+                    </>
                   )}
-                </div>
-              )}
+                  {phase.kind === "ready" && (
+                    <>
+                      {" · "}
+                      {exercises.length} ejercicios
+                    </>
+                  )}
+                </DialogDescription>
+              </div>
+              <div className="flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  onClick={toggleMute}
+                  aria-label={muted ? "Activar sonido" : "Silenciar sonido"}
+                  aria-pressed={muted}
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-[#A1A1AA] hover:bg-[#27272A] hover:text-[#FAFAFA] transition-colors"
+                >
+                  {muted ? (
+                    <VolumeX className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <Volume2 className="h-4 w-4" aria-hidden="true" />
+                  )}
+                </button>
+                {phase.kind !== "ready" && phase.kind !== "done" && (
+                  <button
+                    type="button"
+                    onClick={() => setShowList(true)}
+                    aria-label="Ver lista de ejercicios"
+                    className="flex h-9 w-9 items-center justify-center rounded-full text-[#A1A1AA] hover:bg-[#27272A] hover:text-[#FAFAFA] transition-colors"
+                  >
+                    <ListTodo className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                )}
+              </div>
             </div>
 
-            {/* Rest progress bar */}
-            {phase.kind === "rest" && (
-              <div className="h-1 w-full bg-[#27272A]">
-                <div
-                  className="h-full bg-brand-primary transition-all duration-200 ease-linear"
-                  style={{ width: `${restProgressPct}%` }}
+            {/* Segmented progress bar — only when rutina ya empezó */}
+            {phase.kind !== "ready" && (
+              <div className="mt-2 -mx-5">
+                <SegmentedProgressBar
+                  total={exercises.length}
+                  currentIndex={
+                    phase.kind === "done" ? exercises.length : currentIndex
+                  }
+                  currentSetsTotal={totalSets}
+                  currentSetsDone={Math.max(
+                    0,
+                    Math.min(totalSets, currentSet - 1),
+                  )}
+                  onSegmentClick={(i) => {
+                    if (i === currentIndex) return;
+                    jumpToExercise(i);
+                  }}
                 />
               </div>
             )}
+          </div>
 
-            <div className="px-5 py-4 space-y-4">
-              {/* Exercise name + meta */}
+          {phase.kind === "ready" ? (
+            <ReadyToGoScreen
+              routineName={routineName}
+              dayName={dayName}
+              totalExercises={exercises.length}
+              firstExercise={current}
+              onStart={handleStartReady}
+              onShowList={() => setShowList(true)}
+            />
+          ) : phase.kind === "done" ? (
+            <div className="px-6 py-10 flex flex-col items-center gap-4 text-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#22C55E]/15">
+                <CheckCircle className="h-9 w-9 text-[#22C55E]" />
+              </div>
               <div>
-                <p className="text-lg font-bold text-[#FAFAFA] leading-tight">
-                  {current.nameEs}
+                <p className="text-lg font-bold text-[#FAFAFA]">
+                  ¡Rutina completada!
                 </p>
-                <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-[#A1A1AA]">
-                  <span className="inline-flex items-center gap-1">
-                    <Dumbbell className="h-3 w-3" aria-hidden="true" />
-                    {totalSets} {totalSets === 1 ? "serie" : "series"}
-                  </span>
-                  <span>{repsLabel(current)}</span>
-                  {current.targetRpe !== null && (
-                    <span>RPE {current.targetRpe}</span>
-                  )}
-                  <span className="inline-flex items-center gap-1">
-                    <Clock className="h-3 w-3" aria-hidden="true" />
-                    {current.restSeconds}s descanso
-                  </span>
-                  {current.tempo && <span>Tempo {current.tempo}</span>}
-                </div>
-                {current.notes && (
-                  <p className="mt-2 text-xs italic text-[#71717A]">
-                    {current.notes}
-                  </p>
+                <p className="mt-1 text-sm text-[#A1A1AA]">
+                  Terminaste los {exercises.length} ejercicios del día.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onOpenChange(false)}
+                className="mt-2 rounded-xl bg-brand-primary px-6 py-3 text-sm font-semibold text-white min-h-[48px] hover:bg-brand-primary-hover transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* Media — GIF-mode (autoplay + loop + muted) when the exercise
+                  has a video URL; otherwise the static thumbnail. Overlays
+                  (countdown 3-2-1, rest timer) sit on top via absolute. */}
+              <div className="relative w-full bg-[#09090B]">
+                {videoLoopEmbed && !videoError ? (
+                  <LoopMediaFrame
+                    embed={videoLoopEmbed}
+                    title={`Demostración: ${current.nameEs}`}
+                    onVideoError={() => setVideoError(true)}
+                    maxAspectRatio={9 / 16}
+                  />
+                ) : (
+                  <div className="aspect-video w-full">
+                    <ExerciseThumbnail
+                      thumbnailUrl={current.thumbnailUrl}
+                      gifUrl={current.gifUrl}
+                      slug={current.slug}
+                      nameEn={current.nameEn}
+                      alt={current.nameEs}
+                    />
+                  </div>
+                )}
+
+                {/* 3-2-1 prep overlay */}
+                {phase.kind === "prep" && (
+                  <CountdownOverlay
+                    secondsLeft={prep.secondsLeft}
+                    nextExerciseName={prepName}
+                    contextLabel={prepLabel}
+                  />
+                )}
+
+                {/* Rest overlay */}
+                {phase.kind === "rest" && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/65 backdrop-blur-sm">
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-primary">
+                      {restingForExercise
+                        ? "Descanso entre ejercicios"
+                        : "Descanso"}
+                    </span>
+                    <span
+                      aria-live="polite"
+                      className="text-6xl font-bold tabular tabular-nums text-[#FAFAFA]"
+                    >
+                      {formatTime(restSecondsLeft)}
+                    </span>
+                    {isPaused && (
+                      <span className="rounded-full bg-[#18181B] px-3 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#A1A1AA] border border-[#3F3F46]">
+                        En pausa
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
 
-              {/* Work panel — reps + Done */}
-              {phase.kind === "work" && (
-                <div className="rounded-2xl border border-brand-primary/30 bg-brand-primary/5 px-4 py-5 text-center space-y-2">
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-brand-primary">
-                    Set {Math.min(currentSet, totalSets)} de {totalSets}
+              {/* Rest progress bar (slim) */}
+              {phase.kind === "rest" && (
+                <div className="h-1 w-full bg-[#27272A]">
+                  <div
+                    className="h-full bg-brand-primary transition-all duration-200 ease-linear"
+                    style={{ width: `${restProgressPct}%` }}
+                  />
+                </div>
+              )}
+
+              <div className="px-5 py-4 space-y-4">
+                {/* Exercise name + meta */}
+                <div>
+                  <p className="text-lg font-bold text-[#FAFAFA] leading-tight">
+                    {current.nameEs}
                   </p>
-                  <p className="text-4xl font-bold text-[#FAFAFA] tabular tabular-nums">
-                    {repsLabel(current)}
-                  </p>
-                  <p className="text-[11px] text-[#71717A]">
-                    A tu ritmo. Tocá &quot;Listo&quot; cuando termines.
-                  </p>
+                  <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-[#A1A1AA]">
+                    <span className="inline-flex items-center gap-1">
+                      <Dumbbell className="h-3 w-3" aria-hidden="true" />
+                      {totalSets} {totalSets === 1 ? "serie" : "series"}
+                    </span>
+                    <span>{repsLabel(current)}</span>
+                    {current.targetRpe !== null && (
+                      <span>RPE {current.targetRpe}</span>
+                    )}
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="h-3 w-3" aria-hidden="true" />
+                      {current.restSeconds}s descanso
+                    </span>
+                    {current.tempo && <span>Tempo {current.tempo}</span>}
+                  </div>
+                  {current.notes && (
+                    <p className="mt-2 text-xs italic text-[#71717A]">
+                      {current.notes}
+                    </p>
+                  )}
+                </div>
+
+                {/* Work panel — reps + Done */}
+                {phase.kind === "work" && (
+                  <div className="rounded-2xl border border-brand-primary/30 bg-brand-primary/5 px-4 py-5 text-center space-y-2">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-brand-primary">
+                      Set {Math.min(currentSet, totalSets)} de {totalSets}
+                    </p>
+                    <p className="text-4xl font-bold text-[#FAFAFA] tabular tabular-nums">
+                      {repsLabel(current)}
+                    </p>
+                    <p className="text-[11px] text-[#71717A]">
+                      A tu ritmo. Tocá &quot;Listo&quot; cuando termines.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleDone}
+                      className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-primary py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-brand-primary-hover transition-colors"
+                    >
+                      <CheckCircle className="h-4 w-4" aria-hidden="true" />
+                      Listo
+                    </button>
+                  </div>
+                )}
+
+                {/* Prep panel — countdown also runs on the overlay; show a
+                    skeleton hint here so the layout doesn't jump */}
+                {phase.kind === "prep" && (
+                  <div className="rounded-2xl border border-[#3F3F46] bg-[#09090B]/40 px-4 py-5 text-center space-y-1">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-brand-primary">
+                      Preparate
+                    </p>
+                    <p className="text-2xl font-bold text-[#FAFAFA] tabular tabular-nums">
+                      {prep.secondsLeft === 0 ? "¡GO!" : prep.secondsLeft}
+                    </p>
+                  </div>
+                )}
+
+                {/* Rest panel — controls */}
+                {phase.kind === "rest" && (
+                  <div className="space-y-3">
+                    {restingForExercise && next ? (
+                      <NextExercisePreview
+                        exercise={next}
+                        positionHuman={currentIndex + 2}
+                        total={exercises.length}
+                        variant="full"
+                      />
+                    ) : (
+                      <div className="rounded-2xl border border-[#3F3F46] bg-[#09090B]/40 px-4 py-3 text-center">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-primary">
+                          Próximo
+                        </p>
+                        <p className="mt-1 text-sm text-[#FAFAFA]">
+                          Set {currentSet + 1} de {current.nameEs}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-center gap-3">
+                      <button
+                        type="button"
+                        onClick={handleTogglePause}
+                        aria-label={isPaused ? "Reanudar" : "Pausar"}
+                        className="flex h-12 w-12 items-center justify-center rounded-full border border-[#3F3F46] text-[#FAFAFA] hover:bg-[#27272A] transition-colors"
+                      >
+                        {isPaused ? (
+                          <Play
+                            className="h-5 w-5 fill-current"
+                            aria-hidden="true"
+                          />
+                        ) : (
+                          <Pause
+                            className="h-5 w-5 fill-current"
+                            aria-hidden="true"
+                          />
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSkipRest}
+                        className="inline-flex items-center gap-2 rounded-xl bg-brand-primary px-4 py-3 text-sm font-semibold text-white min-h-[48px] hover:bg-brand-primary-hover transition-colors"
+                      >
+                        <SkipForward className="h-4 w-4" aria-hidden="true" />
+                        Saltar descanso
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Prev / Next exercise */}
+                <div className="flex items-center justify-between gap-2">
                   <button
                     type="button"
-                    onClick={handleDone}
-                    className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-primary py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-brand-primary-hover transition-colors"
+                    onClick={handlePrev}
+                    disabled={currentIndex === 0 && currentSet <= 1}
+                    aria-label="Anterior"
+                    className="flex h-11 items-center gap-1.5 rounded-full border border-[#3F3F46] px-3 text-xs text-[#A1A1AA] disabled:opacity-30 hover:bg-[#27272A] transition-colors"
                   >
-                    <CheckCircle className="h-4 w-4" aria-hidden="true" />
-                    Listo
+                    <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                    Anterior
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    aria-label={
+                      currentIndex >= exercises.length - 1
+                        ? "Finalizar"
+                        : "Siguiente ejercicio"
+                    }
+                    className="flex h-11 items-center gap-1.5 rounded-full border border-[#3F3F46] px-3 text-xs text-[#A1A1AA] hover:bg-[#27272A] transition-colors"
+                  >
+                    Siguiente
+                    <ChevronRight className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
-              )}
 
-              {/* Rest panel — controls */}
-              {phase.kind === "rest" && (
-                <div className="rounded-2xl border border-[#3F3F46] bg-[#09090B]/40 px-4 py-3 space-y-3">
-                  <p className="text-center text-xs text-[#A1A1AA]">
-                    {restingForExercise && next
-                      ? `Siguiente: ${next.nameEs}`
-                      : restingForSet
-                        ? `Próximo: Set ${currentSet + 1} de ${current.nameEs}`
-                        : "Descanso"}
-                  </p>
-                  <div className="flex items-center justify-center gap-3">
-                    <button
-                      type="button"
-                      onClick={handleTogglePause}
-                      aria-label={isPaused ? "Reanudar" : "Pausar"}
-                      className="flex h-12 w-12 items-center justify-center rounded-full border border-[#3F3F46] text-[#FAFAFA] hover:bg-[#27272A] transition-colors"
-                    >
-                      {isPaused ? (
-                        <Play
-                          className="h-5 w-5 fill-current"
-                          aria-hidden="true"
-                        />
-                      ) : (
-                        <Pause
-                          className="h-5 w-5 fill-current"
-                          aria-hidden="true"
-                        />
-                      )}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSkipRest}
-                      className="inline-flex items-center gap-2 rounded-xl bg-brand-primary px-4 py-3 text-sm font-semibold text-white min-h-[48px] hover:bg-brand-primary-hover transition-colors"
-                    >
-                      <SkipForward className="h-4 w-4" aria-hidden="true" />
-                      Saltar descanso
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Prev / Next exercise */}
-              <div className="flex items-center justify-between gap-2">
-                <button
-                  type="button"
-                  onClick={handlePrev}
-                  disabled={currentIndex === 0 && currentSet <= 1}
-                  aria-label="Anterior"
-                  className="flex h-11 items-center gap-1.5 rounded-full border border-[#3F3F46] px-3 text-xs text-[#A1A1AA] disabled:opacity-30 hover:bg-[#27272A] transition-colors"
-                >
-                  <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-                  Anterior
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  aria-label={
-                    currentIndex >= exercises.length - 1
-                      ? "Finalizar"
-                      : "Siguiente ejercicio"
-                  }
-                  className="flex h-11 items-center gap-1.5 rounded-full border border-[#3F3F46] px-3 text-xs text-[#A1A1AA] hover:bg-[#27272A] transition-colors"
-                >
-                  Siguiente
-                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
-                </button>
-              </div>
-
-              {/* Next preview while working */}
-              {phase.kind === "work" && next && (
-                <div className="flex items-center gap-3 rounded-lg border border-[#27272A] bg-[#09090B]/40 px-3 py-2.5">
-                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-[#27272A]">
-                    <ExerciseThumbnail
-                      thumbnailUrl={next.thumbnailUrl}
-                      gifUrl={next.gifUrl}
-                      slug={next.slug}
-                      nameEn={next.nameEn}
-                      alt={next.nameEs}
-                      iconSize="sm"
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-medium uppercase tracking-wide text-[#52525B]">
-                      Siguiente ejercicio
-                    </p>
-                    <p className="truncate text-xs font-medium text-[#A1A1AA]">
-                      {next.nameEs}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Progress dots */}
-              <div className="flex flex-wrap justify-center gap-1 pt-1">
-                {exercises.map((ex, i) => (
-                  <button
-                    key={ex.exerciseId}
-                    type="button"
-                    onClick={() => {
-                      setCurrentIndex(i);
-                      setCurrentSet(1);
-                      setPhase({ kind: "work" });
-                      setCompleted(false);
-                    }}
-                    aria-label={`Ir al ejercicio ${i + 1}`}
-                    className={cn(
-                      "h-1.5 rounded-full transition-all",
-                      i === currentIndex
-                        ? "w-5 bg-brand-primary"
-                        : i < currentIndex
-                          ? "w-1.5 bg-[#22C55E]"
-                          : "w-1.5 bg-[#3F3F46]",
-                    )}
+                {/* Next preview while working */}
+                {phase.kind === "work" && next && (
+                  <NextExercisePreview
+                    exercise={next}
+                    positionHuman={currentIndex + 2}
+                    total={exercises.length}
+                    variant="compact"
                   />
-                ))}
+                )}
               </div>
-            </div>
-          </>
-        )}
-      </DialogContent>
-    </Dialog>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Exercise list sheet — accesible desde el header en cualquier phase
+          (excepto done) y desde Ready-to-Go. */}
+      <ExerciseListSheet
+        open={showList}
+        onOpenChange={setShowList}
+        exercises={exercises}
+        currentIndex={currentIndex}
+        onSelectExercise={(i) => jumpToExercise(i)}
+      />
+    </>
   );
 }
