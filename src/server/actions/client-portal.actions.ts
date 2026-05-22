@@ -264,12 +264,21 @@ export async function getMyTrainerInfo(): Promise<ActionResult<MyTrainerInfo | n
 
 /**
  * Walk every exercise in a snapshot JSON, collect their exerciseIds, fetch
- * the live media columns from Exercise, and overlay them onto the snapshot.
- * Mutates a shallow copy — the original DB value is untouched.
+ * the live media columns from Exercise + the assigning trainer's per-exercise
+ * overrides (TrainerExerciseMedia), and overlay them onto the snapshot.
+ *
+ * Resolution order (highest precedence first):
+ *   1. Per-routine snapshot value (RoutineExercise.mediaUrl, frozen)
+ *   2. Per-trainer override (TrainerExerciseMedia, by `trainerUserId`)
+ *   3. Catalog default (Exercise.mediaUrl)
+ *
+ * `trainerUserId` is the coach who assigned the routine; when null we skip
+ * step 2 (older callers / edge cases).
  */
 async function overlayExerciseMedia(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   snapshotJson: any,
+  trainerUserId: string | null,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> {
   if (!snapshotJson || typeof snapshotJson !== "object") return snapshotJson;
@@ -283,11 +292,25 @@ async function overlayExerciseMedia(
   }
   if (ids.size === 0) return snapshotJson;
 
-  const rows = await prisma.exercise.findMany({
-    where: { id: { in: [...ids] }, deletedAt: null },
-    select: { id: true, mediaUrl: true, gifUrl: true, thumbnailUrl: true },
-  });
+  const idList = [...ids];
+  const [rows, overrideRows] = await Promise.all([
+    prisma.exercise.findMany({
+      where: { id: { in: idList }, deletedAt: null },
+      select: { id: true, mediaUrl: true, gifUrl: true, thumbnailUrl: true },
+    }),
+    trainerUserId
+      ? prisma.trainerExerciseMedia.findMany({
+          where: {
+            trainerUserId,
+            exerciseId: { in: idList },
+            deletedAt: null,
+          },
+          select: { exerciseId: true, mediaUrl: true },
+        })
+      : Promise.resolve([] as Array<{ exerciseId: string; mediaUrl: string }>),
+  ]);
   const live = new Map(rows.map((r) => [r.id, r]));
+  const overrides = new Map(overrideRows.map((r) => [r.exerciseId, r.mediaUrl]));
 
   return {
     ...snapshotJson,
@@ -305,11 +328,11 @@ async function overlayExerciseMedia(
             gifUrl?: string | null;
             thumbnailUrl?: string | null;
           };
-          // Per-routine override (snap.mediaUrl) wins; only fall back to the
-          // shared catalog value when the snapshot doesn't have one.
+          const overrideMediaUrl = e.exerciseId ? overrides.get(e.exerciseId) ?? null : null;
+          // Snapshot (per-routine) > trainer override > catalog default.
           return {
             ...(ex as object),
-            mediaUrl: snap.mediaUrl ?? liveRow.mediaUrl ?? null,
+            mediaUrl: snap.mediaUrl ?? overrideMediaUrl ?? liveRow.mediaUrl ?? null,
             gifUrl: snap.gifUrl ?? liveRow.gifUrl ?? null,
             thumbnailUrl: snap.thumbnailUrl ?? liveRow.thumbnailUrl ?? null,
           };
@@ -345,6 +368,7 @@ export async function getMyAssignedRoutines(): Promise<ActionResult<MyAssignedRo
         endsOn: true,
         status: true,
         trainerNotes: true,
+        routineTemplate: { select: { trainerId: true } },
       },
       orderBy: [
         { status: "asc" },
@@ -356,7 +380,10 @@ export async function getMyAssignedRoutines(): Promise<ActionResult<MyAssignedRo
       rows.map(async (r) => ({
         id: r.id,
         routineTemplateId: r.routineTemplateId,
-        snapshotJson: await overlayExerciseMedia(r.snapshotJson),
+        snapshotJson: await overlayExerciseMedia(
+          r.snapshotJson,
+          r.routineTemplate?.trainerId ?? null,
+        ),
         assignedAt: r.assignedAt,
         startsOn: r.startsOn,
         endsOn: r.endsOn,
@@ -396,6 +423,7 @@ export async function getMyActiveRoutine(): Promise<ActionResult<MyAssignedRouti
         endsOn: true,
         status: true,
         trainerNotes: true,
+        routineTemplate: { select: { trainerId: true } },
       },
       orderBy: { assignedAt: "desc" },
     });
@@ -405,7 +433,10 @@ export async function getMyActiveRoutine(): Promise<ActionResult<MyAssignedRouti
     return {
       id: row.id,
       routineTemplateId: row.routineTemplateId,
-      snapshotJson: await overlayExerciseMedia(row.snapshotJson),
+      snapshotJson: await overlayExerciseMedia(
+        row.snapshotJson,
+        row.routineTemplate?.trainerId ?? null,
+      ),
       assignedAt: row.assignedAt,
       startsOn: row.startsOn,
       endsOn: row.endsOn,

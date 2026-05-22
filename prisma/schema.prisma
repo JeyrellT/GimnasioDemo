@@ -339,6 +339,7 @@ model User {
   invitations         Invitation[]         @relation("TrainerInvitations")
   routinesCreated     RoutineTemplate[]    @relation("RoutineAuthor")
   exercisesCreated    Exercise[]           @relation("ExerciseAuthor")
+  exerciseMediaOverrides TrainerExerciseMedia[] @relation("TrainerExerciseMediaTrainer")
   trainerSubscription TrainerSubscription? @relation("TrainerSub")
   chargesIssued       ClientCharge[]       @relation("TrainerCharges")
 
@@ -743,12 +744,37 @@ model Exercise {
   createdBy        User?             @relation("ExerciseAuthor", fields: [createdById], references: [id], onDelete: SetNull)
   routineExercises RoutineExercise[]
   performedSets    PerformedSet[]
+  trainerMediaOverrides TrainerExerciseMedia[] @relation("TrainerExerciseMediaExercise")
 
   @@index([primaryMuscle])
   @@index([equipment])
   @@index([category])
   @@index([isPublic])
   @@index([createdById])
+}
+
+/// Per-trainer override of an Exercise's video URL.
+/// Lets a coach set a personal Drive/YouTube/Vimeo link on any exercise
+/// (including public seed entries that would otherwise be read-only) without
+/// mutating the shared catalog row — so the override is scoped to that coach's
+/// view + the routines they assign, never leaking to other trainers.
+/// `mediaUrl` stores the source URL; the thumbnail shown in lists is derived
+/// from it at render time (Drive lh3 trick, YouTube hqdefault).
+model TrainerExerciseMedia {
+  id            String    @id @default(cuid())
+  trainerUserId String
+  exerciseId    String
+  mediaUrl      String    @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  trainer  User     @relation("TrainerExerciseMediaTrainer", fields: [trainerUserId], references: [id], onDelete: Cascade)
+  exercise Exercise @relation("TrainerExerciseMediaExercise", fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@unique([trainerUserId, exerciseId])
+  @@index([trainerUserId])
+  @@index([exerciseId])
 }
 
 // =============================================================================

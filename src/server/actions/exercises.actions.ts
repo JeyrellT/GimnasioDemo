@@ -24,6 +24,7 @@ import {
   ValidationError,
 } from "@/lib/errors";
 import { logInfo } from "@/lib/logger";
+import { deriveVideoThumbnail } from "@/lib/media/video-url";
 import type { ActionResult, ExerciseSearchResult } from "@/types/api";
 import type { Exercise, MuscleGroup, ExerciseEquipment, ExerciseDifficulty, ExerciseCategory } from "@prisma/client";
 import { Prisma } from "@prisma/client";
@@ -239,6 +240,11 @@ export async function searchExercises(
 
       const total = rows.length > 0 ? Number(rows[0]!.count) : 0;
 
+      const overrides = await fetchTrainerMediaOverrides(
+        user.id,
+        rows.map((r) => r.id),
+      );
+
       logInfo("exercises.searchExercises.fts", {
         userId: user.id,
         query,
@@ -247,18 +253,21 @@ export async function searchExercises(
       });
 
       return {
-        exercises: rows.map((r) => ({
-          id: r.id,
-          slug: r.slug,
-          nameEs: r.nameEs,
-          nameEn: r.nameEn ?? null,
-          primaryMuscle: r.primaryMuscle,
-          equipment: r.equipment,
-          difficulty: r.difficulty,
-          category: r.category ?? "STRENGTH",
-          gifUrl: r.gifUrl,
-          thumbnailUrl: r.thumbnailUrl,
-        })),
+        exercises: rows.map((r) => {
+          const o = overrides.get(r.id);
+          return {
+            id: r.id,
+            slug: r.slug,
+            nameEs: r.nameEs,
+            nameEn: r.nameEn ?? null,
+            primaryMuscle: r.primaryMuscle,
+            equipment: r.equipment,
+            difficulty: r.difficulty,
+            category: r.category ?? "STRENGTH",
+            gifUrl: r.gifUrl,
+            thumbnailUrl: o?.thumbnailUrl ?? r.thumbnailUrl,
+          };
+        }),
         total,
       };
     }
@@ -302,6 +311,16 @@ export async function searchExercises(
       prisma.exercise.count({ where }),
     ]);
 
+    const overrides = await fetchTrainerMediaOverrides(
+      user.id,
+      exercises.map((e) => e.id),
+    );
+    const overlaid = exercises.map((e) => {
+      const o = overrides.get(e.id);
+      if (!o?.thumbnailUrl) return e;
+      return { ...e, thumbnailUrl: o.thumbnailUrl };
+    });
+
     logInfo("exercises.searchExercises.filter", {
       userId: user.id,
       filters,
@@ -309,8 +328,50 @@ export async function searchExercises(
       page,
     });
 
-    return { exercises, total };
+    return { exercises: overlaid, total };
   });
+}
+
+// -----------------------------------------------------------------------------
+// Trainer media override helpers
+//
+// `TrainerExerciseMedia` lets a coach attach a personal Drive/YouTube/Vimeo
+// link to ANY exercise (including public seed entries) without mutating the
+// shared catalog row. These helpers fetch the overrides for the current
+// trainer in batch so callers can overlay them on lists/details cheaply.
+// -----------------------------------------------------------------------------
+
+interface TrainerMediaOverlay {
+  mediaUrl: string | null;
+  thumbnailUrl: string | null;
+}
+
+/**
+ * Look up the trainer's overrides for a set of exercise IDs and return a map
+ * `exerciseId → { mediaUrl, thumbnailUrl(derived) }`. Skips work if the caller
+ * is not a trainer or the set is empty.
+ */
+async function fetchTrainerMediaOverrides(
+  trainerUserId: string,
+  exerciseIds: Iterable<string>,
+): Promise<Map<string, TrainerMediaOverlay>> {
+  const ids = [...new Set([...exerciseIds])];
+  if (ids.length === 0) return new Map();
+
+  const rows = await prisma.trainerExerciseMedia.findMany({
+    where: { trainerUserId, exerciseId: { in: ids }, deletedAt: null },
+    select: { exerciseId: true, mediaUrl: true },
+  });
+
+  return new Map(
+    rows.map((r) => [
+      r.exerciseId,
+      {
+        mediaUrl: r.mediaUrl,
+        thumbnailUrl: deriveVideoThumbnail(r.mediaUrl),
+      },
+    ]),
+  );
 }
 
 // -----------------------------------------------------------------------------
@@ -342,7 +403,104 @@ export async function getExercise(id: string | { id: string }): Promise<ActionRe
       );
     }
 
-    return exercise;
+    // Apply the calling trainer's media override (if any) on top of the
+    // catalog row. For clients/admins the override map is empty and the
+    // exercise is returned untouched.
+    const overrides = await fetchTrainerMediaOverrides(user.id, [exercise.id]);
+    const override = overrides.get(exercise.id);
+    if (!override) return exercise;
+    return {
+      ...exercise,
+      mediaUrl: override.mediaUrl ?? exercise.mediaUrl,
+      thumbnailUrl: override.thumbnailUrl ?? exercise.thumbnailUrl,
+    };
+  });
+}
+
+// -----------------------------------------------------------------------------
+// setExerciseTrainerMedia — write a video link for this trainer / exercise pair
+// -----------------------------------------------------------------------------
+
+export interface SetExerciseTrainerMediaInput {
+  exerciseId: string;
+  mediaUrl: string | null;
+}
+
+/**
+ * Set or clear the video URL for an exercise from the current trainer's
+ * perspective. Smart routing:
+ *
+ *  - If the trainer owns a PRIVATE exercise, we write to `Exercise.mediaUrl`
+ *    directly (their personal catalog row).
+ *  - Otherwise (public seed entry or someone else's exercise), we upsert a
+ *    row in `TrainerExerciseMedia` so the change stays scoped to this trainer.
+ *
+ * Passing `mediaUrl = null` (or empty string) clears the override / catalog
+ * value.
+ */
+export async function setExerciseTrainerMedia(
+  input: SetExerciseTrainerMediaInput,
+): Promise<ActionResult<{ ok: true; mediaUrl: string | null }>> {
+  return tryCatch(async () => {
+    const user = await requireTrainer();
+    const normalized =
+      !input.mediaUrl || input.mediaUrl.trim() === "" ? null : input.mediaUrl.trim();
+
+    if (normalized !== null) {
+      // Light URL sanity check — full embed support is decided at render time.
+      try {
+        // throws on invalid URL
+        new URL(normalized);
+      } catch {
+        throw new ValidationError("INVALID_URL", "El link de video no es una URL válida.");
+      }
+    }
+
+    const exercise = await prisma.exercise.findUnique({
+      where: { id: input.exerciseId, deletedAt: null },
+      select: { id: true, isPublic: true, createdById: true },
+    });
+    if (!exercise) {
+      throw new NotFoundError("EXERCISE_NOT_FOUND", "Ejercicio no encontrado.");
+    }
+
+    const ownsPrivate =
+      !exercise.isPublic && exercise.createdById === user.id;
+
+    if (ownsPrivate) {
+      await prisma.exercise.update({
+        where: { id: exercise.id },
+        data: { mediaUrl: normalized },
+      });
+    } else if (normalized === null) {
+      await prisma.trainerExerciseMedia.deleteMany({
+        where: { trainerUserId: user.id, exerciseId: exercise.id },
+      });
+    } else {
+      await prisma.trainerExerciseMedia.upsert({
+        where: {
+          trainerUserId_exerciseId: {
+            trainerUserId: user.id,
+            exerciseId: exercise.id,
+          },
+        },
+        create: {
+          trainerUserId: user.id,
+          exerciseId: exercise.id,
+          mediaUrl: normalized,
+        },
+        update: { mediaUrl: normalized, deletedAt: null },
+      });
+    }
+
+    logInfo("exercises.setExerciseTrainerMedia", {
+      userId: user.id,
+      exerciseId: exercise.id,
+      cleared: normalized === null,
+      ownsPrivate,
+    });
+
+    return { ok: true as const, mediaUrl: normalized };
   });
 }
 

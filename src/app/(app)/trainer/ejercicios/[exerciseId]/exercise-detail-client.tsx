@@ -235,14 +235,12 @@ export default function ExerciseDetailClient({ exerciseId, basePath = "/trainer/
           <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
             <h2 className="mb-2 text-sm font-semibold text-[#FAFAFA]">Multimedia</h2>
             <ExerciseMediaGallery
-              thumbnailUrl={exercise.thumbnailUrl}
-              gifUrl={exercise.gifUrl}
-              mediaUrl={exercise.mediaUrl}
-              slug={exercise.slug}
-              nameEn={exercise.nameEn}
               exerciseId={exercise.id}
-              canEdit={isOwner}
-              onPhotoUpdated={(url) => setExercise((prev) => prev ? { ...prev, thumbnailUrl: url } : prev)}
+              mediaUrl={exercise.mediaUrl}
+              canEdit={user !== null}
+              onMediaChanged={(url) =>
+                setExercise((prev) => (prev ? { ...prev, mediaUrl: url } : prev))
+              }
             />
           </div>
 
