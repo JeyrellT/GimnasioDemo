@@ -95,13 +95,44 @@ export type LoopEmbed =
 export function getDriveDirectVideoUrl(url: string): string | null {
   const id = getGoogleDriveFileId(url);
   if (!id) return null;
-  // Drive serves video files with `Cross-Origin-Resource-Policy: same-site`,
-  // which the browser enforces by refusing the bytes inside a <video> element
-  // on our app's origin. CORP is independent of CORS and cannot be relaxed
-  // client-side. So we route through our own proxy
-  // (`/api/exercise-video/[fileId]`) which fetches Drive from the Node
-  // runtime and re-streams with permissive headers. Same-origin → no CORP.
+  // Direct file-id proxy (used for testing and legacy callers). Frontend
+  // production code prefers `/api/exercise/[exerciseId]/video` (resolved
+  // by the backend) so the Drive ID never leaks into client bundles.
   return `/api/exercise-video/${id}`;
+}
+
+/**
+ * Returns true when `url` points to our internal video proxy. These URLs
+ * are same-origin and always serve `video/mp4`, so they can be used as
+ * `<video src=>` directly — no service detection / iframe needed.
+ */
+export function isProxiedVideoUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  return url.startsWith("/api/exercise-video/") || url.startsWith("/api/exercise/");
+}
+
+/**
+ * Convert a raw catalog/override URL into the form the frontend should
+ * receive. Drive URLs are rewritten to `/api/exercise/{exerciseId}/video`
+ * so the backend proxies them transparently — the frontend never sees a
+ * Drive ID and can use the URL as a same-origin `<video src=>` directly.
+ *
+ * YouTube/Vimeo and any unrecognized URL pass through unchanged (the
+ * frontend will detect them via getVideoLoopEmbed and render an iframe).
+ *
+ * Use this at every server → client boundary that exposes mediaUrl.
+ */
+export function toClientMediaUrl(
+  rawUrl: string | null | undefined,
+  exerciseId: string | null | undefined,
+): string | null {
+  if (!rawUrl) return null;
+  if (isProxiedVideoUrl(rawUrl)) return rawUrl;
+  if (!exerciseId) return rawUrl;
+  if (getGoogleDriveFileId(rawUrl)) {
+    return `/api/exercise/${exerciseId}/video`;
+  }
+  return rawUrl;
 }
 
 export function getYouTubeLoopEmbedUrl(url: string): string | null {
@@ -126,11 +157,18 @@ export function getVimeoLoopEmbedUrl(url: string): string | null {
  * Returns the right element kind + URL to render `url` as a silently-looping
  * GIF-style video. Falls back to null when the URL doesn't match a supported
  * provider (caller can render a placeholder).
+ *
+ * URL forms handled:
+ *   - `/api/exercise/.../video` (backend-resolved proxy) → <video> directly
+ *   - `/api/exercise-video/{fileId}`                     → <video> directly
+ *   - Raw Drive URL                                       → <video> via proxy
+ *   - YouTube / Vimeo                                     → <iframe>
  */
 export function getVideoLoopEmbed(
   url: string | null | undefined,
 ): LoopEmbed | null {
   if (!url) return null;
+  if (isProxiedVideoUrl(url)) return { kind: "video", src: url };
   const drive = getDriveDirectVideoUrl(url);
   if (drive) return { kind: "video", src: drive };
   const yt = getYouTubeLoopEmbedUrl(url);
