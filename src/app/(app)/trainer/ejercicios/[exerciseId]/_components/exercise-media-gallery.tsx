@@ -161,15 +161,12 @@ export function ExerciseMediaGallery({
           disabled={saving}
           className="flex-1 rounded-md border border-[#3F3F46] bg-[#09090B] px-3 py-2 text-sm text-[#FAFAFA] placeholder:text-[#52525B] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary/40 disabled:opacity-50"
         />
-        {editing && mediaUrl && (
+        {trimmed !== "" && (
           <button
             type="button"
-            onClick={() => {
-              setEditing(false);
-              setUrl(mediaUrl);
-            }}
+            onClick={() => setUrl("")}
             disabled={saving}
-            aria-label="Cancelar"
+            aria-label="Borrar link"
             className="inline-flex items-center justify-center rounded-md border border-[#3F3F46] bg-[#18181B] px-3 text-xs text-[#A1A1AA] transition-colors hover:border-[#52525B] hover:text-[#FAFAFA] disabled:opacity-50"
           >
             <X className="h-4 w-4" aria-hidden="true" />
