@@ -95,12 +95,13 @@ export type LoopEmbed =
 export function getDriveDirectVideoUrl(url: string): string | null {
   const id = getGoogleDriveFileId(url);
   if (!id) return null;
-  // `drive.usercontent.google.com/download` serves direct MP4 with
-  // `Content-Type: video/mp4` (HEAD-verified) for publicly-shared files
-  // without a virus-scan interstitial up to ~25MB. The older lh3 size
-  // variants (`=m18`) return 404 for Drive videos — they only work for
-  // Google Photos. This is the post-2024 migration endpoint.
-  return `https://drive.usercontent.google.com/download?id=${id}&export=download`;
+  // Drive serves video files with `Cross-Origin-Resource-Policy: same-site`,
+  // which the browser enforces by refusing the bytes inside a <video> element
+  // on our app's origin. CORP is independent of CORS and cannot be relaxed
+  // client-side. So we route through our own proxy
+  // (`/api/exercise-video/[fileId]`) which fetches Drive from the Node
+  // runtime and re-streams with permissive headers. Same-origin → no CORP.
+  return `/api/exercise-video/${id}`;
 }
 
 export function getYouTubeLoopEmbedUrl(url: string): string | null {
