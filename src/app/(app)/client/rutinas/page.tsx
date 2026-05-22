@@ -112,12 +112,19 @@ export default function ClientRutinasPage() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // `parqResolvedInSession` se activa cuando el cliente envía exitosamente el
+  // PAR-Q en esta carga de página. Garantiza el contrato "una vez mandado,
+  // nunca más" incluso si la query trae un valor stale por alguna razón
+  // (refetch racing, error transitorio, etc). El estado se resetea solo en
+  // un reload — para entonces parqStatus ya es GREEN/REVIEW/RED y la query
+  // devuelve shouldShow=false naturalmente.
+  const [parqResolvedInSession, setParqResolvedInSession] = useState(false);
   const [showParqPrompt, setShowParqPrompt] = useState(false);
   useEffect(() => {
-    if (parqQuery.data?.shouldShow) {
+    if (parqQuery.data?.shouldShow && !parqResolvedInSession) {
       setShowParqPrompt(true);
     }
-  }, [parqQuery.data]);
+  }, [parqQuery.data, parqResolvedInSession]);
 
   const cards = useMemo<RoutineCard[]>(() => {
     const loaded: RoutineCard[] = (routinesQuery.data ?? []).map((ar) => ({
@@ -171,6 +178,7 @@ export default function ClientRutinasPage() {
             clientUserId={user.id}
             onDismiss={() => setShowParqPrompt(false)}
             onCompleted={() => {
+              setParqResolvedInSession(true);
               setShowParqPrompt(false);
               void queryClient.invalidateQueries({
                 queryKey: ["parq-prompt-needed", user.id ?? null],
@@ -218,6 +226,7 @@ export default function ClientRutinasPage() {
           clientUserId={user.id}
           onDismiss={() => setShowParqPrompt(false)}
           onCompleted={() => {
+            setParqResolvedInSession(true);
             setShowParqPrompt(false);
             void queryClient.invalidateQueries({
               queryKey: ["parq-prompt-needed", user.id ?? null],
