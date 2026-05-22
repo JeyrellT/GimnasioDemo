@@ -119,33 +119,61 @@ export default function ClientSesionPage() {
 
               {open && (
                 <div className="border-t border-neutral-800 divide-y divide-neutral-800/60">
-                  {exercises.map((ex) => (
-                    <div key={ex.exerciseId} className="px-4 py-3">
-                      <p className="text-sm font-medium text-neutral-200">
-                        {ex.nameEs}
-                      </p>
-                      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-500">
-                        <span>{ex.targetSets} series</span>
-                        <span>
-                          {ex.targetRepsMin === ex.targetRepsMax
-                            ? `${ex.targetRepsMin} reps`
-                            : `${ex.targetRepsMin}-${ex.targetRepsMax} reps`}
-                        </span>
-                        {ex.targetRpe !== null && (
-                          <span>RPE {ex.targetRpe}</span>
-                        )}
-                        <span className="inline-flex items-center gap-0.5">
-                          <Clock className="h-3 w-3" />
-                          {ex.restSeconds}s descanso
-                        </span>
-                      </div>
-                      {ex.notes && (
-                        <p className="mt-1 text-xs text-neutral-600 italic">
-                          {ex.notes}
-                        </p>
-                      )}
-                    </div>
-                  ))}
+                  {(() => {
+                    const seenCount = new Map<string, number>();
+                    const totalCount = new Map<string, number>();
+                    for (const e of exercises) {
+                      totalCount.set(
+                        e.exerciseId,
+                        (totalCount.get(e.exerciseId) ?? 0) + 1,
+                      );
+                    }
+                    return exercises.map((ex, idx) => {
+                      const occurrence =
+                        (seenCount.get(ex.exerciseId) ?? 0) + 1;
+                      seenCount.set(ex.exerciseId, occurrence);
+                      const total = totalCount.get(ex.exerciseId) ?? 1;
+                      const isRepeat = total > 1;
+
+                      return (
+                        <div
+                          key={`${ex.exerciseId}_${idx}`}
+                          className="px-4 py-3"
+                        >
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                            <p className="text-sm font-medium text-neutral-200">
+                              {ex.nameEs}
+                            </p>
+                            {isRepeat && (
+                              <span className="inline-flex items-center rounded-full bg-brand-primary/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-primary">
+                                Vuelta {occurrence}/{total}
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-500">
+                            <span>{ex.targetSets} series</span>
+                            <span>
+                              {ex.targetRepsMin === ex.targetRepsMax
+                                ? `${ex.targetRepsMin} reps`
+                                : `${ex.targetRepsMin}-${ex.targetRepsMax} reps`}
+                            </span>
+                            {ex.targetRpe !== null && (
+                              <span>RPE {ex.targetRpe}</span>
+                            )}
+                            <span className="inline-flex items-center gap-0.5">
+                              <Clock className="h-3 w-3" />
+                              {ex.restSeconds}s descanso
+                            </span>
+                          </div>
+                          {ex.notes && (
+                            <p className="mt-1 text-xs text-neutral-600 italic">
+                              {ex.notes}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               )}
             </div>

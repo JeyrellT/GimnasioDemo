@@ -371,66 +371,99 @@ export default function ClientRutinasPage() {
 
                           {dayOpen && snapshot && (
                             <div className="border-t border-[#3F3F46]/40 divide-y divide-[#3F3F46]/30">
-                              {day.exercises.map(
-                                (
-                                  ex: RoutineSnapshotExercise,
-                                  idx: number,
-                                ) => (
-                                  <button
-                                    type="button"
-                                    key={ex.exerciseId}
-                                    onClick={() => openPlayer(snapshot, day, idx)}
-                                    aria-label={`Reproducir ${ex.nameEs}`}
-                                    className="group flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-[#18181B] transition-colors"
-                                  >
-                                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-[#27272A]">
-                                      <ExerciseThumbnail
-                                        thumbnailUrl={ex.thumbnailUrl}
-                                        gifUrl={ex.gifUrl}
-                                        slug={ex.slug}
-                                        nameEn={ex.nameEn}
-                                        alt={ex.nameEs}
-                                        iconSize="sm"
-                                      />
-                                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                              {(() => {
+                                // Track repeated exercise IDs within the day so
+                                // we can label 2nd / 3rd appearances clearly.
+                                // This is legitimate in hypertrophy (back-off
+                                // sets, eccentric-only round, drop sets) but
+                                // looks like a "duplicate bug" without a label.
+                                const seenCount = new Map<string, number>();
+                                const totalCount = new Map<string, number>();
+                                for (const e of day.exercises) {
+                                  totalCount.set(
+                                    e.exerciseId,
+                                    (totalCount.get(e.exerciseId) ?? 0) + 1,
+                                  );
+                                }
+                                return day.exercises.map(
+                                  (
+                                    ex: RoutineSnapshotExercise,
+                                    idx: number,
+                                  ) => {
+                                    const occurrence =
+                                      (seenCount.get(ex.exerciseId) ?? 0) + 1;
+                                    seenCount.set(ex.exerciseId, occurrence);
+                                    const total =
+                                      totalCount.get(ex.exerciseId) ?? 1;
+                                    const isRepeat = total > 1;
+
+                                    return (
+                                      <button
+                                        type="button"
+                                        key={`${ex.exerciseId}_${idx}`}
+                                        onClick={() =>
+                                          openPlayer(snapshot, day, idx)
+                                        }
+                                        aria-label={`Reproducir ${ex.nameEs}${isRepeat ? ` (vuelta ${occurrence} de ${total})` : ""}`}
+                                        className="group flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-[#18181B] transition-colors"
+                                      >
+                                        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-[#27272A]">
+                                          <ExerciseThumbnail
+                                            thumbnailUrl={ex.thumbnailUrl}
+                                            gifUrl={ex.gifUrl}
+                                            slug={ex.slug}
+                                            nameEn={ex.nameEn}
+                                            alt={ex.nameEs}
+                                            iconSize="sm"
+                                          />
+                                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Play
+                                              className="h-4 w-4 fill-white text-white"
+                                              aria-hidden="true"
+                                            />
+                                          </div>
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                            <p className="text-sm font-medium text-[#E4E4E7]">
+                                              {ex.nameEs}
+                                            </p>
+                                            {isRepeat && (
+                                              <span className="inline-flex items-center rounded-full bg-brand-primary/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-primary">
+                                                Vuelta {occurrence}/{total}
+                                              </span>
+                                            )}
+                                          </div>
+                                          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-[#71717A]">
+                                            <span>{ex.targetSets} series</span>
+                                            <span>
+                                              {ex.targetRepsMin === ex.targetRepsMax
+                                                ? `${ex.targetRepsMin} reps`
+                                                : `${ex.targetRepsMin}-${ex.targetRepsMax} reps`}
+                                            </span>
+                                            {ex.targetRpe && (
+                                              <span>RPE {ex.targetRpe}</span>
+                                            )}
+                                            <span className="inline-flex items-center gap-0.5">
+                                              <Clock className="h-3 w-3" />
+                                              {ex.restSeconds}s
+                                            </span>
+                                          </div>
+                                          {ex.notes && (
+                                            <p className="mt-1 text-xs text-[#52525B] italic">
+                                              {ex.notes}
+                                            </p>
+                                          )}
+                                        </div>
                                         <Play
-                                          className="h-4 w-4 fill-white text-white"
+                                          className="h-4 w-4 shrink-0 text-[#52525B] group-hover:text-brand-primary transition-colors"
                                           aria-hidden="true"
                                         />
-                                      </div>
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                      <p className="text-sm font-medium text-[#E4E4E7]">
-                                        {ex.nameEs}
-                                      </p>
-                                      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-[#71717A]">
-                                        <span>{ex.targetSets} series</span>
-                                        <span>
-                                          {ex.targetRepsMin === ex.targetRepsMax
-                                            ? `${ex.targetRepsMin} reps`
-                                            : `${ex.targetRepsMin}-${ex.targetRepsMax} reps`}
-                                        </span>
-                                        {ex.targetRpe && (
-                                          <span>RPE {ex.targetRpe}</span>
-                                        )}
-                                        <span className="inline-flex items-center gap-0.5">
-                                          <Clock className="h-3 w-3" />
-                                          {ex.restSeconds}s
-                                        </span>
-                                      </div>
-                                      {ex.notes && (
-                                        <p className="mt-1 text-xs text-[#52525B] italic">
-                                          {ex.notes}
-                                        </p>
-                                      )}
-                                    </div>
-                                    <Play
-                                      className="h-4 w-4 shrink-0 text-[#52525B] group-hover:text-brand-primary transition-colors"
-                                      aria-hidden="true"
-                                    />
-                                  </button>
-                                ),
-                              )}
+                                      </button>
+                                    );
+                                  },
+                                );
+                              })()}
                             </div>
                           )}
                         </div>

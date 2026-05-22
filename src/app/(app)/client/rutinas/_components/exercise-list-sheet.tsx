@@ -58,83 +58,107 @@ export function ExerciseListSheet({
 
         {/* Lista scrollable */}
         <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
-          {exercises.map((ex, i) => {
-            const isCurrent = i === currentIndex;
-            const isDone =
-              (completedIndexes ?? []).includes(i) || i < currentIndex;
+          {(() => {
+            // Pre-compute occurrence counters so the same exercise repeated
+            // within the routine (back-off / drop / eccentric round) gets a
+            // "Vuelta X/Y" label instead of looking like a duplicate bug.
+            const seenCount = new Map<string, number>();
+            const totalCount = new Map<string, number>();
+            for (const e of exercises) {
+              totalCount.set(
+                e.exerciseId,
+                (totalCount.get(e.exerciseId) ?? 0) + 1,
+              );
+            }
+            return exercises.map((ex, i) => {
+              const isCurrent = i === currentIndex;
+              const isDone =
+                (completedIndexes ?? []).includes(i) || i < currentIndex;
+              const occurrence = (seenCount.get(ex.exerciseId) ?? 0) + 1;
+              seenCount.set(ex.exerciseId, occurrence);
+              const total = totalCount.get(ex.exerciseId) ?? 1;
+              const isRepeat = total > 1;
 
-            return (
-              <button
-                type="button"
-                key={`${ex.exerciseId}_${i}`}
-                ref={isCurrent ? currentRef : null}
-                onClick={() => {
-                  onSelectExercise(i);
-                  onOpenChange(false);
-                }}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
-                  isCurrent
-                    ? "bg-brand-primary/15 border border-brand-primary/40"
-                    : "border border-transparent hover:bg-[#27272A]",
-                )}
-                aria-current={isCurrent ? "true" : undefined}
-              >
-                {/* Estado */}
-                <div className="shrink-0">
-                  {isDone ? (
-                    <CheckCircle
-                      className="h-5 w-5 text-[#22C55E]"
-                      aria-hidden="true"
-                    />
-                  ) : isCurrent ? (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-primary text-[10px] font-bold text-white">
-                      {i + 1}
-                    </span>
-                  ) : (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full border border-[#3F3F46] text-[10px] font-medium text-[#52525B]">
-                      {i + 1}
-                    </span>
+              return (
+                <button
+                  type="button"
+                  key={`${ex.exerciseId}_${i}`}
+                  ref={isCurrent ? currentRef : null}
+                  onClick={() => {
+                    onSelectExercise(i);
+                    onOpenChange(false);
+                  }}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
+                    isCurrent
+                      ? "bg-brand-primary/15 border border-brand-primary/40"
+                      : "border border-transparent hover:bg-[#27272A]",
                   )}
-                </div>
-
-                {/* Thumb */}
-                <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-[#27272A]">
-                  <ExerciseThumbnail
-                    thumbnailUrl={ex.thumbnailUrl}
-                    gifUrl={ex.gifUrl}
-                    slug={ex.slug}
-                    nameEn={ex.nameEn}
-                    alt={ex.nameEs}
-                    iconSize="sm"
-                  />
-                </div>
-
-                {/* Info */}
-                <div className="min-w-0 flex-1">
-                  <p
-                    className={cn(
-                      "truncate text-sm font-medium",
-                      isCurrent
-                        ? "text-[#FAFAFA]"
-                        : isDone
-                          ? "text-[#A1A1AA]"
-                          : "text-[#E4E4E7]",
+                  aria-current={isCurrent ? "true" : undefined}
+                >
+                  {/* Estado */}
+                  <div className="shrink-0">
+                    {isDone ? (
+                      <CheckCircle
+                        className="h-5 w-5 text-[#22C55E]"
+                        aria-hidden="true"
+                      />
+                    ) : isCurrent ? (
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-primary text-[10px] font-bold text-white">
+                        {i + 1}
+                      </span>
+                    ) : (
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full border border-[#3F3F46] text-[10px] font-medium text-[#52525B]">
+                        {i + 1}
+                      </span>
                     )}
-                  >
-                    {ex.nameEs}
-                  </p>
-                  <p className="text-xs text-[#71717A]">
-                    {ex.targetSets}{" "}
-                    {ex.targetSets === 1 ? "serie" : "series"} &middot;{" "}
-                    {ex.targetRepsMin === ex.targetRepsMax
-                      ? `${ex.targetRepsMin} reps`
-                      : `${ex.targetRepsMin}-${ex.targetRepsMax} reps`}
-                  </p>
-                </div>
-              </button>
-            );
-          })}
+                  </div>
+
+                  {/* Thumb */}
+                  <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-[#27272A]">
+                    <ExerciseThumbnail
+                      thumbnailUrl={ex.thumbnailUrl}
+                      gifUrl={ex.gifUrl}
+                      slug={ex.slug}
+                      nameEn={ex.nameEn}
+                      alt={ex.nameEs}
+                      iconSize="sm"
+                    />
+                  </div>
+
+                  {/* Info */}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                      <p
+                        className={cn(
+                          "truncate text-sm font-medium",
+                          isCurrent
+                            ? "text-[#FAFAFA]"
+                            : isDone
+                              ? "text-[#A1A1AA]"
+                              : "text-[#E4E4E7]",
+                        )}
+                      >
+                        {ex.nameEs}
+                      </p>
+                      {isRepeat && (
+                        <span className="inline-flex items-center rounded-full bg-brand-primary/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-primary">
+                          {occurrence}/{total}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-[#71717A]">
+                      {ex.targetSets}{" "}
+                      {ex.targetSets === 1 ? "serie" : "series"} &middot;{" "}
+                      {ex.targetRepsMin === ex.targetRepsMax
+                        ? `${ex.targetRepsMin} reps`
+                        : `${ex.targetRepsMin}-${ex.targetRepsMax} reps`}
+                    </p>
+                  </div>
+                </button>
+              );
+            });
+          })()}
         </div>
 
         {/* Footer */}
