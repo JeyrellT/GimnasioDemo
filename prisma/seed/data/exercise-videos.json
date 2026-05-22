@@ -3,63 +3,63 @@
   "strength": {
     "barbell-back-squat": {
       "nameEs": "Sentadilla con barra",
-      "videoUrl": null
+      "videoUrl": "https://drive.google.com/file/d/118ZQmmz9hg_qCsJXKDVsaLxdGLoms162/view?usp=drive_link"
     },
     "front-squat": {
       "nameEs": "Sentadilla frontal",
-      "videoUrl": null
+      "videoUrl": "https://drive.google.com/file/d/15S3VIri6mpcN2BQr0lod5bz4GMdb2BXB/view?usp=drive_link"
     },
     "conventional-deadlift": {
       "nameEs": "Peso muerto convencional",
-      "videoUrl": null
+      "videoUrl": "https://drive.google.com/file/d/1tXb14Fq9xA-ucGiKcplr6jODpMgmj4gq/view?usp=drive_link"
     },
     "romanian-deadlift": {
       "nameEs": "Peso muerto rumano",
-      "videoUrl": null
+      "videoUrl": "https://drive.google.com/file/d/1WCns_FfIuln1Nl9rRqLvRYvuy9GC5joq/view?usp=drive_link"
     },
     "barbell-lunge": {
       "nameEs": "Estocada con barra",
-      "videoUrl": null
+      "videoUrl": "https://drive.google.com/file/d/1gpgA3XqM7Kn040uN_G0FhVv4wbED6uiG/view?usp=drive_link"
     },
     "leg-press": {
       "nameEs": "Prensa de piernas",
-      "videoUrl": null
+      "videoUrl": "https://drive.google.com/file/d/1eslLE5ZAcNyI5LdcYKklEULw7ycBCTgC/view?usp=drive_link"
     },
     "lying-leg-curl": {
       "nameEs": "Curl de piernas acostado",
-      "videoUrl": null
+      "videoUrl": "https://drive.google.com/file/d/1K1Y0CHl7avY1jj8B972r3ahC9V_8qNMw/view?usp=drive_link"
     },
     "leg-extension": {
       "nameEs": "Extensión de piernas",
-      "videoUrl": null
+      "videoUrl": "https://drive.google.com/file/d/1MeFnG0gLCPLxBvjZ4TCCSysCJFHuyEbz/view?usp=drive_link"
     },
     "barbell-bench-press": {
       "nameEs": "Press de banca con barra",
-      "videoUrl": null
+      "videoUrl": "https://drive.google.com/file/d/1k2wN1LWFy-fda0UrGclBHGeJC92kmYv0/view?usp=drive_link"
     },
     "incline-barbell-bench-press": {
       "nameEs": "Press de banca inclinado con barra",
-      "videoUrl": null
+      "videoUrl": "https://drive.google.com/file/d/1OQZ1b7naiDnsCyxaKey47xR6bm6VjOo4/view?usp=drive_link"
     },
     "overhead-press": {
       "nameEs": "Press militar con barra",
-      "videoUrl": null
+      "videoUrl": "https://drive.google.com/file/d/1F3cHb_o3EX5wlb9pqttxLy0ZeI3PWXxY/view?usp=drive_link"
     },
     "push-up": {
       "nameEs": "Flexión de pecho (lagartija)",
-      "videoUrl": null
+      "videoUrl": "https://drive.google.com/file/d/1QXl9m4hKOExL4M6TmQ9OPsQjC1y25Uyk/view?usp=drive_link"
     },
     "dips": {
       "nameEs": "Fondos en paralelas",
-      "videoUrl": null
+      "videoUrl": "https://drive.google.com/file/d/1VpGRDPFQCW19d0wu_S8kwPRlATRoVmr9/view?usp=drive_link"
     },
     "dumbbell-bench-press": {
       "nameEs": "Press de banca con mancuernas",
-      "videoUrl": null
+      "videoUrl": "https://drive.google.com/file/d/1HM9yyacjT0JOlNDwDVk9b6oCT1Hv-6My/view?usp=drive_link"
     },
     "pull-up": {
       "nameEs": "Dominada (agarre prono)",
-      "videoUrl": null
+      "videoUrl": "https://drive.google.com/file/d/1rFz0RU9BfUbQT1JC0Z4_n5ql1O0b8di1/view?usp=drive_link"
     },
     "close-grip-pull-up": {
       "nameEs": "Dominada con agarre supino cerrado",
@@ -67,15 +67,15 @@
     },
     "barbell-bent-over-row": {
       "nameEs": "Remo con barra inclinado",
-      "videoUrl": null
+      "videoUrl": "https://drive.google.com/file/d/1vKSB3zLH4qD7RFwXUJuraUiDz-5PVrmi/view?usp=drive_link"
     },
     "dumbbell-single-arm-row": {
       "nameEs": "Remo con mancuerna a un brazo",
-      "videoUrl": null
+      "videoUrl": "https://drive.google.com/file/d/1YGX4sRGJXuMj3yN6TE0WVdEWz_ISO73s/view?usp=drive_link"
     },
     "cable-lat-pulldown": {
       "nameEs": "Jalón al pecho en polea",
-      "videoUrl": null
+      "videoUrl": "https://drive.google.com/file/d/1JnifxfueCCZmzFwft60eODABGKU_jMuO/view?usp=drive_link"
     },
     "seated-cable-row": {
       "nameEs": "Remo en polea sentado",
