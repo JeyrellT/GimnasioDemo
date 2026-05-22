@@ -842,6 +842,10 @@ model RoutineDay {
 
 /// Ordered list of exercises within a RoutineDay with prescription parameters.
 /// `supersetGroup` ties 2-3 exercises together (null if standalone).
+/// `mediaUrl` is a per-routine video link (YouTube / Vimeo / Google Drive) that
+/// the trainer can paste for this prescription — overrides Exercise.mediaUrl
+/// for clients running this specific routine, without mutating the shared
+/// catalog row (which is what keeps public seed exercises safe).
 model RoutineExercise {
   id            String    @id @default(cuid())
   routineDayId  String
@@ -855,6 +859,7 @@ model RoutineExercise {
   tempo         String?
   supersetGroup Int?
   notes         String?   @db.Text
+  mediaUrl      String?   @db.Text
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   deletedAt     DateTime?

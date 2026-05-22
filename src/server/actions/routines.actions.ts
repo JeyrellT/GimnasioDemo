@@ -79,6 +79,7 @@ export interface RoutineDetail {
       tempo: string | null;
       supersetGroup: number | null;
       notes: string | null;
+      mediaUrl: string | null;
       exercise: {
         id: string;
         slug: string;
@@ -143,7 +144,8 @@ function buildSnapshot(routine: RoutineDetail): RoutineSnapshot {
           slug: re.exercise.slug ?? null,
           thumbnailUrl: re.exercise.thumbnailUrl ?? re.exercise.gifUrl ?? null,
           gifUrl: re.exercise.gifUrl ?? null,
-          mediaUrl: re.exercise.mediaUrl ?? null,
+          // Per-routine override wins over the shared catalog default.
+          mediaUrl: re.mediaUrl ?? re.exercise.mediaUrl ?? null,
           nameEn: re.exercise.nameEn || null,
         }),
       ),
@@ -657,6 +659,13 @@ export async function addExerciseToDay(
     const tempo = typed ? (typed.tempo ?? null) : (fd!.get("tempo")?.toString() || null);
     const supersetGroupRaw = typed ? (typed.supersetGroup !== undefined ? String(typed.supersetGroup ?? "") : undefined) : fd!.get("supersetGroup")?.toString();
     const notes = typed ? (typed.notes ?? null) : (fd!.get("notes")?.toString() || null);
+    const mediaUrlRaw = typed
+      ? (typed.mediaUrl === undefined ? undefined : (typed.mediaUrl ?? null))
+      : fd!.get("mediaUrl")?.toString();
+    const mediaUrl =
+      mediaUrlRaw === undefined
+        ? null
+        : (mediaUrlRaw === "" || mediaUrlRaw === null ? null : mediaUrlRaw);
 
     if (!routineDayId || !exerciseId) {
       throw new ValidationError(
@@ -711,6 +720,7 @@ export async function addExerciseToDay(
             ? Number(supersetGroupRaw)
             : null,
         notes,
+        mediaUrl,
       },
       select: { id: true },
     });
@@ -793,6 +803,11 @@ export async function updateExerciseInDay(
 
     const notesVal = typed ? typed.notes : fd?.get("notes")?.toString();
     if (notesVal !== undefined) patch.notes = notesVal || null;
+
+    const mediaUrlVal = typed ? typed.mediaUrl : fd?.get("mediaUrl")?.toString();
+    if (mediaUrlVal !== undefined) {
+      patch.mediaUrl = mediaUrlVal === null || mediaUrlVal === "" ? null : mediaUrlVal;
+    }
 
     await prisma.routineExercise.update({ where: { id }, data: patch });
 

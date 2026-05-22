@@ -37,6 +37,7 @@ import {
   Calendar,
   Clock,
   Save,
+  Video,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -223,6 +224,31 @@ function SortableExerciseRow({
               />
             </div>
           ))}
+        </div>
+
+        {/* Video URL (per-routine override) — YouTube / Vimeo / Google Drive */}
+        <div className="space-y-0.5">
+          <Label
+            htmlFor={`media-${exercise.id}`}
+            className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-[#52525B]"
+          >
+            <Video className="h-3 w-3" aria-hidden="true" />
+            Video (YouTube / Vimeo / Drive)
+          </Label>
+          <Input
+            id={`media-${exercise.id}`}
+            type="url"
+            inputMode="url"
+            autoComplete="off"
+            placeholder="https://drive.google.com/file/d/..."
+            className="h-7 text-xs px-2 bg-[#09090B] border-[#3F3F46] focus:border-brand-primary"
+            value={exercise.mediaUrl ?? ""}
+            onChange={(e) =>
+              updateExercise(dayId, exercise.id, {
+                mediaUrl: e.target.value === "" ? null : e.target.value,
+              })
+            }
+          />
         </div>
       </div>
 
@@ -590,6 +616,7 @@ function ExerciseSearchPanel({
       tempo: null,
       supersetGroup: null,
       notes: null,
+      mediaUrl: null,
     };
 
     onAdded(dayId, draft);
@@ -990,6 +1017,7 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
               tempo: ex.tempo,
               supersetGroup: ex.supersetGroup,
               notes: ex.notes,
+              mediaUrl: ex.mediaUrl,
             }),
           );
         }
