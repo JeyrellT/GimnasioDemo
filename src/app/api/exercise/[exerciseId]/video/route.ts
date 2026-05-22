@@ -25,6 +25,7 @@ import {
   extractDriveFileId,
   proxyDriveFile,
 } from "@/server/lib/drive-video-proxy";
+import { isSupportedVideoUrl } from "@/lib/media/video-url";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,13 +38,15 @@ async function resolveEffectiveMediaUrl(
   exerciseId: string,
   trainerUserId: string | null,
 ): Promise<string | null> {
-  // 1) If a trainer is asking (or a client whose trainer set an override),
-  //    prefer that override. For clients we can't easily know which trainer
-  //    assigned this exercise without joining through AssignedRoutine; in
-  //    practice we just look up ANY active override by ANY trainer for this
-  //    exercise — the catalog isn't shared with other coaches' overrides,
-  //    so the only override that exists for a public exercise was likely
-  //    set by the trainer the client is currently working with.
+  // Estrategia: junto TODOS los candidates (override del trainer + catálogo +
+  // override de cualquier trainer si el caller es client). Luego elijo el
+  // primero que sea REPRODUCIBLE (Drive / YouTube / Vimeo). Si ninguno es
+  // reproducible, devuelvo el primero que exista — el caller maneja el 415.
+  //
+  // Esto evita el bug donde un override viejo con un URL no embebible (un
+  // .mp4 random, un link Telegram, etc.) pisaba un Drive válido del seed.
+  const candidates: string[] = [];
+
   if (trainerUserId) {
     // findFirst instead of findUnique so we can filter deletedAt: null.
     // The @@unique constraint guarantees at most one non-deleted row, so
@@ -56,31 +59,36 @@ async function resolveEffectiveMediaUrl(
       },
       select: { mediaUrl: true },
     });
-    if (override?.mediaUrl) return override.mediaUrl;
+    if (override?.mediaUrl) candidates.push(override.mediaUrl);
   }
 
-  // 2) Catalog default — populated by the seed script or by the trainer
-  //    when they own a private exercise.
+  // Catalog default — populated by the seed script or by the trainer
+  // when they own a private exercise.
   const ex = await prisma.exercise.findUnique({
     where: { id: exerciseId, deletedAt: null },
     select: { mediaUrl: true, isPublic: true },
   });
 
-  // 3) For clients (no trainerUserId), also look at any override that exists
-  //    for the trainer of an ACTIVE assigned routine pointing to this
-  //    exercise. We do this as a fallback to avoid a heavier join above.
+  // For clients (no trainerUserId), also look at any override that exists
+  // for the trainer of an ACTIVE assigned routine pointing to this
+  // exercise. We do this as a fallback to avoid a heavier join above.
   if (!trainerUserId && ex && ex.isPublic) {
     const overrideAny = await prisma.trainerExerciseMedia.findFirst({
       where: { exerciseId, deletedAt: null },
       select: { mediaUrl: true },
       // No order — for a small product we accept whichever the DB returns.
-      // If the user has multiple trainers, the DB picks one; both should be
-      // the same video for the same exercise in this product's model.
     });
-    if (overrideAny?.mediaUrl) return overrideAny.mediaUrl;
+    if (overrideAny?.mediaUrl) candidates.push(overrideAny.mediaUrl);
   }
 
-  return ex?.mediaUrl ?? null;
+  if (ex?.mediaUrl) candidates.push(ex.mediaUrl);
+
+  // Primer URL reproducible gana — el override de "verdad" si es Drive/YT/Vimeo,
+  // sino caemos al catálogo del JSON.
+  for (const c of candidates) {
+    if (isSupportedVideoUrl(c)) return c;
+  }
+  return candidates[0] ?? null;
 }
 
 export async function GET(

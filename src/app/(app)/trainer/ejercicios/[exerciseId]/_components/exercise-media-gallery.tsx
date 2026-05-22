@@ -214,17 +214,30 @@ export function ExerciseMediaGallery({
 
 function ExternalLinkCard({ url }: { url: string }) {
   return (
-    <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-xl border border-[#3F3F46] bg-[#09090B] px-6 text-center">
-      <PlayCircle className="h-10 w-10 text-[#52525B]" strokeWidth={1.5} aria-hidden="true" />
-      <p className="text-sm text-[#A1A1AA]">Video externo</p>
+    <div className="flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-amber-500/40 bg-[#09090B] px-6 text-center">
+      <PlayCircle
+        className="h-10 w-10 text-amber-400/70"
+        strokeWidth={1.5}
+        aria-hidden="true"
+      />
+      <p className="text-sm font-medium text-[#FAFAFA]">
+        Este link no se puede embeber
+      </p>
+      <p className="text-[11px] text-[#71717A] max-w-[280px] leading-relaxed">
+        Para que el video se reproduzca acá adentro, usá un link de
+        <span className="text-[#FAFAFA]"> Google Drive</span>,
+        <span className="text-[#FAFAFA]"> YouTube</span> o
+        <span className="text-[#FAFAFA]"> Vimeo</span>. Tocá "Cambiar link" o
+        "Quitar" abajo y pegá uno soportado.
+      </p>
       <a
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 rounded-lg bg-brand-primary px-4 py-2 text-xs font-semibold text-white transition-colors hover:brightness-110"
+        className="mt-1 inline-flex items-center gap-1.5 rounded-md border border-[#3F3F46] bg-transparent px-3 py-1 text-[11px] font-medium text-[#A1A1AA] transition-colors hover:border-brand-primary/40 hover:text-[#FAFAFA]"
       >
-        <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-        Ver video
+        <ExternalLink className="h-3 w-3" aria-hidden="true" />
+        Abrir link actual
       </a>
     </div>
   );

@@ -24,7 +24,11 @@ import {
   ValidationError,
 } from "@/lib/errors";
 import { logInfo } from "@/lib/logger";
-import { deriveVideoThumbnail, toClientMediaUrl } from "@/lib/media/video-url";
+import {
+  deriveVideoThumbnail,
+  toClientMediaUrl,
+  isSupportedVideoUrl,
+} from "@/lib/media/video-url";
 import type { ActionResult, ExerciseSearchResult } from "@/types/api";
 import type { Exercise, MuscleGroup, ExerciseEquipment, ExerciseDifficulty, ExerciseCategory } from "@prisma/client";
 import { Prisma } from "@prisma/client";
@@ -390,6 +394,27 @@ async function fetchTrainerMediaOverrides(
 }
 
 // -----------------------------------------------------------------------------
+// pickPlayableMediaUrl
+// -----------------------------------------------------------------------------
+
+/**
+ * Devuelve el primer URL reproducible (Drive / YouTube / Vimeo / proxy) entre
+ * los candidatos. Si el primero no es reproducible pero el segundo sí, gana
+ * el segundo — esto permite que un override roto del trainer caiga al
+ * catálogo automáticamente sin pedirle al usuario que corra ningún script.
+ *
+ * Si ninguno es reproducible, devuelve el primero existente (o null).
+ */
+function pickPlayableMediaUrl(
+  primary: string | null | undefined,
+  fallback: string | null | undefined,
+): string | null {
+  if (primary && isSupportedVideoUrl(primary)) return primary;
+  if (fallback && isSupportedVideoUrl(fallback)) return fallback;
+  return primary ?? fallback ?? null;
+}
+
+// -----------------------------------------------------------------------------
 // getExercise
 // -----------------------------------------------------------------------------
 
@@ -423,7 +448,15 @@ export async function getExercise(id: string | { id: string }): Promise<ActionRe
     // exercise is returned with just the catalog-derived thumbnail.
     const overrides = await fetchTrainerMediaOverrides(user.id, [exercise.id]);
     const override = overrides.get(exercise.id);
-    const effectiveMediaUrl = override?.mediaUrl ?? exercise.mediaUrl;
+    // Pick the first playable URL. Si el override existe pero NO es Drive /
+    // YouTube / Vimeo (link random pegado en una versión anterior, antes de
+    // que pusiéramos el allowlist en setExerciseTrainerMedia), caemos al
+    // catálogo que sí mandamos por el seed. Esto evita que un override viejo
+    // "roto" siga pisando un Drive válido del JSON.
+    const effectiveMediaUrl = pickPlayableMediaUrl(
+      override?.mediaUrl,
+      exercise.mediaUrl,
+    );
     // If the effective mediaUrl is a recognized video URL, derive its
     // thumbnail so the biblioteca card and other thumbnail consumers show the
     // video poster instead of the original seed photo.
@@ -469,12 +502,22 @@ export async function setExerciseTrainerMedia(
       !input.mediaUrl || input.mediaUrl.trim() === "" ? null : input.mediaUrl.trim();
 
     if (normalized !== null) {
-      // Light URL sanity check — full embed support is decided at render time.
+      // Sanity de URL + allowlist de hosts. Solo aceptamos servicios que el
+      // player sabe embeber (Drive / YouTube / Vimeo). Esto previene que un
+      // link random como un .mp4 hosteado en otro lado, un Telegram, un
+      // file:// o un host interno termine como override "roto" en
+      // TrainerExerciseMedia (era el bug que dejaba el panel mostrando
+      // "Video externo / Ver video" en vez del GIF embebido).
       try {
-        // throws on invalid URL
         new URL(normalized);
       } catch {
         throw new ValidationError("INVALID_URL", "El link de video no es una URL válida.");
+      }
+      if (!isSupportedVideoUrl(normalized)) {
+        throw new ValidationError(
+          "UNSUPPORTED_VIDEO_HOST",
+          "Solo se aceptan links de Google Drive, YouTube o Vimeo.",
+        );
       }
     }
 
