@@ -1,0 +1,243 @@
+{
+  "$schema": "Defaults de video por ejercicio. Pegá un link de YouTube/Vimeo/Drive en \"videoUrl\" cuando lo tengas. null = sin video por defecto. Corré pnpm db:seed:videos para aplicar.",
+  "strength": {
+    "barbell-back-squat": {
+      "nameEs": "Sentadilla con barra",
+      "videoUrl": null
+    },
+    "front-squat": {
+      "nameEs": "Sentadilla frontal",
+      "videoUrl": null
+    },
+    "conventional-deadlift": {
+      "nameEs": "Peso muerto convencional",
+      "videoUrl": null
+    },
+    "romanian-deadlift": {
+      "nameEs": "Peso muerto rumano",
+      "videoUrl": null
+    },
+    "barbell-lunge": {
+      "nameEs": "Estocada con barra",
+      "videoUrl": null
+    },
+    "leg-press": {
+      "nameEs": "Prensa de piernas",
+      "videoUrl": null
+    },
+    "lying-leg-curl": {
+      "nameEs": "Curl de piernas acostado",
+      "videoUrl": null
+    },
+    "leg-extension": {
+      "nameEs": "Extensión de piernas",
+      "videoUrl": null
+    },
+    "barbell-bench-press": {
+      "nameEs": "Press de banca con barra",
+      "videoUrl": null
+    },
+    "incline-barbell-bench-press": {
+      "nameEs": "Press de banca inclinado con barra",
+      "videoUrl": null
+    },
+    "overhead-press": {
+      "nameEs": "Press militar con barra",
+      "videoUrl": null
+    },
+    "push-up": {
+      "nameEs": "Flexión de pecho (lagartija)",
+      "videoUrl": null
+    },
+    "dips": {
+      "nameEs": "Fondos en paralelas",
+      "videoUrl": null
+    },
+    "dumbbell-bench-press": {
+      "nameEs": "Press de banca con mancuernas",
+      "videoUrl": null
+    },
+    "pull-up": {
+      "nameEs": "Dominada (agarre prono)",
+      "videoUrl": null
+    },
+    "close-grip-pull-up": {
+      "nameEs": "Dominada con agarre supino cerrado",
+      "videoUrl": null
+    },
+    "barbell-bent-over-row": {
+      "nameEs": "Remo con barra inclinado",
+      "videoUrl": null
+    },
+    "dumbbell-single-arm-row": {
+      "nameEs": "Remo con mancuerna a un brazo",
+      "videoUrl": null
+    },
+    "cable-lat-pulldown": {
+      "nameEs": "Jalón al pecho en polea",
+      "videoUrl": null
+    },
+    "seated-cable-row": {
+      "nameEs": "Remo en polea sentado",
+      "videoUrl": null
+    },
+    "barbell-curl": {
+      "nameEs": "Curl de bíceps con barra",
+      "videoUrl": null
+    },
+    "hammer-curl": {
+      "nameEs": "Curl martillo",
+      "videoUrl": null
+    },
+    "cable-tricep-pushdown": {
+      "nameEs": "Extensión de tríceps en polea alta",
+      "videoUrl": null
+    },
+    "ez-bar-skull-crusher": {
+      "nameEs": "Press francés con barra EZ",
+      "videoUrl": null
+    },
+    "dumbbell-lateral-raise": {
+      "nameEs": "Elevación lateral con mancuernas",
+      "videoUrl": null
+    },
+    "dumbbell-front-raise": {
+      "nameEs": "Elevación frontal con mancuernas",
+      "videoUrl": null
+    },
+    "cable-rear-delt-fly": {
+      "nameEs": "Apertura para deltoides posterior en polea",
+      "videoUrl": null
+    },
+    "plank": {
+      "nameEs": "Plancha abdominal",
+      "videoUrl": null
+    },
+    "ab-wheel-rollout": {
+      "nameEs": "Extensión abdominal con rueda",
+      "videoUrl": null
+    },
+    "hanging-leg-raise": {
+      "nameEs": "Elevación de piernas colgado",
+      "videoUrl": null
+    }
+  },
+  "warmup": {
+    "cardio-en-maquina": {
+      "nameEs": "Cardio en máquina",
+      "videoUrl": null
+    },
+    "saltos-de-tijera": {
+      "nameEs": "Saltos de tijera",
+      "videoUrl": null
+    },
+    "rodillas-altas": {
+      "nameEs": "Rodillas altas",
+      "videoUrl": null
+    },
+    "talones-a-gluteos": {
+      "nameEs": "Talones a glúteos",
+      "videoUrl": null
+    },
+    "saltar-la-cuerda": {
+      "nameEs": "Saltar la cuerda",
+      "videoUrl": null
+    },
+    "mountain-climbers": {
+      "nameEs": "Mountain climbers",
+      "videoUrl": null
+    },
+    "circulos-de-hombros": {
+      "nameEs": "Círculos de hombros",
+      "videoUrl": null
+    },
+    "circulos-de-brazos": {
+      "nameEs": "Círculos de brazos",
+      "videoUrl": null
+    },
+    "circulos-de-cadera": {
+      "nameEs": "Círculos de cadera",
+      "videoUrl": null
+    },
+    "circulos-de-tobillos": {
+      "nameEs": "Círculos de tobillos",
+      "videoUrl": null
+    },
+    "gato-camello": {
+      "nameEs": "Gato-camello",
+      "videoUrl": null
+    },
+    "inchworm": {
+      "nameEs": "Inchworm",
+      "videoUrl": null
+    },
+    "sentadilla-con-peso-corporal": {
+      "nameEs": "Sentadilla con peso corporal",
+      "videoUrl": null
+    },
+    "zancadas-caminando": {
+      "nameEs": "Zancadas caminando",
+      "videoUrl": null
+    },
+    "puente-de-gluteo": {
+      "nameEs": "Puente de glúteo",
+      "videoUrl": null
+    },
+    "bird-dog": {
+      "nameEs": "Bird dog",
+      "videoUrl": null
+    },
+    "plancha-isometrica": {
+      "nameEs": "Plancha",
+      "videoUrl": null
+    },
+    "push-ups-lentos": {
+      "nameEs": "Push-ups lentos",
+      "videoUrl": null
+    },
+    "band-pull-aparts": {
+      "nameEs": "Band pull-aparts",
+      "videoUrl": null
+    },
+    "face-pulls-con-banda": {
+      "nameEs": "Face pulls con banda",
+      "videoUrl": null
+    },
+    "monster-walks-con-banda": {
+      "nameEs": "Monster walks con banda",
+      "videoUrl": null
+    },
+    "estiramiento-cuadriceps-de-pie": {
+      "nameEs": "Estiramiento de cuádriceps de pie",
+      "videoUrl": null
+    },
+    "estiramiento-isquiotibiales-sentado": {
+      "nameEs": "Estiramiento de isquiotibiales sentado",
+      "videoUrl": null
+    },
+    "estiramiento-gemelos-en-pared": {
+      "nameEs": "Estiramiento de gemelos en pared",
+      "videoUrl": null
+    },
+    "figura-4-supino": {
+      "nameEs": "Figura 4 supino",
+      "videoUrl": null
+    },
+    "estiramiento-flexor-de-cadera": {
+      "nameEs": "Estiramiento de flexor de cadera",
+      "videoUrl": null
+    },
+    "estiramiento-pecho-en-puerta": {
+      "nameEs": "Estiramiento de pecho en puerta",
+      "videoUrl": null
+    },
+    "postura-del-nino": {
+      "nameEs": "Postura del niño",
+      "videoUrl": null
+    },
+    "estiramiento-triceps-sobre-cabeza": {
+      "nameEs": "Estiramiento de tríceps sobre la cabeza",
+      "videoUrl": null
+    }
+  }
+}
