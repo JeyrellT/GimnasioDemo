@@ -94,9 +94,13 @@ export type LoopEmbed =
 
 export function getDriveDirectVideoUrl(url: string): string | null {
   const id = getGoogleDriveFileId(url);
-  // The lh3 video URL works for publicly-shared Drive files without a virus
-  // scan interstitial. `=m18` is Google's "video mp4" variant tag.
-  return id ? `https://lh3.googleusercontent.com/d/${id}=m18` : null;
+  if (!id) return null;
+  // `drive.usercontent.google.com/download` serves direct MP4 with
+  // `Content-Type: video/mp4` (HEAD-verified) for publicly-shared files
+  // without a virus-scan interstitial up to ~25MB. The older lh3 size
+  // variants (`=m18`) return 404 for Drive videos — they only work for
+  // Google Photos. This is the post-2024 migration endpoint.
+  return `https://drive.usercontent.google.com/download?id=${id}&export=download`;
 }
 
 export function getYouTubeLoopEmbedUrl(url: string): string | null {
