@@ -11,12 +11,14 @@ import {
   CalendarDays,
   Play,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ExerciseThumbnail } from "@/components/shared/exercise-thumbnail";
 import { useAuth } from "@/components/providers/auth-provider";
 import { getMyAssignedRoutines } from "@/app/actions/client-portal";
 import { needsMedicalPrompt } from "@/app/actions/medical-conditions";
+import { needsParqPrompt } from "@/app/actions/clients";
 import { MedicalConditionsPrompt } from "@/components/forms/medical-conditions-prompt";
+import { ParqClientPrompt } from "@/components/forms/parq-client-prompt";
 import { RoutinePlayerDialog } from "./_components/routine-player-dialog";
 import type { MyAssignedRoutine } from "@/server/actions/client-portal.actions";
 import type {
@@ -56,6 +58,7 @@ function parseSnapshot(json: unknown): RoutineSnapshot | null {
 
 export default function ClientRutinasPage() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [expandedRoutine, setExpandedRoutine] = useState<string | null>(null);
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [player, setPlayer] = useState<PlayerState | null>(null);
@@ -94,6 +97,27 @@ export default function ClientRutinasPage() {
       setShowMedicalPrompt(true);
     }
   }, [medicalQuery.data]);
+
+  // PAR-Q gate: show modal the moment the client lands here while parqStatus
+  // is NOT_COMPLETED. Dismissible (so they can still browse) but reopens on
+  // the next visit until they actually submit it.
+  const parqQuery = useQuery({
+    queryKey: ["parq-prompt-needed", user?.id ?? null],
+    enabled: !!user,
+    queryFn: async () => {
+      const result = await needsParqPrompt();
+      if (!result.ok) throw new Error(result.error.message);
+      return result.value;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const [showParqPrompt, setShowParqPrompt] = useState(false);
+  useEffect(() => {
+    if (parqQuery.data?.shouldShow) {
+      setShowParqPrompt(true);
+    }
+  }, [parqQuery.data]);
 
   const cards = useMemo<RoutineCard[]>(() => {
     const loaded: RoutineCard[] = (routinesQuery.data ?? []).map((ar) => ({
@@ -141,6 +165,19 @@ export default function ClientRutinasPage() {
           open={showMedicalPrompt}
           onClose={() => setShowMedicalPrompt(false)}
         />
+        {user?.id && (
+          <ParqClientPrompt
+            open={showParqPrompt}
+            clientUserId={user.id}
+            onDismiss={() => setShowParqPrompt(false)}
+            onCompleted={() => {
+              setShowParqPrompt(false);
+              void queryClient.invalidateQueries({
+                queryKey: ["parq-prompt-needed", user.id ?? null],
+              });
+            }}
+          />
+        )}
         <div className="max-w-md mx-auto py-12 px-6 text-center space-y-4">
           <ClipboardList className="h-12 w-12 text-[#52525B] mx-auto" />
           <h2 className="text-xl font-bold text-[#FAFAFA]">
@@ -175,6 +212,19 @@ export default function ClientRutinasPage() {
         open={showMedicalPrompt}
         onClose={() => setShowMedicalPrompt(false)}
       />
+      {user?.id && (
+        <ParqClientPrompt
+          open={showParqPrompt}
+          clientUserId={user.id}
+          onDismiss={() => setShowParqPrompt(false)}
+          onCompleted={() => {
+            setShowParqPrompt(false);
+            void queryClient.invalidateQueries({
+              queryKey: ["parq-prompt-needed", user.id ?? null],
+            });
+          }}
+        />
+      )}
       <div className="space-y-6">
         {/* Header */}
         <div>
