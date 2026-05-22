@@ -300,14 +300,18 @@ async function overlayExerciseMedia(
           const e = ex as { exerciseId?: string };
           const liveRow = e.exerciseId ? live.get(e.exerciseId) : null;
           if (!liveRow) return ex;
+          const snap = ex as {
+            mediaUrl?: string | null;
+            gifUrl?: string | null;
+            thumbnailUrl?: string | null;
+          };
+          // Per-routine override (snap.mediaUrl) wins; only fall back to the
+          // shared catalog value when the snapshot doesn't have one.
           return {
             ...(ex as object),
-            mediaUrl: liveRow.mediaUrl ?? (ex as { mediaUrl?: string | null }).mediaUrl ?? null,
-            gifUrl: liveRow.gifUrl ?? (ex as { gifUrl?: string | null }).gifUrl ?? null,
-            thumbnailUrl:
-              liveRow.thumbnailUrl ??
-              (ex as { thumbnailUrl?: string | null }).thumbnailUrl ??
-              null,
+            mediaUrl: snap.mediaUrl ?? liveRow.mediaUrl ?? null,
+            gifUrl: snap.gifUrl ?? liveRow.gifUrl ?? null,
+            thumbnailUrl: snap.thumbnailUrl ?? liveRow.thumbnailUrl ?? null,
           };
         }),
       };

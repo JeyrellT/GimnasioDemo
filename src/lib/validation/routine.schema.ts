@@ -76,6 +76,12 @@ const addExerciseToDayBaseSchema = z.object({
     .optional(),
   supersetGroup: z.coerce.number().int().min(1).max(10).optional(),
   notes: longTextSchema(500),
+  // Per-routine video override (YouTube / Vimeo / Google Drive).
+  // `""` and `null` both clear the column; non-empty must be a valid URL.
+  mediaUrl: z.preprocess(
+    (v) => (v === "" ? null : v),
+    z.union([z.string().url("URL inválida").max(2000), z.null()]).optional(),
+  ),
 });
 
 export const addExerciseToDaySchema = addExerciseToDayBaseSchema.refine(

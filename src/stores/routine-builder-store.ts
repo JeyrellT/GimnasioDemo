@@ -21,6 +21,8 @@ export interface DraftExercise {
   tempo: string | null;
   supersetGroup: number | null;
   notes: string | null;
+  /** Per-routine video override (YouTube / Vimeo / Google Drive). */
+  mediaUrl: string | null;
 }
 
 export interface DraftDay {
@@ -97,6 +99,7 @@ export const useRoutineBuilderStore = create<RoutineBuilderState>()((set) => ({
           tempo: e.tempo ?? null,
           supersetGroup: e.supersetGroup ?? null,
           notes: e.notes ?? null,
+          mediaUrl: (e as { mediaUrl?: string | null }).mediaUrl ?? null,
         })),
       })),
       isDirty: false,
