@@ -389,6 +389,8 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
   const [backendDetail, setBackendDetail] = useState<BackendDetail | null>(null);
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [bodyView, setBodyView] = useState<"front" | "back">("front");
+  // Bumped after a successful PAR-Q completion to trigger a profile refetch.
+  const [parqRefetchTick, setParqRefetchTick] = useState(0);
   const openSheetWithFocus = useMeasurementSheetStore((s) => s.openWithFocus);
   const closeSheet = useMeasurementSheetStore((s) => s.close);
   // Subscribe to measurement saves so we can re-fetch profile data after recording.
@@ -441,6 +443,21 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
       cancelled = true;
     };
   }, [lastSavedAt, clientId]);
+
+  // Silent re-fetch after a PAR-Q completion so the badge updates immediately.
+  useEffect(() => {
+    if (parqRefetchTick === 0) return;
+    let cancelled = false;
+    const fetchingFor = clientId;
+    getClientProfileDetail(clientId).then((result) => {
+      if (cancelled) return;
+      if (latestClientIdRef.current !== fetchingFor) return;
+      if (result.ok) setBackendDetail(result.value);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [parqRefetchTick, clientId]);
 
   function handleTableZoneClick(zone: string) {
     setSelectedZone((prev) => (prev === zone ? null : zone));
@@ -584,6 +601,7 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
         hasActiveRoutine={profile.activeRoutine !== null}
         routineHref={routineHref}
         clientId={clientId}
+        onParqCompleted={() => setParqRefetchTick((n) => n + 1)}
       />
 
       <MeasurementSheetController clientId={clientId} />

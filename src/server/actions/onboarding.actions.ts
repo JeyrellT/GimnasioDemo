@@ -26,13 +26,33 @@ import {
   BucketType,
 } from "@/lib/storage/upload";
 import type { ActionResult } from "@/types/api";
-import type { OnboardingMode } from "@prisma/client";
+import type { OnboardingMode, ParqStatus } from "@prisma/client";
 import type {
   OnboardingCedulaExtraction,
   OnboardingDraftDTO,
   OnboardingPayload,
 } from "@/types/onboarding";
 import type { WorkoutPhotoExtraction } from "@/lib/ai/extract-workout-photos";
+import { buildParqAnswerRows } from "@/lib/onboarding/payload-builder";
+
+const PARQ_STATUS_VALUES: ReadonlySet<ParqStatus> = new Set([
+  "NOT_COMPLETED",
+  "GREEN",
+  "REVIEW",
+  "RED",
+]);
+
+function isParqStatus(v: unknown): v is ParqStatus {
+  return typeof v === "string" && PARQ_STATUS_VALUES.has(v as ParqStatus);
+}
+
+function isParqAnswersRecord(v: unknown): v is Record<string, "yes" | "no"> {
+  if (!v || typeof v !== "object") return false;
+  for (const val of Object.values(v as Record<string, unknown>)) {
+    if (val !== "yes" && val !== "no") return false;
+  }
+  return Object.keys(v as object).length > 0;
+}
 
 // =============================================================================
 // Helper types
@@ -361,6 +381,16 @@ export async function completeOnboarding(
       );
     }
 
+    // PAR-Q (step 4) — captured but never persisted prior to this commit, so
+    // every wizard-created client appeared as "PAR-Q Pendiente" forever.
+    const rawParqStatus = allStepData["parqStatus"];
+    const rawParqAnswers = allStepData["parqAnswers"];
+    const parqStatus: ParqStatus | undefined = isParqStatus(rawParqStatus)
+      ? rawParqStatus
+      : undefined;
+    const parqAnswers: Record<string, "yes" | "no"> | undefined =
+      isParqAnswersRecord(rawParqAnswers) ? rawParqAnswers : undefined;
+
     const userId = await prisma.$transaction(async (tx) => {
       // 1. Create or update User
       const user = await tx.user.upsert({
@@ -406,6 +436,9 @@ export async function completeOnboarding(
             : undefined,
           locationCity:
             (allStepData["locationCity"] as string | undefined) ?? undefined,
+          // Only override the default NOT_COMPLETED if the wizard actually
+          // computed a status from a fully-answered PAR-Q.
+          parqStatus: parqStatus ?? undefined,
         },
         update: {
           goal:
@@ -422,6 +455,7 @@ export async function completeOnboarding(
           weightKg: allStepData["weightKg"] !== undefined
             ? Number(allStepData["weightKg"])
             : undefined,
+          parqStatus: parqStatus ?? undefined,
         },
       });
 
@@ -433,6 +467,7 @@ export async function completeOnboarding(
         ? Number(allStepData["weightKg"])
         : null;
 
+      let assessmentId: string | null = null;
       if (heightCm && weightKg) {
         const existingAssessment = await tx.initialAssessment.findUnique({
           where: { clientUserId: user.id },
@@ -440,7 +475,7 @@ export async function completeOnboarding(
         });
 
         if (!existingAssessment) {
-          await tx.initialAssessment.create({
+          const created = await tx.initialAssessment.create({
             data: {
               clientUserId: user.id,
               heightCm,
@@ -470,7 +505,29 @@ export async function completeOnboarding(
                 ? Number(allStepData["thighCm"])
                 : undefined,
             },
+            select: { id: true },
           });
+          assessmentId = created.id;
+        } else {
+          assessmentId = existingAssessment.id;
+        }
+      }
+
+      // 3.b. Persist PAR-Q answers when both the assessment exists and the
+      // wizard captured answers. Idempotent: skip if rows already exist for
+      // this assessment (re-running completeOnboarding should not duplicate).
+      if (assessmentId && parqAnswers) {
+        const alreadyHasRows = await tx.parqAnswer.count({
+          where: { assessmentId, deletedAt: null },
+        });
+        if (alreadyHasRows === 0) {
+          const rows = buildParqAnswerRows(parqAnswers).map((r) => ({
+            ...r,
+            assessmentId,
+          }));
+          if (rows.length > 0) {
+            await tx.parqAnswer.createMany({ data: rows });
+          }
         }
       }
 

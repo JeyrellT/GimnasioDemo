@@ -17,6 +17,7 @@ export {
   recordTrainerNoteUpdate,
   quickAddClient,
   completeFirstLogin,
+  recordClientParq,
 } from "@/server/actions/clients.actions";
 
 // updateTrainerProfile lives in auth.actions.ts (mutates User + TrainerProfile).

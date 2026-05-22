@@ -9,11 +9,12 @@
 import * as React from "react";
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import Link from "next/link";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ClipboardCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ParqStatus } from "@/types/domain";
 import type { Goal } from "@/types/domain";
 import { useMeasurementSheetStore } from "@/stores/measurement-sheet-store";
+import { ParqCompletionDialog } from "@/components/shared/parq-completion-dialog";
 
 // -----------------------------------------------------------------------------
 // Types
@@ -31,6 +32,9 @@ interface ClientHeroCardProps {
   hasActiveRoutine: boolean;
   routineHref: string;
   clientId: string;
+  /** Triggered after the PAR-Q dialog saves successfully so the parent can
+   *  refetch profile data and re-render the badge with the new status. */
+  onParqCompleted?: () => void;
 }
 
 // -----------------------------------------------------------------------------
@@ -93,10 +97,12 @@ export function ClientHeroCard({
   hasActiveRoutine,
   routineHref,
   clientId,
+  onParqCompleted,
 }: ClientHeroCardProps) {
   const parqConfig = PARQ_CONFIG[parqStatus];
   const resolvedGoalLabel = goalLabel ? (GOAL_LABELS[goalLabel] ?? goalLabel) : null;
   const openMeasurementSheet = useMeasurementSheetStore((s) => s.open);
+  const [parqDialogOpen, setParqDialogOpen] = React.useState(false);
 
   return (
     <section
@@ -179,6 +185,17 @@ export function ClientHeroCard({
               >
                 {parqConfig.label}
               </span>
+              {parqStatus === "NOT_COMPLETED" && (
+                <button
+                  type="button"
+                  onClick={() => setParqDialogOpen(true)}
+                  className="inline-flex items-center gap-1 rounded-full border border-[rgba(255,106,26,0.4)] bg-[rgba(255,106,26,0.08)] px-2.5 py-1 text-xs font-semibold text-brand-primary transition-colors hover:bg-[rgba(255,106,26,0.16)] focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-2"
+                  aria-label="Completar el cuestionario PAR-Q para este cliente"
+                >
+                  <ClipboardCheck className="h-3 w-3" aria-hidden="true" />
+                  Completar PAR-Q
+                </button>
+              )}
             </div>
 
             {/* Días entrenando */}
@@ -216,6 +233,16 @@ export function ClientHeroCard({
           </div>
         </div>
       </div>
+
+      <ParqCompletionDialog
+        open={parqDialogOpen}
+        onOpenChange={setParqDialogOpen}
+        clientUserId={clientId}
+        clientName={name}
+        onCompleted={() => {
+          onParqCompleted?.();
+        }}
+      />
     </section>
   );
 }
