@@ -66,6 +66,11 @@ export function usePrepCountdown(
 
   const [secondsLeft, setSecondsLeft] = useState<number>(0);
   const [isActive, setIsActive] = useState<boolean>(false);
+  // tickEpoch is incremented on every start(). It forces the interval-effect
+  // to re-subscribe even when isActive was already true (e.g. user pressed
+  // "Next" while a prep countdown was already running — same final state,
+  // but we need a fresh interval against the new meta.startedAt).
+  const [tickEpoch, setTickEpoch] = useState<number>(0);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -113,6 +118,10 @@ export function usePrepCountdown(
 
       setSecondsLeft(target);
       setIsActive(true);
+      // Bump epoch so the interval-effect re-subscribes even if isActive was
+      // already true (case: pressing "Next" mid-prep — same isActive, but the
+      // anchor moved, so we need a fresh interval).
+      setTickEpoch((e) => e + 1);
 
       // Fire the first tick synchronously so the consumer sees "3" with sound
       // at the exact moment start() is called.
@@ -121,7 +130,9 @@ export function usePrepCountdown(
     [clearTick, defaultSeconds],
   );
 
-  // Main interval — runs whenever isActive flips true.
+  // Main interval — runs whenever isActive flips true or tickEpoch bumps
+  // (a fresh start() while isActive was already true).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: tickEpoch is a re-subscription token used only as a dep trigger
   useEffect(() => {
     if (!isActive) {
       clearTick();
@@ -159,7 +170,7 @@ export function usePrepCountdown(
     }, 200);
 
     return clearTick;
-  }, [isActive, clearTick]);
+  }, [isActive, tickEpoch, clearTick]);
 
   // Cleanup on unmount.
   // biome-ignore lint/correctness/useExhaustiveDependencies: only run on unmount
