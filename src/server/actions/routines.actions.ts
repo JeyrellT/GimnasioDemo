@@ -612,6 +612,7 @@ export interface AddExerciseToDayInput {
   tempo?: string | null;
   supersetGroup?: number | null;
   notes?: string | null;
+  mediaUrl?: string | null;
 }
 
 export interface UpdateExerciseInDayInput {
@@ -624,6 +625,7 @@ export interface UpdateExerciseInDayInput {
   tempo?: string | null;
   supersetGroup?: number | null;
   notes?: string | null;
+  mediaUrl?: string | null;
 }
 
 export interface AssignRoutineInput {
