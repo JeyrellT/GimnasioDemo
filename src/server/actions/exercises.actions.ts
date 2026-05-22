@@ -166,18 +166,17 @@ export async function searchExercises(
     const owner = parseOwner(filters?.owner);
 
     if (query.trim().length > 0) {
-      // Sanitize query: replace non-alphanumeric/space with space, join tokens
-      // with & for AND semantics in tsquery.
-      const sanitized = query
+      // ILIKE search on nameEs/nameEn with accent + case insensitivity.
+      // TRANSLATE() maps Spanish accented chars to their unaccented form on
+      // both sides of the comparison, so "sentadilla" matches "Sentadilla"
+      // and "biceps" matches "Bíceps". No PG extension required.
+      const escapedQuery = query
         .trim()
-        .replace(/[^a-záéíóúüñ\s]/gi, " ")
-        .split(/\s+/)
-        .filter(Boolean)
-        .join(" & ");
+        .replace(/\\/g, "\\\\")
+        .replace(/%/g, "\\%")
+        .replace(/_/g, "\\_");
+      const likePattern = `%${escapedQuery}%`;
 
-      // Raw query: tsvector FTS with optional enum filters.
-      // We build a parameterized query to avoid SQL injection.
-      // Visibility: public OR owned by current user.
       type RawRow = {
         id: string;
         slug: string;
@@ -193,9 +192,6 @@ export async function searchExercises(
         count: bigint;
       };
 
-      // Build dynamic WHERE clauses for optional enum filters.
-      // Prisma.$queryRaw uses tagged template literals for safe parameterization.
-      // We use a two-query approach: one for rows, one for total count.
       const muscleSql = muscle
         ? Prisma.sql`AND e."primaryMuscle" = ${muscle}::"MuscleGroup"`
         : Prisma.empty;
@@ -231,12 +227,20 @@ export async function searchExercises(
         FROM "Exercise" e
         WHERE e."deletedAt" IS NULL
           ${ownerSql}
-          AND e."searchVector" @@ to_tsquery('spanish', ${sanitized})
+          AND (
+            LOWER(TRANSLATE(e."nameEs", 'áéíóúüñÁÉÍÓÚÜÑ', 'aeiouunAEIOUUN'))
+              LIKE LOWER(TRANSLATE(${likePattern}, 'áéíóúüñÁÉÍÓÚÜÑ', 'aeiouunAEIOUUN'))
+            OR (
+              e."nameEn" IS NOT NULL
+              AND LOWER(TRANSLATE(e."nameEn", 'áéíóúüñÁÉÍÓÚÜÑ', 'aeiouunAEIOUUN'))
+                LIKE LOWER(TRANSLATE(${likePattern}, 'áéíóúüñÁÉÍÓÚÜÑ', 'aeiouunAEIOUUN'))
+            )
+          )
           ${muscleSql}
           ${equipmentSql}
           ${difficultySql}
           ${categorySql}
-        ORDER BY ts_rank(e."searchVector", to_tsquery('spanish', ${sanitized})) DESC
+        ORDER BY e."nameEs" ASC
         LIMIT ${limit} OFFSET ${offset}
       `;
 
@@ -247,7 +251,7 @@ export async function searchExercises(
         rows.map((r) => r.id),
       );
 
-      logInfo("exercises.searchExercises.fts", {
+      logInfo("exercises.searchExercises.like", {
         userId: user.id,
         query,
         total,
