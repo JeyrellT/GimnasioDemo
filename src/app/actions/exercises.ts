@@ -6,4 +6,5 @@ export {
   updateExerciseFromForm as updateExercise,
   updateExerciseInstructions,
   deleteExercise,
+  setExerciseTrainerMedia,
 } from "@/server/actions/exercises.actions";
