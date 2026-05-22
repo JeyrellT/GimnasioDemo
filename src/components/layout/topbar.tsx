@@ -5,6 +5,7 @@ import { signOut } from "next-auth/react";
 import { LogOut, User, Settings } from "lucide-react";
 import { BlacklineFitnessLogo } from "@/components/shared/blackline-fitness-logo";
 import { useBranding } from "@/lib/branding/branding-context";
+import { useAuth } from "@/components/providers/auth-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -36,6 +37,8 @@ export function Topbar({ user, userName, userAvatarUrl }: TopbarProps) {
   const displayName = user?.name ?? userName ?? null;
   const displayAvatar = user?.avatarUrl ?? userAvatarUrl ?? null;
   const { branding } = useBranding();
+  const { user: authUser } = useAuth();
+  const isTrainer = authUser?.role === "TRAINER";
 
   return (
     <header className="relative flex h-14 items-center justify-between bg-canvas px-4 sm:px-6">
@@ -116,12 +119,14 @@ export function Topbar({ user, userName, userAvatarUrl }: TopbarProps) {
               Perfil
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/trainer/ajustes" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" aria-hidden="true" />
-              Ajustes
-            </Link>
-          </DropdownMenuItem>
+          {isTrainer && (
+            <DropdownMenuItem asChild>
+              <Link href="/trainer/ajustes" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" aria-hidden="true" />
+                Ajustes
+              </Link>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className="text-[#EF4444] focus:text-[#EF4444]"

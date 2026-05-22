@@ -5,6 +5,11 @@
 // Provides the active palette + logo across the app. On mount it reads from
 // localStorage and injects CSS custom properties so that every component using
 // var(--brand-primary) etc. picks up the trainer's chosen palette automatically.
+//
+// IMPORTANT: branding is per-trainer. localStorage is per-browser, so we MUST
+// gate by role — otherwise a coach who configured branding and then logs into
+// the same browser as a client would leak their logo/palette onto the client UI.
+// Only TRAINER sees their custom branding; clients/admins always see defaults.
 // =============================================================================
 
 import {
@@ -30,6 +35,7 @@ import {
   DEFAULT_BRANDING,
 } from "./branding-store";
 import { getPaletteById, type PaletteColors } from "./presets";
+import { useAuth } from "@/components/providers/auth-provider";
 
 // -----------------------------------------------------------------------------
 // Context shape
@@ -56,13 +62,23 @@ const BrandingContext = createContext<BrandingContextValue>({
 // -----------------------------------------------------------------------------
 
 export function BrandingProvider({ children }: { children: ReactNode }) {
-  // Lazy initializer reads localStorage on the very first client render so
-  // hydrated paint already has the trainer's chosen palette. Without this,
-  // the first render uses DEFAULT_BRANDING (blue) and a subsequent useEffect
-  // flips it — creating a visible blue-to-color flash on every navigation.
-  const [branding, setBranding] = useState<TrainerBranding>(() =>
-    typeof window !== "undefined" ? getBranding() : DEFAULT_BRANDING,
-  );
+  const { user } = useAuth();
+  const isTrainer = user?.role === "TRAINER";
+
+  // Branding is a trainer-only feature. Clients/admins always see defaults
+  // to avoid leaking a coach's localStorage into another role's UI in the
+  // same browser. We start from DEFAULT_BRANDING and only hydrate from
+  // localStorage when the authenticated user is a trainer.
+  const [branding, setBranding] = useState<TrainerBranding>(DEFAULT_BRANDING);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (isTrainer) {
+      setBranding(getBranding());
+    } else {
+      setBranding(DEFAULT_BRANDING);
+    }
+  }, [isTrainer]);
 
   const palette = useMemo(
     () => getPaletteById(branding.paletteId),
@@ -105,19 +121,23 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
 
   const update = useCallback(
     (patch: Partial<TrainerBranding>) => {
+      // Guard: only trainers can mutate branding. Prevents accidental writes
+      // from a non-trainer session polluting the shared localStorage key.
+      if (!isTrainer) return;
       setBranding((prev) => {
         const next = { ...prev, ...patch };
         saveBranding(next);
         return next;
       });
     },
-    [],
+    [isTrainer],
   );
 
   const reset = useCallback(() => {
+    if (!isTrainer) return;
     setBranding(DEFAULT_BRANDING);
     saveBranding(DEFAULT_BRANDING);
-  }, []);
+  }, [isTrainer]);
 
   const value = useMemo<BrandingContextValue>(
     () => ({ branding, palette, update, reset }),
