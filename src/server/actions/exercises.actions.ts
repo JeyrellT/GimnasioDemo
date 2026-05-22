@@ -189,6 +189,7 @@ export async function searchExercises(
         category: ExerciseCategory;
         gifUrl: string | null;
         thumbnailUrl: string | null;
+        mediaUrl: string | null;
         count: bigint;
       };
 
@@ -225,6 +226,7 @@ export async function searchExercises(
           e.category,
           e."gifUrl",
           e."thumbnailUrl",
+          e."mediaUrl",
           COUNT(*) OVER () AS count
         FROM "Exercise" e
         WHERE e."deletedAt" IS NULL
@@ -255,6 +257,9 @@ export async function searchExercises(
       return {
         exercises: rows.map((r) => {
           const o = overrides.get(r.id);
+          // Precedence: trainer override → catalog mediaUrl (if it's a video
+          // URL we can derive a thumb from) → original catalog thumbnail.
+          const catalogDerivedThumb = deriveVideoThumbnail(r.mediaUrl);
           return {
             id: r.id,
             slug: r.slug,
@@ -265,7 +270,7 @@ export async function searchExercises(
             difficulty: r.difficulty,
             category: r.category ?? "STRENGTH",
             gifUrl: r.gifUrl,
-            thumbnailUrl: o?.thumbnailUrl ?? r.thumbnailUrl,
+            thumbnailUrl: o?.thumbnailUrl ?? catalogDerivedThumb ?? r.thumbnailUrl,
           };
         }),
         total,
@@ -303,6 +308,7 @@ export async function searchExercises(
           category: true,
           gifUrl: true,
           thumbnailUrl: true,
+          mediaUrl: true,
         },
         orderBy: [{ nameEs: "asc" }],
         skip: offset,
@@ -315,10 +321,15 @@ export async function searchExercises(
       user.id,
       exercises.map((e) => e.id),
     );
-    const overlaid = exercises.map((e) => {
-      const o = overrides.get(e.id);
-      if (!o?.thumbnailUrl) return e;
-      return { ...e, thumbnailUrl: o.thumbnailUrl };
+    // Precedence: trainer override → catalog mediaUrl (if it's a video URL
+    // we can derive a thumb from) → original catalog thumbnail.
+    // mediaUrl is dropped from the returned object so the search result shape
+    // matches ExerciseSearchResult.
+    const overlaid = exercises.map(({ mediaUrl, ...rest }) => {
+      const o = overrides.get(rest.id);
+      const derived = o?.thumbnailUrl ?? deriveVideoThumbnail(mediaUrl);
+      if (!derived) return rest;
+      return { ...rest, thumbnailUrl: derived };
     });
 
     logInfo("exercises.searchExercises.filter", {
@@ -405,14 +416,19 @@ export async function getExercise(id: string | { id: string }): Promise<ActionRe
 
     // Apply the calling trainer's media override (if any) on top of the
     // catalog row. For clients/admins the override map is empty and the
-    // exercise is returned untouched.
+    // exercise is returned with just the catalog-derived thumbnail.
     const overrides = await fetchTrainerMediaOverrides(user.id, [exercise.id]);
     const override = overrides.get(exercise.id);
-    if (!override) return exercise;
+    const effectiveMediaUrl = override?.mediaUrl ?? exercise.mediaUrl;
+    // If the effective mediaUrl is a recognized video URL, derive its
+    // thumbnail so the biblioteca card and other thumbnail consumers show the
+    // video poster instead of the original seed photo.
+    const derivedThumb =
+      override?.thumbnailUrl ?? deriveVideoThumbnail(exercise.mediaUrl);
     return {
       ...exercise,
-      mediaUrl: override.mediaUrl ?? exercise.mediaUrl,
-      thumbnailUrl: override.thumbnailUrl ?? exercise.thumbnailUrl,
+      mediaUrl: effectiveMediaUrl,
+      thumbnailUrl: derivedThumb ?? exercise.thumbnailUrl,
     };
   });
 }
