@@ -89,6 +89,7 @@ export interface RoutineDetail {
         difficulty: string;
         gifUrl: string | null;
         thumbnailUrl: string | null;
+        mediaUrl: string | null;
       };
     }>;
   }>;
@@ -142,6 +143,7 @@ function buildSnapshot(routine: RoutineDetail): RoutineSnapshot {
           slug: re.exercise.slug ?? null,
           thumbnailUrl: re.exercise.thumbnailUrl ?? re.exercise.gifUrl ?? null,
           gifUrl: re.exercise.gifUrl ?? null,
+          mediaUrl: re.exercise.mediaUrl ?? null,
           nameEn: re.exercise.nameEn || null,
         }),
       ),
@@ -177,6 +179,7 @@ const ROUTINE_INCLUDE = {
               difficulty: true,
               gifUrl: true,
               thumbnailUrl: true,
+              mediaUrl: true,
             },
           },
         },

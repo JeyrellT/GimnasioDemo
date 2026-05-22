@@ -13,10 +13,12 @@ import {
   ChevronRight,
   Pause,
   Play,
+  PlayCircle,
   Clock,
   CheckCircle,
   Dumbbell,
   SkipForward,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RoutineSnapshotExercise } from "@/types/domain";
@@ -60,6 +62,36 @@ function chime() {
   } catch {
     // best-effort
   }
+}
+
+function getYouTubeEmbedUrl(url: string): string | null {
+  const m = /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/.exec(url);
+  return m ? `https://www.youtube.com/embed/${m[1]}?rel=0&modestbranding=1&playsinline=1` : null;
+}
+
+function getVimeoEmbedUrl(url: string): string | null {
+  const m = /vimeo\.com\/(?:video\/)?(\d+)/.exec(url);
+  return m ? `https://player.vimeo.com/video/${m[1]}` : null;
+}
+
+function getGoogleDriveEmbedUrl(url: string): string | null {
+  const path = /drive\.google\.com\/file\/d\/([A-Za-z0-9_-]+)/.exec(url);
+  const query = /drive\.google\.com\/(?:open|uc)\?.*?id=([A-Za-z0-9_-]+)/.exec(url);
+  const fileId = path?.[1] ?? query?.[1] ?? null;
+  return fileId ? `https://drive.google.com/file/d/${fileId}/preview` : null;
+}
+
+function getVideoEmbedUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return getYouTubeEmbedUrl(url) ?? getVimeoEmbedUrl(url) ?? getGoogleDriveEmbedUrl(url);
+}
+
+function withAutoplay(embedUrl: string): string {
+  // Drive uses a static /preview URL and does not accept autoplay reliably;
+  // YouTube/Vimeo do. For YT/Vimeo we append the param; for Drive return
+  // the URL unchanged so it loads its native poster.
+  if (embedUrl.startsWith("https://drive.google.com/")) return embedUrl;
+  return embedUrl + (embedUrl.includes("?") ? "&autoplay=1" : "?autoplay=1");
 }
 
 function vibrate() {
@@ -107,9 +139,20 @@ export function RoutinePlayerDialog({
   const [restSecondsLeft, setRestSecondsLeft] = React.useState(0);
   const [isPaused, setIsPaused] = React.useState(false);
   const [completed, setCompleted] = React.useState(false);
+  const [videoPlaying, setVideoPlaying] = React.useState(false);
 
   const current = exercises[currentIndex] ?? null;
   const next = exercises[currentIndex + 1] ?? null;
+  const videoEmbedUrl = React.useMemo(
+    () => getVideoEmbedUrl(current?.mediaUrl ?? null),
+    [current?.mediaUrl],
+  );
+
+  // Stop the video when switching exercises or entering rest — avoids carrying
+  // an iframe (and its audio) across transitions.
+  React.useEffect(() => {
+    setVideoPlaying(false);
+  }, [currentIndex, phase.kind]);
 
   // Anchor for drift-free rest countdown.
   const restAnchor = React.useRef<{
@@ -131,6 +174,7 @@ export function RoutinePlayerDialog({
     setRestSecondsLeft(0);
     setIsPaused(false);
     setCompleted(false);
+    setVideoPlaying(false);
   }, [open, startIndex]);
 
   // Start the rest countdown anchor whenever phase transitions to "rest".
@@ -315,13 +359,52 @@ export function RoutinePlayerDialog({
           <>
             {/* Media */}
             <div className="relative aspect-video w-full bg-[#09090B]">
-              <ExerciseThumbnail
-                thumbnailUrl={current.thumbnailUrl}
-                gifUrl={current.gifUrl}
-                slug={current.slug}
-                nameEn={current.nameEn}
-                alt={current.nameEs}
-              />
+              {videoPlaying && videoEmbedUrl ? (
+                <>
+                  <iframe
+                    key={videoEmbedUrl}
+                    src={withAutoplay(videoEmbedUrl)}
+                    title={`Video: ${current.nameEs}`}
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setVideoPlaying(false)}
+                    aria-label="Cerrar video"
+                    className="absolute left-3 top-3 z-20 flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-sm px-3 py-1.5 text-[11px] font-medium text-white/80 ring-1 ring-white/10 transition-colors hover:bg-black/80 hover:text-white"
+                  >
+                    <X className="h-3 w-3" aria-hidden="true" />
+                    Cerrar video
+                  </button>
+                </>
+              ) : (
+                <>
+                  <ExerciseThumbnail
+                    thumbnailUrl={current.thumbnailUrl}
+                    gifUrl={current.gifUrl}
+                    slug={current.slug}
+                    nameEn={current.nameEn}
+                    alt={current.nameEs}
+                  />
+                  {videoEmbedUrl && phase.kind === "work" && (
+                    <button
+                      type="button"
+                      onClick={() => setVideoPlaying(true)}
+                      aria-label="Reproducir video tutorial"
+                      className="absolute inset-0 z-10 flex items-center justify-center group/play"
+                    >
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-primary/90 shadow-lg shadow-brand-primary/30 ring-2 ring-white/20 transition-transform duration-200 group-hover/play:scale-110 group-active/play:scale-95">
+                        <PlayCircle className="h-8 w-8 text-white" aria-hidden="true" />
+                      </div>
+                      <span className="absolute bottom-3 rounded-full bg-black/60 backdrop-blur-sm px-3 py-1 text-[11px] font-medium text-white/90">
+                        Ver video
+                      </span>
+                    </button>
+                  )}
+                </>
+              )}
               {phase.kind === "rest" && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/65 backdrop-blur-sm">
                   <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-primary">

@@ -196,6 +196,8 @@ export interface RoutineSnapshotExercise {
   slug?: string | null;
   thumbnailUrl?: string | null;
   gifUrl?: string | null;
+  /** External video URL set by the trainer (YouTube / Vimeo / Google Drive). */
+  mediaUrl?: string | null;
   nameEn?: string | null;
 }
 
