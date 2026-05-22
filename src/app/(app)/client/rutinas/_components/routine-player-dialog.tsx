@@ -130,6 +130,10 @@ export function RoutinePlayerDialog({
     targetSec: 0,
   });
 
+  // Guard against double-firing of advanceFromRest when the rest tick lands on
+  // 0 multiple times before the interval cleanup runs (250ms gap).
+  const restCompletedRef = React.useRef(false);
+
   // 3-2-1 prep countdown.
   const prep = usePrepCountdown({
     seconds: 3,
@@ -165,36 +169,40 @@ export function RoutinePlayerDialog({
       pausedRemaining: null,
       targetSec: target,
     };
+    restCompletedRef.current = false;
     setRestSecondsLeft(target);
     setIsPaused(false);
     // If the coach configured 0s rest, jump straight to prep.
     if (target === 0) {
+      restCompletedRef.current = true;
       advanceFromRest(phase.nextAdvance);
     }
-    // advanceFromRest is stable via setState callbacks; safe to omit.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, currentIndex, exercises]);
 
-  // Rest countdown tick — only runs during rest phase.
+  // Rest countdown tick — only runs during rest phase. Critical: clear the
+  // interval AND set the completed guard before calling advanceFromRest, so
+  // we never fire twice (would skip a set / break the auto-advance).
   React.useEffect(() => {
     if (!open) return;
     if (phase.kind !== "rest") return;
 
+    const nextAdvance = phase.nextAdvance;
     const id = setInterval(() => {
       if (isPaused) return;
+      if (restCompletedRef.current) return;
       const a = restAnchor.current;
       const elapsed = Math.floor((Date.now() - a.startedAt) / 1000);
       const remaining = Math.max(0, a.targetSec - elapsed);
       setRestSecondsLeft(remaining);
       if (remaining === 0) {
+        restCompletedRef.current = true;
+        clearInterval(id);
         playRestEnd();
         vibrate([180, 80, 180]);
-        advanceFromRest(phase.nextAdvance);
+        advanceFromRest(nextAdvance);
       }
     }, 250);
     return () => clearInterval(id);
-    // advanceFromRest is stable via setState callbacks; safe to omit.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, phase, isPaused]);
 
   function advanceFromRest(target: "set" | "exercise") {
@@ -248,6 +256,8 @@ export function RoutinePlayerDialog({
 
   function handleSkipRest() {
     if (phase.kind !== "rest") return;
+    if (restCompletedRef.current) return;
+    restCompletedRef.current = true;
     advanceFromRest(phase.nextAdvance);
   }
 
