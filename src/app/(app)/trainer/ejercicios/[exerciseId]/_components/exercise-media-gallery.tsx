@@ -19,11 +19,8 @@ import { setExerciseTrainerMedia } from "@/app/actions/exercises";
 import {
   getVideoLoopEmbed,
   isSupportedVideoUrl,
-  type LoopEmbed,
 } from "@/lib/media/video-url";
-
-const IFRAME_ALLOW =
-  "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+import { LoopMediaFrame } from "@/components/shared/loop-media-frame";
 
 export interface ExerciseMediaGalleryProps {
   exerciseId: string;
@@ -211,69 +208,6 @@ export function ExerciseMediaGallery({
           </p>
         </div>
       )}
-    </div>
-  );
-}
-
-/**
- * Renders the video in "GIF mode": autoplay, looping, muted, no controls.
- * Picks `<video>` for Drive proxy URLs and `<iframe>` for YouTube/Vimeo.
- *
- * When the proxy returns 404 (no video) or 415 (YouTube/Vimeo can't be
- * streamed as video/mp4), `onError` triggers and the component swaps to a
- * "Sin video" placeholder so the UI never shows a blank black box.
- */
-function LoopMediaFrame({
-  embed,
-  title,
-}: {
-  embed: LoopEmbed;
-  title: string;
-}) {
-  const [videoError, setVideoError] = React.useState(false);
-
-  if (embed.kind === "video") {
-    if (videoError) {
-      return (
-        <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#3F3F46] bg-[#09090B] px-6 text-center">
-          <PlayCircle className="h-10 w-10 text-[#52525B]" strokeWidth={1.5} aria-hidden="true" />
-          <p className="text-sm font-medium text-[#71717A]">Video no disponible</p>
-        </div>
-      );
-    }
-    return (
-      <div className="aspect-video w-full overflow-hidden rounded-xl border border-[#3F3F46] bg-[#09090B]">
-        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-        <video
-          key={embed.src}
-          src={embed.src}
-          // object-contain → encaja el video entero en el frame 16:9 sin
-          // recortar. Si el original es vertical o cuadrado quedan barras
-          // negras a los lados, pero el coach/cliente ve el movimiento
-          // completo (object-cover hacía el efecto "muy cerca").
-          className="h-full w-full object-contain"
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="metadata"
-          aria-label={title}
-          onError={() => setVideoError(true)}
-        />
-      </div>
-    );
-  }
-  return (
-    <div className="aspect-video w-full overflow-hidden rounded-xl border border-[#3F3F46] bg-[#09090B]">
-      <iframe
-        key={embed.src}
-        src={embed.src}
-        title={title}
-        className="h-full w-full"
-        allow={IFRAME_ALLOW}
-        allowFullScreen
-        loading="lazy"
-      />
     </div>
   );
 }
