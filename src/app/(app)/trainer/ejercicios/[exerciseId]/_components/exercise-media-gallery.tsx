@@ -93,7 +93,7 @@ export function ExerciseMediaGallery({
           <LoopMediaFrame
             embed={savedLoopEmbed}
             title="Video del ejercicio"
-            maxAspectRatio={1}
+            maxAspectRatio={9 / 16}
           />
         ) : (
           <ExternalLinkCard url={mediaUrl} />
@@ -199,7 +199,7 @@ export function ExerciseMediaGallery({
         <LoopMediaFrame
           embed={draftLoopEmbed}
           title="Vista previa del video"
-          maxAspectRatio={1}
+          maxAspectRatio={9 / 16}
         />
       )}
 
