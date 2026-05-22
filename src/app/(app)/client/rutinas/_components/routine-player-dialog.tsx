@@ -370,7 +370,10 @@ export function RoutinePlayerDialog({
                   )}
                 </DialogDescription>
               </div>
-              <div className="flex shrink-0 items-center gap-1">
+              {/* mr-10: reserva 40px a la derecha para la X de cierre del
+                  DialogContent (absolute right-4 top-4, 44×44px). Sin esto
+                  el botón ListTodo queda pisado por la X. */}
+              <div className="mr-10 flex shrink-0 items-center gap-1">
                 <button
                   type="button"
                   onClick={toggleMute}
