@@ -90,7 +90,11 @@ export function ExerciseMediaGallery({
     return (
       <div className="flex flex-col gap-3">
         {savedLoopEmbed ? (
-          <LoopMediaFrame embed={savedLoopEmbed} title="Video del ejercicio" />
+          <LoopMediaFrame
+            embed={savedLoopEmbed}
+            title="Video del ejercicio"
+            maxAspectRatio={1}
+          />
         ) : (
           <ExternalLinkCard url={mediaUrl} />
         )}
@@ -192,7 +196,11 @@ export function ExerciseMediaGallery({
       )}
 
       {draftLoopEmbed && (
-        <LoopMediaFrame embed={draftLoopEmbed} title="Vista previa del video" />
+        <LoopMediaFrame
+          embed={draftLoopEmbed}
+          title="Vista previa del video"
+          maxAspectRatio={1}
+        />
       )}
 
       {!draftLoopEmbed && !mediaUrl && trimmed === "" && (
