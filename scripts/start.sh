@@ -47,5 +47,22 @@ if [ "$migrate_ok" = false ]; then
   echo ">>> DB reset complete"
 fi
 
+# =============================================================================
+# Default-video catalog seed (idempotent)
+#
+# Applies the URLs in prisma/seed/data/exercise-videos.json to Exercise.mediaUrl
+# by slug. Safe to run on every boot — no-ops when nothing changed.
+#
+# Failures here MUST NOT stop the app from booting (e.g., a malformed JSON
+# should leave the catalog untouched but still serve traffic). We swallow the
+# exit code and just log.
+# =============================================================================
+echo ">>> Seeding default exercise videos..."
+if pnpm db:seed:videos; then
+  echo ">>> Default videos seed completed"
+else
+  echo ">>> WARN: default-videos seed failed (continuing boot anyway)"
+fi
+
 echo ">>> Starting Next.js..."
 exec pnpm start
