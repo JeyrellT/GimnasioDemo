@@ -337,6 +337,7 @@ export function RoutinePlayerDialog({
                   embed={videoLoopEmbed}
                   title={`Demostración: ${current.nameEs}`}
                   onVideoError={() => setVideoError(true)}
+                  maxAspectRatio={9 / 16}
                 />
               ) : (
                 <div className="aspect-video w-full">
