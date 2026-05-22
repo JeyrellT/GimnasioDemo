@@ -40,9 +40,25 @@ export interface LoopMediaFrameProps {
    * Si no se provee, muestra "Video no disponible".
    */
   onVideoError?: () => void;
+  /**
+   * Cap superior del ratio height/width del contenedor. Cuando el video
+   * original es más alto que el cap (típico 9:16 grabado en celular), el
+   * contenedor se limita al cap y el video se recorta por abajo con
+   * `object-cover object-top` (la acción del ejercicio suele estar en
+   * la parte superior — torso/brazos). Sin cap (default) el contenedor
+   * adopta el ratio nativo del video.
+   *
+   * Ejemplo: `maxAspectRatio={1}` cap a cuadrado.
+   */
+  maxAspectRatio?: number;
 }
 
-export function LoopMediaFrame({ embed, title, onVideoError }: LoopMediaFrameProps) {
+export function LoopMediaFrame({
+  embed,
+  title,
+  onVideoError,
+  maxAspectRatio,
+}: LoopMediaFrameProps) {
   const [internalError, setInternalError] = React.useState(false);
   // { w: 0, h: 0 } → metadata todavía no cargó (skeleton visible).
   const [dims, setDims] = React.useState<{ w: number; h: number }>({ w: 0, h: 0 });
@@ -102,13 +118,25 @@ export function LoopMediaFrame({ embed, title, onVideoError }: LoopMediaFramePro
   //      - Un skeleton absolute/inset-0 cubre el video (que está invisible).
   //   2. Después de onLoadedMetadata:
   //      - El contenedor pasa a "padding-bottom intrinsic ratio" con el ratio
-  //        real del video via style inline.
+  //        real del video via style inline, opcionalmente capeado por
+  //        maxAspectRatio (height/width).
+  //      - Si el ratio nativo > cap, el contenedor se queda en el cap y el
+  //        video se recorta por abajo (object-top) — la acción del ejercicio
+  //        suele estar arriba.
   //      - El skeleton desaparece.
-  //      - El video pasa a visible con object-cover (ya no hay barras negras).
   //
   // No usamos useLayoutEffect ni hacks de SSR.
 
   const dimsKnown = dims.w > 0 && dims.h > 0;
+  const nativeRatio = dimsKnown ? dims.h / dims.w : 0;
+  const displayRatio =
+    dimsKnown && typeof maxAspectRatio === "number"
+      ? Math.min(nativeRatio, maxAspectRatio)
+      : nativeRatio;
+  const cropsBottom =
+    dimsKnown &&
+    typeof maxAspectRatio === "number" &&
+    nativeRatio > maxAspectRatio;
 
   return (
     <div
@@ -117,7 +145,7 @@ export function LoopMediaFrame({ embed, title, onVideoError }: LoopMediaFramePro
         dimsKnown
           ? // Padding-bottom trick: height:0 + paddingBottom = ratio%.
             // El video absolute/inset-0 llena exactamente ese espacio.
-            { height: 0, paddingBottom: `${(dims.h / dims.w) * 100}%` }
+            { height: 0, paddingBottom: `${displayRatio * 100}%` }
           : // Placeholder 16:9 mientras carga. aspect-video lo maneja via Tailwind.
             undefined
       }
@@ -143,10 +171,14 @@ export function LoopMediaFrame({ embed, title, onVideoError }: LoopMediaFramePro
       <video
         key={embed.src}
         src={embed.src}
-        // object-cover: cuando dimsKnown el container ya tiene el ratio exacto
-        // del video original, así que cover llena sin recortar ni dejar barras.
-        // Mientras dimsKnown===false el video está invisible (detrás del skeleton).
-        className="absolute inset-0 h-full w-full object-cover"
+        // object-cover llena el contenedor. Cuando el contenedor matchea el
+        // ratio nativo no hay recorte. Cuando hay cap activo, object-top
+        // ancla la parte superior (head/torso visibles) y recorta el piso.
+        className={
+          cropsBottom
+            ? "absolute inset-0 h-full w-full object-cover object-top"
+            : "absolute inset-0 h-full w-full object-cover"
+        }
         style={dimsKnown ? undefined : { visibility: "hidden" }}
         autoPlay
         loop
