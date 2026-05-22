@@ -147,6 +147,7 @@ const snapshotExerciseSchema = z.object({
   slug: z.string().nullable().optional(),
   thumbnailUrl: z.string().nullable().optional(),
   gifUrl: z.string().nullable().optional(),
+  mediaUrl: z.string().nullable().optional(),
   nameEn: z.string().nullable().optional(),
 });
 

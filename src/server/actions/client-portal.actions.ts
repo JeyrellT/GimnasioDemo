@@ -253,6 +253,69 @@ export async function getMyTrainerInfo(): Promise<ActionResult<MyTrainerInfo | n
 }
 
 // =============================================================================
+// Snapshot media enrichment
+//
+// Routine snapshots freeze the prescription (sets/reps/rest) but media URLs
+// live on the shared Exercise catalog and can be edited by the trainer after
+// the routine was assigned. We overlay the live `mediaUrl` / `gifUrl` /
+// `thumbnailUrl` on each snapshot exercise so the client immediately sees the
+// trainer's latest video without needing the routine to be re-assigned.
+// =============================================================================
+
+/**
+ * Walk every exercise in a snapshot JSON, collect their exerciseIds, fetch
+ * the live media columns from Exercise, and overlay them onto the snapshot.
+ * Mutates a shallow copy — the original DB value is untouched.
+ */
+async function overlayExerciseMedia(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  snapshotJson: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<any> {
+  if (!snapshotJson || typeof snapshotJson !== "object") return snapshotJson;
+  const days = Array.isArray(snapshotJson.days) ? snapshotJson.days : [];
+  const ids = new Set<string>();
+  for (const day of days) {
+    const exercises = Array.isArray(day?.exercises) ? day.exercises : [];
+    for (const ex of exercises) {
+      if (typeof ex?.exerciseId === "string") ids.add(ex.exerciseId);
+    }
+  }
+  if (ids.size === 0) return snapshotJson;
+
+  const rows = await prisma.exercise.findMany({
+    where: { id: { in: [...ids] }, deletedAt: null },
+    select: { id: true, mediaUrl: true, gifUrl: true, thumbnailUrl: true },
+  });
+  const live = new Map(rows.map((r) => [r.id, r]));
+
+  return {
+    ...snapshotJson,
+    days: days.map((day: unknown) => {
+      const d = day as { exercises?: unknown[] };
+      const exercises = Array.isArray(d.exercises) ? d.exercises : [];
+      return {
+        ...(day as object),
+        exercises: exercises.map((ex) => {
+          const e = ex as { exerciseId?: string };
+          const liveRow = e.exerciseId ? live.get(e.exerciseId) : null;
+          if (!liveRow) return ex;
+          return {
+            ...(ex as object),
+            mediaUrl: liveRow.mediaUrl ?? (ex as { mediaUrl?: string | null }).mediaUrl ?? null,
+            gifUrl: liveRow.gifUrl ?? (ex as { gifUrl?: string | null }).gifUrl ?? null,
+            thumbnailUrl:
+              liveRow.thumbnailUrl ??
+              (ex as { thumbnailUrl?: string | null }).thumbnailUrl ??
+              null,
+          };
+        }),
+      };
+    }),
+  };
+}
+
+// =============================================================================
 // 2. getMyAssignedRoutines
 // =============================================================================
 
@@ -285,16 +348,19 @@ export async function getMyAssignedRoutines(): Promise<ActionResult<MyAssignedRo
       ],
     });
 
-    return rows.map((r) => ({
-      id: r.id,
-      routineTemplateId: r.routineTemplateId,
-      snapshotJson: r.snapshotJson,
-      assignedAt: r.assignedAt,
-      startsOn: r.startsOn,
-      endsOn: r.endsOn,
-      status: r.status,
-      trainerNotes: r.trainerNotes,
-    }));
+    const enriched = await Promise.all(
+      rows.map(async (r) => ({
+        id: r.id,
+        routineTemplateId: r.routineTemplateId,
+        snapshotJson: await overlayExerciseMedia(r.snapshotJson),
+        assignedAt: r.assignedAt,
+        startsOn: r.startsOn,
+        endsOn: r.endsOn,
+        status: r.status,
+        trainerNotes: r.trainerNotes,
+      })),
+    );
+    return enriched;
   });
 }
 
@@ -335,7 +401,7 @@ export async function getMyActiveRoutine(): Promise<ActionResult<MyAssignedRouti
     return {
       id: row.id,
       routineTemplateId: row.routineTemplateId,
-      snapshotJson: row.snapshotJson,
+      snapshotJson: await overlayExerciseMedia(row.snapshotJson),
       assignedAt: row.assignedAt,
       startsOn: row.startsOn,
       endsOn: row.endsOn,
