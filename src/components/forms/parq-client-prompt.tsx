@@ -1,16 +1,16 @@
 "use client";
 
 // =============================================================================
-// BLACKLINE FITNESS — ParqCompletionDialog
+// BLACKLINE FITNESS — ParqClientPrompt
 // Owner: frontend-react.
-// Modal con el cuestionario PAR-Q+ 2024. El coach (o el cliente) responde 10
-// preguntas Si/No, el estado (GREEN/REVIEW/RED) se computa server-side y se
-// persiste en ClientProfile.parqStatus + ParqAnswer rows.
+// Modal del lado del CLIENTE para completar el PAR-Q+ 2024. Se abre desde
+// /client/rutinas cuando ClientProfile.parqStatus === NOT_COMPLETED. Al
+// guardar, persiste vía recordClientParq y notifica al coach.
 // =============================================================================
 
 import * as React from "react";
 import { useState } from "react";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { recordClientParq } from "@/app/actions/clients";
@@ -30,26 +30,25 @@ import {
   AlertTitle,
 } from "@/components/ui/alert";
 
-interface ParqCompletionDialogProps {
+interface ParqClientPromptProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  /** Authenticated client's User.id — server still verifies session match. */
   clientUserId: string;
-  clientName: string;
-  /** Called after a successful save so the parent can re-fetch profile data. */
+  /** Triggered by user dismissing the dialog. The PAR-Q remains pending. */
+  onDismiss: () => void;
+  /** Triggered after a successful save with the resulting status. */
   onCompleted: (status: "GREEN" | "REVIEW" | "RED") => void;
 }
 
-export function ParqCompletionDialog({
+export function ParqClientPrompt({
   open,
-  onOpenChange,
   clientUserId,
-  clientName,
+  onDismiss,
   onCompleted,
-}: ParqCompletionDialogProps) {
+}: ParqClientPromptProps) {
   const [answers, setAnswers] = useState<Record<string, "yes" | "no">>({});
   const [saving, setSaving] = useState(false);
 
-  // Reset state when dialog closes so a re-open starts fresh.
   React.useEffect(() => {
     if (!open) {
       setAnswers({});
@@ -69,7 +68,7 @@ export function ParqCompletionDialog({
 
   async function handleSubmit() {
     if (!allAnswered) {
-      toast.error("Respondé las 10 preguntas antes de guardar.");
+      toast.error("Respondé las 10 preguntas antes de continuar.");
       return;
     }
     setSaving(true);
@@ -81,32 +80,34 @@ export function ParqCompletionDialog({
       }
       const status = result.value.parqStatus;
       if (status === "NOT_COMPLETED") {
-        // Should never happen with a complete form, but stay defensive.
         toast.error("El PAR-Q no quedó marcado como completado.");
         return;
       }
       toast.success(
         status === "GREEN"
-          ? "PAR-Q guardado — sin restricciones."
+          ? "¡Listo! Sin restricciones — empezá a entrenar."
           : status === "REVIEW"
-            ? "PAR-Q guardado — requiere revisión."
-            : "PAR-Q guardado — requiere autorización médica.",
+            ? "PAR-Q guardado. Tu entrenador revisará tus respuestas."
+            : "PAR-Q guardado. Tu entrenador fue notificado — esperá su validación.",
       );
       onCompleted(status);
-      onOpenChange(false);
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => (!o ? onDismiss() : undefined)}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Completar PAR-Q+ 2024</DialogTitle>
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-brand-primary" aria-hidden="true" />
+            <DialogTitle>Tu PAR-Q+ — antes de empezar</DialogTitle>
+          </div>
           <DialogDescription>
-            Cuestionario de aptitud física para {clientName}. Respondé con
-            honestidad — la información es confidencial.
+            Cuestionario de aptitud física. Respondé honestamente, esto ayuda a
+            tu entrenador a cuidarte. Solo vos y tu entrenador ven las
+            respuestas.
           </DialogDescription>
         </DialogHeader>
 
@@ -121,11 +122,6 @@ export function ParqCompletionDialog({
                   {i + 1}.
                 </span>
                 {q.text}
-                {q.critical && (
-                  <span className="ml-2 text-[10px] uppercase tracking-wider font-bold text-[#EF4444]">
-                    crítica
-                  </span>
-                )}
               </p>
               <div className="flex gap-3">
                 <button
@@ -162,13 +158,13 @@ export function ParqCompletionDialog({
             <AlertTriangle className="h-4 w-4" aria-hidden="true" />
             <AlertTitle>
               {criticalYes
-                ? "Requerirá autorización médica"
-                : "Revisión médica recomendada"}
+                ? "Vamos a esperar autorización médica"
+                : "Tu entrenador revisará tus respuestas"}
             </AlertTitle>
             <AlertDescription>
               {criticalYes
-                ? "Hay respuestas críticas. El cliente quedará marcado en ROJO hasta validación médica."
-                : "Algunas respuestas requieren revisión. El cliente quedará en estado AMARILLO."}
+                ? "Recomendamos que consultes con tu médico antes de empezar. Tu entrenador será notificado."
+                : "Podés continuar, pero tu entrenador puede ajustar el plan según tu respuesta."}
             </AlertDescription>
           </Alert>
         )}
@@ -178,10 +174,10 @@ export function ParqCompletionDialog({
             type="button"
             variant="outline"
             className="flex-1"
-            onClick={() => onOpenChange(false)}
+            onClick={onDismiss}
             disabled={saving}
           >
-            Cancelar
+            Después
           </Button>
           <Button
             type="button"
@@ -190,7 +186,7 @@ export function ParqCompletionDialog({
             disabled={!allAnswered || saving}
           >
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-            {saving ? "Guardando..." : "Guardar PAR-Q"}
+            {saving ? "Guardando..." : "Enviar PAR-Q"}
           </Button>
         </div>
       </DialogContent>

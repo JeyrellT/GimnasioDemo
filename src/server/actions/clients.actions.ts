@@ -1823,6 +1823,29 @@ export async function completeFirstLogin(input: {
 }
 
 // =============================================================================
+// needsParqPrompt — read-only, called from /client/* layouts to decide whether
+// to surface the PAR-Q dialog. shouldShow = parqStatus is NOT_COMPLETED.
+// =============================================================================
+
+export async function needsParqPrompt(): Promise<
+  ActionResult<{ shouldShow: boolean; parqStatus: ParqStatus }>
+> {
+  return tryCatch(async () => {
+    const user = await requireUser();
+    if (user.role !== "CLIENT") {
+      // Trainer/admin viewing the route — never prompt them.
+      return { shouldShow: false, parqStatus: "NOT_COMPLETED" as ParqStatus };
+    }
+    const profile = await prisma.clientProfile.findUnique({
+      where: { userId: user.id },
+      select: { parqStatus: true },
+    });
+    const parqStatus: ParqStatus = profile?.parqStatus ?? "NOT_COMPLETED";
+    return { shouldShow: parqStatus === "NOT_COMPLETED", parqStatus };
+  });
+}
+
+// =============================================================================
 // recordClientParq
 // =============================================================================
 
@@ -1894,6 +1917,8 @@ export async function recordClientParq(
     const evalResult = evaluateParq(evalAnswers);
     const newStatus: ParqStatus = evalResult.status;
 
+    const filledBySelf = user.id === clientUserId;
+
     await prisma.$transaction(async (tx) => {
       await tx.clientProfile.upsert({
         where: { userId: clientUserId },
@@ -1920,6 +1945,47 @@ export async function recordClientParq(
           await tx.parqAnswer.createMany({ data: rows });
         }
       }
+
+      // Notify each active trainer linked to this client when the client
+      // themselves completes the PAR-Q. Skip when the trainer is the actor
+      // (they already know — they just clicked it themselves).
+      if (filledBySelf) {
+        const links = await tx.trainerClient.findMany({
+          where: {
+            clientId: clientUserId,
+            deletedAt: null,
+            status: { in: ["ACTIVE", "PENDING", "PAUSED"] },
+          },
+          select: { trainerId: true },
+        });
+        const clientUser = await tx.user.findUnique({
+          where: { id: clientUserId },
+          select: { name: true },
+        });
+        const clientName = clientUser?.name ?? "Tu cliente";
+        const statusLabel =
+          newStatus === "GREEN"
+            ? "sin restricciones"
+            : newStatus === "REVIEW"
+              ? "requiere tu revisión"
+              : "requiere autorización médica";
+
+        for (const link of links) {
+          await tx.notification.create({
+            data: {
+              userUserId: link.trainerId,
+              type: "CLIENT_PARQ_COMPLETED",
+              title: `${clientName} completó su PAR-Q`,
+              body: `Estado: ${statusLabel}.`,
+              data: {
+                clientUserId,
+                parqStatus: newStatus,
+              },
+              sentVia: [],
+            },
+          });
+        }
+      }
     });
 
     const { ipAddress, userAgent } = await getRequestMeta();
@@ -1935,7 +2001,7 @@ export async function recordClientParq(
           field: "parqStatus",
           newStatus,
           clientUserId,
-          source: user.id === clientUserId ? "self" : "trainer",
+          source: filledBySelf ? "self" : "trainer",
         },
       },
     });
