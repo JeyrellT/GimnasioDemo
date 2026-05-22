@@ -21,6 +21,7 @@ import { requireClient } from "@/server/guards";
 import { tryCatch } from "@/lib/result";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { logInfo } from "@/lib/logger";
+import { deriveVideoThumbnail } from "@/lib/media/video-url";
 import type { ActionResult } from "@/types/api";
 
 // =============================================================================
@@ -330,11 +331,18 @@ async function overlayExerciseMedia(
           };
           const overrideMediaUrl = e.exerciseId ? overrides.get(e.exerciseId) ?? null : null;
           // Snapshot (per-routine) > trainer override > catalog default.
+          const effectiveMediaUrl =
+            snap.mediaUrl ?? overrideMediaUrl ?? liveRow.mediaUrl ?? null;
+          // Derive a thumb from the effective video URL so the player and
+          // "next exercise" preview show the Drive/YouTube poster instead of
+          // the frozen seed image.
+          const derivedThumb = deriveVideoThumbnail(effectiveMediaUrl);
           return {
             ...(ex as object),
-            mediaUrl: snap.mediaUrl ?? overrideMediaUrl ?? liveRow.mediaUrl ?? null,
+            mediaUrl: effectiveMediaUrl,
             gifUrl: snap.gifUrl ?? liveRow.gifUrl ?? null,
-            thumbnailUrl: snap.thumbnailUrl ?? liveRow.thumbnailUrl ?? null,
+            thumbnailUrl:
+              derivedThumb ?? snap.thumbnailUrl ?? liveRow.thumbnailUrl ?? null,
           };
         }),
       };
