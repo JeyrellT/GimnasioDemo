@@ -120,6 +120,11 @@ export function RoutinePlayerDialog({
     () => getVideoLoopEmbed(current?.mediaUrl ?? null),
     [current?.mediaUrl],
   );
+  // Reset the video error flag when the exercise changes.
+  const [videoError, setVideoError] = React.useState(false);
+  React.useEffect(() => {
+    setVideoError(false);
+  }, [current?.exerciseId]);
 
   // Anchor for drift-free rest countdown.
   const restAnchor = React.useRef<{
@@ -325,9 +330,11 @@ export function RoutinePlayerDialog({
           <>
             {/* Media — GIF-mode (autoplay + loop + muted) when the exercise
                 has a video URL; otherwise the static thumbnail. The rest
-                overlay below sits on top regardless. */}
+                overlay below sits on top regardless. When the proxy returns
+                404/415 (no video or non-proxyable service), onError fires
+                and we fall back to the static thumbnail. */}
             <div className="relative aspect-video w-full bg-[#09090B]">
-              {videoLoopEmbed ? (
+              {videoLoopEmbed && !videoError ? (
                 videoLoopEmbed.kind === "video" ? (
                   // eslint-disable-next-line jsx-a11y/media-has-caption
                   <video
@@ -340,6 +347,7 @@ export function RoutinePlayerDialog({
                     playsInline
                     preload="metadata"
                     aria-label={`Demostración: ${current.nameEs}`}
+                    onError={() => setVideoError(true)}
                   />
                 ) : (
                   <iframe

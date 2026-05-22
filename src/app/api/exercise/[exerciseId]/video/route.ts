@@ -45,9 +45,14 @@ async function resolveEffectiveMediaUrl(
   //    so the only override that exists for a public exercise was likely
   //    set by the trainer the client is currently working with.
   if (trainerUserId) {
-    const override = await prisma.trainerExerciseMedia.findUnique({
+    // findFirst instead of findUnique so we can filter deletedAt: null.
+    // The @@unique constraint guarantees at most one non-deleted row, so
+    // this is functionally equivalent but respects the soft-delete.
+    const override = await prisma.trainerExerciseMedia.findFirst({
       where: {
-        trainerUserId_exerciseId: { trainerUserId, exerciseId },
+        trainerUserId,
+        exerciseId,
+        deletedAt: null,
       },
       select: { mediaUrl: true },
     });

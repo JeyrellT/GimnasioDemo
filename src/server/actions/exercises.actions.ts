@@ -522,7 +522,13 @@ export async function setExerciseTrainerMedia(
       ownsPrivate,
     });
 
-    return { ok: true as const, mediaUrl: normalized };
+    // Rewrite Drive URLs to the proxy form so the caller (ExerciseMediaGallery
+    // onMediaChanged) gets the same URL shape that getExerciseDetail returns.
+    // YouTube/Vimeo and null pass through unchanged.
+    return {
+      ok: true as const,
+      mediaUrl: toClientMediaUrl(normalized, exercise.id),
+    };
   });
 }
 

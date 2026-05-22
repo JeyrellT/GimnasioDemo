@@ -1,5 +1,5 @@
 {
-  "$schema": "Defaults de video por ejercicio. Pegá un link de YouTube/Vimeo/Drive en \"videoUrl\" cuando lo tengas. null = sin video por defecto. Corré pnpm db:seed:videos para aplicar.",
+  "$schema": "Defaults de video por ejercicio. Pegá un link de YouTube/Vimeo/Drive en \"videoUrl\" cuando lo tengas. null = sin video por defecto. Corré pnpm db:seed:videos para aplicar. Inventario completo del catálogo: 30 strength + 30 warmup = 60 ejercicios.",
   "strength": {
     "barbell-back-squat": {
       "nameEs": "Sentadilla con barra",
@@ -237,6 +237,10 @@
     },
     "estiramiento-triceps-sobre-cabeza": {
       "nameEs": "Estiramiento de tríceps sobre la cabeza",
+      "videoUrl": null
+    },
+    "worlds-greatest-stretch": {
+      "nameEs": "World's greatest stretch",
       "videoUrl": null
     }
   }
