@@ -74,3 +74,63 @@ export function withAutoplay(embedUrl: string): string {
   if (embedUrl.startsWith("https://drive.google.com/")) return embedUrl;
   return embedUrl + (embedUrl.includes("?") ? "&autoplay=1" : "?autoplay=1");
 }
+
+// =============================================================================
+// GIF-mode: autoplay + loop + muted + no controls
+//
+// Each service has a different mechanism:
+//   - Drive  → <video> element pointing to the direct stream URL. The /preview
+//              iframe does NOT support loop/autoplay params, so we fall back
+//              to a <video> tag with `autoplay loop muted playsinline`.
+//   - YouTube → iframe with `autoplay=1&loop=1&playlist={id}&mute=1&controls=0`
+//              (YouTube requires `playlist={id}` to loop a single-video player).
+//   - Vimeo  → iframe with `background=1` (Vimeo's "background mode" hides
+//              controls and enables autoplay + loop + muted automatically).
+// =============================================================================
+
+export type LoopEmbed =
+  | { kind: "iframe"; src: string }
+  | { kind: "video"; src: string };
+
+export function getDriveDirectVideoUrl(url: string): string | null {
+  const id = getGoogleDriveFileId(url);
+  // The lh3 video URL works for publicly-shared Drive files without a virus
+  // scan interstitial. `=m18` is Google's "video mp4" variant tag.
+  return id ? `https://lh3.googleusercontent.com/d/${id}=m18` : null;
+}
+
+export function getYouTubeLoopEmbedUrl(url: string): string | null {
+  const id = getYouTubeId(url);
+  if (!id) return null;
+  // playlist={id} is REQUIRED for loop=1 to work on a single video.
+  return (
+    `https://www.youtube.com/embed/${id}` +
+    `?autoplay=1&loop=1&playlist=${id}&mute=1&controls=0&modestbranding=1` +
+    `&rel=0&playsinline=1&iv_load_policy=3`
+  );
+}
+
+export function getVimeoLoopEmbedUrl(url: string): string | null {
+  const id = getVimeoId(url);
+  if (!id) return null;
+  // background=1 turns on autoplay+loop+muted and removes all chrome.
+  return `https://player.vimeo.com/video/${id}?background=1&autoplay=1&loop=1&muted=1`;
+}
+
+/**
+ * Returns the right element kind + URL to render `url` as a silently-looping
+ * GIF-style video. Falls back to null when the URL doesn't match a supported
+ * provider (caller can render a placeholder).
+ */
+export function getVideoLoopEmbed(
+  url: string | null | undefined,
+): LoopEmbed | null {
+  if (!url) return null;
+  const drive = getDriveDirectVideoUrl(url);
+  if (drive) return { kind: "video", src: drive };
+  const yt = getYouTubeLoopEmbedUrl(url);
+  if (yt) return { kind: "iframe", src: yt };
+  const vimeo = getVimeoLoopEmbedUrl(url);
+  if (vimeo) return { kind: "iframe", src: vimeo };
+  return null;
+}
