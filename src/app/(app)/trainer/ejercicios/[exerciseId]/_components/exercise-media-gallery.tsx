@@ -217,8 +217,11 @@ export function ExerciseMediaGallery({
 
 /**
  * Renders the video in "GIF mode": autoplay, looping, muted, no controls.
- * Picks `<video>` for Drive (direct stream from lh3) and `<iframe>` for
- * YouTube/Vimeo (their player handles loop+autoplay via URL params).
+ * Picks `<video>` for Drive proxy URLs and `<iframe>` for YouTube/Vimeo.
+ *
+ * When the proxy returns 404 (no video) or 415 (YouTube/Vimeo can't be
+ * streamed as video/mp4), `onError` triggers and the component swaps to a
+ * "Sin video" placeholder so the UI never shows a blank black box.
  */
 function LoopMediaFrame({
   embed,
@@ -227,7 +230,17 @@ function LoopMediaFrame({
   embed: LoopEmbed;
   title: string;
 }) {
+  const [videoError, setVideoError] = React.useState(false);
+
   if (embed.kind === "video") {
+    if (videoError) {
+      return (
+        <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#3F3F46] bg-[#09090B] px-6 text-center">
+          <PlayCircle className="h-10 w-10 text-[#52525B]" strokeWidth={1.5} aria-hidden="true" />
+          <p className="text-sm font-medium text-[#71717A]">Video no disponible</p>
+        </div>
+      );
+    }
     return (
       <div className="aspect-video w-full overflow-hidden rounded-xl border border-[#3F3F46] bg-[#09090B]">
         {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
@@ -241,6 +254,7 @@ function LoopMediaFrame({
           playsInline
           preload="metadata"
           aria-label={title}
+          onError={() => setVideoError(true)}
         />
       </div>
     );

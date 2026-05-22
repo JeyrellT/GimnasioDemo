@@ -63,6 +63,10 @@ export function deriveVideoThumbnail(url: string | null | undefined): string | n
 }
 
 export function isSupportedVideoUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  // Proxied internal URLs are always supported — the backend will handle
+  // the Drive lookup and either stream the file or return 4xx.
+  if (isProxiedVideoUrl(url)) return true;
   return getVideoEmbedUrl(url) !== null;
 }
 
