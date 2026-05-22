@@ -247,7 +247,11 @@ function LoopMediaFrame({
         <video
           key={embed.src}
           src={embed.src}
-          className="h-full w-full object-cover"
+          // object-contain → encaja el video entero en el frame 16:9 sin
+          // recortar. Si el original es vertical o cuadrado quedan barras
+          // negras a los lados, pero el coach/cliente ve el movimiento
+          // completo (object-cover hacía el efecto "muy cerca").
+          className="h-full w-full object-contain"
           autoPlay
           loop
           muted
