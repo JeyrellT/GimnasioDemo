@@ -21,7 +21,7 @@ import { requireClient } from "@/server/guards";
 import { tryCatch } from "@/lib/result";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { logInfo } from "@/lib/logger";
-import { deriveVideoThumbnail } from "@/lib/media/video-url";
+import { deriveVideoThumbnail, toClientMediaUrl } from "@/lib/media/video-url";
 import type { ActionResult } from "@/types/api";
 
 // =============================================================================
@@ -339,7 +339,9 @@ async function overlayExerciseMedia(
           const derivedThumb = deriveVideoThumbnail(effectiveMediaUrl);
           return {
             ...(ex as object),
-            mediaUrl: effectiveMediaUrl,
+            // Drive URLs are rewritten to /api/exercise/{id}/video so the
+            // client player never sees a Drive ID; backend proxies on demand.
+            mediaUrl: toClientMediaUrl(effectiveMediaUrl, e.exerciseId ?? null),
             gifUrl: snap.gifUrl ?? liveRow.gifUrl ?? null,
             thumbnailUrl:
               derivedThumb ?? snap.thumbnailUrl ?? liveRow.thumbnailUrl ?? null,

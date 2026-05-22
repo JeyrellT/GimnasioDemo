@@ -24,7 +24,7 @@ import {
   ValidationError,
 } from "@/lib/errors";
 import { logInfo } from "@/lib/logger";
-import { deriveVideoThumbnail } from "@/lib/media/video-url";
+import { deriveVideoThumbnail, toClientMediaUrl } from "@/lib/media/video-url";
 import type { ActionResult, ExerciseSearchResult } from "@/types/api";
 import type { Exercise, MuscleGroup, ExerciseEquipment, ExerciseDifficulty, ExerciseCategory } from "@prisma/client";
 import { Prisma } from "@prisma/client";
@@ -427,7 +427,9 @@ export async function getExercise(id: string | { id: string }): Promise<ActionRe
       override?.thumbnailUrl ?? deriveVideoThumbnail(exercise.mediaUrl);
     return {
       ...exercise,
-      mediaUrl: effectiveMediaUrl,
+      // Drive URLs are rewritten to /api/exercise/{id}/video so the frontend
+      // never sees the Drive ID — backend resolves + proxies on demand.
+      mediaUrl: toClientMediaUrl(effectiveMediaUrl, exercise.id),
       thumbnailUrl: derivedThumb ?? exercise.thumbnailUrl,
     };
   });
