@@ -16,7 +16,11 @@ import * as React from "react";
 import { Loader2, PlayCircle, Pencil, Trash2, ExternalLink, X } from "lucide-react";
 import { toast } from "sonner";
 import { setExerciseTrainerMedia } from "@/app/actions/exercises";
-import { getVideoEmbedUrl, isSupportedVideoUrl } from "@/lib/media/video-url";
+import {
+  getVideoLoopEmbed,
+  isSupportedVideoUrl,
+  type LoopEmbed,
+} from "@/lib/media/video-url";
 
 const IFRAME_ALLOW =
   "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
@@ -49,8 +53,8 @@ export function ExerciseMediaGallery({
 
   const trimmed = url.trim();
   const supportedDraft = isSupportedVideoUrl(trimmed);
-  const draftEmbedUrl = getVideoEmbedUrl(trimmed);
-  const savedEmbedUrl = getVideoEmbedUrl(mediaUrl);
+  const draftLoopEmbed = getVideoLoopEmbed(trimmed);
+  const savedLoopEmbed = getVideoLoopEmbed(mediaUrl);
 
   async function save() {
     if (saving) return;
@@ -88,17 +92,8 @@ export function ExerciseMediaGallery({
   if (mediaUrl && !editing) {
     return (
       <div className="flex flex-col gap-3">
-        {savedEmbedUrl ? (
-          <div className="aspect-video w-full overflow-hidden rounded-xl border border-[#3F3F46] bg-[#09090B]">
-            <iframe
-              src={savedEmbedUrl}
-              title="Video del ejercicio"
-              className="h-full w-full"
-              allow={IFRAME_ALLOW}
-              allowFullScreen
-              loading="lazy"
-            />
-          </div>
+        {savedLoopEmbed ? (
+          <LoopMediaFrame embed={savedLoopEmbed} title="Video del ejercicio" />
         ) : (
           <ExternalLinkCard url={mediaUrl} />
         )}
@@ -202,21 +197,11 @@ export function ExerciseMediaGallery({
         </p>
       )}
 
-      {draftEmbedUrl && (
-        <div className="aspect-video w-full overflow-hidden rounded-xl border border-[#3F3F46] bg-[#09090B]">
-          <iframe
-            key={draftEmbedUrl}
-            src={draftEmbedUrl}
-            title="Vista previa del video"
-            className="h-full w-full"
-            allow={IFRAME_ALLOW}
-            allowFullScreen
-            loading="lazy"
-          />
-        </div>
+      {draftLoopEmbed && (
+        <LoopMediaFrame embed={draftLoopEmbed} title="Vista previa del video" />
       )}
 
-      {!draftEmbedUrl && !mediaUrl && trimmed === "" && (
+      {!draftLoopEmbed && !mediaUrl && trimmed === "" && (
         <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#3F3F46] bg-[#09090B] px-6 text-center">
           <PlayCircle className="h-10 w-10 text-[#52525B]" strokeWidth={1.5} aria-hidden="true" />
           <p className="text-sm font-medium text-[#71717A]">Pegá un link para empezar</p>
@@ -226,6 +211,51 @@ export function ExerciseMediaGallery({
           </p>
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Renders the video in "GIF mode": autoplay, looping, muted, no controls.
+ * Picks `<video>` for Drive (direct stream from lh3) and `<iframe>` for
+ * YouTube/Vimeo (their player handles loop+autoplay via URL params).
+ */
+function LoopMediaFrame({
+  embed,
+  title,
+}: {
+  embed: LoopEmbed;
+  title: string;
+}) {
+  if (embed.kind === "video") {
+    return (
+      <div className="aspect-video w-full overflow-hidden rounded-xl border border-[#3F3F46] bg-[#09090B]">
+        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+        <video
+          key={embed.src}
+          src={embed.src}
+          className="h-full w-full object-cover"
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="metadata"
+          aria-label={title}
+        />
+      </div>
+    );
+  }
+  return (
+    <div className="aspect-video w-full overflow-hidden rounded-xl border border-[#3F3F46] bg-[#09090B]">
+      <iframe
+        key={embed.src}
+        src={embed.src}
+        title={title}
+        className="h-full w-full"
+        allow={IFRAME_ALLOW}
+        allowFullScreen
+        loading="lazy"
+      />
     </div>
   );
 }
