@@ -340,7 +340,10 @@ export function RoutinePlayerDialog({
                   <video
                     key={videoLoopEmbed.src}
                     src={videoLoopEmbed.src}
-                    className="h-full w-full object-cover"
+                    // object-contain → el cliente ve el movimiento completo
+                    // del ejercicio. object-cover recortaba la parte de arriba
+                    // y abajo del video (efecto "muy cerca").
+                    className="h-full w-full object-contain"
                     autoPlay
                     loop
                     muted
