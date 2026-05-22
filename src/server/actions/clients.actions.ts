@@ -30,6 +30,7 @@ import {
   ValidationError,
   NotFoundError,
   ConflictError,
+  ForbiddenError,
 } from "@/lib/errors";
 import { logInfo, logError } from "@/lib/logger";
 import {
@@ -60,7 +61,13 @@ import type {
 } from "@/types/api";
 import type { BodyComposition, BodyZone } from "@/types/api";
 import type { ClientListItem } from "@/types/domain";
-import type { LpdpRequest } from "@prisma/client";
+import type { LpdpRequest, ParqStatus } from "@prisma/client";
+
+import {
+  PARQ_QUESTION_CODES,
+  evaluateParq,
+} from "@/lib/validation/parq.schema";
+import { buildParqAnswerRows } from "@/lib/onboarding/payload-builder";
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -1812,6 +1819,134 @@ export async function completeFirstLogin(input: {
     logInfo("client.first_login_completed", { userId: user.id });
 
     return { success: true };
+  });
+}
+
+// =============================================================================
+// recordClientParq
+// =============================================================================
+
+/**
+ * Persist a fully-answered PAR-Q+ 2024 questionnaire for a client.
+ *
+ * Updates `ClientProfile.parqStatus` (GREEN/REVIEW/RED) and, if an
+ * `InitialAssessment` exists, refreshes the `ParqAnswer` rows by soft-deleting
+ * the previous batch and inserting the new one.
+ *
+ * Access:
+ *   - Trainer with an active link to the client, OR
+ *   - The client themselves filling their own PAR-Q.
+ *
+ * Idempotent: re-running with the same answers produces the same status and
+ * a new batch of ParqAnswer rows (the previous batch is soft-deleted).
+ */
+export async function recordClientParq(
+  clientUserId: string,
+  answers: Record<string, "yes" | "no">,
+): Promise<ActionResult<{ parqStatus: ParqStatus }>> {
+  return tryCatch(async () => {
+    const user = await requireUser();
+
+    if (!clientUserId) {
+      throw new ValidationError("CLIENT_USER_ID_REQUIRED", "ID de cliente requerido");
+    }
+
+    if (user.id !== clientUserId) {
+      if (user.role !== "TRAINER") {
+        throw new ForbiddenError(
+          "PARQ_ACCESS_DENIED",
+          "Solo el cliente o su entrenador pueden completar este PAR-Q.",
+        );
+      }
+      await assertOwnsClient(user.id, clientUserId);
+    }
+
+    // ── Validate input: all 10 codes present with yes|no values. ──
+    const expected = new Set<string>(PARQ_QUESTION_CODES);
+    const provided = Object.keys(answers);
+    if (provided.length !== expected.size) {
+      throw new ValidationError(
+        "PARQ_INCOMPLETE",
+        "Debés responder las 10 preguntas del PAR-Q+.",
+      );
+    }
+    for (const code of provided) {
+      if (!expected.has(code)) {
+        throw new ValidationError(
+          "PARQ_UNKNOWN_CODE",
+          `Pregunta desconocida: ${code}.`,
+        );
+      }
+      const val = answers[code];
+      if (val !== "yes" && val !== "no") {
+        throw new ValidationError(
+          "PARQ_INVALID_ANSWER",
+          `Respuesta inválida en ${code}.`,
+        );
+      }
+    }
+
+    // ── Compute status via canonical evaluator. ──
+    const evalAnswers = [...expected].map((code) => ({
+      questionCode: code,
+      answer: answers[code] === "yes",
+    }));
+    const evalResult = evaluateParq(evalAnswers);
+    const newStatus: ParqStatus = evalResult.status;
+
+    await prisma.$transaction(async (tx) => {
+      await tx.clientProfile.upsert({
+        where: { userId: clientUserId },
+        create: { userId: clientUserId, parqStatus: newStatus },
+        update: { parqStatus: newStatus },
+      });
+
+      const assessment = await tx.initialAssessment.findUnique({
+        where: { clientUserId },
+        select: { id: true },
+      });
+
+      if (assessment) {
+        // Soft-delete previous answers to keep audit trail.
+        await tx.parqAnswer.updateMany({
+          where: { assessmentId: assessment.id, deletedAt: null },
+          data: { deletedAt: new Date() },
+        });
+        const rows = buildParqAnswerRows(answers).map((r) => ({
+          ...r,
+          assessmentId: assessment.id,
+        }));
+        if (rows.length > 0) {
+          await tx.parqAnswer.createMany({ data: rows });
+        }
+      }
+    });
+
+    const { ipAddress, userAgent } = await getRequestMeta();
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: user.id,
+        action: "UPDATE",
+        entityType: "ClientProfile",
+        entityId: clientUserId,
+        ipAddress,
+        userAgent,
+        metadata: {
+          field: "parqStatus",
+          newStatus,
+          clientUserId,
+          source: user.id === clientUserId ? "self" : "trainer",
+        },
+      },
+    });
+
+    logInfo("client.parq_recorded", {
+      actorId: user.id,
+      clientUserId,
+      status: newStatus,
+    });
+
+    return { parqStatus: newStatus };
   });
 }
 
