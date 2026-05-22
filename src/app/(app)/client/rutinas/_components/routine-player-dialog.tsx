@@ -20,10 +20,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getVideoLoopEmbed, type LoopEmbed } from "@/lib/media/video-url";
+import { LoopMediaFrame } from "@/components/shared/loop-media-frame";
 import type { RoutineSnapshotExercise } from "@/types/domain";
-
-const IFRAME_ALLOW =
-  "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -330,46 +328,26 @@ export function RoutinePlayerDialog({
           <>
             {/* Media — GIF-mode (autoplay + loop + muted) when the exercise
                 has a video URL; otherwise the static thumbnail. The rest
-                overlay below sits on top regardless. When the proxy returns
-                404/415 (no video or non-proxyable service), onError fires
-                and we fall back to the static thumbnail. */}
-            <div className="relative aspect-video w-full bg-[#09090B]">
+                overlay sits on top via absolute positioning. When the proxy
+                returns 404/415, LoopMediaFrame's onError fires and renders
+                its own "Video no disponible" placeholder. */}
+            <div className="relative w-full bg-[#09090B]">
               {videoLoopEmbed && !videoError ? (
-                videoLoopEmbed.kind === "video" ? (
-                  // eslint-disable-next-line jsx-a11y/media-has-caption
-                  <video
-                    key={videoLoopEmbed.src}
-                    src={videoLoopEmbed.src}
-                    // object-contain → el cliente ve el movimiento completo
-                    // del ejercicio. object-cover recortaba la parte de arriba
-                    // y abajo del video (efecto "muy cerca").
-                    className="h-full w-full object-contain"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    preload="metadata"
-                    aria-label={`Demostración: ${current.nameEs}`}
-                    onError={() => setVideoError(true)}
-                  />
-                ) : (
-                  <iframe
-                    key={videoLoopEmbed.src}
-                    src={videoLoopEmbed.src}
-                    title={`Demostración: ${current.nameEs}`}
-                    className="h-full w-full"
-                    allow={IFRAME_ALLOW}
-                    allowFullScreen
-                  />
-                )
-              ) : (
-                <ExerciseThumbnail
-                  thumbnailUrl={current.thumbnailUrl}
-                  gifUrl={current.gifUrl}
-                  slug={current.slug}
-                  nameEn={current.nameEn}
-                  alt={current.nameEs}
+                <LoopMediaFrame
+                  embed={videoLoopEmbed}
+                  title={`Demostración: ${current.nameEs}`}
+                  onVideoError={() => setVideoError(true)}
                 />
+              ) : (
+                <div className="aspect-video w-full">
+                  <ExerciseThumbnail
+                    thumbnailUrl={current.thumbnailUrl}
+                    gifUrl={current.gifUrl}
+                    slug={current.slug}
+                    nameEn={current.nameEn}
+                    alt={current.nameEs}
+                  />
+                </div>
               )}
               {phase.kind === "rest" && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/65 backdrop-blur-sm">
