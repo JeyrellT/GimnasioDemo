@@ -61,21 +61,21 @@ export function ReadyToGoScreen({
       {/* Media */}
       <div className="relative w-full overflow-hidden bg-[#09090B]">
         {videoLoopEmbed && !videoError ? (
-          // maxAspectRatio={9/16} caps the frame to landscape 16:9 even when
-          // the video is portrait — portrait videos crop to object-top and
-          // every exercise renders the same compact height.
+          // maxAspectRatio={1} caps the frame to a 1:1 square — portrait
+          // videos show torso + arms (the actual exercise body) instead of
+          // just the head, while staying compact enough to keep the CTA
+          // visible without scrolling.
           <LoopMediaFrame
             embed={videoLoopEmbed}
             title={`Demostración: ${firstExercise.nameEs}`}
             onVideoError={() => setVideoError(true)}
-            maxAspectRatio={9 / 16}
+            maxAspectRatio={1}
           />
         ) : (
-          // aspect-video keeps the fallback frame consistent with the
-          // LoopMediaFrame's initial loader (most coach videos are landscape).
-          // Without this, exercises without media render a portrait card that
-          // pushes the rest of the UI down inconsistently between exercises.
-          <div className="aspect-video w-full">
+          // aspect-square matches the new maxAspectRatio={1} used for videos
+          // above, so the fallback (no video) renders at the same size as a
+          // video card — no layout shift between exercises.
+          <div className="aspect-square w-full">
             <ExerciseThumbnail
               thumbnailUrl={firstExercise.thumbnailUrl}
               gifUrl={firstExercise.gifUrl}
