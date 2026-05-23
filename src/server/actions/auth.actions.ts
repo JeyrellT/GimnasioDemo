@@ -42,6 +42,11 @@ import {
   requestMagicLinkSchema,
   updateProfileBasicSchema,
 } from "@/lib/validation/auth.schema";
+import {
+  uploadFile,
+  generateStorageKey,
+  BucketType,
+} from "@/lib/storage/upload";
 
 // Local trainer-profile update schema (not in auth.schema.ts — domain-specific)
 const updateTrainerProfileSchema = z.object({
@@ -570,5 +575,100 @@ export async function updateTrainerProfile(
     logInfo("trainer.profile_updated", { userId: user.id });
 
     return { updated: true };
+  });
+}
+
+// =============================================================================
+// uploadAvatar
+// =============================================================================
+
+const AVATAR_MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+const AVATAR_ALLOWED_MIMES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+]);
+
+function extFromMime(mime: string): string {
+  if (mime === "image/jpeg") return "jpg";
+  if (mime === "image/png") return "png";
+  if (mime === "image/webp") return "webp";
+  if (mime === "image/gif") return "gif";
+  return "bin";
+}
+
+/**
+ * Upload an avatar image for the authenticated user. The file is sent as
+ * multipart/form-data from the browser (no presigned roundtrip needed for
+ * small images). Server-side validates type + size, writes to R2/MinIO,
+ * then updates User.avatarUrl.
+ */
+export async function uploadAvatar(
+  formData: FormData,
+): Promise<ActionResult<{ avatarUrl: string }>> {
+  return tryCatch(async () => {
+    const user = await requireUser();
+
+    const file = formData.get("file");
+    if (!(file instanceof File)) {
+      throw new ValidationError(
+        "AVATAR_MISSING_FILE",
+        "No se recibió ningún archivo.",
+      );
+    }
+    if (file.size === 0) {
+      throw new ValidationError(
+        "AVATAR_EMPTY_FILE",
+        "El archivo está vacío.",
+      );
+    }
+    if (file.size > AVATAR_MAX_BYTES) {
+      throw new ValidationError(
+        "AVATAR_TOO_LARGE",
+        "La imagen pesa más de 5 MB. Reducila e intentá de nuevo.",
+      );
+    }
+    if (!AVATAR_ALLOWED_MIMES.has(file.type)) {
+      throw new ValidationError(
+        "AVATAR_INVALID_TYPE",
+        "Formato no soportado. Usá JPG, PNG, WebP o GIF.",
+      );
+    }
+
+    const ext = extFromMime(file.type);
+    const key = generateStorageKey("avatars", user.id, ext);
+    const bytes = Buffer.from(await file.arrayBuffer());
+
+    const { url } = await uploadFile({
+      bucket: BucketType.PHOTOS,
+      key,
+      body: bytes,
+      contentType: file.type,
+    });
+
+    const { ipAddress, userAgent } = await getRequestMeta();
+
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: user.id },
+        data: { avatarUrl: url },
+      });
+      await tx.auditLog.create({
+        data: {
+          actorUserId: user.id,
+          action: "UPDATE",
+          entityType: "User",
+          entityId: user.id,
+          ipAddress,
+          userAgent,
+          metadata: { fields: ["avatarUrl"], avatarKey: key },
+        },
+      });
+    });
+
+    logInfo("user.avatar_uploaded", { userId: user.id, key });
+
+    return { avatarUrl: url };
   });
 }

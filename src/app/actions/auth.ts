@@ -5,5 +5,6 @@ export {
   updateProfile,
   updateTrainerProfile,
   searchTrainersByName,
+  uploadAvatar,
 } from "@/server/actions/auth.actions";
 export type { TrainerSearchResult } from "@/server/actions/auth.actions";

@@ -24,6 +24,7 @@ declare module "next-auth" {
       name: string;
       role: UserRole;
       mustChangePassword?: boolean;
+      avatarUrl?: string | null;
     };
   }
 
@@ -38,6 +39,7 @@ declare module "next-auth/jwt" {
     role: UserRole;
     name: string;
     mustChangePassword?: boolean;
+    avatarUrl?: string | null;
   }
 }
 
@@ -75,6 +77,7 @@ export const authConfig = {
         name: token.name,
         role: token.role,
         mustChangePassword: token.mustChangePassword ?? false,
+        avatarUrl: token.avatarUrl ?? null,
       };
       return session;
     },
