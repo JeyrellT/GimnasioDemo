@@ -61,11 +61,14 @@ export function ReadyToGoScreen({
       {/* Media */}
       <div className="relative w-full overflow-hidden bg-[#09090B]">
         {videoLoopEmbed && !videoError ? (
+          // maxAspectRatio={9/16} caps the frame to landscape 16:9 even when
+          // the video is portrait — portrait videos crop to object-top and
+          // every exercise renders the same compact height.
           <LoopMediaFrame
             embed={videoLoopEmbed}
             title={`Demostración: ${firstExercise.nameEs}`}
             onVideoError={() => setVideoError(true)}
-            maxAspectRatio={16 / 9}
+            maxAspectRatio={9 / 16}
           />
         ) : (
           // aspect-video keeps the fallback frame consistent with the
