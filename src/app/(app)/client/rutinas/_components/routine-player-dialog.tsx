@@ -477,7 +477,11 @@ export function RoutinePlayerDialog({
                     maxAspectRatio={16 / 9}
                   />
                 ) : (
-                  <div className="aspect-[3/4] w-full">
+                  // aspect-video keeps the fallback frame consistent with the
+                  // LoopMediaFrame's initial loader. Exercises without media
+                  // render the same height as those with video, so the layout
+                  // below doesn't shift between exercises.
+                  <div className="aspect-video w-full">
                     <ExerciseThumbnail
                       thumbnailUrl={current.thumbnailUrl}
                       gifUrl={current.gifUrl}

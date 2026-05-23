@@ -68,7 +68,11 @@ export function ReadyToGoScreen({
             maxAspectRatio={16 / 9}
           />
         ) : (
-          <div className="aspect-[3/4] w-full">
+          // aspect-video keeps the fallback frame consistent with the
+          // LoopMediaFrame's initial loader (most coach videos are landscape).
+          // Without this, exercises without media render a portrait card that
+          // pushes the rest of the UI down inconsistently between exercises.
+          <div className="aspect-video w-full">
             <ExerciseThumbnail
               thumbnailUrl={firstExercise.thumbnailUrl}
               gifUrl={firstExercise.gifUrl}
