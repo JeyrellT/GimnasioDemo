@@ -85,8 +85,11 @@ export function ExerciseListSheet({
                   key={`${ex.exerciseId}_${i}`}
                   ref={isCurrent ? currentRef : null}
                   onClick={() => {
+                    // Sheet close is the consumer's responsibility — calling
+                    // onOpenChange(false) here would let the pointerdown
+                    // propagate to the underlying dialog overlay (Radix bug
+                    // with sibling dialogs in the same Portal layer).
                     onSelectExercise(i);
-                    onOpenChange(false);
                   }}
                   className={cn(
                     "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
