@@ -346,9 +346,15 @@ export function RoutinePlayerDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md p-0 overflow-hidden gap-0 sm:max-w-lg">
+        {/* max-h + flex column makes the dialog fit any viewport:
+            - header stays anchored at top (shrink-0)
+            - body scrolls internally when the video + meta + rest controls
+              exceed the screen (typical on phone in portrait when the video
+              is 9:16). Without this, the bottom controls (Pausar / Saltar
+              descanso) get cut off on small viewports. */}
+        <DialogContent className="max-w-md p-0 overflow-hidden gap-0 sm:max-w-lg flex flex-col max-h-[100dvh] sm:max-h-[90dvh]">
           {/* Header */}
-          <div className="border-b border-[#3F3F46] px-5 py-3.5">
+          <div className="shrink-0 border-b border-[#3F3F46] px-5 py-3.5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1 pr-8">
                 <DialogTitle className="text-base font-semibold text-[#FAFAFA] truncate">
@@ -421,6 +427,11 @@ export function RoutinePlayerDialog({
               </div>
             )}
           </div>
+
+          {/* Scrollable body — keeps the header sticky and lets the rest
+              controls (Pausar / Saltar descanso) stay reachable when the
+              video + meta exceed the viewport on small phones. */}
+          <div className="flex-1 overflow-y-auto overscroll-contain">
 
           {phase.kind === "ready" ? (
             <ReadyToGoScreen
@@ -675,6 +686,9 @@ export function RoutinePlayerDialog({
               </div>
             </>
           )}
+
+          {/* /scrollable body */}
+          </div>
         </DialogContent>
       </Dialog>
 
