@@ -40,7 +40,7 @@ export function NextExercisePreview({
           Siguiente {positionHuman}/{total}
         </p>
         <div className="mt-3 flex items-center gap-3">
-          <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[#27272A]">
+          <div className="h-20 w-16 shrink-0 overflow-hidden rounded-xl bg-[#27272A]">
             <ExerciseThumbnail
               thumbnailUrl={exercise.thumbnailUrl}
               gifUrl={exercise.gifUrl}

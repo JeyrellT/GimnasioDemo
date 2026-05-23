@@ -93,7 +93,7 @@ export function ExerciseMediaGallery({
           <LoopMediaFrame
             embed={savedLoopEmbed}
             title="Video del ejercicio"
-            maxAspectRatio={9 / 16}
+            maxAspectRatio={16 / 9}
           />
         ) : (
           <ExternalLinkCard url={mediaUrl} />
@@ -134,8 +134,8 @@ export function ExerciseMediaGallery({
   // For non-editors with no video, show a friendly placeholder.
   if (!canEdit && !mediaUrl) {
     return (
-      <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#3F3F46] bg-[#09090B] px-6 text-center">
-        <PlayCircle className="h-10 w-10 text-[#52525B]" strokeWidth={1.5} aria-hidden="true" />
+      <div className="flex min-h-[140px] w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[#3F3F46] bg-[#09090B] px-6 py-8 text-center">
+        <PlayCircle className="h-8 w-8 text-[#52525B]" strokeWidth={1.5} aria-hidden="true" />
         <p className="text-sm font-medium text-[#71717A]">Sin video</p>
         <p className="text-[11px] text-[#52525B] max-w-[260px] leading-relaxed">
           El coach todavía no agregó un video tutorial para este ejercicio.
@@ -199,13 +199,13 @@ export function ExerciseMediaGallery({
         <LoopMediaFrame
           embed={draftLoopEmbed}
           title="Vista previa del video"
-          maxAspectRatio={9 / 16}
+          maxAspectRatio={16 / 9}
         />
       )}
 
       {!draftLoopEmbed && !mediaUrl && trimmed === "" && (
-        <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#3F3F46] bg-[#09090B] px-6 text-center">
-          <PlayCircle className="h-10 w-10 text-[#52525B]" strokeWidth={1.5} aria-hidden="true" />
+        <div className="flex min-h-[140px] w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[#3F3F46] bg-[#09090B] px-6 py-8 text-center">
+          <PlayCircle className="h-8 w-8 text-[#52525B]" strokeWidth={1.5} aria-hidden="true" />
           <p className="text-sm font-medium text-[#71717A]">Pegá un link para empezar</p>
           <p className="text-[11px] text-[#52525B] max-w-[260px] leading-relaxed">
             El video va a ser la portada de este ejercicio en tu biblioteca y en las

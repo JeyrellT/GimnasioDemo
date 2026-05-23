@@ -457,16 +457,16 @@ export function RoutinePlayerDialog({
               {/* Media — GIF-mode (autoplay + loop + muted) when the exercise
                   has a video URL; otherwise the static thumbnail. Overlays
                   (countdown 3-2-1, rest timer) sit on top via absolute. */}
-              <div className="relative w-full bg-[#09090B]">
+              <div className="relative w-full overflow-hidden bg-[#09090B]">
                 {videoLoopEmbed && !videoError ? (
                   <LoopMediaFrame
                     embed={videoLoopEmbed}
                     title={`Demostración: ${current.nameEs}`}
                     onVideoError={() => setVideoError(true)}
-                    maxAspectRatio={9 / 16}
+                    maxAspectRatio={16 / 9}
                   />
                 ) : (
-                  <div className="aspect-video w-full">
+                  <div className="aspect-[3/4] w-full">
                     <ExerciseThumbnail
                       thumbnailUrl={current.thumbnailUrl}
                       gifUrl={current.gifUrl}

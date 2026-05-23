@@ -220,10 +220,9 @@ export default function ExerciseDetailClient({ exerciseId, basePath = "/trainer/
 
       {/* Two-column body */}
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Left column: body map — flex column so the figures sit centered
-            vertically when the right column (media + instructions) is taller
-            and the grid stretches this card. */}
-        <div className="flex flex-col rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+        {/* Left column (desktop): body map. On mobile it stacks second so
+            media is seen first — achieved via order-last on mobile. */}
+        <div className="order-last flex flex-col rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] md:order-first">
           <h2 className="mb-3 text-sm font-semibold text-[#FAFAFA]">Músculos trabajados</h2>
           <div className="flex flex-1 items-center justify-center">
             <ExerciseBodyMapView
@@ -233,8 +232,8 @@ export default function ExerciseDetailClient({ exerciseId, basePath = "/trainer/
           </div>
         </div>
 
-        {/* Right column: media + instructions */}
-        <div className="flex flex-col gap-4">
+        {/* Right column (desktop): media + instructions. Appears first on mobile. */}
+        <div className="order-first flex flex-col gap-4 md:order-last">
           {/* Media gallery — always visible, with static fallback for photos */}
           <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
             <h2 className="mb-2 text-sm font-semibold text-[#FAFAFA]">Multimedia</h2>

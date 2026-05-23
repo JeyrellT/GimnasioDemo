@@ -12,6 +12,7 @@ import Link from "next/link";
 import { Search, Plus, Loader2, Dumbbell } from "lucide-react";
 import { searchExercises } from "@/app/actions/exercises";
 import { PageHeader } from "@/components/shared/page-header";
+import { ExerciseThumbnail } from "@/components/shared/exercise-thumbnail";
 import {
   MUSCLE_COLORS,
   MUSCLE_LABELS,
@@ -297,7 +298,7 @@ export function ExerciseLibraryPage({
           <p className="text-xs text-[#71717A]">
             {exercises.length} resultado{exercises.length !== 1 ? "s" : ""}
           </p>
-          <ul className="grid gap-3 sm:grid-cols-2">
+          <ul className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
             {exercises.map((ex) => {
               const muscleColor = MUSCLE_COLORS[ex.primaryMuscle ?? ""] ?? {
                 bg: "bg-[#27272A]",
@@ -307,6 +308,7 @@ export function ExerciseLibraryPage({
                 MUSCLE_LABELS[ex.primaryMuscle ?? ""] ?? ex.primaryMuscle ?? "";
               const equipLabel = EQUIPMENT_LABELS[ex.equipment ?? ""] ?? ex.equipment ?? "";
               const diffMeta = ex.difficulty ? DIFFICULTY_META[ex.difficulty] : undefined;
+              const hasMedia = Boolean(ex.thumbnailUrl || ex.gifUrl);
 
               return (
                 <li key={ex.id}>
@@ -314,14 +316,19 @@ export function ExerciseLibraryPage({
                     href={`${basePath}/${ex.id}`}
                     className="group relative flex flex-col overflow-hidden rounded-xl border border-[#3F3F46] bg-[#18181B]/80 backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:scale-[1.02] hover:border-brand-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/60 cursor-pointer"
                   >
-                    <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-[#27272A] to-[#18181B] flex items-center justify-center">
-                      {(ex.thumbnailUrl || ex.gifUrl) ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
-                          src={ex.thumbnailUrl ?? ex.gifUrl ?? ""}
+                    {/* Portrait frame (3:4) — fits Drive videos and exercise
+                        photos (typically vertical) much better than aspect-video. */}
+                    <div className="relative aspect-[3/4] w-full overflow-hidden bg-gradient-to-br from-[#27272A] to-[#18181B] flex items-center justify-center">
+                      {hasMedia ? (
+                        // ExerciseThumbnail handles Drive URL rewriting
+                        // (drive.google.com/file/d/X → lh3.googleusercontent.com/d/X)
+                        // plus a retry chain (slug → nameEn → SLUG_IMAGE_MAP).
+                        <ExerciseThumbnail
+                          thumbnailUrl={ex.thumbnailUrl}
+                          gifUrl={ex.gifUrl}
+                          slug={ex.slug}
+                          nameEn={ex.nameEn}
                           alt={ex.nameEs}
-                          className="h-full w-full object-contain"
-                          loading="lazy"
                         />
                       ) : (
                         // Rich fallback: bigger icon + muscle label so the card
