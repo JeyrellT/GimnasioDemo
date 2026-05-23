@@ -134,6 +134,25 @@ export function RoutinePlayerDialog({
   // 0 multiple times before the interval cleanup runs (250ms gap).
   const restCompletedRef = React.useRef(false);
 
+  // Guard against accidental player-dialog close when the inner ExerciseListSheet
+  // closes via a tap on a card: the pointerdown that selected the card can be
+  // re-interpreted by Radix as "click outside" of the player dialog (both dialogs
+  // mount in the same Portal layer). Setting this true for ~2 frames after the
+  // sheet closes makes the player ignore the spurious onOpenChange(false).
+  const sheetGuardRef = React.useRef(false);
+
+  function closeSheet() {
+    sheetGuardRef.current = true;
+    setShowList(false);
+    // Two RAFs: first to let the sheet unmount, second to release the guard
+    // after the synthetic pointerdown event has fully resolved.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        sheetGuardRef.current = false;
+      });
+    });
+  }
+
   // 3-2-1 prep countdown.
   const prep = usePrepCountdown({
     seconds: 3,
@@ -343,9 +362,17 @@ export function RoutinePlayerDialog({
     }
   }
 
+  function handlePlayerOpenChange(nextOpen: boolean) {
+    // Suppress close while the exercise list sheet is open OR was just closed
+    // (Radix can re-fire pointerdown-outside on the player when the sheet
+    // unmounts after a card tap).
+    if (!nextOpen && (showList || sheetGuardRef.current)) return;
+    onOpenChange(nextOpen);
+  }
+
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={open} onOpenChange={handlePlayerOpenChange}>
         {/* max-h + flex column makes the dialog fit any viewport:
             - header stays anchored at top (shrink-0)
             - body scrolls internally when the video + meta + rest controls
@@ -697,13 +724,20 @@ export function RoutinePlayerDialog({
       </Dialog>
 
       {/* Exercise list sheet — accesible desde el header en cualquier phase
-          (excepto done) y desde Ready-to-Go. */}
+          (excepto done) y desde Ready-to-Go. closeSheet() es lo que rompe la
+          propagación del pointerdown al overlay del player dialog. */}
       <ExerciseListSheet
         open={showList}
-        onOpenChange={setShowList}
+        onOpenChange={(v) => {
+          if (v) setShowList(true);
+          else closeSheet();
+        }}
         exercises={exercises}
         currentIndex={currentIndex}
-        onSelectExercise={(i) => jumpToExercise(i)}
+        onSelectExercise={(i) => {
+          jumpToExercise(i);
+          closeSheet();
+        }}
       />
     </>
   );
