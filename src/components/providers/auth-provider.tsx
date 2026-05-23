@@ -50,7 +50,7 @@ function ProdAuthBridge({ children }: { children: ReactNode }) {
       : null,
     isLoading: status === "loading",
     isAuthenticated: status === "authenticated",
-    avatarUrl: null,
+    avatarUrl: session?.user?.avatarUrl ?? null,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

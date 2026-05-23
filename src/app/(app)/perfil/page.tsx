@@ -2,10 +2,22 @@
 
 import { useRef, useState, useEffect, lazy, Suspense } from "react";
 import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
-import { LogOut, ArrowLeftRight, Camera, Trash2, Sparkles, Eye, EyeOff, ExternalLink } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
+import {
+  LogOut,
+  ArrowLeftRight,
+  Camera,
+  Trash2,
+  Sparkles,
+  Eye,
+  EyeOff,
+  ExternalLink,
+  Loader2,
+} from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { uploadAvatar } from "@/app/actions/auth";
 import {
   getGeminiKey,
   setGeminiKey,
@@ -33,8 +45,12 @@ function getInitials(name: string): string {
 
 export default function PerfilPage() {
   const { user, avatarUrl } = useAuth();
+  const { update: updateSession } = useSession();
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // ── Avatar upload state ──────────────────────────────────────────────────
+  const [uploading, setUploading] = useState(false);
 
   // ── Gemini key state (demo only — prod uses server-side env) ─────────────
   const [apiKey, setApiKeyState] = useState("");
@@ -66,6 +82,49 @@ export default function PerfilPage() {
     }
   }
 
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    // Reset the input so picking the same file twice still triggers onChange.
+    e.target.value = "";
+    if (!file) return;
+
+    // Client-side guards mirror server-side validation in uploadAvatar.
+    if (!file.type.startsWith("image/")) {
+      toast.error("Solo se admiten archivos de imagen.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("La imagen pesa más de 5 MB. Reducila e intentá de nuevo.");
+      return;
+    }
+    if (IS_DEMO) {
+      // No backend in demo mode — surface a clear message instead of failing.
+      toast.message("Modo demo: la subida de foto no está activa.");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const result = await uploadAvatar(fd);
+      if (!result.ok) {
+        toast.error(result.error.message ?? "No se pudo subir la foto.");
+        return;
+      }
+      // Refresh the NextAuth session so session.user.avatarUrl picks up the
+      // new value from DB. Then refresh the route so any server components
+      // re-render with the new avatar.
+      await updateSession();
+      router.refresh();
+      toast.success("Foto actualizada.");
+    } catch {
+      toast.error("Error inesperado al subir la foto.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   if (!user) return null;
 
   return (
@@ -87,23 +146,42 @@ export default function PerfilPage() {
           </div>
           <button
             type="button"
-            onClick={() => fileRef.current?.click()}
-            className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+            onClick={() => !uploading && fileRef.current?.click()}
+            disabled={uploading}
+            className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Cambiar foto"
           >
-            <Camera className="h-5 w-5 text-white" />
+            {uploading ? (
+              <Loader2 className="h-5 w-5 text-white animate-spin" aria-hidden="true" />
+            ) : (
+              <Camera className="h-5 w-5 text-white" aria-hidden="true" />
+            )}
           </button>
+          {uploading && (
+            // Always-visible spinner on mobile (no hover state).
+            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/60 sm:hidden">
+              <Loader2 className="h-5 w-5 text-white animate-spin" aria-hidden="true" />
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="text-sm font-medium text-brand-primary hover:underline"
+            disabled={uploading}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-primary hover:underline disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
           >
-            {avatarUrl ? "Cambiar foto" : "Subir foto"}
+            {uploading && (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+            )}
+            {uploading
+              ? "Subiendo..."
+              : avatarUrl
+                ? "Cambiar foto"
+                : "Subir foto"}
           </button>
-          {avatarUrl && (
+          {avatarUrl && !uploading && (
             <button
               type="button"
               className="flex items-center gap-1 text-xs text-neutral-500 hover:text-danger transition-colors"
@@ -117,8 +195,9 @@ export default function PerfilPage() {
         <input
           ref={fileRef}
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp,image/gif"
           className="hidden"
+          onChange={handleAvatarChange}
         />
       </div>
 

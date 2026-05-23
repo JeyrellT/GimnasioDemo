@@ -272,29 +272,41 @@ export const fullAuthConfig: NextAuthConfig = {
       if (user?.id) {
         token.id = user.id;
 
-        // Fetch the authoritative role, name, and mustChangePassword from DB
-        // on first sign-in. Subsequent refreshes use the cached token values;
-        // role changes take effect on the next sign-in or explicit rotation.
+        // Fetch the authoritative role, name, mustChangePassword, and avatarUrl
+        // from DB on first sign-in. Subsequent refreshes use the cached token
+        // values; changes take effect on the next sign-in or explicit rotation.
         const dbUser = await prisma.user.findUnique({
           where: { id: user.id },
-          select: { role: true, name: true, mustChangePassword: true },
+          select: {
+            role: true,
+            name: true,
+            mustChangePassword: true,
+            avatarUrl: true,
+          },
         });
 
         token.role = dbUser?.role ?? ("CLIENT" as UserRole);
         token.name = dbUser?.name ?? (user.name ?? "");
         token.mustChangePassword = dbUser?.mustChangePassword ?? false;
+        token.avatarUrl = dbUser?.avatarUrl ?? null;
       } else if (trigger === "update" && token.id) {
         // Explicit session refresh (e.g. after the client completes the forced
-        // password change). Re-read mustChangePassword from DB so the middleware
-        // stops redirecting them to /client/bienvenida.
+        // password change OR uploads a new avatar). Re-read the same fields
+        // from DB so the JWT stays in sync.
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { role: true, name: true, mustChangePassword: true },
+          select: {
+            role: true,
+            name: true,
+            mustChangePassword: true,
+            avatarUrl: true,
+          },
         });
         if (dbUser) {
           token.role = dbUser.role;
           token.name = dbUser.name;
           token.mustChangePassword = dbUser.mustChangePassword;
+          token.avatarUrl = dbUser.avatarUrl;
         }
       }
 
@@ -312,6 +324,7 @@ export const fullAuthConfig: NextAuthConfig = {
         name: token.name,
         role: token.role,
         mustChangePassword: token.mustChangePassword ?? false,
+        avatarUrl: token.avatarUrl ?? null,
       };
       return session;
     },
