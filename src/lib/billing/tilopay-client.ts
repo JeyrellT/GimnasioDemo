@@ -16,7 +16,7 @@
 import { createId } from "@paralleldrive/cuid2";
 import { createHmac, timingSafeEqual } from "crypto";
 
-import { env } from "@/env";
+import { serverEnv as env } from "@/server/env";
 import { isFlagOn } from "@/lib/flags";
 import { ExternalServiceError } from "@/lib/errors";
 import { logError, logInfo } from "@/lib/logger";
@@ -189,6 +189,7 @@ export function verifyWebhookSignature(
   signature: string,
 ): boolean {
   try {
+    if (!env.TILOPAY_WEBHOOK_SECRET) return false;
     const hmac = createHmac("sha256", env.TILOPAY_WEBHOOK_SECRET);
     hmac.update(typeof rawBody === "string" ? rawBody : rawBody);
     const expected = hmac.digest("hex");

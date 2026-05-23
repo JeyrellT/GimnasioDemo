@@ -3,16 +3,17 @@
 import { useRef, useState, useEffect, lazy, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import {
   LogOut,
   ArrowLeftRight,
-  Camera,
   Trash2,
   Sparkles,
   Eye,
   EyeOff,
   ExternalLink,
   Loader2,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -51,6 +52,7 @@ export default function PerfilPage() {
 
   // ── Avatar upload state ──────────────────────────────────────────────────
   const [uploading, setUploading] = useState(false);
+  const [zoomOpen, setZoomOpen] = useState(false);
 
   // ── Gemini key state (demo only — prod uses server-side env) ─────────────
   const [apiKey, setApiKeyState] = useState("");
@@ -133,37 +135,26 @@ export default function PerfilPage() {
 
       {/* Avatar section */}
       <div className="flex items-center gap-5">
-        <div className="relative group">
-          <div className="h-20 w-20 rounded-full bg-gradient-to-br from-brand-primary to-brand-primary-hover p-[2px]">
-            <Avatar className="h-full w-full">
-              {avatarUrl && (
-                <AvatarImage src={avatarUrl} alt={user.name} />
-              )}
-              <AvatarFallback className="bg-neutral-900 text-brand-primary text-xl font-bold">
-                {getInitials(user.name)}
-              </AvatarFallback>
-            </Avatar>
-          </div>
-          <button
-            type="button"
-            onClick={() => !uploading && fileRef.current?.click()}
-            disabled={uploading}
-            className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Cambiar foto"
-          >
-            {uploading ? (
-              <Loader2 className="h-5 w-5 text-white animate-spin" aria-hidden="true" />
-            ) : (
-              <Camera className="h-5 w-5 text-white" aria-hidden="true" />
-            )}
-          </button>
+        {/* Avatar — click to zoom (only when there's a photo). No upload trigger here. */}
+        <button
+          type="button"
+          onClick={() => avatarUrl && setZoomOpen(true)}
+          disabled={!avatarUrl || uploading}
+          aria-label={avatarUrl ? "Ver foto en grande" : "Sin foto de perfil"}
+          className="relative h-20 w-20 rounded-full bg-gradient-to-br from-brand-primary to-brand-primary-hover p-[2px] disabled:cursor-default focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950"
+        >
+          <Avatar className="h-full w-full">
+            {avatarUrl && <AvatarImage src={avatarUrl} alt={user.name} />}
+            <AvatarFallback className="bg-neutral-900 text-brand-primary text-xl font-bold">
+              {getInitials(user.name)}
+            </AvatarFallback>
+          </Avatar>
           {uploading && (
-            // Always-visible spinner on mobile (no hover state).
-            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/60 sm:hidden">
+            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/60">
               <Loader2 className="h-5 w-5 text-white animate-spin" aria-hidden="true" />
             </div>
           )}
-        </div>
+        </button>
 
         <div className="space-y-2">
           <button
@@ -200,6 +191,32 @@ export default function PerfilPage() {
           onChange={handleAvatarChange}
         />
       </div>
+
+      {/* Zoom modal — opens on avatar click when a photo exists */}
+      <DialogPrimitive.Root open={zoomOpen} onOpenChange={setZoomOpen}>
+        <DialogPrimitive.Portal>
+          <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+          <DialogPrimitive.Content
+            aria-describedby={undefined}
+            className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+          >
+            <DialogPrimitive.Title className="sr-only">Foto de perfil</DialogPrimitive.Title>
+            {avatarUrl && (
+              <img
+                src={avatarUrl}
+                alt={`Foto de ${user.name}`}
+                className="max-h-[85vh] max-w-[90vw] rounded-2xl border-2 border-brand-primary/40 object-contain shadow-2xl"
+              />
+            )}
+            <DialogPrimitive.Close
+              aria-label="Cerrar"
+              className="absolute right-2 top-2 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+            >
+              <X className="h-5 w-5" />
+            </DialogPrimitive.Close>
+          </DialogPrimitive.Content>
+        </DialogPrimitive.Portal>
+      </DialogPrimitive.Root>
 
       {/* Info card */}
       <div className="rounded-xl border border-neutral-700 bg-neutral-900 divide-y divide-neutral-700">
