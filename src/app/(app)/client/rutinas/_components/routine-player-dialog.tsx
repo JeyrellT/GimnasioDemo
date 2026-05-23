@@ -497,24 +497,23 @@ export function RoutinePlayerDialog({
                   (countdown 3-2-1, rest timer) sit on top via absolute. */}
               <div className="relative w-full overflow-hidden bg-[#09090B]">
                 {videoLoopEmbed && !videoError ? (
-                  // maxAspectRatio={9/16} caps the player container to a
-                  // landscape 16:9 box. Portrait videos (typical 9:16 from
-                  // phones) get cropped with object-top — showing the upper
-                  // body where the exercise action lives. This keeps every
-                  // exercise the same compact height during a routine, no
-                  // matter if the coach uploaded landscape or portrait.
+                  // maxAspectRatio={1} caps the frame to a square (1:1) so
+                  // portrait videos show torso + arms (the actual exercise
+                  // body) instead of just the head. Frame is roughly 384×384
+                  // on mobile — bigger than landscape 16:9 (~216px tall) but
+                  // still compact enough to keep Listo / Anterior / Siguiente
+                  // visible without scrolling.
                   <LoopMediaFrame
                     embed={videoLoopEmbed}
                     title={`Demostración: ${current.nameEs}`}
                     onVideoError={() => setVideoError(true)}
-                    maxAspectRatio={9 / 16}
+                    maxAspectRatio={1}
                   />
                 ) : (
-                  // aspect-video keeps the fallback frame consistent with the
-                  // LoopMediaFrame's initial loader. Exercises without media
-                  // render the same height as those with video, so the layout
-                  // below doesn't shift between exercises.
-                  <div className="aspect-video w-full">
+                  // aspect-square matches the new maxAspectRatio={1} used for
+                  // videos. Exercises without media render the same size as
+                  // those with video — no layout shift between exercises.
+                  <div className="aspect-square w-full">
                     <ExerciseThumbnail
                       thumbnailUrl={current.thumbnailUrl}
                       gifUrl={current.gifUrl}

@@ -133,10 +133,6 @@ export function LoopMediaFrame({
     dimsKnown && typeof maxAspectRatio === "number"
       ? Math.min(nativeRatio, maxAspectRatio)
       : nativeRatio;
-  const cropsBottom =
-    dimsKnown &&
-    typeof maxAspectRatio === "number" &&
-    nativeRatio > maxAspectRatio;
 
   return (
     <div
@@ -172,13 +168,11 @@ export function LoopMediaFrame({
         key={embed.src}
         src={embed.src}
         // object-cover llena el contenedor. Cuando el contenedor matchea el
-        // ratio nativo no hay recorte. Cuando hay cap activo, object-top
-        // ancla la parte superior (head/torso visibles) y recorta el piso.
-        className={
-          cropsBottom
-            ? "absolute inset-0 h-full w-full object-cover object-top"
-            : "absolute inset-0 h-full w-full object-cover"
-        }
+        // ratio nativo no hay recorte. Cuando hay cap activo, object-center
+        // muestra la franja central del video (típicamente torso + brazos —
+        // donde está la acción de la mayoría de ejercicios), en lugar de
+        // anclarse a la parte superior y recortar las piernas.
+        className="absolute inset-0 h-full w-full object-cover object-center"
         style={dimsKnown ? undefined : { visibility: "hidden" }}
         autoPlay
         loop
