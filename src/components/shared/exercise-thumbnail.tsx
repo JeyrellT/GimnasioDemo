@@ -102,12 +102,14 @@ export function ExerciseThumbnail({
   }
 
   return (
+    // Outer wrapper paints the neutral background so object-contain shows the
+    // full exercise figure (cabeza + cuerpo + pies) centered without cropping.
     // eslint-disable-next-line @next/next/no-img-element
     <img
       key={src}
       src={src}
       alt={alt}
-      className={`h-full w-full object-cover ${className}`}
+      className={`h-full w-full object-contain bg-gradient-to-br from-[#27272A] to-[#18181B] ${className}`}
       loading="lazy"
       onError={() => setIndex((i) => i + 1)}
     />
