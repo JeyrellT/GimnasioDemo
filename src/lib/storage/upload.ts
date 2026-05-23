@@ -18,7 +18,7 @@ import { createId } from "@paralleldrive/cuid2";
 import { s3, BucketType, resolveBucketName } from "./client";
 
 export { BucketType } from "./client";
-import { env } from "@/env";
+import { serverEnv as env } from "@/server/env";
 import { PRESIGNED_URL_TTL_SEC } from "@/lib/consts";
 import { ExternalServiceError } from "@/lib/errors";
 import { logError } from "@/lib/logger";
@@ -90,6 +90,12 @@ export async function uploadFile({
     );
   }
 
+  if (!env.R2_PUBLIC_URL) {
+    throw new ExternalServiceError(
+      "S3_PUBLIC_URL_MISSING",
+      "Storage no configurado: falta R2_PUBLIC_URL en el entorno.",
+    );
+  }
   const url = `${env.R2_PUBLIC_URL}/${key}`;
   return { key, url };
 }
