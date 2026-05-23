@@ -464,8 +464,10 @@ export function RoutinePlayerDialog({
               is 9:16). Without this, the bottom controls (Pausar / Saltar
               descanso) get cut off on small viewports. */}
         <DialogContent className="max-w-md p-0 overflow-hidden gap-0 sm:max-w-lg flex flex-col max-h-[100dvh] sm:max-h-[90dvh]">
-          {/* Header */}
-          <div className="shrink-0 border-b border-[#3F3F46] px-5 py-3.5">
+          {/* Header — compact: solo título + día. El detalle "Ejercicio N /
+              Set X" ya está representado visualmente en la SegmentedProgressBar
+              de abajo y en el panel "SET N DE M" más abajo del contenido. */}
+          <div className="shrink-0 border-b border-[#3F3F46] px-5 py-2.5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1 pr-8">
                 <DialogTitle className="text-base font-semibold text-[#FAFAFA] truncate">
@@ -473,12 +475,6 @@ export function RoutinePlayerDialog({
                 </DialogTitle>
                 <DialogDescription className="text-xs text-[#71717A] mt-0.5">
                   {dayName}
-                  {phase.kind !== "ready" && phase.kind !== "done" && (
-                    <>
-                      {" · "}Ejercicio {currentIndex + 1} de {exercises.length}
-                      {" · "}Set {Math.min(currentSet, totalSets)} de {totalSets}
-                    </>
-                  )}
                   {phase.kind === "ready" && (
                     <>
                       {" · "}
@@ -517,9 +513,11 @@ export function RoutinePlayerDialog({
               </div>
             </div>
 
-            {/* Segmented progress bar — only when rutina ya empezó */}
+            {/* Segmented progress bar — only when rutina ya empezó.
+                mt-1.5 + py-2.5 del header dejan la barra justo debajo del
+                título sin desperdiciar vertical space. */}
             {phase.kind !== "ready" && (
-              <div className="mt-2 -mx-5">
+              <div className="mt-1.5 -mx-5 -mb-1">
                 <SegmentedProgressBar
                   total={exercises.length}
                   currentIndex={
