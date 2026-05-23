@@ -10,7 +10,8 @@
 // =============================================================================
 
 export function getYouTubeId(url: string): string | null {
-  const m = /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/.exec(url);
+  // shorts/ added — coach can paste YouTube Shorts links (common for fitness).
+  const m = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/.exec(url);
   return m ? m[1]! : null;
 }
 

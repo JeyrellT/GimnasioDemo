@@ -89,15 +89,19 @@ export function ExerciseMediaGallery({
   if (mediaUrl && !editing) {
     return (
       <div className="flex flex-col gap-3">
-        {savedLoopEmbed ? (
-          <LoopMediaFrame
-            embed={savedLoopEmbed}
-            title="Video del ejercicio"
-            maxAspectRatio={16 / 9}
-          />
-        ) : (
-          <ExternalLinkCard url={mediaUrl} />
-        )}
+        {/* max-w-sm (~384px) keeps the video card compact instead of filling
+            the entire right column of the detail page. mx-auto centers it. */}
+        <div className="mx-auto w-full max-w-sm">
+          {savedLoopEmbed ? (
+            <LoopMediaFrame
+              embed={savedLoopEmbed}
+              title="Video del ejercicio"
+              maxAspectRatio={16 / 9}
+            />
+          ) : (
+            <ExternalLinkCard url={mediaUrl} />
+          )}
+        </div>
 
         {canEdit && (
           <div className="flex items-center justify-end gap-2">
@@ -196,11 +200,13 @@ export function ExerciseMediaGallery({
       )}
 
       {draftLoopEmbed && (
-        <LoopMediaFrame
-          embed={draftLoopEmbed}
-          title="Vista previa del video"
-          maxAspectRatio={16 / 9}
-        />
+        <div className="mx-auto w-full max-w-sm">
+          <LoopMediaFrame
+            embed={draftLoopEmbed}
+            title="Vista previa del video"
+            maxAspectRatio={16 / 9}
+          />
+        </div>
       )}
 
       {!draftLoopEmbed && !mediaUrl && trimmed === "" && (
