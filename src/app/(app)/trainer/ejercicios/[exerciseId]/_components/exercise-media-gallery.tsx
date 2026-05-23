@@ -22,6 +22,10 @@ import {
 } from "@/lib/media/video-url";
 import { LoopMediaFrame } from "@/components/shared/loop-media-frame";
 
+const COMPACT_MEDIA_FRAME_CLASS =
+  "mx-auto w-full max-w-[180px] sm:max-w-[220px] lg:max-w-[240px]";
+const TRAINER_PREVIEW_MAX_ASPECT_RATIO = 0.72;
+
 export interface ExerciseMediaGalleryProps {
   exerciseId: string;
   /** Effective mediaUrl already merged with per-trainer override. */
@@ -89,14 +93,13 @@ export function ExerciseMediaGallery({
   if (mediaUrl && !editing) {
     return (
       <div className="flex flex-col gap-3">
-        {/* max-w-sm (~384px) keeps the video card compact instead of filling
-            the entire right column of the detail page. mx-auto centers it. */}
-        <div className="mx-auto w-full max-w-sm">
+        {/* Keep previews compact and close to the client mobile player shape. */}
+        <div className={COMPACT_MEDIA_FRAME_CLASS}>
           {savedLoopEmbed ? (
             <LoopMediaFrame
               embed={savedLoopEmbed}
               title="Video del ejercicio"
-              maxAspectRatio={16 / 9}
+              maxAspectRatio={TRAINER_PREVIEW_MAX_ASPECT_RATIO}
             />
           ) : (
             <ExternalLinkCard url={mediaUrl} />
@@ -200,11 +203,11 @@ export function ExerciseMediaGallery({
       )}
 
       {draftLoopEmbed && (
-        <div className="mx-auto w-full max-w-sm">
+        <div className={COMPACT_MEDIA_FRAME_CLASS}>
           <LoopMediaFrame
             embed={draftLoopEmbed}
             title="Vista previa del video"
-            maxAspectRatio={16 / 9}
+            maxAspectRatio={TRAINER_PREVIEW_MAX_ASPECT_RATIO}
           />
         </div>
       )}

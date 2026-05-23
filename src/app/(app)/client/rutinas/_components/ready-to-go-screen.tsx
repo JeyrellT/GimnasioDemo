@@ -59,32 +59,31 @@ export function ReadyToGoScreen({
   return (
     <div className="flex flex-col bg-[#18181B]">
       {/* Media */}
-      <div className="relative w-full overflow-hidden bg-[#09090B]">
-        {videoLoopEmbed && !videoError ? (
-          // maxAspectRatio={1} caps the frame to a 1:1 square — portrait
-          // videos show torso + arms (the actual exercise body) instead of
-          // just the head, while staying compact enough to keep the CTA
-          // visible without scrolling.
-          <LoopMediaFrame
-            embed={videoLoopEmbed}
-            title={`Demostración: ${firstExercise.nameEs}`}
-            onVideoError={() => setVideoError(true)}
-            maxAspectRatio={1}
-          />
-        ) : (
-          // aspect-square matches the new maxAspectRatio={1} used for videos
-          // above, so the fallback (no video) renders at the same size as a
-          // video card — no layout shift between exercises.
-          <div className="aspect-square w-full">
-            <ExerciseThumbnail
-              thumbnailUrl={firstExercise.thumbnailUrl}
-              gifUrl={firstExercise.gifUrl}
-              slug={firstExercise.slug}
-              nameEn={firstExercise.nameEn}
-              alt={firstExercise.nameEs}
+      <div className="relative w-full overflow-hidden bg-[#09090B] px-4 py-3 sm:p-0">
+        <div className="mx-auto w-full max-w-[320px] sm:max-w-none">
+          {videoLoopEmbed && !videoError ? (
+            // maxAspectRatio={1} caps the frame to a 1:1 square — portrait
+            // videos show torso + arms while keeping the mobile CTA reachable.
+            <LoopMediaFrame
+              embed={videoLoopEmbed}
+              title={`Demostración: ${firstExercise.nameEs}`}
+              onVideoError={() => setVideoError(true)}
+              maxAspectRatio={1}
             />
-          </div>
-        )}
+          ) : (
+            // aspect-square matches the maxAspectRatio={1} used for videos
+            // above, so the fallback renders at the same compact size.
+            <div className="aspect-square w-full">
+              <ExerciseThumbnail
+                thumbnailUrl={firstExercise.thumbnailUrl}
+                gifUrl={firstExercise.gifUrl}
+                slug={firstExercise.slug}
+                nameEn={firstExercise.nameEn}
+                alt={firstExercise.nameEs}
+              />
+            </div>
+          )}
+        </div>
 
         {/* "PRÓXIMO" ribbon */}
         <div className="absolute left-3 top-3">
