@@ -600,8 +600,9 @@ export function RoutinePlayerDialog({
                     embed={videoLoopEmbed}
                     title={`Demostración: ${current.nameEs}`}
                     onVideoError={() => setVideoError(true)}
+                    fit="contain"
                     minAspectRatio={1}
-                    maxAspectRatio={1.25}
+                    maxAspectRatio={1.35}
                   />
                 ) : (
                   // aspect-square = el "punto base" del rango [1, 1.25].

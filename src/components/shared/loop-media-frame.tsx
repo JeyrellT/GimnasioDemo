@@ -66,6 +66,11 @@ export interface LoopMediaFrameProps {
    * Ejemplo: `fixedAspectRatio={1}` cuadrado uniforme.
    */
   fixedAspectRatio?: number;
+  /**
+   * How the video fills the frame. `cover` keeps the frame full and may crop;
+   * `contain` keeps the full video visible with letterboxing.
+   */
+  fit?: "cover" | "contain";
 }
 
 export function LoopMediaFrame({
@@ -75,6 +80,7 @@ export function LoopMediaFrame({
   maxAspectRatio,
   minAspectRatio,
   fixedAspectRatio,
+  fit = "cover",
 }: LoopMediaFrameProps) {
   const [internalError, setInternalError] = React.useState(false);
   // { w: 0, h: 0 } → metadata todavía no cargó (skeleton visible).
@@ -217,6 +223,7 @@ export function LoopMediaFrame({
   // aunque la metadata no haya cargado — el skeleton se superpone). En modo
   // dinámico el video se oculta hasta que conocemos el ratio nativo.
   const videoHidden = !usesFixedRatio && !dimsKnown;
+  const videoFitClass = fit === "contain" ? "object-contain" : "object-cover";
 
   return (
     <div
@@ -247,7 +254,7 @@ export function LoopMediaFrame({
         // object-cover llena el contenedor. Cuando el contenedor matchea el
         // ratio nativo no hay recorte. Cuando hay cap activo o fixed activo,
         // object-center muestra la franja central del video.
-        className="absolute inset-0 h-full w-full object-cover object-center"
+        className={`absolute inset-0 h-full w-full ${videoFitClass} object-center`}
         style={videoHidden ? { visibility: "hidden" } : undefined}
         autoPlay
         loop

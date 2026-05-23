@@ -68,7 +68,9 @@ export function ReadyToGoScreen({
               embed={videoLoopEmbed}
               title={`Demostración: ${firstExercise.nameEs}`}
               onVideoError={() => setVideoError(true)}
-              maxAspectRatio={1}
+              fit="contain"
+              minAspectRatio={1}
+              maxAspectRatio={1.35}
             />
           ) : (
             // aspect-square matches the maxAspectRatio={1} used for videos
