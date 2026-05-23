@@ -37,6 +37,11 @@ interface RoutineCard {
 }
 
 interface PlayerState {
+  /** Required so the player can call startSession(assignedRoutineId, dayIndex)
+      to persist the workout when the client taps Comenzar and complete it
+      when the routine ends. */
+  assignedRoutineId: string;
+  dayIndex: number;
   routineName: string;
   dayName: string;
   exercises: RoutineSnapshotExercise[];
@@ -202,11 +207,14 @@ export default function ClientRutinasPage() {
   const activeCount = cards.filter((c) => c.assigned.status === "ACTIVE").length;
 
   function openPlayer(
+    assignedRoutineId: string,
     snapshot: RoutineSnapshot,
     day: RoutineSnapshotDay,
     startIndex: number,
   ) {
     setPlayer({
+      assignedRoutineId,
+      dayIndex: day.dayIndex,
       routineName: snapshot.templateName,
       dayName: day.name,
       exercises: day.exercises,
@@ -402,7 +410,12 @@ export default function ClientRutinasPage() {
                                         type="button"
                                         key={`${ex.exerciseId}_${idx}`}
                                         onClick={() =>
-                                          openPlayer(snapshot, day, idx)
+                                          openPlayer(
+                                            assigned.id,
+                                            snapshot,
+                                            day,
+                                            idx,
+                                          )
                                         }
                                         aria-label={`Reproducir ${ex.nameEs}${isRepeat ? ` (vuelta ${occurrence} de ${total})` : ""}`}
                                         className="group flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-[#18181B] transition-colors"
@@ -483,10 +496,18 @@ export default function ClientRutinasPage() {
           onOpenChange={(v) => {
             if (!v) setPlayer(null);
           }}
+          assignedRoutineId={player.assignedRoutineId}
+          dayIndex={player.dayIndex}
           routineName={player.routineName}
           dayName={player.dayName}
           exercises={player.exercises}
           startIndex={player.startIndex}
+          onCompleted={() => {
+            // Refresh assigned routines so any updated state shows up.
+            void queryClient.invalidateQueries({
+              queryKey: ["my-assigned-routines"],
+            });
+          }}
         />
       )}
     </>

@@ -41,6 +41,8 @@ import { CountdownOverlay } from "./countdown-overlay";
 import { SegmentedProgressBar } from "./segmented-progress-bar";
 import { NextExercisePreview } from "./next-exercise-preview";
 import { ExerciseListSheet } from "./exercise-list-sheet";
+import { toast } from "sonner";
+import { startSession, completeSession } from "@/app/actions/sessions";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -50,6 +52,16 @@ function formatTime(s: number): string {
   const m = Math.floor(s / 60);
   const sec = s % 60;
   return `${m}:${sec.toString().padStart(2, "0")}`;
+}
+
+function formatDurationLabel(totalSec: number): string {
+  if (totalSec < 60) return `${totalSec}s`;
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  if (m < 60) return s > 0 ? `${m}min ${s}s` : `${m}min`;
+  const h = Math.floor(m / 60);
+  const rem = m % 60;
+  return rem > 0 ? `${h}h ${rem}min` : `${h}h`;
 }
 
 function repsLabel(ex: RoutineSnapshotExercise): string {
@@ -72,10 +84,17 @@ type Phase =
 interface RoutinePlayerDialogProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  /** AssignedRoutine.id — required to persist the session in the backend. */
+  assignedRoutineId: string;
+  /** dayIndex of the routine day the client is executing (0-based). */
+  dayIndex: number;
   routineName: string;
   dayName: string;
   exercises: RoutineSnapshotExercise[];
   startIndex: number;
+  /** Fired after the routine is successfully marked as completed in the
+      backend — lets the parent invalidate any queries / refresh state. */
+  onCompleted?: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -85,10 +104,13 @@ interface RoutinePlayerDialogProps {
 export function RoutinePlayerDialog({
   open,
   onOpenChange,
+  assignedRoutineId,
+  dayIndex,
   routineName,
   dayName,
   exercises,
   startIndex,
+  onCompleted,
 }: RoutinePlayerDialogProps) {
   const [currentIndex, setCurrentIndex] = React.useState(startIndex);
   const [currentSet, setCurrentSet] = React.useState(1);
@@ -97,6 +119,14 @@ export function RoutinePlayerDialog({
   const [isPaused, setIsPaused] = React.useState(false);
   const [showList, setShowList] = React.useState(false);
   const [muted, setMutedState] = React.useState(false);
+
+  // ── Backend session tracking ──────────────────────────────────────────────
+  // A WorkoutSession is created in the DB when the client taps Comenzar (phase
+  // first transitions out of "ready") and marked COMPLETED when phase reaches
+  // "done". Refs avoid double-firing in React StrictMode / re-renders.
+  const sessionIdRef = React.useRef<string | null>(null);
+  const sessionStartedRef = React.useRef(false);
+  const sessionCompletedRef = React.useRef(false);
 
   const current = exercises[currentIndex] ?? null;
   const next = exercises[currentIndex + 1] ?? null;
@@ -172,6 +202,11 @@ export function RoutinePlayerDialog({
     setCurrentSet(1);
     setRestSecondsLeft(0);
     setIsPaused(false);
+    // Reset session tracking — a fresh open should start a new WorkoutSession
+    // when the client taps Comenzar.
+    sessionIdRef.current = null;
+    sessionStartedRef.current = false;
+    sessionCompletedRef.current = false;
     // Always show "Ready to Go" first when the dialog opens, regardless of
     // which exercise was tapped. This is the "preparación" screen.
     setPhase({ kind: "ready" });
@@ -197,6 +232,37 @@ export function RoutinePlayerDialog({
       advanceFromRest(phase.nextAdvance);
     }
   }, [phase, currentIndex, exercises]);
+
+  // Persist the routine as COMPLETED in the backend when phase reaches "done".
+  // Ref guard prevents double-fire under StrictMode re-renders.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: onCompleted is captured by closure; intentionally not in deps
+  React.useEffect(() => {
+    if (phase.kind !== "done") return;
+    if (sessionCompletedRef.current) return;
+    sessionCompletedRef.current = true;
+
+    const sid = sessionIdRef.current;
+    if (!sid) {
+      // No session was created (startSession failed or client closed before
+      // tapping Comenzar somehow). Nothing to persist — but still call
+      // onCompleted so the parent can refresh local state.
+      onCompleted?.();
+      return;
+    }
+
+    void completeSession({ sessionId: sid }).then((result) => {
+      if (result.ok) {
+        toast.success("¡Rutina guardada!", {
+          description: `Duración: ${formatDurationLabel(result.value.totalDurationSec)}`,
+        });
+        onCompleted?.();
+      } else {
+        toast.error(
+          `La rutina terminó pero no se pudo guardar: ${result.error.message ?? "intentá más tarde"}`,
+        );
+      }
+    });
+  }, [phase]);
 
   // Rest countdown tick — only runs during rest phase. Critical: clear the
   // interval AND set the completed guard before calling advanceFromRest, so
@@ -248,6 +314,24 @@ export function RoutinePlayerDialog({
   function handleStartReady() {
     setPhase({ kind: "prep", reason: "first" });
     prep.start(3);
+
+    // Fire-and-forget: create the backend WorkoutSession. We don't block the
+    // UI on the network — the countdown starts immediately. If startSession
+    // fails we surface a toast but the local routine still runs (the user
+    // can re-attempt next time).
+    if (!sessionStartedRef.current) {
+      sessionStartedRef.current = true;
+      void startSession({ assignedRoutineId, dayIndex }).then((result) => {
+        if (result.ok) {
+          sessionIdRef.current = result.value.sessionId;
+        } else {
+          sessionStartedRef.current = false;
+          toast.error(
+            `No se pudo registrar la sesión: ${result.error.message ?? "intentá de nuevo"}`,
+          );
+        }
+      });
+    }
   }
 
   function handleDone() {
