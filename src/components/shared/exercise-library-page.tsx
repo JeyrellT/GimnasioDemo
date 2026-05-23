@@ -324,7 +324,21 @@ export function ExerciseLibraryPage({
                           loading="lazy"
                         />
                       ) : (
-                        <Dumbbell className="h-10 w-10 text-[#3F3F46]" strokeWidth={1.5} />
+                        // Rich fallback: bigger icon + muscle label so the card
+                        // does not look "empty". Color hints which muscle group
+                        // is primary (matches the pill below).
+                        <div className="flex flex-col items-center justify-center gap-2 px-3 text-center">
+                          <Dumbbell
+                            className={`h-12 w-12 ${muscleColor.text} opacity-60`}
+                            strokeWidth={1.4}
+                            aria-hidden="true"
+                          />
+                          {muscleLabel && (
+                            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#52525B]">
+                              {muscleLabel}
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
 

@@ -91,12 +91,29 @@ export function ExerciseThumbnail({
   }, [thumbnailUrl, gifUrl, slug, nameEn]);
 
   const src = index < chain.length ? chain[index] : null;
-  const iconCls = iconSize === "sm" ? "h-5 w-5" : "h-8 w-8";
+  const iconCls = iconSize === "sm" ? "h-5 w-5" : "h-10 w-10";
 
   if (!src) {
+    // Derive 2-letter initials from the exercise name as a richer fallback in
+    // md size. Keeps the small "sm" icon-only look for tight list rows.
+    const initials =
+      iconSize === "md"
+        ? alt
+            .split(/\s+/)
+            .filter((w) => w.length > 0)
+            .slice(0, 2)
+            .map((w) => w[0]?.toUpperCase() ?? "")
+            .join("")
+            .slice(0, 2)
+        : null;
     return (
-      <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br from-[#27272A] to-[#18181B] ${className}`}>
-        <Dumbbell className={`${iconCls} text-[#3F3F46]`} strokeWidth={1.5} aria-hidden="true" />
+      <div className={`flex h-full w-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-[#27272A] to-[#18181B] ${className}`}>
+        <Dumbbell className={`${iconCls} text-[#52525B]`} strokeWidth={1.5} aria-hidden="true" />
+        {initials && initials.length > 0 && (
+          <span className="text-[10px] font-bold tracking-[0.12em] text-[#52525B]">
+            {initials}
+          </span>
+        )}
       </div>
     );
   }
