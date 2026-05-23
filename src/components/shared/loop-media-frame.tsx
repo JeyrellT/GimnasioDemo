@@ -41,27 +41,29 @@ export interface LoopMediaFrameProps {
    */
   onVideoError?: () => void;
   /**
-   * Cap superior del ratio height/width del contenedor. Cuando el video
-   * original es más alto que el cap (típico 9:16 grabado en celular), el
-   * contenedor se limita al cap y el video se recorta por abajo con
-   * `object-cover object-top` (la acción del ejercicio suele estar en
-   * la parte superior — torso/brazos). Sin cap (default) el contenedor
-   * adopta el ratio nativo del video.
+   * Cap SUPERIOR del ratio height/width. Si el video nativo excede este cap
+   * (típico 9:16 grabado con celular, ratio ≈ 1.78), el contenedor se queda
+   * en el cap y el video se recorta con object-cover.
    *
-   * Ejemplo: `maxAspectRatio={1}` cap a cuadrado.
+   * Ejemplo: `maxAspectRatio={1.25}` permite hasta 4:5 (vertical leve).
    */
   maxAspectRatio?: number;
   /**
+   * Cap INFERIOR del ratio height/width. Si el video nativo es más ancho
+   * que este cap (típico 16:9 horizontal, ratio ≈ 0.56), el contenedor se
+   * estira hasta este cap y el video se recorta a los lados con
+   * object-cover. Útil para que los horizontales no se vean mucho más
+   * chatos que los cuadrados en listas uniformes.
+   *
+   * Ejemplo: `minAspectRatio={1}` fuerza horizontales a verse cuadrados.
+   */
+  minAspectRatio?: number;
+  /**
    * Ratio height/width FIJO del contenedor (no se adapta al video).
-   * El contenedor siempre tiene este ratio y el <video> se centra adentro
-   * con object-cover. Útil para listas donde todos los items deben verse
-   * uniformes (el player de rutinas del cliente, por ejemplo).
+   * El contenedor siempre tiene este ratio. Si se pasa, anula el
+   * comportamiento dinámico y min/maxAspectRatio se ignoran.
    *
-   * Si se pasa, anula el comportamiento dinámico (skeleton padding-bottom
-   * mientras carga metadata) y `maxAspectRatio` se ignora. iframe usa el
-   * mismo ratio fijo (en vez del 16:9 default).
-   *
-   * Ejemplo: `fixedAspectRatio={1}` para cuadrado uniforme.
+   * Ejemplo: `fixedAspectRatio={1}` cuadrado uniforme.
    */
   fixedAspectRatio?: number;
 }
@@ -71,6 +73,7 @@ export function LoopMediaFrame({
   title,
   onVideoError,
   maxAspectRatio,
+  minAspectRatio,
   fixedAspectRatio,
 }: LoopMediaFrameProps) {
   const [internalError, setInternalError] = React.useState(false);
@@ -175,16 +178,37 @@ export function LoopMediaFrame({
   const usesFixedRatio = typeof fixedAspectRatio === "number";
   const dimsKnown = dims.w > 0 && dims.h > 0;
   const nativeRatio = dimsKnown ? dims.h / dims.w : 0;
-  const displayRatio =
-    dimsKnown && typeof maxAspectRatio === "number"
-      ? Math.min(nativeRatio, maxAspectRatio)
-      : nativeRatio;
+  // Clamp del ratio nativo a [minAspectRatio, maxAspectRatio]. Las dos props
+  // son independientes y opcionales — el clamp ignora la que no se pasó.
+  // Resultado: la disposición queda en un rango angosto (uniformidad) pero
+  // los verticales/horizontales mantienen una pista de su forma original
+  // dentro de ese rango.
+  let displayRatio = nativeRatio;
+  if (dimsKnown && typeof maxAspectRatio === "number") {
+    displayRatio = Math.min(displayRatio, maxAspectRatio);
+  }
+  if (dimsKnown && typeof minAspectRatio === "number") {
+    displayRatio = Math.max(displayRatio, minAspectRatio);
+  }
+
+  // Placeholder antes de que cargue metadata: si hay min/max, usamos el min
+  // como base (asume que la mayoría de videos llegarán al min o por encima);
+  // sino el aspect-video clásico. Esto evita un salto de altura grande al
+  // pasar de placeholder a video real.
+  const placeholderRatio: number | null =
+    typeof minAspectRatio === "number"
+      ? minAspectRatio
+      : typeof maxAspectRatio === "number"
+        ? Math.min(maxAspectRatio, 9 / 16)
+        : null;
 
   const containerStyle: React.CSSProperties | undefined = usesFixedRatio
     ? { aspectRatio: `1 / ${fixedAspectRatio}` }
     : dimsKnown
       ? { height: 0, paddingBottom: `${displayRatio * 100}%` }
-      : undefined;
+      : placeholderRatio !== null
+        ? { aspectRatio: `1 / ${placeholderRatio}` }
+        : undefined;
 
   // En modo fixed, el skeleton solo se ve mientras carga metadata (no afecta
   // el layout). En modo dinámico, el skeleton ocupa el placeholder 16:9.
@@ -199,10 +223,11 @@ export function LoopMediaFrame({
       className="relative w-full overflow-hidden rounded-xl border border-[#3F3F46] bg-[#09090B]"
       style={containerStyle}
     >
-      {/* Placeholder 16:9 — solo en modo dinámico antes de conocer el ratio.
-          Necesita ser un elemento separado porque Tailwind aspect-video en el
-          div padre conflictúa con el paddingBottom inline del post-meta. */}
-      {!usesFixedRatio && !dimsKnown && (
+      {/* Placeholder antes de conocer el ratio real:
+          - Si hay min/maxAspectRatio: el padre ya aplica `aspectRatio` inline
+            (placeholderRatio arriba) y este div solo sirve para ocupar el alto.
+          - Sin ninguno: caemos al aspect-video clásico (16:9). */}
+      {!usesFixedRatio && !dimsKnown && placeholderRatio === null && (
         <div className="aspect-video w-full" aria-hidden="true" />
       )}
 

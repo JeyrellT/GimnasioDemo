@@ -578,28 +578,37 @@ export function RoutinePlayerDialog({
                   has a video URL; otherwise the static thumbnail. Overlays
                   (countdown 3-2-1, rest timer) sit on top via absolute.
 
-                  UNIFORMIDAD: el container está limitado a max-w-xs (320px)
-                  y centrado con mx-auto. Plus fixedAspectRatio={1} en el
-                  LoopMediaFrame → todos los videos del player tienen el
-                  MISMO tamaño y disposición sin importar el ratio nativo
-                  del video (vertical, cuadrado, horizontal). El thumbnail
-                  fallback usa aspect-square w-full para el mismo size.
+                  UNIFORMIDAD CASI TOTAL (con licencia para verticales):
+                  - max-w-xs (320px) + mx-auto → ancho fijo y centrado.
+                  - minAspectRatio={1} fuerza a los horizontales 16:9 a verse
+                    al menos cuadrados (no se ven mucho más chatos que el
+                    resto). object-cover recorta los costados.
+                  - maxAspectRatio={1.25} permite a los verticales 9:16
+                    estirarse hasta 4:5 (~25% más altos que cuadrado). Más
+                    allá de eso se recortan arriba/abajo. Esto es la
+                    "licencia para que los verticales se excedan un poco".
+                  - Resultado: 320×320 (cuadrado) → 320×400 (vertical leve).
+                    Rango angosto, casi-uniforme, sin recortes agresivos
+                    cuando el video es vertical (que es la mayoría grabada
+                    con celular).
 
-                  TAMAÑO: 320×320 en mobile-large / desktop es deliberadamente
-                  "un poco más pequeño" que cubrir todo el ancho del modal
-                  (que es max-w-md = 448px). Deja respiro para los controles
-                  abajo (Listo / Anterior / Siguiente). En mobile pequeño
-                  (<320px viewport) el modal es full-width y max-w-xs no
-                  aplica más allá del ancho disponible. */}
+                  TAMAÑO: deliberadamente menor que el ancho del modal
+                  (max-w-md = 448px) para dejar respiro a los controles. */}
               <div className="relative mx-auto w-full max-w-xs overflow-hidden bg-[#09090B]">
                 {videoLoopEmbed && !videoError ? (
                   <LoopMediaFrame
                     embed={videoLoopEmbed}
                     title={`Demostración: ${current.nameEs}`}
                     onVideoError={() => setVideoError(true)}
-                    fixedAspectRatio={1}
+                    minAspectRatio={1}
+                    maxAspectRatio={1.25}
                   />
                 ) : (
+                  // aspect-square = el "punto base" del rango [1, 1.25].
+                  // Cuando un ejercicio sin video aparece entre videos
+                  // verticales (que pueden ser 1.25), hay un pequeño salto
+                  // de altura — aceptable porque sin video casi nunca pasa
+                  // en una rutina bien armada.
                   <div className="aspect-square w-full">
                     <ExerciseThumbnail
                       thumbnailUrl={current.thumbnailUrl}
