@@ -26,6 +26,10 @@ import {
 } from "@/lib/demo/settings-store";
 
 const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+// Gated on storage being configured. Flip the env var to "true" in Railway
+// once R2_* vars are set so the upload UI re-appears without a code deploy.
+const AVATAR_UPLOAD_ENABLED =
+  process.env.NEXT_PUBLIC_AVATAR_UPLOAD_ENABLED === "true";
 
 const ReferralSection = lazy(
   () => import("@/app/(app)/perfil/_components/referral-section"),
@@ -156,40 +160,44 @@ export default function PerfilPage() {
           )}
         </button>
 
-        <div className="space-y-2">
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-primary hover:underline disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
-          >
-            {uploading && (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-            )}
-            {uploading
-              ? "Subiendo..."
-              : avatarUrl
-                ? "Cambiar foto"
-                : "Subir foto"}
-          </button>
-          {avatarUrl && !uploading && (
+        {AVATAR_UPLOAD_ENABLED && (
+          <div className="space-y-2">
             <button
               type="button"
-              className="flex items-center gap-1 text-xs text-neutral-500 hover:text-danger transition-colors"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-primary hover:underline disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
             >
-              <Trash2 className="h-3 w-3" />
-              Eliminar
+              {uploading && (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              )}
+              {uploading
+                ? "Subiendo..."
+                : avatarUrl
+                  ? "Cambiar foto"
+                  : "Subir foto"}
             </button>
-          )}
-        </div>
+            {avatarUrl && !uploading && (
+              <button
+                type="button"
+                className="flex items-center gap-1 text-xs text-neutral-500 hover:text-danger transition-colors"
+              >
+                <Trash2 className="h-3 w-3" />
+                Eliminar
+              </button>
+            )}
+          </div>
+        )}
 
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          className="hidden"
-          onChange={handleAvatarChange}
-        />
+        {AVATAR_UPLOAD_ENABLED && (
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+            onChange={handleAvatarChange}
+          />
+        )}
       </div>
 
       {/* Zoom modal — opens on avatar click when a photo exists */}
