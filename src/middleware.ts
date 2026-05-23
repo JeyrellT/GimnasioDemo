@@ -68,13 +68,19 @@ const MUST_CHANGE_PASSWORD_EXEMPT: string[] = [
 /**
  * Path prefixes that are rate-limited per IP.
  * These are sensitive auth/account endpoints where brute-force is a concern.
- * Limit: AUTH_LIMIT_PER_MIN requests per minute (default 5, env: RATE_LIMIT_AUTH_PER_MIN).
+ * Limit: AUTH_LIMIT_PER_MIN requests per minute (default 20, env: RATE_LIMIT_AUTH_PER_MIN).
+ *
+ * Intentionally NOT rate-limited:
+ *   - /ingresar (the HTML page) — every refresh / direct hit counted toward
+ *     the budget before, causing legitimate users to get 429 just navigating.
+ *   - /api/auth/session — NextAuth polls this from every authenticated page
+ *     to keep the session warm. Throttling it breaks normal usage.
+ * Only the actual POST endpoints (signin / callback) plus /registrarse stay
+ * gated, which is where brute-force / abuse actually happens.
  */
 const RATE_LIMITED_PREFIXES: string[] = [
   "/api/auth/signin",
   "/api/auth/callback",
-  "/api/auth/session",
-  "/ingresar",
   "/registrarse",
   "/api/lpdp",
 ];
