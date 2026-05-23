@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
   Loader2,
@@ -130,10 +129,7 @@ function SessionSetRow({ session, setNumber }: SessionSetRowProps) {
       : null;
 
   return (
-    <Link
-      href={`/client/sesion/${session.id}`}
-      className="ml-3 flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-900/60 px-3 py-2.5 transition-colors hover:border-neutral-700"
-    >
+    <div className="ml-3 flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-900/60 px-3 py-2.5">
       <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-brand-primary/40 bg-brand-primary/10 text-[11px] font-semibold tabular-nums text-brand-primary">
         {setNumber}
       </span>
@@ -153,7 +149,7 @@ function SessionSetRow({ session, setNumber }: SessionSetRowProps) {
           </span>
         )}
       </div>
-    </Link>
+    </div>
   );
 }
 
