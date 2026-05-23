@@ -497,11 +497,17 @@ export function RoutinePlayerDialog({
                   (countdown 3-2-1, rest timer) sit on top via absolute. */}
               <div className="relative w-full overflow-hidden bg-[#09090B]">
                 {videoLoopEmbed && !videoError ? (
+                  // maxAspectRatio={9/16} caps the player container to a
+                  // landscape 16:9 box. Portrait videos (typical 9:16 from
+                  // phones) get cropped with object-top — showing the upper
+                  // body where the exercise action lives. This keeps every
+                  // exercise the same compact height during a routine, no
+                  // matter if the coach uploaded landscape or portrait.
                   <LoopMediaFrame
                     embed={videoLoopEmbed}
                     title={`Demostración: ${current.nameEs}`}
                     onVideoError={() => setVideoError(true)}
-                    maxAspectRatio={16 / 9}
+                    maxAspectRatio={9 / 16}
                   />
                 ) : (
                   // aspect-video keeps the fallback frame consistent with the
