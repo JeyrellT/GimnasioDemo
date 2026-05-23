@@ -59,16 +59,16 @@ export function ReadyToGoScreen({
   return (
     <div className="flex flex-col bg-[#18181B]">
       {/* Media */}
-      <div className="relative w-full bg-[#09090B]">
+      <div className="relative w-full overflow-hidden bg-[#09090B]">
         {videoLoopEmbed && !videoError ? (
           <LoopMediaFrame
             embed={videoLoopEmbed}
             title={`Demostración: ${firstExercise.nameEs}`}
             onVideoError={() => setVideoError(true)}
-            maxAspectRatio={9 / 16}
+            maxAspectRatio={16 / 9}
           />
         ) : (
-          <div className="aspect-video w-full">
+          <div className="aspect-[3/4] w-full">
             <ExerciseThumbnail
               thumbnailUrl={firstExercise.thumbnailUrl}
               gifUrl={firstExercise.gifUrl}
