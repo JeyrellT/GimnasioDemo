@@ -576,25 +576,30 @@ export function RoutinePlayerDialog({
             <>
               {/* Media — GIF-mode (autoplay + loop + muted) when the exercise
                   has a video URL; otherwise the static thumbnail. Overlays
-                  (countdown 3-2-1, rest timer) sit on top via absolute. */}
-              <div className="relative w-full overflow-hidden bg-[#09090B]">
+                  (countdown 3-2-1, rest timer) sit on top via absolute.
+
+                  UNIFORMIDAD: el container está limitado a max-w-xs (320px)
+                  y centrado con mx-auto. Plus fixedAspectRatio={1} en el
+                  LoopMediaFrame → todos los videos del player tienen el
+                  MISMO tamaño y disposición sin importar el ratio nativo
+                  del video (vertical, cuadrado, horizontal). El thumbnail
+                  fallback usa aspect-square w-full para el mismo size.
+
+                  TAMAÑO: 320×320 en mobile-large / desktop es deliberadamente
+                  "un poco más pequeño" que cubrir todo el ancho del modal
+                  (que es max-w-md = 448px). Deja respiro para los controles
+                  abajo (Listo / Anterior / Siguiente). En mobile pequeño
+                  (<320px viewport) el modal es full-width y max-w-xs no
+                  aplica más allá del ancho disponible. */}
+              <div className="relative mx-auto w-full max-w-xs overflow-hidden bg-[#09090B]">
                 {videoLoopEmbed && !videoError ? (
-                  // maxAspectRatio={1} caps the frame to a square (1:1) so
-                  // portrait videos show torso + arms (the actual exercise
-                  // body) instead of just the head. Frame is roughly 384×384
-                  // on mobile — bigger than landscape 16:9 (~216px tall) but
-                  // still compact enough to keep Listo / Anterior / Siguiente
-                  // visible without scrolling.
                   <LoopMediaFrame
                     embed={videoLoopEmbed}
                     title={`Demostración: ${current.nameEs}`}
                     onVideoError={() => setVideoError(true)}
-                    maxAspectRatio={1}
+                    fixedAspectRatio={1}
                   />
                 ) : (
-                  // aspect-square matches the new maxAspectRatio={1} used for
-                  // videos. Exercises without media render the same size as
-                  // those with video — no layout shift between exercises.
                   <div className="aspect-square w-full">
                     <ExerciseThumbnail
                       thumbnailUrl={current.thumbnailUrl}

@@ -37,7 +37,7 @@ export interface LoopMediaFrameProps {
   /**
    * Llamado cuando el <video> dispara onError (proxy 404/415).
    * Si se provee, el componente no muestra su placeholder interno.
-   * Si no se provee, muestra "Video no disponible".
+   * Si no se provide, muestra "Video no disponible".
    */
   onVideoError?: () => void;
   /**
@@ -51,6 +51,19 @@ export interface LoopMediaFrameProps {
    * Ejemplo: `maxAspectRatio={1}` cap a cuadrado.
    */
   maxAspectRatio?: number;
+  /**
+   * Ratio height/width FIJO del contenedor (no se adapta al video).
+   * El contenedor siempre tiene este ratio y el <video> se centra adentro
+   * con object-cover. Útil para listas donde todos los items deben verse
+   * uniformes (el player de rutinas del cliente, por ejemplo).
+   *
+   * Si se pasa, anula el comportamiento dinámico (skeleton padding-bottom
+   * mientras carga metadata) y `maxAspectRatio` se ignora. iframe usa el
+   * mismo ratio fijo (en vez del 16:9 default).
+   *
+   * Ejemplo: `fixedAspectRatio={1}` para cuadrado uniforme.
+   */
+  fixedAspectRatio?: number;
 }
 
 export function LoopMediaFrame({
@@ -58,6 +71,7 @@ export function LoopMediaFrame({
   title,
   onVideoError,
   maxAspectRatio,
+  fixedAspectRatio,
 }: LoopMediaFrameProps) {
   const [internalError, setInternalError] = React.useState(false);
   // { w: 0, h: 0 } → metadata todavía no cargó (skeleton visible).
@@ -78,8 +92,29 @@ export function LoopMediaFrame({
   }
 
   // ── iframe (YouTube / Vimeo) ─────────────────────────────────────────────
-  // Metadata cross-origin no disponible → 16:9 fijo. Sin skeleton.
+  // Metadata cross-origin no disponible. Si el padre pidió fixedAspectRatio,
+  // se respeta (uniformidad en listas). Sino, 16:9 default. El video dentro
+  // del iframe sigue siendo nativo del servicio (YouTube renderiza 16:9 con
+  // barras si el container es cuadrado).
   if (embed.kind === "iframe") {
+    if (typeof fixedAspectRatio === "number") {
+      return (
+        <div
+          className="w-full overflow-hidden rounded-xl border border-[#3F3F46] bg-[#09090B]"
+          style={{ aspectRatio: `1 / ${fixedAspectRatio}` }}
+        >
+          <iframe
+            key={embed.src}
+            src={embed.src}
+            title={title}
+            className="h-full w-full"
+            allow={IFRAME_ALLOW}
+            allowFullScreen
+            loading="lazy"
+          />
+        </div>
+      );
+    }
     return (
       <div className="aspect-video w-full overflow-hidden rounded-xl border border-[#3F3F46] bg-[#09090B]">
         <iframe
@@ -98,7 +133,18 @@ export function LoopMediaFrame({
   // ── video (Drive proxy) — error interno ─────────────────────────────────
   if (internalError) {
     return (
-      <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#3F3F46] bg-[#09090B] px-6 text-center">
+      <div
+        className="flex w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#3F3F46] bg-[#09090B] px-6 text-center"
+        style={
+          typeof fixedAspectRatio === "number"
+            ? { aspectRatio: `1 / ${fixedAspectRatio}` }
+            : undefined
+        }
+      >
+        {/* Tailwind aspect-video fallback cuando NO hay fixedAspectRatio. */}
+        {typeof fixedAspectRatio !== "number" && (
+          <div className="aspect-video w-full" aria-hidden="true" />
+        )}
         <PlayCircle
           className="h-10 w-10 text-[#52525B]"
           strokeWidth={1.5}
@@ -111,22 +157,22 @@ export function LoopMediaFrame({
 
   // ── video (Drive proxy) — normal ────────────────────────────────────────
   //
-  // Un único <video> siempre presente (no duplicamos la carga).
-  // La estrategia:
-  //   1. Antes de onLoadedMetadata (dims.w === 0):
-  //      - El contenedor usa aspect-video (16:9 placeholder).
-  //      - Un skeleton absolute/inset-0 cubre el video (que está invisible).
-  //   2. Después de onLoadedMetadata:
-  //      - El contenedor pasa a "padding-bottom intrinsic ratio" con el ratio
-  //        real del video via style inline, opcionalmente capeado por
-  //        maxAspectRatio (height/width).
-  //      - Si el ratio nativo > cap, el contenedor se queda en el cap y el
-  //        video se recorta por abajo (object-top) — la acción del ejercicio
-  //        suele estar arriba.
-  //      - El skeleton desaparece.
+  // Dos modos de operación:
+  //
+  // A) fixedAspectRatio set (uniformidad en listas):
+  //    - El contenedor usa ESTE ratio desde el primer render.
+  //    - El video con object-cover llena el contenedor (puede recortar si el
+  //      video original tiene otro ratio).
+  //    - Skeleton: aparece sobre el video hasta que metadata cargue.
+  //
+  // B) fixedAspectRatio NO set (default — adopta ratio nativo):
+  //    - Mientras dims.w === 0: contenedor aspect-video (16:9 placeholder).
+  //    - Después de onLoadedMetadata: contenedor con padding-bottom intrinsic
+  //      ratio, opcionalmente capeado por maxAspectRatio (height/width).
   //
   // No usamos useLayoutEffect ni hacks de SSR.
 
+  const usesFixedRatio = typeof fixedAspectRatio === "number";
   const dimsKnown = dims.w > 0 && dims.h > 0;
   const nativeRatio = dimsKnown ? dims.h / dims.w : 0;
   const displayRatio =
@@ -134,27 +180,33 @@ export function LoopMediaFrame({
       ? Math.min(nativeRatio, maxAspectRatio)
       : nativeRatio;
 
+  const containerStyle: React.CSSProperties | undefined = usesFixedRatio
+    ? { aspectRatio: `1 / ${fixedAspectRatio}` }
+    : dimsKnown
+      ? { height: 0, paddingBottom: `${displayRatio * 100}%` }
+      : undefined;
+
+  // En modo fixed, el skeleton solo se ve mientras carga metadata (no afecta
+  // el layout). En modo dinámico, el skeleton ocupa el placeholder 16:9.
+  const showSkeleton = !dimsKnown && !internalError;
+  // En modo fixed el video siempre visible (object-cover llena el container
+  // aunque la metadata no haya cargado — el skeleton se superpone). En modo
+  // dinámico el video se oculta hasta que conocemos el ratio nativo.
+  const videoHidden = !usesFixedRatio && !dimsKnown;
+
   return (
     <div
       className="relative w-full overflow-hidden rounded-xl border border-[#3F3F46] bg-[#09090B]"
-      style={
-        dimsKnown
-          ? // Padding-bottom trick: height:0 + paddingBottom = ratio%.
-            // El video absolute/inset-0 llena exactamente ese espacio.
-            { height: 0, paddingBottom: `${displayRatio * 100}%` }
-          : // Placeholder 16:9 mientras carga. aspect-video lo maneja via Tailwind.
-            undefined
-      }
+      style={containerStyle}
     >
-      {/* Placeholder 16:9 — solo presente antes de conocer el ratio real.
+      {/* Placeholder 16:9 — solo en modo dinámico antes de conocer el ratio.
           Necesita ser un elemento separado porque Tailwind aspect-video en el
-          div padre conflictúa con el paddingBottom inline del estado post-meta. */}
-      {!dimsKnown && (
+          div padre conflictúa con el paddingBottom inline del post-meta. */}
+      {!usesFixedRatio && !dimsKnown && (
         <div className="aspect-video w-full" aria-hidden="true" />
       )}
 
-      {/* Skeleton: visible mientras no haya dimensiones reales. */}
-      {!dimsKnown && (
+      {showSkeleton && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#09090B]">
           <Loader2
             className="h-8 w-8 animate-spin text-[#52525B]"
@@ -168,12 +220,10 @@ export function LoopMediaFrame({
         key={embed.src}
         src={embed.src}
         // object-cover llena el contenedor. Cuando el contenedor matchea el
-        // ratio nativo no hay recorte. Cuando hay cap activo, object-center
-        // muestra la franja central del video (típicamente torso + brazos —
-        // donde está la acción de la mayoría de ejercicios), en lugar de
-        // anclarse a la parte superior y recortar las piernas.
+        // ratio nativo no hay recorte. Cuando hay cap activo o fixed activo,
+        // object-center muestra la franja central del video.
         className="absolute inset-0 h-full w-full object-cover object-center"
-        style={dimsKnown ? undefined : { visibility: "hidden" }}
+        style={videoHidden ? { visibility: "hidden" } : undefined}
         autoPlay
         loop
         muted
