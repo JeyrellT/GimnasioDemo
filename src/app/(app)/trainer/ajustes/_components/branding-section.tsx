@@ -109,26 +109,35 @@ function LogoUploadSlot({
 
       <div className="flex items-center gap-3">
         {/* Current logo preview */}
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-[#3F3F46] bg-[#09090B] overflow-hidden">
-          {currentSrc ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={currentSrc}
-              alt={label}
-              className="h-full w-full object-contain p-1"
-            />
-          ) : (
-            fallback
+        <div className="flex flex-col items-center gap-1">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-[#3F3F46] bg-[#09090B] overflow-hidden">
+            {currentSrc ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={currentSrc}
+                alt={label}
+                className="h-full w-full object-contain p-1"
+              />
+            ) : (
+              fallback
+            )}
+          </div>
+          {!currentSrc && (
+            <span className="text-[9px] font-medium text-brand-primary">
+              Original BL
+            </span>
           )}
         </div>
 
-        {/* Original logo preview (only when custom is set) */}
+        {/* Original BL preview (only when custom is set) */}
         {currentSrc && (
-          <div className="flex flex-col items-center gap-0.5">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-dashed border-[#3F3F46]/60 bg-[#09090B]/60 overflow-hidden opacity-50">
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-dashed border-brand-primary/30 bg-[#09090B] overflow-hidden">
               {fallback}
             </div>
-            <span className="text-[9px] text-[#52525B]">Original</span>
+            <span className="text-[9px] font-medium text-brand-primary/70">
+              Original BL
+            </span>
           </div>
         )}
 
@@ -387,7 +396,7 @@ export function BrandingSection() {
             currentSrc={branding.logoFull}
             onUpload={(dataUrl) => update({ logoFull: dataUrl })}
             onClear={() => update({ logoFull: null })}
-            fallback={<BlacklineFitnessLogo variant="full" size={28} />}
+            fallback={<BlacklineFitnessLogo variant="full" size={32} />}
           />
 
           <LogoUploadSlot
@@ -396,7 +405,7 @@ export function BrandingSection() {
             currentSrc={branding.logoMark}
             onUpload={(dataUrl) => update({ logoMark: dataUrl })}
             onClear={() => update({ logoMark: null })}
-            fallback={<BlacklineFitnessLogo variant="mark" size={28} />}
+            fallback={<BlacklineFitnessLogo variant="mark" size={36} />}
           />
         </div>
 
