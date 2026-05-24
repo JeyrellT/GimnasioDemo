@@ -56,9 +56,6 @@ function BlacklineFitnessMark({
   size?: number;
   className?: string;
 }) {
-  // Unique IDs to avoid SVG gradient collisions when multiple instances render
-  const uid = "blm";
-
   return (
     <svg
       width={size}
@@ -69,42 +66,13 @@ function BlacklineFitnessMark({
       className={className}
       aria-hidden="true"
     >
-      <defs>
-        {/* Background circle gradient — visible on dark UIs */}
-        <radialGradient id={`${uid}-bg`} cx="0.4" cy="0.35" r="0.7">
-          <stop offset="0%" stopColor="#404048" />
-          <stop offset="100%" stopColor="#28282E" />
-        </radialGradient>
+      {/* ── Background circle — LIGHT GRAY for max contrast on dark UIs ── */}
+      <circle cx="32" cy="32" r="31" fill="#3A3A42" />
+      <circle cx="32" cy="32" r="31" fill="none" stroke="#62626C" strokeWidth="1.5" />
 
-        {/* Bright silver gradient for the B — high contrast */}
-        <linearGradient id={`${uid}-silver`} x1="0" y1="0" x2="0.5" y2="1">
-          <stop offset="0%" stopColor="#FFFFFF" />
-          <stop offset="50%" stopColor="#E0E0E0" />
-          <stop offset="100%" stopColor="#B0BEC5" />
-        </linearGradient>
-
-        {/* Bright blue gradient for the L */}
-        <linearGradient id={`${uid}-blue`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#93C5FD" />
-          <stop offset="50%" stopColor="#60A5FA" />
-          <stop offset="100%" stopColor="#3B82F6" />
-        </linearGradient>
-
-        {/* Bright white-blue for lightning bolt */}
-        <linearGradient id={`${uid}-bolt`} x1="0.5" y1="0" x2="0.5" y2="1">
-          <stop offset="0%" stopColor="#FFFFFF" />
-          <stop offset="50%" stopColor="#93C5FD" />
-          <stop offset="100%" stopColor="#60A5FA" />
-        </linearGradient>
-      </defs>
-
-      {/* ── Background circle ────────────────────────────────────────── */}
-      <circle cx="32" cy="32" r="31" fill={`url(#${uid}-bg)`} />
-      <circle cx="32" cy="32" r="31" fill="none" stroke="#52525B" strokeWidth="1" />
-
-      {/* Letters group — shifted down 6px to center vertically in circle */}
+      {/* Letters group — centered in circle */}
       <g transform="translate(1, 6)">
-        {/* ── B letter — angular, bold, metallic ───────────────────── */}
+        {/* ── B letter — SOLID WHITE for maximum visibility ─────── */}
         <path
           d={[
             "M 6 6",
@@ -118,7 +86,7 @@ function BlacklineFitnessMark({
             "L 6 45",
             "Z",
           ].join(" ")}
-          fill={`url(#${uid}-silver)`}
+          fill="#FFFFFF"
         />
         {/* Top bowl cutout */}
         <path
@@ -131,7 +99,7 @@ function BlacklineFitnessMark({
             "L 14 21",
             "Z",
           ].join(" ")}
-          fill="#2C2C32"
+          fill="#3A3A42"
         />
         {/* Bottom bowl cutout */}
         <path
@@ -144,10 +112,10 @@ function BlacklineFitnessMark({
             "L 14 39",
             "Z",
           ].join(" ")}
-          fill="#2C2C32"
+          fill="#3A3A42"
         />
 
-        {/* ── L letter — bold, angular, electric blue ──────────────── */}
+        {/* ── L letter — SOLID BRIGHT BLUE for max visibility ──── */}
         <path
           d={[
             "M 33 6",
@@ -158,10 +126,10 @@ function BlacklineFitnessMark({
             "L 33 45",
             "Z",
           ].join(" ")}
-          fill={`url(#${uid}-blue)`}
+          fill="#3B82F6"
         />
 
-        {/* ── Lightning bolt ───────────────────────────────────────── */}
+        {/* ── Lightning bolt — PURE WHITE, thick ───────────────── */}
         <path
           d={[
             "M 37 2",
@@ -169,8 +137,8 @@ function BlacklineFitnessMark({
             "L 36 21",
             "L 29 50",
           ].join(" ")}
-          stroke={`url(#${uid}-bolt)`}
-          strokeWidth="2.5"
+          stroke="#FFFFFF"
+          strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"
           fill="none"
