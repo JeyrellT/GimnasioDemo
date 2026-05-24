@@ -87,6 +87,8 @@ export function CircumferencesTable({
   className,
 }: CircumferencesTableProps) {
   const c = data.circumferences;
+  const deltaFor = (zone: string) =>
+    data.circumferenceDeltas[zone as keyof typeof data.circumferenceDeltas]?.deltaCm ?? null;
 
   const groups: CircGroup[] = [
     {
@@ -130,6 +132,12 @@ export function CircumferencesTable({
       ],
     },
   ];
+
+  for (const group of groups) {
+    for (const row of group.rows) {
+      row.delta = deltaFor(row.zone);
+    }
+  }
 
   return (
     <div

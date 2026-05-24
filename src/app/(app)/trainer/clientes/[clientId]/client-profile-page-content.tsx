@@ -31,6 +31,7 @@ import type {
   ActiveRoutine as FrontendRoutine,
   RecentSession as FrontendSession,
   DeltaAlignment,
+  BodyZone as FrontendBodyZone,
 } from "@/types/profile";
 import type {
   ClientProfileDetail as BackendDetail,
@@ -101,6 +102,75 @@ function alignDelta(
 // -----------------------------------------------------------------------------
 // Adapter: backend → frontend
 // -----------------------------------------------------------------------------
+
+type ProfileMetricPoint = BackendDetail["metricsHistory"][number];
+type NumericMetricKey = {
+  [K in keyof ProfileMetricPoint]: ProfileMetricPoint[K] extends number | null ? K : never;
+}[keyof ProfileMetricPoint];
+
+const CIRCUMFERENCE_FIELDS: Array<{
+  zone: FrontendBodyZone;
+  label: string;
+  field: NumericMetricKey;
+  fallbackField?: NumericMetricKey;
+}> = [
+  { zone: "neck", label: "Cuello", field: "neckCm" },
+  { zone: "shoulderL", label: "Hombro izq.", field: "shoulderLeftCm" },
+  { zone: "shoulderR", label: "Hombro der.", field: "shoulderRightCm" },
+  { zone: "chest", label: "Pecho", field: "chestCm" },
+  { zone: "bicepL", label: "Biceps izq.", field: "bicepLeftCm", fallbackField: "armCm" },
+  { zone: "bicepR", label: "Biceps der.", field: "bicepRightCm", fallbackField: "armCm" },
+  { zone: "forearmL", label: "Antebrazo izq.", field: "forearmLeftCm" },
+  { zone: "forearmR", label: "Antebrazo der.", field: "forearmRightCm" },
+  { zone: "abdomen", label: "Abdomen", field: "abdomenCm" },
+  { zone: "waist", label: "Cintura", field: "waistCm" },
+  { zone: "hip", label: "Cadera", field: "hipCm" },
+  { zone: "gluteL", label: "Gluteo izq.", field: "gluteLeftCm" },
+  { zone: "gluteR", label: "Gluteo der.", field: "gluteRightCm" },
+  { zone: "quadL", label: "Cuadriceps izq.", field: "thighLeftCm", fallbackField: "thighCm" },
+  { zone: "quadR", label: "Cuadriceps der.", field: "thighRightCm", fallbackField: "thighCm" },
+  { zone: "hamstringL", label: "Isquios izq.", field: "hamstringLeftCm" },
+  { zone: "hamstringR", label: "Isquios der.", field: "hamstringRightCm" },
+  { zone: "calfL", label: "Gemelo izq.", field: "calfLeftCm" },
+  { zone: "calfR", label: "Gemelo der.", field: "calfRightCm" },
+];
+
+function metricValue(
+  point: ProfileMetricPoint,
+  field: NumericMetricKey,
+  fallbackField?: NumericMetricKey,
+) {
+  return point[field] ?? (fallbackField ? point[fallbackField] : null);
+}
+
+function buildMetricDeltaSeries(
+  history: ProfileMetricPoint[],
+  field: NumericMetricKey,
+  fallbackField?: NumericMetricKey,
+) {
+  const values = history
+    .map((point) => {
+      const value = metricValue(point, field, fallbackField);
+      return value === null
+        ? null
+        : { value, recordedAt: new Date(point.recordedAt) };
+    })
+    .filter((point): point is { value: number; recordedAt: Date } => point !== null);
+
+  if (values.length === 0) return null;
+
+  const latest = values.at(-1);
+  if (!latest) return null;
+  const previous = values.at(-2) ?? null;
+  const delta = previous ? latest.value - previous.value : 0;
+
+  return {
+    value: latest.value,
+    delta: Math.round(delta * 10) / 10,
+    measuredAt: latest.recordedAt,
+    trendSparkline: values.slice(-12).map((point) => point.value),
+  };
+}
 
 // Note: the backend BodyZone "glute" is a single-column that covers both sides
 // in the current MVP schema. We map it to "gluteL" for freshness; "gluteR" is
@@ -176,6 +246,37 @@ function adaptToFrontend(b: BackendDetail): FrontendDetail {
     .map((m) => (m.muscleMassKg !== null ? Number(m.muscleMassKg) : null))
     .filter((n): n is number => n !== null);
 
+  const circumferenceDeltas: FrontendComposition["circumferenceDeltas"] = {};
+  for (const config of CIRCUMFERENCE_FIELDS) {
+    const series = buildMetricDeltaSeries(
+      b.metricsHistory ?? [],
+      config.field,
+      config.fallbackField,
+    );
+    if (!series) continue;
+    circumferenceDeltas[config.zone] = {
+      valueCm: series.value,
+      deltaCm: series.delta,
+      measuredAt: series.measuredAt,
+      trendSparkline: series.trendSparkline,
+    };
+  }
+
+  const measurementHighlights = CIRCUMFERENCE_FIELDS
+    .map((config) => {
+      const series = circumferenceDeltas[config.zone];
+      return series
+        ? {
+            zone: config.zone,
+            label: config.label,
+            ...series,
+          }
+        : null;
+    })
+    .filter((item): item is FrontendDetail["measurementHighlights"][number] => item !== null)
+    .sort((a, b) => Math.abs(b.deltaCm) - Math.abs(a.deltaCm))
+    .slice(0, 4);
+
   const composition: FrontendComposition = {
     weightKg: bc.weightKg,
     bodyFatPct: bc.bodyFatPct,
@@ -185,6 +286,7 @@ function adaptToFrontend(b: BackendDetail): FrontendDetail {
     bmi: bc.bmi
       ?? computeBmi(bc.weightKg, b.profile?.heightCm ?? null),
     circumferences: { ...(bc.circumferences ?? {}) } as FrontendComposition["circumferences"],
+    circumferenceDeltas,
     freshness,
   };
 
@@ -240,6 +342,7 @@ function adaptToFrontend(b: BackendDetail): FrontendDetail {
     weightHistory12w,
     bodyFatHistory12w,
     muscleMassHistory12w,
+    measurementHighlights,
   };
 }
 
@@ -322,14 +425,17 @@ function viewForBodyZone(bodyZone: BodyZone): "front" | "back" | null {
 function buildBodyMapZones(bc: FrontendComposition): Record<BodyZone, ZoneData | null> {
   const c = bc.circumferences;
   const f = bc.freshness;
+  const d = bc.circumferenceDeltas;
 
   function zone(value: number | null, freshKey: keyof typeof f): ZoneData | null {
     if (value === null) return null;
     const fr = f[freshKey];
+    const delta = d[freshKey];
     return {
       valueCm: value,
-      deltaCm: 0,
-      measuredAt: fr?.lastMeasuredAt ?? new Date(0),
+      deltaCm: delta?.deltaCm ?? 0,
+      measuredAt: delta?.measuredAt ?? fr?.lastMeasuredAt ?? new Date(0),
+      trendSparkline: delta?.trendSparkline,
     };
   }
 
@@ -671,6 +777,7 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
           weightHistory={profile.weightHistory12w}
           bodyFatHistory={profile.bodyFatHistory12w}
           muscleMassHistory={profile.muscleMassHistory12w}
+          measurementHighlights={profile.measurementHighlights}
           initialNotes={backendDetail.trainerNotes ?? ""}
         />
       </section>
