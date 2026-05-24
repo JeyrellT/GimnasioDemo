@@ -22,8 +22,7 @@ import {
 } from "@/lib/media/video-url";
 import { LoopMediaFrame } from "@/components/shared/loop-media-frame";
 
-const COMPACT_MEDIA_FRAME_CLASS =
-  "mx-auto w-full max-w-[180px] sm:max-w-[220px] lg:max-w-[240px]";
+const COMPACT_MEDIA_FRAME_CLASS = "mx-auto w-full";
 const TRAINER_PREVIEW_MAX_ASPECT_RATIO = 0.72;
 
 export interface ExerciseMediaGalleryProps {
@@ -100,6 +99,7 @@ export function ExerciseMediaGallery({
               embed={savedLoopEmbed}
               title="Video del ejercicio"
               maxAspectRatio={TRAINER_PREVIEW_MAX_ASPECT_RATIO}
+              fit="contain"
             />
           ) : (
             <ExternalLinkCard url={mediaUrl} />

@@ -230,6 +230,25 @@ export default function ExerciseDetailClient({ exerciseId, basePath = "/trainer/
               secondaryMuscles={exercise.secondaryMuscles as MuscleGroup[]}
             />
           </div>
+          {/* Text labels for muscles */}
+          <div className="mt-3 space-y-1.5 border-t border-[#27272A] pt-3">
+            <div className="flex items-center gap-2">
+              <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-brand-primary" />
+              <span className="text-xs text-[#A1A1AA]">
+                <span className="font-medium text-[#FAFAFA]">Primario:</span>{" "}
+                {MUSCLE_LABELS[exercise.primaryMuscle] ?? exercise.primaryMuscle}
+              </span>
+            </div>
+            {(exercise.secondaryMuscles ?? []).length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-[#F59E0B]" />
+                <span className="text-xs text-[#A1A1AA]">
+                  <span className="font-medium text-[#FAFAFA]">Secundario:</span>{" "}
+                  {(exercise.secondaryMuscles as string[]).map((m) => MUSCLE_LABELS[m] ?? m).join(", ")}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right column (desktop): media + instructions. Appears first on mobile. */}
