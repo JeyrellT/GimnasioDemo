@@ -70,60 +70,37 @@ function BlacklineFitnessMark({
       aria-hidden="true"
     >
       <defs>
-        {/* Background circle gradient */}
+        {/* Background circle gradient — visible on dark UIs */}
         <radialGradient id={`${uid}-bg`} cx="0.4" cy="0.35" r="0.7">
-          <stop offset="0%" stopColor="#2A2A2E" />
-          <stop offset="100%" stopColor="#111113" />
+          <stop offset="0%" stopColor="#404048" />
+          <stop offset="100%" stopColor="#28282E" />
         </radialGradient>
 
-        {/* Metallic silver gradient for the B */}
-        <linearGradient id={`${uid}-silver`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#ECEFF1" />
-          <stop offset="35%" stopColor="#FFFFFF" />
-          <stop offset="65%" stopColor="#B0BEC5" />
-          <stop offset="100%" stopColor="#78909C" />
+        {/* Bright silver gradient for the B — high contrast */}
+        <linearGradient id={`${uid}-silver`} x1="0" y1="0" x2="0.5" y2="1">
+          <stop offset="0%" stopColor="#FFFFFF" />
+          <stop offset="50%" stopColor="#E0E0E0" />
+          <stop offset="100%" stopColor="#B0BEC5" />
         </linearGradient>
 
-        {/* Electric blue gradient for the L */}
+        {/* Bright blue gradient for the L */}
         <linearGradient id={`${uid}-blue`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#60A5FA" />
-          <stop offset="50%" stopColor="#3B82F6" />
-          <stop offset="100%" stopColor="#1D4ED8" />
-        </linearGradient>
-
-        {/* Bright blue for lightning bolt */}
-        <linearGradient id={`${uid}-bolt`} x1="0.5" y1="0" x2="0.5" y2="1">
           <stop offset="0%" stopColor="#93C5FD" />
           <stop offset="50%" stopColor="#60A5FA" />
           <stop offset="100%" stopColor="#3B82F6" />
         </linearGradient>
 
-        {/* Blue glow filter */}
-        <filter id={`${uid}-glow`} x="-40%" y="-40%" width="180%" height="180%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
-          <feFlood floodColor="#3B82F6" floodOpacity="0.6" result="color" />
-          <feComposite in="color" in2="blur" operator="in" result="glow" />
-          <feMerge>
-            <feMergeNode in="glow" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-
-        {/* Subtle outer glow for the bolt */}
-        <filter id={`${uid}-bolt-glow`} x="-60%" y="-20%" width="220%" height="140%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur" />
-          <feFlood floodColor="#60A5FA" floodOpacity="0.8" result="color" />
-          <feComposite in="color" in2="blur" operator="in" result="glow" />
-          <feMerge>
-            <feMergeNode in="glow" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
+        {/* Bright white-blue for lightning bolt */}
+        <linearGradient id={`${uid}-bolt`} x1="0.5" y1="0" x2="0.5" y2="1">
+          <stop offset="0%" stopColor="#FFFFFF" />
+          <stop offset="50%" stopColor="#93C5FD" />
+          <stop offset="100%" stopColor="#60A5FA" />
+        </linearGradient>
       </defs>
 
       {/* ── Background circle ────────────────────────────────────────── */}
       <circle cx="32" cy="32" r="31" fill={`url(#${uid}-bg)`} />
-      <circle cx="32" cy="32" r="31" fill="none" stroke="#3F3F46" strokeWidth="0.8" opacity="0.5" />
+      <circle cx="32" cy="32" r="31" fill="none" stroke="#52525B" strokeWidth="1" />
 
       {/* Letters group — shifted down 6px to center vertically in circle */}
       <g transform="translate(1, 6)">
@@ -154,7 +131,7 @@ function BlacklineFitnessMark({
             "L 14 21",
             "Z",
           ].join(" ")}
-          fill="#1A1A1D"
+          fill="#2C2C32"
         />
         {/* Bottom bowl cutout */}
         <path
@@ -167,7 +144,7 @@ function BlacklineFitnessMark({
             "L 14 39",
             "Z",
           ].join(" ")}
-          fill="#1A1A1D"
+          fill="#2C2C32"
         />
 
         {/* ── L letter — bold, angular, electric blue ──────────────── */}
@@ -182,7 +159,6 @@ function BlacklineFitnessMark({
             "Z",
           ].join(" ")}
           fill={`url(#${uid}-blue)`}
-          filter={`url(#${uid}-glow)`}
         />
 
         {/* ── Lightning bolt ───────────────────────────────────────── */}
@@ -194,27 +170,10 @@ function BlacklineFitnessMark({
             "L 29 50",
           ].join(" ")}
           stroke={`url(#${uid}-bolt)`}
-          strokeWidth="2"
+          strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
           fill="none"
-          filter={`url(#${uid}-bolt-glow)`}
-        />
-
-        {/* Lightning bolt bright core */}
-        <path
-          d={[
-            "M 37 2",
-            "L 31 24",
-            "L 36 21",
-            "L 29 50",
-          ].join(" ")}
-          stroke="white"
-          strokeWidth="0.7"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-          opacity="0.6"
         />
       </g>
     </svg>
