@@ -63,7 +63,7 @@ function BlacklineFitnessMark({
       viewBox="0 0 64 64"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={className}
+      className={cn("shrink-0", className)}
       aria-hidden="true"
     >
       {/* ── Background circle — LIGHT GRAY for max contrast on dark UIs ── */}

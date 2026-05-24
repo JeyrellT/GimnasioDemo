@@ -60,7 +60,7 @@ export function Topbar({ user, userName, userAvatarUrl }: TopbarProps) {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={mobileLogoSrc} alt={logoAlt} className="max-h-8 max-w-[92px] shrink-0 object-contain" />
           ) : (
-            <BlacklineFitnessLogo variant="mark" size={26} />
+            <BlacklineFitnessLogo variant="mark" size={34} />
           )}
           {branding.businessName && (
             <span className="min-w-0 max-w-[145px] truncate text-sm font-bold text-text-primary">
@@ -73,7 +73,7 @@ export function Topbar({ user, userName, userAvatarUrl }: TopbarProps) {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={desktopLogoSrc} alt={logoAlt} className="h-8 max-w-[160px] object-contain" />
           ) : (
-            <BlacklineFitnessLogo variant={branding.businessName ? "mark" : "full"} size={28} />
+            <BlacklineFitnessLogo variant={branding.businessName ? "mark" : "full"} size={34} />
           )}
           {branding.businessName && (
             <span className="text-sm font-bold text-text-primary tracking-wide truncate max-w-[180px]">
