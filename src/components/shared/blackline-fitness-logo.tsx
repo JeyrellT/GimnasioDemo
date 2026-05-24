@@ -70,6 +70,12 @@ function BlacklineFitnessMark({
       aria-hidden="true"
     >
       <defs>
+        {/* Background circle gradient */}
+        <radialGradient id={`${uid}-bg`} cx="0.4" cy="0.35" r="0.7">
+          <stop offset="0%" stopColor="#2A2A2E" />
+          <stop offset="100%" stopColor="#111113" />
+        </radialGradient>
+
         {/* Metallic silver gradient for the B */}
         <linearGradient id={`${uid}-silver`} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#ECEFF1" />
@@ -115,96 +121,102 @@ function BlacklineFitnessMark({
         </filter>
       </defs>
 
-      {/* ── B letter — angular, bold, metallic ───────────────────────── */}
-      {/* Outer shape: aggressive sporty B with sharp diagonal cuts */}
-      <path
-        d={[
-          "M 6 6",      // top-left
-          "L 24 6",     // top edge
-          "L 29 10",    // top-right diagonal cut (top bowl)
-          "L 29 19",    // right side of top bowl
-          "L 25 23",    // notch inward at waist
-          "L 30 27",    // kick out to bottom bowl (wider)
-          "L 30 40",    // right side of bottom bowl
-          "L 25 45",    // bottom-right diagonal cut
-          "L 6 45",     // bottom edge
-          "Z",          // close
-        ].join(" ")}
-        fill={`url(#${uid}-silver)`}
-      />
-      {/* Top bowl cutout */}
-      <path
-        d={[
-          "M 14 13",
-          "L 22 13",
-          "L 24 15",
-          "L 24 19",
-          "L 22 21",
-          "L 14 21",
-          "Z",
-        ].join(" ")}
-        fill="#18181B"
-      />
-      {/* Bottom bowl cutout */}
-      <path
-        d={[
-          "M 14 28",
-          "L 23 28",
-          "L 25 30",
-          "L 25 37",
-          "L 23 39",
-          "L 14 39",
-          "Z",
-        ].join(" ")}
-        fill="#18181B"
-      />
+      {/* ── Background circle ────────────────────────────────────────── */}
+      <circle cx="32" cy="32" r="31" fill={`url(#${uid}-bg)`} />
+      <circle cx="32" cy="32" r="31" fill="none" stroke="#3F3F46" strokeWidth="0.8" opacity="0.5" />
 
-      {/* ── L letter — bold, angular, electric blue ──────────────────── */}
-      <path
-        d={[
-          "M 33 6",     // top-left of vertical stroke
-          "L 40 6",     // top-right
-          "L 40 39",    // down the vertical
-          "L 56 39",    // horizontal foot extends right
-          "L 56 45",    // foot bottom-right (with diagonal)
-          "L 33 45",    // foot bottom-left connects to vertical
-          "Z",
-        ].join(" ")}
-        fill={`url(#${uid}-blue)`}
-        filter={`url(#${uid}-glow)`}
-      />
+      {/* Letters group — shifted down 6px to center vertically in circle */}
+      <g transform="translate(1, 6)">
+        {/* ── B letter — angular, bold, metallic ───────────────────── */}
+        <path
+          d={[
+            "M 6 6",
+            "L 24 6",
+            "L 29 10",
+            "L 29 19",
+            "L 25 23",
+            "L 30 27",
+            "L 30 40",
+            "L 25 45",
+            "L 6 45",
+            "Z",
+          ].join(" ")}
+          fill={`url(#${uid}-silver)`}
+        />
+        {/* Top bowl cutout */}
+        <path
+          d={[
+            "M 14 13",
+            "L 22 13",
+            "L 24 15",
+            "L 24 19",
+            "L 22 21",
+            "L 14 21",
+            "Z",
+          ].join(" ")}
+          fill="#1A1A1D"
+        />
+        {/* Bottom bowl cutout */}
+        <path
+          d={[
+            "M 14 28",
+            "L 23 28",
+            "L 25 30",
+            "L 25 37",
+            "L 23 39",
+            "L 14 39",
+            "Z",
+          ].join(" ")}
+          fill="#1A1A1D"
+        />
 
-      {/* ── Lightning bolt — sharp zigzag between B and L ────────────── */}
-      <path
-        d={[
-          "M 37 2",     // top start
-          "L 31 24",    // strike down-left
-          "L 36 21",    // jag back right
-          "L 29 50",    // strike down to bottom
-        ].join(" ")}
-        stroke={`url(#${uid}-bolt)`}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-        filter={`url(#${uid}-bolt-glow)`}
-      />
+        {/* ── L letter — bold, angular, electric blue ──────────────── */}
+        <path
+          d={[
+            "M 33 6",
+            "L 40 6",
+            "L 40 39",
+            "L 54 39",
+            "L 54 45",
+            "L 33 45",
+            "Z",
+          ].join(" ")}
+          fill={`url(#${uid}-blue)`}
+          filter={`url(#${uid}-glow)`}
+        />
 
-      {/* Lightning bolt bright core (thinner, white-ish) */}
-      <path
-        d={[
-          "M 37 2",
-          "L 31 24",
-          "L 36 21",
-          "L 29 50",
-        ].join(" ")}
-        stroke="white"
-        strokeWidth="0.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-        opacity="0.6"
-      />
+        {/* ── Lightning bolt ───────────────────────────────────────── */}
+        <path
+          d={[
+            "M 37 2",
+            "L 31 24",
+            "L 36 21",
+            "L 29 50",
+          ].join(" ")}
+          stroke={`url(#${uid}-bolt)`}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+          filter={`url(#${uid}-bolt-glow)`}
+        />
+
+        {/* Lightning bolt bright core */}
+        <path
+          d={[
+            "M 37 2",
+            "L 31 24",
+            "L 36 21",
+            "L 29 50",
+          ].join(" ")}
+          stroke="white"
+          strokeWidth="0.7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+          opacity="0.6"
+        />
+      </g>
     </svg>
   );
 }
