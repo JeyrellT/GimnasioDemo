@@ -108,6 +108,7 @@ function LogoUploadSlot({
       <p className="text-[11px] text-[#52525B]">{hint}</p>
 
       <div className="flex items-center gap-3">
+        {/* Current logo preview */}
         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-[#3F3F46] bg-[#09090B] overflow-hidden">
           {currentSrc ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -121,7 +122,17 @@ function LogoUploadSlot({
           )}
         </div>
 
-        <div className="flex gap-2">
+        {/* Original logo preview (only when custom is set) */}
+        {currentSrc && (
+          <div className="flex flex-col items-center gap-0.5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-dashed border-[#3F3F46]/60 bg-[#09090B]/60 overflow-hidden opacity-50">
+              {fallback}
+            </div>
+            <span className="text-[9px] text-[#52525B]">Original</span>
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-2">
           <input
             ref={inputRef}
             type="file"
@@ -143,11 +154,14 @@ function LogoUploadSlot({
             <Button
               variant="outline"
               size="sm"
-              onClick={onClear}
-              className="border-[#EF4444]/30 text-[#EF4444] hover:bg-[#EF4444]/10"
+              onClick={() => {
+                onClear();
+                toast.success("Logo restaurado al original de Blackline.");
+              }}
+              className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10"
             >
-              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-              Quitar
+              <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+              Restaurar original
             </Button>
           )}
         </div>
@@ -386,13 +400,27 @@ export function BrandingSection() {
           />
         </div>
 
-        {/* Reset all branding */}
-        <div className="pt-2 border-t border-[#27272A]">
+        {/* Restore logos only / reset all */}
+        <div className="pt-2 border-t border-[#27272A] flex flex-wrap gap-2">
+          {(branding.logoFull || branding.logoMark) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                update({ logoFull: null, logoMark: null });
+                toast.success("Logos restaurados a los originales de Blackline.");
+              }}
+              className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10"
+            >
+              <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+              Restaurar logos originales
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
             onClick={() => {
-              if (!confirm("Restaurar todo el branding a los valores por defecto?")) return;
+              if (!confirm("Restaurar todo el branding a los valores por defecto? (colores, logos y nombre)")) return;
               reset();
               setLocalName("");
               toast.success("Branding restaurado a valores por defecto.");
@@ -400,7 +428,7 @@ export function BrandingSection() {
             className="border-[#3F3F46] text-[#A1A1AA] hover:text-[#FAFAFA]"
           >
             <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-            Restaurar valores por defecto
+            Restaurar todo por defecto
           </Button>
         </div>
       </SectionCard>
