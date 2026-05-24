@@ -36,6 +36,12 @@ import {
 } from "./branding-store";
 import { getPaletteById, type PaletteColors } from "./presets";
 import { useAuth } from "@/components/providers/auth-provider";
+import {
+  getClientTrainerBranding,
+  getTrainerBranding,
+  updateTrainerBranding,
+  type TrainerBrandingData,
+} from "@/app/actions/branding";
 
 // -----------------------------------------------------------------------------
 // Context shape
@@ -57,6 +63,24 @@ const BrandingContext = createContext<BrandingContextValue>({
   reset: () => {},
 });
 
+function normalizeBranding(data: TrainerBrandingData): TrainerBranding {
+  return {
+    paletteId: data.paletteId || DEFAULT_BRANDING.paletteId,
+    businessName: data.businessName ?? "",
+    logoFull: data.logoFull ?? null,
+    logoMark: data.logoMark ?? null,
+  };
+}
+
+function isDefaultBranding(branding: TrainerBranding): boolean {
+  return (
+    branding.paletteId === DEFAULT_BRANDING.paletteId &&
+    branding.businessName === DEFAULT_BRANDING.businessName &&
+    branding.logoFull === DEFAULT_BRANDING.logoFull &&
+    branding.logoMark === DEFAULT_BRANDING.logoMark
+  );
+}
+
 // -----------------------------------------------------------------------------
 // Provider
 // -----------------------------------------------------------------------------
@@ -64,21 +88,55 @@ const BrandingContext = createContext<BrandingContextValue>({
 export function BrandingProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const isTrainer = user?.role === "TRAINER";
+  const isClient = user?.role === "CLIENT";
 
-  // Branding is a trainer-only feature. Clients/admins always see defaults
-  // to avoid leaking a coach's localStorage into another role's UI in the
-  // same browser. We start from DEFAULT_BRANDING and only hydrate from
-  // localStorage when the authenticated user is a trainer.
   const [branding, setBranding] = useState<TrainerBranding>(DEFAULT_BRANDING);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (isTrainer) {
-      setBranding(getBranding());
-    } else {
+    if (typeof window === "undefined" || !user) return;
+    let cancelled = false;
+
+    async function loadBranding() {
+      if (isTrainer) {
+        const cached = getBranding();
+        setBranding(cached);
+
+        const result = await getTrainerBranding();
+        if (cancelled) return;
+
+        if (!result.ok) return;
+
+        const remote = normalizeBranding(result.value);
+        const shouldSeedRemote = isDefaultBranding(remote) && !isDefaultBranding(cached);
+
+        if (shouldSeedRemote) {
+          void updateTrainerBranding(cached);
+          setBranding(cached);
+          return;
+        }
+
+        setBranding(remote);
+        saveBranding(remote);
+        return;
+      }
+
+      if (isClient) {
+        setBranding(DEFAULT_BRANDING);
+        const result = await getClientTrainerBranding();
+        if (cancelled) return;
+        setBranding(result.ok ? normalizeBranding(result.value) : DEFAULT_BRANDING);
+        return;
+      }
+
       setBranding(DEFAULT_BRANDING);
     }
-  }, [isTrainer]);
+
+    void loadBranding();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, isTrainer, isClient]);
 
   const palette = useMemo(
     () => getPaletteById(branding.paletteId),
@@ -121,12 +179,11 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
 
   const update = useCallback(
     (patch: Partial<TrainerBranding>) => {
-      // Guard: only trainers can mutate branding. Prevents accidental writes
-      // from a non-trainer session polluting the shared localStorage key.
       if (!isTrainer) return;
       setBranding((prev) => {
         const next = { ...prev, ...patch };
         saveBranding(next);
+        void updateTrainerBranding(next);
         return next;
       });
     },
@@ -137,6 +194,7 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     if (!isTrainer) return;
     setBranding(DEFAULT_BRANDING);
     saveBranding(DEFAULT_BRANDING);
+    void updateTrainerBranding(DEFAULT_BRANDING);
   }, [isTrainer]);
 
   const value = useMemo<BrandingContextValue>(

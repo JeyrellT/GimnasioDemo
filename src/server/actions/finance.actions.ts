@@ -1213,8 +1213,13 @@ export async function getFinanceDashboardData(
       }),
       prisma.locationVisit.findMany({
         where: { trainerUserId: trainer.id, visitedAt: { gte: from, lt: to } },
-        select: { id: true, locationId: true, computedCostCRC: true, visitedAt: true },
-        include: { location: { select: { name: true } } },
+        select: {
+          id: true,
+          locationId: true,
+          computedCostCRC: true,
+          visitedAt: true,
+          location: { select: { name: true } },
+        },
       }),
       // Prior month — charges
       prisma.clientCharge.findMany({

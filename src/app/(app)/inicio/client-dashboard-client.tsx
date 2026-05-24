@@ -58,6 +58,16 @@ function daysBetween(a: Date | string, b: Date | string): number {
   return Math.round(Math.abs(db - da) / (1000 * 60 * 60 * 24));
 }
 
+function isSameLocalDay(a: Date | string | null, b: Date): boolean {
+  if (!a) return false;
+  const d = new Date(a);
+  return (
+    d.getFullYear() === b.getFullYear() &&
+    d.getMonth() === b.getMonth() &&
+    d.getDate() === b.getDate()
+  );
+}
+
 function formatDelta(delta: number, unit: string): string {
   const sign = delta > 0 ? "+" : "";
   return `${sign}${delta.toFixed(1)} ${unit}`;
@@ -194,6 +204,12 @@ export function ClientDashboardClient({ userId, name }: Props) {
   const totalCompleted = sessions.length;
   const recentSessions = sessions.slice(0, 3);
   const lastSessionAt = sessions[0]?.completedAt ?? null;
+  const activeRoutineSessions = activeRoutine
+    ? sessions.filter((session) => session.assignedRoutineId === activeRoutine.id)
+    : [];
+  const activeRoutineCompletedToday = activeRoutineSessions.some((session) =>
+    isSameLocalDay(session.completedAt, new Date()),
+  );
 
   // Latest + previous body metric for comparative deltas.
   const latest = metrics[0] ?? null;
@@ -218,27 +234,62 @@ export function ClientDashboardClient({ userId, name }: Props) {
       {/* Active routine */}
       {activeRoutine && (
         <Link
-          href="/client/rutinas"
-          className="block rounded-2xl border border-neutral-800 bg-neutral-900 p-5 transition-colors hover:border-brand-primary/40"
+          href={activeRoutineCompletedToday ? "/client/progreso" : "/client/rutinas"}
+          className={[
+            "block rounded-2xl border bg-neutral-900 p-5 transition-colors",
+            activeRoutineCompletedToday
+              ? "border-[#22C55E]/35 hover:border-[#22C55E]/60"
+              : "border-neutral-800 hover:border-brand-primary/40",
+          ].join(" ")}
         >
           <div className="flex items-start justify-between">
             <div className="space-y-1">
-              <p className="text-xs font-medium text-brand-primary uppercase tracking-wider">
-                Rutina activa
+              <p
+                className={[
+                  "text-xs font-medium uppercase tracking-wider",
+                  activeRoutineCompletedToday ? "text-[#22C55E]" : "text-brand-primary",
+                ].join(" ")}
+              >
+                {activeRoutineCompletedToday ? "Rutina hecha" : "Rutina activa"}
               </p>
-              <p className="text-lg font-semibold text-neutral-100">
+              {activeRoutineCompletedToday && (
+                <>
+                  <p className="text-lg font-semibold text-neutral-100">
+                    Completada hoy
+                  </p>
+                  <p className="text-sm text-neutral-500">
+                    {activeRoutine.completedSessionCount} sesiones registradas
+                  </p>
+                </>
+              )}
+              <p className={["text-lg font-semibold text-neutral-100", activeRoutineCompletedToday ? "hidden" : ""].join(" ")}>
                 Tu rutina del día
               </p>
-              <p className="text-sm text-neutral-500">
+              <p className={["text-sm text-neutral-500", activeRoutineCompletedToday ? "hidden" : ""].join(" ")}>
                 Tocá para empezar tu sesión
               </p>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary/15">
-              <Dumbbell className="h-5 w-5 text-brand-primary" />
+            <div
+              className={[
+                "flex h-10 w-10 items-center justify-center rounded-full",
+                activeRoutineCompletedToday ? "bg-[#22C55E]/15" : "bg-brand-primary/15",
+              ].join(" ")}
+            >
+              {activeRoutineCompletedToday ? (
+                <CheckCircle2 className="h-5 w-5 text-[#22C55E]" />
+              ) : (
+                <Dumbbell className="h-5 w-5 text-brand-primary" />
+              )}
             </div>
           </div>
-          <div className="mt-3 flex items-center gap-1 text-sm font-medium text-brand-primary">
-            Ir a la sesión <ArrowRight className="h-4 w-4" />
+          <div
+            className={[
+              "mt-3 flex items-center gap-1 text-sm font-medium",
+              activeRoutineCompletedToday ? "text-[#22C55E]" : "text-brand-primary",
+            ].join(" ")}
+          >
+            {activeRoutineCompletedToday ? "Ver progreso" : "Ir a la sesión"}{" "}
+            <ArrowRight className="h-4 w-4" />
           </div>
         </Link>
       )}

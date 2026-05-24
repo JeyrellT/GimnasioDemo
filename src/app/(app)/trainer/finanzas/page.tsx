@@ -90,10 +90,12 @@ export default function FinanzasPage() {
   if (error || !payload) {
     return (
       <FinanceShell trainerName={trainerName} currentMonth={monthStr}>
-        <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-[#EF4444]/30 bg-[#EF4444]/5 p-8 text-center">
-          <div className="space-y-1">
-            <p className="text-sm font-semibold text-[#EF4444]">Error al cargar el dashboard</p>
-            <p className="text-xs text-[#71717A]">Intentá recargar la página.</p>
+        <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-[#3F3F46] bg-[#18181B]/70 p-8 text-center">
+          <div className="max-w-xs space-y-1">
+            <p className="text-sm font-semibold text-[#FAFAFA]">No hay datos todavia</p>
+            <p className="text-xs text-[#71717A]">
+              Cuando registres ingresos, gastos o visitas, el resumen aparecera aqui.
+            </p>
           </div>
         </div>
       </FinanceShell>

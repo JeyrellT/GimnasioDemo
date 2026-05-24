@@ -52,6 +52,9 @@ export interface MyAssignedRoutine {
   endsOn: Date | null;
   status: string;
   trainerNotes: string | null;
+  completedDayIndexes: number[];
+  completedSessionCount: number;
+  lastCompletedAt: Date | null;
 }
 
 export interface MySessionSummary {
@@ -379,6 +382,17 @@ export async function getMyAssignedRoutines(): Promise<ActionResult<MyAssignedRo
         status: true,
         trainerNotes: true,
         routineTemplate: { select: { trainerId: true } },
+        workoutSessions: {
+          where: {
+            status: "COMPLETED",
+            deletedAt: null,
+          },
+          select: {
+            dayIndex: true,
+            completedAt: true,
+          },
+          orderBy: { completedAt: "desc" },
+        },
       },
       orderBy: [
         { status: "asc" },
@@ -399,6 +413,15 @@ export async function getMyAssignedRoutines(): Promise<ActionResult<MyAssignedRo
         endsOn: r.endsOn,
         status: r.status,
         trainerNotes: r.trainerNotes,
+        completedDayIndexes: Array.from(
+          new Set(
+            r.workoutSessions
+              .map((session) => session.dayIndex)
+              .filter((dayIndex): dayIndex is number => dayIndex !== null),
+          ),
+        ),
+        completedSessionCount: r.workoutSessions.length,
+        lastCompletedAt: r.workoutSessions[0]?.completedAt ?? null,
       })),
     );
     return enriched;
@@ -434,6 +457,17 @@ export async function getMyActiveRoutine(): Promise<ActionResult<MyAssignedRouti
         status: true,
         trainerNotes: true,
         routineTemplate: { select: { trainerId: true } },
+        workoutSessions: {
+          where: {
+            status: "COMPLETED",
+            deletedAt: null,
+          },
+          select: {
+            dayIndex: true,
+            completedAt: true,
+          },
+          orderBy: { completedAt: "desc" },
+        },
       },
       orderBy: { assignedAt: "desc" },
     });
@@ -452,6 +486,15 @@ export async function getMyActiveRoutine(): Promise<ActionResult<MyAssignedRouti
       endsOn: row.endsOn,
       status: row.status,
       trainerNotes: row.trainerNotes,
+      completedDayIndexes: Array.from(
+        new Set(
+          row.workoutSessions
+            .map((session) => session.dayIndex)
+            .filter((dayIndex): dayIndex is number => dayIndex !== null),
+        ),
+      ),
+      completedSessionCount: row.workoutSessions.length,
+      lastCompletedAt: row.workoutSessions[0]?.completedAt ?? null,
     };
   });
 }

@@ -270,6 +270,49 @@ export async function listMetrics(
 }
 
 // =============================================================================
+// deleteClientBodyMetrics
+// Trainer-only bulk reset for a client's weight/body measurements.
+// =============================================================================
+
+export async function deleteClientBodyMetrics(
+  clientUserId: string,
+): Promise<ActionResult<{ deletedCount: number }>> {
+  return tryCatch(async () => {
+    const trainer = await requireTrainer();
+    await assertOwnsClient(trainer.id, clientUserId);
+
+    const now = new Date();
+
+    const [deleted] = await prisma.$transaction([
+      prisma.bodyMetric.updateMany({
+        where: { clientUserId, deletedAt: null },
+        data: { deletedAt: now },
+      }),
+      prisma.clientProfile.updateMany({
+        where: { userId: clientUserId, deletedAt: null },
+        data: {
+          weightKg: null,
+          lastWeightUpdate: null,
+        },
+      }),
+    ]);
+
+    await writeAuditLog(trainer.id, "BodyMetric", clientUserId, {
+      action: "BULK_DELETE",
+      deletedCount: deleted.count,
+    });
+
+    logInfo("Client body metrics deleted", {
+      actorId: trainer.id,
+      clientUserId,
+      deletedCount: deleted.count,
+    });
+
+    return { deletedCount: deleted.count };
+  });
+}
+
+// =============================================================================
 // initProgressPhotoUpload
 // Creates the DB record and returns presigned POST fields for browser-direct upload.
 // =============================================================================

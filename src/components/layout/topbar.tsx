@@ -39,6 +39,9 @@ export function Topbar({ user, userName, userAvatarUrl }: TopbarProps) {
   const { branding } = useBranding();
   const { user: authUser } = useAuth();
   const isTrainer = authUser?.role === "TRAINER";
+  const mobileLogoSrc = branding.logoMark ?? branding.logoFull;
+  const desktopLogoSrc = branding.logoFull ?? branding.logoMark;
+  const logoAlt = branding.businessName ? `Logo de ${branding.businessName}` : "Logo";
 
   return (
     <header className="relative flex h-14 items-center justify-between bg-canvas px-4 sm:px-6">
@@ -51,24 +54,24 @@ export function Topbar({ user, userName, userAvatarUrl }: TopbarProps) {
         }}
       />
 
-      <Link href="/inicio" aria-label="Ir al inicio" className="flex items-center gap-2">
-        <span className="sm:hidden flex items-center gap-1.5">
-          {branding.logoMark ? (
+      <Link href="/inicio" aria-label="Ir al inicio" className="flex min-w-0 flex-1 items-center gap-2">
+        <span className="flex min-w-0 items-center gap-2 sm:hidden">
+          {mobileLogoSrc ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={branding.logoMark} alt="Logo" className="h-7 w-7 object-contain" />
+            <img src={mobileLogoSrc} alt={logoAlt} className="max-h-8 max-w-[92px] shrink-0 object-contain" />
           ) : (
             <BlacklineFitnessLogo variant="mark" size={26} />
           )}
           {branding.businessName && (
-            <span className="text-xs font-bold text-text-primary truncate max-w-[100px]">
+            <span className="min-w-0 max-w-[145px] truncate text-sm font-bold text-text-primary">
               {branding.businessName}
             </span>
           )}
         </span>
         <span className="hidden sm:inline-flex items-center gap-2">
-          {branding.logoFull ? (
+          {desktopLogoSrc ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={branding.logoFull} alt="Logo" className="h-8 max-w-[160px] object-contain" />
+            <img src={desktopLogoSrc} alt={logoAlt} className="h-8 max-w-[160px] object-contain" />
           ) : (
             <BlacklineFitnessLogo variant={branding.businessName ? "mark" : "full"} size={28} />
           )}

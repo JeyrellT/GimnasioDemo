@@ -3,15 +3,26 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, Dumbbell, Loader2 } from "lucide-react";
+import { ChevronLeft, Dumbbell, Loader2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { getClientProfileDetail } from "@/app/actions/clients";
+import { deleteClientBodyMetrics } from "@/app/actions/metrics";
 
 import { ClientHeroCard } from "@/components/shared/client-hero-card";
 import { KpiHeroCard } from "@/components/shared/kpi-hero-card";
 import { CircumferencesTable } from "@/components/shared/circumferences-table";
 import { MeasurementSheetController } from "./_components/measurement-sheet-controller";
 import { ClientProfileTabsClient } from "./_components/client-profile-tabs";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 // Body map: usamos la versión anatómica (paths musculares detallados) que
 // reemplaza visualmente al body-map iconográfico previo manteniendo la misma
@@ -495,6 +506,8 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
   const [backendDetail, setBackendDetail] = useState<BackendDetail | null>(null);
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [bodyView, setBodyView] = useState<"front" | "back">("front");
+  const [deleteMetricsOpen, setDeleteMetricsOpen] = useState(false);
+  const [deletingMetrics, setDeletingMetrics] = useState(false);
   const openSheetWithFocus = useMeasurementSheetStore((s) => s.openWithFocus);
   const closeSheet = useMeasurementSheetStore((s) => s.close);
   // Subscribe to measurement saves so we can re-fetch profile data after recording.
@@ -573,6 +586,31 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
     openSheetWithFocus(clientId, focus);
   }
 
+  async function handleDeleteBodyMetrics() {
+    setDeletingMetrics(true);
+    const result = await deleteClientBodyMetrics(clientId);
+
+    if (!result.ok) {
+      setDeletingMetrics(false);
+      toast.error(result.error.message ?? "No se pudieron eliminar las mediciones.");
+      return;
+    }
+
+    const refreshed = await getClientProfileDetail(clientId);
+    if (latestClientIdRef.current === clientId && refreshed.ok) {
+      setBackendDetail(refreshed.value);
+      setSelectedZone(null);
+    }
+
+    setDeletingMetrics(false);
+    setDeleteMetricsOpen(false);
+    toast.success(
+      result.value.deletedCount === 1
+        ? "Medición eliminada. Ya podés registrar una nueva."
+        : `${result.value.deletedCount} mediciones eliminadas. Ya podés registrar una nueva.`,
+    );
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
@@ -598,6 +636,7 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
 
   const weightDelta = backendDetail.stats.weightDelta28d;
   const bodyFatDelta = backendDetail.stats.bodyFatDelta28d;
+  const metricsCount = backendDetail.metricsHistory.length;
 
   const kpiCards: Array<{
     label: string;
@@ -745,9 +784,29 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
             />
           </div>
           <div className="rounded-2xl border border-[rgba(63,63,70,0.7)] bg-gradient-to-b from-[#1A1A1D] to-[#18181B] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-            <h3 className="mb-5 text-xs font-bold uppercase tracking-[0.1em] text-[#71717A]">
-              Circunferencias
-            </h3>
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <h3 className="text-xs font-bold uppercase tracking-[0.1em] text-[#71717A]">
+                Circunferencias
+              </h3>
+              <button
+                type="button"
+                aria-label="Eliminar todos los pesos y medidas del cliente"
+                title={
+                  metricsCount > 0
+                    ? "Eliminar pesos y medidas"
+                    : "Sin mediciones para eliminar"
+                }
+                disabled={metricsCount === 0 || deletingMetrics}
+                onClick={() => setDeleteMetricsOpen(true)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#3F3F46] text-[#71717A] transition-colors hover:border-[#EF4444]/60 hover:bg-[#EF4444]/10 hover:text-[#EF4444] focus-visible:outline-2 focus-visible:outline-[#EF4444] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {deletingMetrics ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                )}
+              </button>
+            </div>
             <CircumferencesTable
               data={bc}
               selectedZone={selectedZone}
@@ -781,6 +840,45 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
           initialNotes={backendDetail.trainerNotes ?? ""}
         />
       </section>
+
+      <Dialog open={deleteMetricsOpen} onOpenChange={setDeleteMetricsOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Eliminar pesos y medidas</DialogTitle>
+            <DialogDescription className="text-sm text-[#A1A1AA]">
+              Esto borrará del perfil de {profile.user.name} todo el historial de peso,
+              grasa, masa muscular y circunferencias. Después podés registrar una
+              nueva medición y será tomada como el nuevo punto de partida.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeleteMetricsOpen(false)}
+              disabled={deletingMetrics}
+              className="border-[#3F3F46] text-[#A1A1AA] hover:border-brand-primary"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={handleDeleteBodyMetrics}
+              disabled={deletingMetrics}
+              className="bg-[#EF4444] text-white hover:bg-[#DC2626] disabled:opacity-50"
+            >
+              {deletingMetrics ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                  Eliminando...
+                </>
+              ) : (
+                "Eliminar todo"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

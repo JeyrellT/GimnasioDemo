@@ -10,6 +10,7 @@ import {
   ChevronUp,
   CalendarDays,
   Play,
+  CheckCircle2,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ExerciseThumbnail } from "@/components/shared/exercise-thumbnail";
@@ -17,6 +18,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { getMyAssignedRoutines } from "@/app/actions/client-portal";
 import { needsMedicalPrompt } from "@/app/actions/medical-conditions";
 import { needsParqPrompt } from "@/app/actions/clients";
+import { cn } from "@/lib/utils";
 import { MedicalConditionsPrompt } from "@/components/forms/medical-conditions-prompt";
 import { ParqClientPrompt } from "@/components/forms/parq-client-prompt";
 import { RoutinePlayerDialog } from "./_components/routine-player-dialog";
@@ -259,6 +261,7 @@ export default function ClientRutinasPage() {
             const isActive = assigned.status === "ACTIVE";
             const isExpanded = expandedRoutine === assigned.id;
             const days: RoutineSnapshotDay[] = snapshot?.days ?? [];
+            const completedDays = new Set(assigned.completedDayIndexes ?? []);
 
             return (
               <div
@@ -317,6 +320,11 @@ export default function ClientRutinasPage() {
                             <span>{snapshot.durationWeeks} semanas</span>
                           </>
                         )}
+                        {assigned.completedSessionCount > 0 && (
+                          <span className="text-[#22C55E]">
+                            {assigned.completedSessionCount} hechas
+                          </span>
+                        )}
                         <span className="flex items-center gap-1">
                           <CalendarDays className="h-3 w-3" />
                           {new Date(assigned.startsOn).toLocaleDateString(
@@ -344,11 +352,17 @@ export default function ClientRutinasPage() {
                     {days.map((day: RoutineSnapshotDay) => {
                       const dayKey = `${assigned.id}-${day.dayIndex}`;
                       const dayOpen = expandedDay === dayKey;
+                      const dayCompleted = completedDays.has(day.dayIndex);
 
                       return (
                         <div
                           key={dayKey}
-                          className="rounded-lg border border-[#3F3F46]/60 bg-[#09090B]/50 overflow-hidden"
+                          className={cn(
+                            "overflow-hidden rounded-lg border bg-[#09090B]/50",
+                            dayCompleted
+                              ? "border-[#22C55E]/35"
+                              : "border-[#3F3F46]/60",
+                          )}
                         >
                           <button
                             type="button"
@@ -359,12 +373,23 @@ export default function ClientRutinasPage() {
                           >
                             <div className="flex items-center gap-2.5">
                               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-primary/10 text-xs font-bold text-brand-primary">
-                                {day.dayIndex + 1}
+                                {dayCompleted ? (
+                                  <CheckCircle2 className="h-4 w-4 text-[#22C55E]" aria-hidden="true" />
+                                ) : (
+                                  day.dayIndex + 1
+                                )}
                               </div>
                               <div>
-                                <p className="text-sm font-medium text-[#FAFAFA]">
-                                  {day.name}
-                                </p>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <p className="text-sm font-medium text-[#FAFAFA]">
+                                    {day.name}
+                                  </p>
+                                  {dayCompleted && (
+                                    <span className="rounded-full bg-[#22C55E]/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#22C55E]">
+                                      Hecha
+                                    </span>
+                                  )}
+                                </div>
                                 <p className="text-[11px] text-[#52525B]">
                                   {day.exercises.length} ejercicios
                                 </p>
@@ -506,6 +531,12 @@ export default function ClientRutinasPage() {
             // Refresh assigned routines so any updated state shows up.
             void queryClient.invalidateQueries({
               queryKey: ["my-assigned-routines"],
+            });
+            void queryClient.invalidateQueries({
+              queryKey: ["client-active-routine"],
+            });
+            void queryClient.invalidateQueries({
+              queryKey: ["client-sessions-history"],
             });
           }}
         />
