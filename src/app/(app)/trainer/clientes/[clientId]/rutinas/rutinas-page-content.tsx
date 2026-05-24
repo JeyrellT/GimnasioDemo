@@ -2,11 +2,20 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Dumbbell, Loader2 } from "lucide-react";
-import { db } from "@/lib/offline/db";
+import { AlertCircle, ArrowLeft, Dumbbell, Loader2 } from "lucide-react";
+import { getClientAssignedRoutines } from "@/app/actions/routines";
 import { formatDateCR } from "@/lib/utils";
-import type { DemoAssignedRoutineRow } from "@/lib/offline/db";
 import type { RoutineSnapshot } from "@/types/domain";
+
+type AssignedRoutineRow = {
+  id: string;
+  status: string;
+  startsOn: Date;
+  endsOn: Date | null;
+  assignedAt: Date;
+  trainerNotes: string | null;
+  snapshotJson: unknown;
+};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -84,18 +93,32 @@ function StatusBadge({ status }: { status: string }) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function RutinasPageContent({ clientId }: { clientId: string }) {
-  const [routines, setRoutines] = useState<DemoAssignedRoutineRow[] | null>(null);
+  const [routines, setRoutines] = useState<AssignedRoutineRow[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    db.demoAssignedRoutines
-      .where({ clientUserId: clientId })
-      .toArray()
-      .then((rows) => {
-        rows.sort((a, b) => b.startsOn.localeCompare(a.startsOn));
-        setRoutines(rows.slice(0, 30));
-        setLoading(false);
-      });
+    let cancelled = false;
+
+    setLoading(true);
+    setError(null);
+
+    getClientAssignedRoutines(clientId).then((result) => {
+      if (cancelled) return;
+
+      if (!result.ok) {
+        setRoutines([]);
+        setError(result.error.message);
+      } else {
+        setRoutines(result.value.slice(0, 30));
+      }
+
+      setLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [clientId]);
 
   if (loading) {
@@ -129,6 +152,13 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
           )}
         </div>
       </div>
+
+      {error && (
+        <div className="flex items-center gap-2 rounded-xl border border-[#F59E0B]/30 bg-[#F59E0B]/10 px-4 py-3 text-sm text-[#FBBF24]">
+          <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>{error}</span>
+        </div>
+      )}
 
       {/* Empty state */}
       {list.length === 0 ? (
