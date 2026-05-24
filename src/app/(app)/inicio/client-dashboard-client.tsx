@@ -238,7 +238,7 @@ export function ClientDashboardClient({ userId, name }: Props) {
           className={[
             "block rounded-2xl border bg-neutral-900 p-5 transition-colors",
             activeRoutineCompletedToday
-              ? "border-[#22C55E]/35 hover:border-[#22C55E]/60"
+              ? "border-brand-primary/35 hover:border-brand-primary/60"
               : "border-neutral-800 hover:border-brand-primary/40",
           ].join(" ")}
         >
@@ -247,7 +247,7 @@ export function ClientDashboardClient({ userId, name }: Props) {
               <p
                 className={[
                   "text-xs font-medium uppercase tracking-wider",
-                  activeRoutineCompletedToday ? "text-[#22C55E]" : "text-brand-primary",
+                  "text-brand-primary",
                 ].join(" ")}
               >
                 {activeRoutineCompletedToday ? "Rutina hecha" : "Rutina activa"}
@@ -272,11 +272,11 @@ export function ClientDashboardClient({ userId, name }: Props) {
             <div
               className={[
                 "flex h-10 w-10 items-center justify-center rounded-full",
-                activeRoutineCompletedToday ? "bg-[#22C55E]/15" : "bg-brand-primary/15",
+                "bg-brand-primary/15",
               ].join(" ")}
             >
               {activeRoutineCompletedToday ? (
-                <CheckCircle2 className="h-5 w-5 text-[#22C55E]" />
+                <CheckCircle2 className="h-5 w-5 text-brand-primary" />
               ) : (
                 <Dumbbell className="h-5 w-5 text-brand-primary" />
               )}
@@ -285,7 +285,7 @@ export function ClientDashboardClient({ userId, name }: Props) {
           <div
             className={[
               "mt-3 flex items-center gap-1 text-sm font-medium",
-              activeRoutineCompletedToday ? "text-[#22C55E]" : "text-brand-primary",
+              "text-brand-primary",
             ].join(" ")}
           >
             {activeRoutineCompletedToday ? "Ver progreso" : "Ir a la sesión"}{" "}
