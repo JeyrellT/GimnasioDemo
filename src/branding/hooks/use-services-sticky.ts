@@ -72,10 +72,66 @@ export function useServicesSticky() {
 
     loop();
 
+    // ─────────────────────────────────────────────────────────────────────
+    // Drag-to-pan: el usuario puede agarrar las cards con el mouse y
+    // arrastrarlas horizontalmente. En lugar de mover el track directamente
+    // (lo cual pelearia con el loop de scroll-driven), convertimos el delta
+    // X del cursor en scroll vertical sintetizado. Asi el sistema sticky
+    // sigue siendo la unica fuente de verdad y todo queda coherente.
+    //
+    // Solo se activa con mouse (pointerType === "mouse"). Touch usa el
+    // scroll vertical nativo, no necesita drag.
+    // ─────────────────────────────────────────────────────────────────────
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartScrollY = 0;
+    let dragPointerId: number | null = null;
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse") return;
+      if (e.button !== 0) return; // solo click izquierdo
+      isDragging = true;
+      dragStartX = e.clientX;
+      dragStartScrollY = window.scrollY;
+      dragPointerId = e.pointerId;
+      section.setPointerCapture(e.pointerId);
+      section.style.cursor = "grabbing";
+      // No preventDefault: dejamos que el click llegue si el usuario solo
+      // hace tap sin mover (se vera como drag de 0 px, sin scroll).
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (!isDragging || e.pointerId !== dragPointerId) return;
+      const deltaX = dragStartX - e.clientX; // arrastrar a izquierda = avanzar
+      window.scrollTo({ top: dragStartScrollY + deltaX });
+    };
+
+    const endDrag = (e: PointerEvent) => {
+      if (!isDragging || e.pointerId !== dragPointerId) return;
+      isDragging = false;
+      dragPointerId = null;
+      section.style.cursor = "";
+      try {
+        section.releasePointerCapture(e.pointerId);
+      } catch {
+        // si el pointer ya fue liberado, ignorar
+      }
+    };
+
+    section.addEventListener("pointerdown", onPointerDown);
+    section.addEventListener("pointermove", onPointerMove);
+    section.addEventListener("pointerup", endDrag);
+    section.addEventListener("pointercancel", endDrag);
+
     return () => {
       window.removeEventListener("resize", setHeight);
       cancelAnimationFrame(raf);
       section.style.height = "";
+      section.style.cursor = "";
+      section.removeEventListener("pointerdown", onPointerDown);
+      section.removeEventListener("pointermove", onPointerMove);
+      section.removeEventListener("pointerup", endDrag);
+      section.removeEventListener("pointercancel", endDrag);
     };
   }, []);
 
