@@ -1,3 +1,5 @@
+import { EXERCISE_IMAGES } from "@/branding/assets";
+
 export interface PreviewExercise {
   title: string;
   tagLabel: string;
@@ -5,6 +7,7 @@ export interface PreviewExercise {
   equipment: string;
   level: "Principiante" | "Intermedio" | "Avanzado";
   dots: 1 | 2 | 3;
+  image: string;
 }
 
 export const PREVIEW_EXERCISES: PreviewExercise[] = [
@@ -15,6 +18,7 @@ export const PREVIEW_EXERCISES: PreviewExercise[] = [
     equipment: "Barra",
     level: "Intermedio",
     dots: 2,
+    image: EXERCISE_IMAGES[0],
   },
   {
     title: "Curl piernas acostado",
@@ -23,6 +27,7 @@ export const PREVIEW_EXERCISES: PreviewExercise[] = [
     equipment: "Máquina",
     level: "Principiante",
     dots: 1,
+    image: EXERCISE_IMAGES[1],
   },
   {
     title: "Curl martillo",
@@ -31,6 +36,7 @@ export const PREVIEW_EXERCISES: PreviewExercise[] = [
     equipment: "Mancuerna",
     level: "Principiante",
     dots: 1,
+    image: EXERCISE_IMAGES[2],
   },
   {
     title: "Curl Scott",
@@ -39,5 +45,6 @@ export const PREVIEW_EXERCISES: PreviewExercise[] = [
     equipment: "Otro",
     level: "Intermedio",
     dots: 2,
+    image: EXERCISE_IMAGES[3],
   },
 ];
