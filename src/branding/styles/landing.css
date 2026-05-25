@@ -11,9 +11,13 @@
   --ink: #f4f4f5;
   --ink-dim: #8a8a90;
   --ink-faint: #3a3a40;
-  --blue: #3a8bff;
-  --blue-hot: #6aa9ff;
-  --blue-deep: #0a1a3a;
+  /* Conectados al sistema de branding global. Si el trainer cambia el preset
+     en ajustes, las CSS vars --brand-* se inyectan en :root y este landing
+     responde automáticamente. Los hex actúan como fallback si el provider
+     no monta (visitante anónimo). */
+  --blue: var(--brand-primary, #3a8bff);
+  --blue-hot: var(--brand-accent, #6aa9ff);
+  --blue-deep: var(--brand-deep, #0a1a3a);
   --line: rgba(255, 255, 255, 0.08);
   --line-strong: rgba(255, 255, 255, 0.18);
   --grid: 1.25rem;
