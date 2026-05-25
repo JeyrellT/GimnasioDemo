@@ -666,6 +666,12 @@
   position: relative;
   background: var(--bg);
   border-top: 1px solid var(--line);
+  /* Drag-to-pan: evita seleccion de texto al arrastrar las cards con mouse.
+     touch-action pan-y deja libre el scroll vertical nativo (que sigue
+     siendo lo que mueve el track horizontal via el hook). */
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
 }
 .branding-landing .services-sticky {
   position: sticky;
