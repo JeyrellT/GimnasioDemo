@@ -67,12 +67,12 @@ function NavIcon({ kind }: { kind: "home" | "clients" | "routines" | "exercises"
 
 export function PreviewSection() {
   return (
-    <section className="preview" id="preview" data-screen-label="05 Vista previa">
+    <section className="preview" id="preview" data-screen-label="03 Vista previa">
       <div className="preview-glow" />
       <div className="preview-inner">
         <div className="preview-head">
           <div className="section-label">
-            <span className="num">/ 05</span>
+            <span className="num">/ 03</span>
             Producto en mano
           </div>
           <h2 className="preview-title">

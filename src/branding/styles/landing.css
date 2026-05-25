@@ -569,7 +569,7 @@
 
 /* ====================  MANIFESTO  ==================== */
 .branding-landing .manifesto {
-  padding: 4rem 1.5rem 4rem;
+  padding: 4rem 1.5rem 6rem;
   position: relative;
 }
 .branding-landing .manifesto-inner {
@@ -665,11 +665,12 @@
 .branding-landing .services {
   position: relative;
   background: var(--bg);
+  border-top: 1px solid var(--line);
 }
 .branding-landing .services-sticky {
   position: sticky;
   top: 0;
-  height: 100vh;
+  height: 90vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;

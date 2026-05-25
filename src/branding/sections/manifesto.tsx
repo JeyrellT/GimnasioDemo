@@ -1,9 +1,9 @@
 export function ManifestoSection() {
   return (
-    <section className="manifesto" id="manifesto" data-screen-label="02 Manifiesto">
+    <section className="manifesto" id="manifesto" data-screen-label="05 Manifiesto">
       <div className="manifesto-inner">
         <div className="section-label">
-          <span className="num">/ 03</span>
+          <span className="num">/ 05</span>
           Manifiesto
         </div>
         <div className="manifesto-body">
