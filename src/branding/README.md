@@ -31,7 +31,7 @@ src/branding/
 │   ├── use-clock.ts                  ← HH:MM:SS CST tickea cada 1s
 │   ├── use-hero-parallax.ts          ← parallax título + glow
 │   ├── use-reveal-on-view.ts         ← IntersectionObserver para .fade-up/.reveal
-│   └── use-services-sticky.ts        ← sticky horizontal scroll progreso
+│   └── use-services-carousel.ts        ← carousel horizontal scroll progreso
 │
 ├── data/
 │   ├── modules.ts                    ← 6 módulos del producto
