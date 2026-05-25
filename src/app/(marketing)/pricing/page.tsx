@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Check, HelpCircle } from "lucide-react";
 import type { Metadata } from "next";
+import { BrandingShell } from "@/branding/components/branding-shell";
 
 export const metadata: Metadata = {
   title: "Precios",
@@ -81,6 +82,7 @@ const faqs = [
 
 export default function PricingPage() {
   return (
+    <BrandingShell>
     <div className="mx-auto max-w-6xl px-4 py-16">
       {/* Header */}
       <div className="mb-12 text-center">
@@ -194,5 +196,6 @@ export default function PricingPage() {
         </div>
       </section>
     </div>
+    </BrandingShell>
   );
 }

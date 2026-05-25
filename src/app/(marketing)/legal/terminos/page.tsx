@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BrandingShell } from "@/branding/components/branding-shell";
 
 export const metadata: Metadata = {
   title: "Términos y condiciones",
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 
 export default function TerminosPage() {
   return (
+    <BrandingShell>
     <article className="mx-auto max-w-3xl px-4 py-16">
       <header className="mb-10">
         <p className="mb-2 text-sm text-[#A1A1AA]">
@@ -172,6 +174,7 @@ export default function TerminosPage() {
         </Section>
       </div>
     </article>
+    </BrandingShell>
   );
 }
 

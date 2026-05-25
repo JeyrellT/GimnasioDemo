@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BrandingShell } from "@/branding/components/branding-shell";
 
 export const metadata: Metadata = {
   title: "Política de privacidad",
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
 
 export default function PrivacidadPage() {
   return (
+    <BrandingShell>
     <article className="mx-auto max-w-3xl px-4 py-16">
       <header className="mb-10">
         <p className="mb-2 text-sm text-[#A1A1AA]">
@@ -199,6 +201,7 @@ export default function PrivacidadPage() {
         </Section>
       </div>
     </article>
+    </BrandingShell>
   );
 }
 
