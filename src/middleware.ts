@@ -218,7 +218,10 @@ export const config = {
      *   - manifest.webmanifest (PWA manifest — must stay public)
      *   - robots.txt / sitemap.xml (SEO assets)
      *   - Files with extensions: .svg .png .jpg .jpeg .gif .webp .ico .woff .woff2 .ttf .otf .json .xml .txt .webmanifest
+     *   - Video/audio assets: .mp4 .webm .ogv .mov .m4v .mp3 .wav .ogg .m4a
+     *     (necesario para que /branding/demo.mp4 y futuros assets multimedia
+     *      del landing se sirvan estaticos sin pasar por el auth gate)
      */
-    "/((?!_next/static|_next/image|favicon\\.ico|manifest\\.webmanifest|robots\\.txt|sitemap\\.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|ttf|otf|json|xml|txt|webmanifest)$).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico|manifest\\.webmanifest|robots\\.txt|sitemap\\.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|ttf|otf|json|xml|txt|webmanifest|mp4|webm|ogv|mov|m4v|mp3|wav|ogg|m4a)$).*)",
   ],
 };
