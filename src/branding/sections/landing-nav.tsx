@@ -1,23 +1,13 @@
-"use client";
-
 import Link from "next/link";
-import { useClock } from "@/branding/hooks/use-clock";
 import { BRANDING_LOGO_SRC, BRANDING_LOGO_ALT } from "@/branding/assets";
 
 export function LandingNav() {
-  const time = useClock();
-
   return (
     <header className="nav" data-screen-label="00 Nav">
-      <div className="nav-meta">
-        <div className="row">
-          <span className="dot" />
-          <span>BLACKLINE · BETA</span>
-          <span>{time}</span>
-        </div>
-        <div className="sub">HECHO EN COSTA RICA</div>
-        <div className="sub blue">PRODUCTO · PRIVADO · POR INVITACIÓN</div>
-      </div>
+      {/* nav-meta vacio: preserva la primera columna del grid 1fr auto 1fr
+          para que el logo siga centrado. aria-hidden porque no aporta
+          informacion. */}
+      <div className="nav-meta" aria-hidden="true" />
 
       <Link href="/" className="nav-logo" data-hover aria-label="Blackline Fitness — inicio">
         <img src={BRANDING_LOGO_SRC} alt={BRANDING_LOGO_ALT} />
