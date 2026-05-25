@@ -129,7 +129,9 @@ export function PreviewSection() {
               <div className="app-grid">
                 {PREVIEW_EXERCISES.map((ex) => (
                   <article key={ex.title} className="ex-card">
-                    <div className="ex-thumb placeholder" />
+                    <div className="ex-thumb">
+                      <img src={ex.image} alt={ex.title} />
+                    </div>
                     <div className="ex-info">
                       <h4>{ex.title}</h4>
                       <div className="ex-tags">
