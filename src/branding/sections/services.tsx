@@ -21,13 +21,25 @@ export function ServicesSection() {
         <div className="services-carousel" ref={wrapperRef}>
           <div className="services-track">
             {BRANDING_MODULES.map((m) => (
-              <article key={m.num} className="service-card" data-hover>
-                <div className="service-num">{m.num}</div>
-                <h3 className="service-title">{m.title}</h3>
-                <p className="service-desc">{m.desc}</p>
-                <div className="service-meta">
-                  <span>{m.metaLeft}</span>
-                  <span className="blue">{m.metaRight}</span>
+              <article
+                key={m.num}
+                className="service-card"
+                data-hover
+                data-with-bg={m.bgImage ? "true" : undefined}
+                style={
+                  m.bgImage
+                    ? { backgroundImage: `url(${m.bgImage})` }
+                    : undefined
+                }
+              >
+                <div className="service-card-content">
+                  <div className="service-num">{m.num}</div>
+                  <h3 className="service-title">{m.title}</h3>
+                  <p className="service-desc">{m.desc}</p>
+                  <div className="service-meta">
+                    <span>{m.metaLeft}</span>
+                    <span className="blue">{m.metaRight}</span>
+                  </div>
                 </div>
               </article>
             ))}
