@@ -57,6 +57,12 @@ export function VideoDemoSection() {
               muted
               playsInline
               preload="metadata"
+              // controles + interaccion deshabilitados — solo el
+              // IntersectionObserver controla play/pause/mute
+              controlsList="nodownload nofullscreen noremoteplayback"
+              disablePictureInPicture
+              disableRemotePlayback
+              onContextMenu={(e) => e.preventDefault()}
               aria-label="Demo del producto en loop con audio dinamico al entrar al viewport"
             />
           </div>

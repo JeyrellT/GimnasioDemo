@@ -1380,6 +1380,18 @@
   object-fit: cover;
   display: block;
   background: #000;
+  /* No interaccion del usuario: el video solo lo controla el
+     IntersectionObserver. Bloquea click/tap/doble-click que en algunos
+     browsers togglean play/pause por default sobre el elemento <video>. */
+  pointer-events: none;
+}
+/* Safari shadow-DOM: oculta cualquier control nativo residual */
+.branding-landing .video-demo-video::-webkit-media-controls,
+.branding-landing .video-demo-video::-webkit-media-controls-enclosure,
+.branding-landing .video-demo-video::-webkit-media-controls-panel,
+.branding-landing .video-demo-video::-webkit-media-controls-play-button {
+  display: none !important;
+  -webkit-appearance: none;
 }
 
 /* ====================  RESPONSIVE  ==================== */
