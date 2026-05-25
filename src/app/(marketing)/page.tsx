@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { BrandingLandingPage } from "@/branding/landing-page";
 
 export const metadata: Metadata = {
-  title: "Blackline Fitness — Tu línea, tu fuerza",
+  title: "Blackline Fitness — Fuerza Orden Escala",
   description:
-    "Rutinas, métricas, sesiones en vivo y finanzas — en una app que funciona sin señal. Para entrenadores que quieren escalar sin perder el toque personal.",
+    "El sistema operativo del entrenador profesional. Rutinas, sesiones offline, métricas de cliente y finanzas en una sola línea de trabajo. No es una app de fitness, es tu negocio entero.",
 };
 
 export default function LandingPage() {

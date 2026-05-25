@@ -1,47 +1,64 @@
 # `src/branding/`
 
-Todo el código de la **branding page** (landing pública de Blackline Fitness)
-vive aquí. Hacer ajustes a la landing **solo requiere tocar archivos de esta
-carpeta** — no se modifica el gym (`(app)`), ni el login (`(auth)`), ni el
-onboarding.
+Todo el código de la **branding page** (landing pública en `/`) vive aquí.
+Diseño migrado 1:1 desde el HTML producido en Claude Design — animaciones,
+cursor follow, sticky horizontal services, phone preview, manifesto reveal y
+electric lines.
 
 ## Estructura
 
 ```
 src/branding/
-├── landing-page.tsx              ← Componente raíz que arma las 5 secciones
+├── landing-page.tsx                  ← root cliente (cursor + reveals + secciones)
+├── assets.ts                         ← rutas de imágenes (logo + ejercicios)
+│
 ├── components/
-│   ├── branding-shell.tsx        ← Wrapper layout (header + main + footer)
-│   ├── branding-header.tsx       ← Header sticky con logo y nav
-│   └── branding-footer.tsx       ← Footer con copyright + links legales
-├── sections/
-│   ├── hero.tsx                  ← "Tu línea, tu fuerza." + CTAs
-│   ├── features.tsx              ← Grid de 3 features
-│   ├── pricing-teaser.tsx        ← Resumen de 3 planes
-│   ├── testimonial.tsx           ← Quote + autor
-│   └── cta-final.tsx             ← "Empezá hoy"
-└── data/
-    ├── features.ts               ← BRANDING_FEATURES
-    ├── testimonial.ts            ← BRANDING_TESTIMONIAL
-    └── pricing-teaser.ts         ← BRANDING_PRICING_TIERS
+│   ├── branding-shell.tsx            ← shell viejo (lo usan /pricing y /legal/*)
+│   ├── branding-header.tsx           ← header viejo (usado por shell)
+│   └── branding-footer.tsx           ← footer viejo (usado por shell)
+│
+├── sections/                         ← secciones de la landing nueva
+│   ├── landing-nav.tsx               ← nav sticky + clock + meta + logo
+│   ├── hero.tsx                      ← FUERZA / ORDEN / ESCALA con parallax
+│   ├── marquee.tsx                   ← RUTINAS · SESIONES · OFFLINE...
+│   ├── manifesto.tsx                 ← "No transformás cuerpos..."
+│   ├── services.tsx                  ← 6 cards sticky horizontal
+│   ├── preview.tsx                   ← phone mockup con app UI
+│   └── landing-footer.tsx            ← footer de la landing nueva
+│
+├── hooks/
+│   ├── use-cursor.ts                 ← cursor + ring + hover
+│   ├── use-clock.ts                  ← HH:MM:SS CST tickea cada 1s
+│   ├── use-hero-parallax.ts          ← parallax título + glow
+│   ├── use-reveal-on-view.ts         ← IntersectionObserver para .fade-up/.reveal
+│   └── use-services-sticky.ts        ← sticky horizontal scroll progreso
+│
+├── data/
+│   ├── modules.ts                    ← 6 módulos del producto
+│   └── preview-exercises.ts          ← 4 ejercicios del phone preview
+│
+└── styles/
+    └── landing.css                   ← TODO el CSS de la landing, scoped a .branding-landing
 ```
 
 ## Cómo se conecta al routing
 
-- `src/app/(marketing)/page.tsx` → renderiza `<BrandingLandingPage />`
-- `src/app/(marketing)/layout.tsx` → renderiza `<BrandingShell>`
+- `src/app/(marketing)/page.tsx` → `<BrandingLandingPage />` (landing nueva)
+- `src/app/(marketing)/layout.tsx` → pass-through (`{children}`)
+- `src/app/(marketing)/pricing/page.tsx` → envuelve con `<BrandingShell>` (shell viejo)
+- `src/app/(marketing)/legal/*/page.tsx` → envuelve con `<BrandingShell>` (shell viejo)
 
-Ambos archivos son **wrappers delgados** — toda la lógica/markup vive en
-`src/branding/`.
+## Assets requeridos (copiar a `public/branding/`)
 
-## Lo que NO está aquí
+El CSS y el JSX referencian estos archivos. Si faltan, los `<img>` se rompen
+silenciosamente (el alt funciona). Copiá los pngs reales acá cuando los tengas:
 
-- **Logo** (`@/components/shared/blackline-fitness-logo`) — es compartido con
-  auth, onboarding y el gym; se importa, no se mueve.
-- **Tokens de color** (`--brand-primary`, `--brand-accent`) — son CSS vars
-  globales en `src/app/globals.css` porque el trainer las personaliza desde
-  ajustes.
-- **Pricing detallado** (`/pricing`) y **legales** (`/legal/*`) — son páginas
-  separadas del marketing route group, comparten el mismo `BrandingShell`
-  pero su contenido propio sigue en `(marketing)/pricing/` y
-  `(marketing)/legal/`.
+- `public/branding/logo-transparent.png` — logo Blackline (usado en nav, footer y phone preview)
+- `public/branding/exercise-1.png` ... `exercise-4.png` — (opcional, hoy se ven gradient placeholders)
+
+## Scope: ¿qué se toca y qué no?
+
+- **Sí se toca:** todo lo de `src/branding/`, y los wrappers `src/app/(marketing)/*`.
+- **NO se toca:** `(app)/`, `(auth)/`, `(onboarding)/`, logo SVG compartido
+  (`src/components/shared/blackline-fitness-logo.tsx`), tokens globales del
+  trainer (`src/app/globals.css`).

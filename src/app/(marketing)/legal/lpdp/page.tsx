@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BrandingShell } from "@/branding/components/branding-shell";
 
 export const metadata: Metadata = {
   title: "Derechos LPDP",
@@ -8,6 +9,7 @@ export const metadata: Metadata = {
 
 export default function LpdpPage() {
   return (
+    <BrandingShell>
     <article className="mx-auto max-w-3xl px-4 py-16">
       <header className="mb-10">
         <h1 className="text-3xl font-bold text-[#FAFAFA]">
@@ -142,6 +144,7 @@ export default function LpdpPage() {
         </Section>
       </div>
     </article>
+    </BrandingShell>
   );
 }
 
