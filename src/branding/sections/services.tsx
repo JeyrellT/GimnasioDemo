@@ -36,6 +36,17 @@ export function ServicesSection() {
             </article>
           ))}
         </div>
+        {/* Hover edges invisibles: al pasar el cursor por la zona izquierda
+            o derecha, el track se mueve automaticamente para revelar las
+            cards escondidas. El hook use-services-sticky lo maneja. */}
+        <div
+          className="services-edge services-edge-left"
+          aria-hidden="true"
+        />
+        <div
+          className="services-edge services-edge-right"
+          aria-hidden="true"
+        />
       </div>
     </section>
   );

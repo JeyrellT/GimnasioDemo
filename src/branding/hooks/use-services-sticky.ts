@@ -123,15 +123,78 @@ export function useServicesSticky() {
     section.addEventListener("pointerup", endDrag);
     section.addEventListener("pointercancel", endDrag);
 
+    // ─────────────────────────────────────────────────────────────────────
+    // Auto-scroll en hover edges: cuando el cursor entra a la zona izquierda
+    // o derecha de la seccion (divs .services-edge invisibles), se inicia un
+    // loop que aplica scroll vertical sintetizado. Asi las cards se mueven
+    // sin que el usuario tenga que arrastrar ni scrollear con la rueda.
+    // ─────────────────────────────────────────────────────────────────────
+    let edgeScrollDir = 0; // -1 = izquierda (atras), +1 = derecha (avanza)
+    let edgeRaf = 0;
+    const EDGE_SPEED = 6; // px de scroll por frame
+
+    const edgeLoop = () => {
+      if (edgeScrollDir !== 0) {
+        window.scrollBy({ top: edgeScrollDir * EDGE_SPEED });
+        edgeRaf = requestAnimationFrame(edgeLoop);
+      } else {
+        edgeRaf = 0;
+      }
+    };
+
+    const startEdgeLoop = () => {
+      if (edgeRaf === 0 && edgeScrollDir !== 0) {
+        edgeRaf = requestAnimationFrame(edgeLoop);
+      }
+    };
+
+    const onEdgeEnter = (dir: number) => () => {
+      edgeScrollDir = dir;
+      startEdgeLoop();
+    };
+    const onEdgeLeave = () => {
+      edgeScrollDir = 0;
+      if (edgeRaf !== 0) {
+        cancelAnimationFrame(edgeRaf);
+        edgeRaf = 0;
+      }
+    };
+
+    const leftEdge = section.querySelector<HTMLElement>(
+      ".services-edge-left",
+    );
+    const rightEdge = section.querySelector<HTMLElement>(
+      ".services-edge-right",
+    );
+    const enterLeft = onEdgeEnter(-1);
+    const enterRight = onEdgeEnter(1);
+    if (leftEdge) {
+      leftEdge.addEventListener("pointerenter", enterLeft);
+      leftEdge.addEventListener("pointerleave", onEdgeLeave);
+    }
+    if (rightEdge) {
+      rightEdge.addEventListener("pointerenter", enterRight);
+      rightEdge.addEventListener("pointerleave", onEdgeLeave);
+    }
+
     return () => {
       window.removeEventListener("resize", setHeight);
       cancelAnimationFrame(raf);
+      if (edgeRaf !== 0) cancelAnimationFrame(edgeRaf);
       section.style.height = "";
       section.style.cursor = "";
       section.removeEventListener("pointerdown", onPointerDown);
       section.removeEventListener("pointermove", onPointerMove);
       section.removeEventListener("pointerup", endDrag);
       section.removeEventListener("pointercancel", endDrag);
+      if (leftEdge) {
+        leftEdge.removeEventListener("pointerenter", enterLeft);
+        leftEdge.removeEventListener("pointerleave", onEdgeLeave);
+      }
+      if (rightEdge) {
+        rightEdge.removeEventListener("pointerenter", enterRight);
+        rightEdge.removeEventListener("pointerleave", onEdgeLeave);
+      }
     };
   }, []);
 
