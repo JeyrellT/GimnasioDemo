@@ -1117,20 +1117,6 @@
   background: linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, 0.55));
   z-index: 2;
 }
-.branding-landing .ex-thumb::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  z-index: 3;
-}
 .branding-landing .ex-thumb.placeholder {
   background: linear-gradient(135deg, #0f1115 0%, #181b22 50%, #0a0c10 100%);
 }
