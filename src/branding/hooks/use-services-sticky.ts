@@ -29,8 +29,11 @@ export function useServicesSticky() {
 
     let raf = 0;
 
+    // Sin buffer extra: el sticky termina justo cuando el track horizontal
+    // completa su recorrido, evitando un gap negro entre la ultima card y
+    // la siguiente seccion.
     const getScrollDistance = () =>
-      Math.max(0, track.scrollWidth - window.innerWidth + 100);
+      Math.max(0, track.scrollWidth - window.innerWidth);
 
     const setHeight = () => {
       const dist = getScrollDistance();
