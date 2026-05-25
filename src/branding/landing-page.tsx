@@ -12,6 +12,7 @@ import { MarqueeSection } from "@/branding/sections/marquee";
 import { ManifestoSection } from "@/branding/sections/manifesto";
 import { ServicesSection } from "@/branding/sections/services";
 import { PreviewSection } from "@/branding/sections/preview";
+import { VideoDemoSection } from "@/branding/sections/video-demo";
 import { LandingFooter } from "@/branding/sections/landing-footer";
 
 function BrandingLandingPageInner() {
@@ -37,6 +38,7 @@ function BrandingLandingPageInner() {
       <MarqueeSection />
       <PreviewSection />
       <ServicesSection />
+      <VideoDemoSection />
       <ManifestoSection />
 
       <LandingFooter />
