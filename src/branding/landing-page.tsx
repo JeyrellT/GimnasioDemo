@@ -35,9 +35,9 @@ function BrandingLandingPageInner() {
       {/* Sections */}
       <HeroSection />
       <MarqueeSection />
-      <ManifestoSection />
-      <ServicesSection />
       <PreviewSection />
+      <ServicesSection />
+      <ManifestoSection />
 
       <LandingFooter />
     </div>
