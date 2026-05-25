@@ -124,10 +124,13 @@
   height: 0;
 }
 .branding-landing .cursor-ring.hover {
-  width: 72px;
-  height: 72px;
+  /* Reducido de 72px a 48px y fondo transparente para que el cursor-ring
+     no oscurezca el texto de los titulos de cards (e.g. RUTINAS) cuando
+     hovers sobre ellas. Solo queda el borde azul como acento sutil. */
+  width: 48px;
+  height: 48px;
   border-color: var(--blue);
-  background: rgba(58, 139, 255, 0.08);
+  background: transparent;
 }
 @media (max-width: 780px) {
   .branding-landing .cursor,
@@ -804,6 +807,34 @@
   background: var(--line-strong);
   margin-top: 0.6rem;
   overflow: hidden;
+}
+
+/* Hover edges invisibles a izq/der de .services-sticky. Al entrar el cursor,
+   el hook use-services-sticky inicia auto-scroll vertical sintetizado, lo
+   que mueve el track horizontal de las cards. Sin feedback visual (el
+   usuario los pidio "invisibles"); el cursor custom se ve cuando esta
+   encima y ya da la pista de interactividad. */
+.branding-landing .services-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 12%;
+  max-width: 180px;
+  z-index: 4;
+  pointer-events: auto;
+  /* Sin background ni borde - completamente transparente */
+}
+.branding-landing .services-edge-left {
+  left: 0;
+}
+.branding-landing .services-edge-right {
+  right: 0;
+}
+@media (max-width: 780px) {
+  /* En mobile no aplica - el usuario usa scroll vertical nativo */
+  .branding-landing .services-edge {
+    display: none;
+  }
 }
 
 /* ====================  PHONE PREVIEW  ==================== */
