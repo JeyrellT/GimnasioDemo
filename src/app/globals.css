@@ -111,6 +111,9 @@
   --brand-primary-hover: #2563eb;
   --brand-secondary: #1e2a38;
   --brand-accent: #60a5fa;
+  --brand-glow: #60a5fa;
+  --brand-deep: #1e40af;
+  --brand-tint: rgba(59, 130, 246, 0.1);
 
   --success: #22c55e;
   --success-bg: #052e16;
