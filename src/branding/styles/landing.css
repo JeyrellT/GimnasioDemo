@@ -569,7 +569,7 @@
 
 /* ====================  MANIFESTO  ==================== */
 .branding-landing .manifesto {
-  padding: 2rem 1.5rem 6rem;
+  padding: 1rem 1.5rem 6rem;
   position: relative;
 }
 .branding-landing .manifesto-inner {
@@ -670,12 +670,16 @@
 .branding-landing .services-sticky {
   position: sticky;
   top: 0;
-  height: 100vh;
+  /* Reducido de 100vh a 70vh para eliminar ~30vh de "trail" negro que
+     quedaba entre las cards y la siguiente seccion (Manifesto) cuando
+     el sticky se despegaba. El hook use-services-sticky usa el mismo
+     factor (STICKY_VH = 0.7) para calcular la altura virtual. */
+  height: 70vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 2.5rem;
+  gap: 2rem;
 }
 .branding-landing .services-track {
   display: flex;
@@ -688,8 +692,10 @@
   width: 30vw;
   max-width: 520px;
   min-width: 340px;
-  height: 58vh;
-  max-height: 600px;
+  /* Reducido de 58vh a 52vh para encajar en el nuevo sticky de 70vh con
+     respiracion holgada para el services-head y la barra de progreso. */
+  height: 52vh;
+  max-height: 540px;
   background: var(--bg-2);
   border: 1px solid var(--line);
   padding: 2.5rem;

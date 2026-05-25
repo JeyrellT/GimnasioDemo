@@ -35,9 +35,17 @@ export function useServicesSticky() {
     const getScrollDistance = () =>
       Math.max(0, track.scrollWidth - window.innerWidth);
 
+    // El sticky-element ocupa 70vh (ver landing.css .services-sticky). La
+    // altura virtual de la seccion = 70vh + scroll horizontal. Asi cuando
+    // el sticky se despega, solo deja 70vh de "trail" en lugar de 100vh,
+    // eliminando ~30vh de espacio negro entre las cards y la siguiente
+    // seccion (Manifesto).
+    const STICKY_VH = 0.7;
+    const getStickyHeight = () => window.innerHeight * STICKY_VH;
+
     const setHeight = () => {
       const dist = getScrollDistance();
-      section.style.height = `${window.innerHeight + dist}px`;
+      section.style.height = `${getStickyHeight() + dist}px`;
     };
 
     setHeight();
@@ -46,11 +54,12 @@ export function useServicesSticky() {
     const loop = () => {
       const rect = section.getBoundingClientRect();
       const dist = getScrollDistance();
-      const total = section.offsetHeight - window.innerHeight;
+      const stickyHeight = getStickyHeight();
+      const total = section.offsetHeight - stickyHeight;
       let progress = 0;
-      if (rect.top <= 0 && rect.bottom >= window.innerHeight) {
+      if (rect.top <= 0 && rect.bottom >= stickyHeight) {
         progress = Math.min(1, Math.max(0, -rect.top / total));
-      } else if (rect.bottom < window.innerHeight) {
+      } else if (rect.bottom < stickyHeight) {
         progress = 1;
       }
       track.style.transform = `translateX(${-progress * dist}px)`;
