@@ -14,6 +14,10 @@ export function LandingNav() {
       </Link>
 
       <nav className="nav-actions">
+        {/* Mobile-only: tag pais en azul arriba del CTA. Hidden en desktop via CSS. */}
+        <span className="nav-cr-tag" aria-label="Hecho en Costa Rica">
+          Hecho en Costa Rica
+        </span>
         <a href="#manifesto" className="nav-link hide-sm" data-hover>
           Filosofía
         </a>

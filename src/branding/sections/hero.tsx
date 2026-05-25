@@ -27,7 +27,7 @@ export function HeroSection() {
         <div className="hero-bottom">
           <p className="hero-lede">
             El sistema operativo del entrenador profesional. Rutinas, sesiones offline,
-            métricas de cliente y finanzas — en una sola línea de trabajo.{" "}
+            métricas de cliente y finanzas en una sola línea de trabajo.{" "}
             <strong>No es una app de fitness. Es tu negocio entero.</strong>
           </p>
           <div
@@ -42,7 +42,7 @@ export function HeroSection() {
               justifySelf: "center",
             }}
           >
-            / 02 — Concepto
+            / 02 Concepto
           </div>
           <div className="cta-row">
             <Link href="/registrarse" className="btn" data-hover>

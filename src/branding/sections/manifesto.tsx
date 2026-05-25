@@ -25,8 +25,8 @@ export function ManifestoSection() {
 
           <p className="manifesto-aside fade-up">
             Hay un instante en cada sesión donde alguien decide si va a volver.
-            Ese instante no se programa, pero se prepara — con <strong>atención</strong>,
-            con <strong>datos</strong>, con <strong>presencia</strong>. Cada rutina que
+            Ese instante no se programa, pero se prepara con <strong>atención</strong>,
+            <strong> datos</strong>, <strong>presencia</strong>. Cada rutina que
             firmás es una promesa. Cada métrica que mirás antes de una sesión es un acto
             de cuidado.{" "}
             <strong>
