@@ -675,7 +675,10 @@
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
-  touch-action: pan-y;
+  /* pan-x: deja que el browser maneje swipe horizontal en touch (carrusel).
+     Touches verticales hacen bubble al scroll de pagina. pan-y aqui rompia
+     el swipe horizontal en mobile (el browser cancelaba el gesto). */
+  touch-action: pan-x;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
   /* Hide native scrollbar */
@@ -1457,12 +1460,40 @@
 }
 
 /* ====================  RESPONSIVE  ==================== */
+
+/* Tag "Hecho en Costa Rica" — hidden por default; solo aparece en mobile */
+.branding-landing .nav-cr-tag {
+  display: none;
+}
+
 @media (max-width: 980px) {
   .branding-landing .nav-meta {
     display: none;
   }
   .branding-landing .nav-actions .nav-link.hide-sm {
     display: none;
+  }
+  /* Stack vertical para que el tag CR quede arriba del CTA ¡Iniciar! */
+  .branding-landing .nav-actions {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.45rem;
+  }
+  .branding-landing .nav-cr-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--blue);
+    white-space: nowrap;
+    line-height: 1.2;
+    text-shadow: 0 0 12px rgba(58, 139, 255, 0.45);
+  }
+  /* Hero title mas grande en mobile para que abarque mas viewport */
+  .branding-landing .hero-title {
+    font-size: clamp(5.5rem, 24vw, 8.5rem);
+    letter-spacing: -0.025em;
   }
   .branding-landing .hero-bottom {
     grid-template-columns: 1fr;
@@ -1490,6 +1521,13 @@
   .branding-landing .footer-meta {
     text-align: center;
   }
+  /* Logo centrado y mas grande en mobile */
+  .branding-landing .footer-brand {
+    justify-content: center;
+  }
+  .branding-landing .footer-brand img {
+    height: 110px;
+  }
   .branding-landing .services-head {
     padding: 0 1.5rem;
     flex-direction: column;
@@ -1498,5 +1536,11 @@
   }
   .branding-landing .services-head h2 {
     font-size: 2rem;
+  }
+  /* Reduce padding del track en mobile para que el primer card no quede
+     escondido tras 6rem de padding (mobile viewport es muy estrecho) */
+  .branding-landing .services-track {
+    padding: 0 1.5rem;
+    gap: 1rem;
   }
 }

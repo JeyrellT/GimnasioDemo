@@ -84,7 +84,7 @@ export function PreviewSection() {
           </h2>
           <p className="preview-desc">
             Así se ve tu negocio en la palma de tu mano. Roster de ejercicios, videos,
-            filtros por grupo muscular y nivel — todo organizado para que arranques una
+            filtros por grupo muscular y nivel, todo organizado para que arranques una
             sesión en menos de <strong>10 segundos</strong>.
           </p>
           <div className="preview-meta">
