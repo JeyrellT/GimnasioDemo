@@ -724,9 +724,65 @@
   background: linear-gradient(90deg, transparent, var(--blue), transparent);
   transform: translateX(-100%);
   transition: transform 0.9s;
+  z-index: 3;
 }
 .branding-landing .service-card:hover::after {
   transform: translateX(100%);
+}
+
+/* Cards con imagen de fondo (data-with-bg): la imagen se aplica via inline
+   style desde el componente. Aca anyadimos overlay oscuro + tint azul para
+   mantener legible el texto encima. */
+.branding-landing .service-card[data-with-bg] {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.branding-landing .service-card[data-with-bg]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(5, 8, 14, 0.55) 0%,
+      rgba(5, 8, 14, 0.78) 60%,
+      rgba(5, 8, 14, 0.92) 100%
+    ),
+    radial-gradient(
+      ellipse at top right,
+      rgba(58, 139, 255, 0.18),
+      transparent 60%
+    );
+  z-index: 1;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+.branding-landing .service-card[data-with-bg]:hover::before {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(5, 8, 14, 0.45) 0%,
+      rgba(5, 8, 14, 0.72) 60%,
+      rgba(5, 8, 14, 0.9) 100%
+    ),
+    radial-gradient(
+      ellipse at top right,
+      rgba(58, 139, 255, 0.28),
+      transparent 60%
+    );
+}
+.branding-landing .service-card[data-with-bg]:hover {
+  background-color: transparent;
+}
+/* Wrapper interno para que el contenido quede por encima del overlay */
+.branding-landing .service-card-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 .branding-landing .service-num {
   font-family: var(--mono);
