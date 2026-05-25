@@ -1366,7 +1366,11 @@
 .branding-landing .video-demo-frame {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  /* Aspect ratio del video original (1584x720 ≈ 2.2:1). Asi el frame
+     coincide exacto con el video y NO se recortan los bordes ni aparecen
+     barras negras. Si en el futuro cambias el video a otro aspect, ajustá
+     este valor. */
+  aspect-ratio: 1584 / 720;
   background: var(--bg-2);
   border: 1px solid var(--line-strong);
   overflow: hidden;
@@ -1377,7 +1381,9 @@
 .branding-landing .video-demo-video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  /* contain en lugar de cover: muestra el video completo sin recortar.
+     Como el frame tiene el mismo aspect ratio, no aparecen barras negras. */
+  object-fit: contain;
   display: block;
   background: #000;
   /* No interaccion del usuario: el video solo lo controla el
