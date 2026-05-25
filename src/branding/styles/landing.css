@@ -32,14 +32,10 @@
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
-  cursor: none;
+  /* cursor custom desactivado por pedido del usuario — usar cursor nativo */
+  cursor: auto;
   position: relative;
   min-height: 100vh;
-}
-@media (max-width: 780px) {
-  .branding-landing {
-    cursor: auto;
-  }
 }
 .branding-landing *,
 .branding-landing *::before,
@@ -52,15 +48,10 @@
 }
 .branding-landing button {
   font-family: inherit;
-  cursor: none;
+  cursor: pointer;
   border: none;
   background: none;
   color: inherit;
-}
-@media (max-width: 780px) {
-  .branding-landing button {
-    cursor: pointer;
-  }
 }
 .branding-landing img {
   display: block;
@@ -1433,16 +1424,11 @@
   border: 1px solid var(--blue);
   background: var(--blue);
   color: #fff;
-  cursor: none;
+  cursor: pointer;
   transition:
     background 0.2s,
     border-color 0.2s,
     opacity 0.2s;
-}
-@media (max-width: 780px) {
-  .branding-landing .video-demo-btn {
-    cursor: pointer;
-  }
 }
 .branding-landing .video-demo-btn:hover {
   background: var(--blue-hot);
