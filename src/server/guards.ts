@@ -26,6 +26,7 @@ import type {
 } from "@prisma/client";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 
 import { auth } from "@/server/auth";
 import { prisma } from "@/server/db";
@@ -126,7 +127,11 @@ function isSuspensionColumnMissing(err: unknown): boolean {
   );
 }
 
-async function fetchUserById(id: string): Promise<UserWithProfile | null> {
+// React `cache` dedupes the lookup per RSC request. Multiple guard calls
+// (`requireUser`, `requireActiveSubscription`, `assertOwnsClient`, etc.) in the
+// same request now resolve to ONE database round-trip instead of 1-3. Outside
+// RSC (route handlers, server actions started from edge runtime) it's a no-op.
+const fetchUserById = cache(async (id: string): Promise<UserWithProfile | null> => {
   // prisma (not prismaRaw) — soft-delete filter automatically applied.
   try {
     return await prisma.user.findUnique({
@@ -156,7 +161,7 @@ async function fetchUserById(id: string): Promise<UserWithProfile | null> {
       suspendedReason: null,
     } as UserWithProfile;
   }
-}
+});
 
 // -----------------------------------------------------------------------------
 // Active subscription statuses

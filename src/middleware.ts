@@ -83,6 +83,9 @@ const RATE_LIMITED_PREFIXES: string[] = [
   "/api/auth/callback",
   "/registrarse",
   "/api/lpdp",
+  // Magic-link auto-login: mints a 30-day session cookie on first GET with a
+  // valid token. Public + cookie-minting + no captcha = brute-force target.
+  "/api/cliente/aceptar-invitacion",
 ];
 
 /**

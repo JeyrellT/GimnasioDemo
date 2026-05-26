@@ -242,19 +242,16 @@ export async function getRoutine(
   return tryCatch(async () => {
     const user = await requireTrainer();
 
-    const routine = await prisma.routineTemplate.findUnique({
-      where: { id, deletedAt: null },
+    // Tenant isolation enforced at the DB layer: trainerId is part of the WHERE
+    // so cross-tenant reads return null instead of leaking "exists but not yours"
+    // via different error codes / timing.
+    const routine = await prisma.routineTemplate.findFirst({
+      where: { id, trainerId: user.id, deletedAt: null },
       include: ROUTINE_INCLUDE,
     });
 
     if (!routine) {
       throw new NotFoundError("ROUTINE_NOT_FOUND", "Rutina no encontrada.");
-    }
-    if (routine.trainerId !== user.id) {
-      throw new ForbiddenError(
-        "ROUTINE_NOT_OWNED",
-        "Esta rutina no te pertenece.",
-      );
     }
 
     return routine as RoutineDetail;
@@ -397,16 +394,14 @@ export async function deleteRoutine(
   return tryCatch(async () => {
     const user = await requireTrainer();
 
-    const routine = await prisma.routineTemplate.findUnique({
-      where: { id, deletedAt: null },
-      select: { id: true, trainerId: true },
+    // Tenant-scoped lookup — cross-tenant returns null.
+    const routine = await prisma.routineTemplate.findFirst({
+      where: { id, trainerId: user.id, deletedAt: null },
+      select: { id: true },
     });
 
     if (!routine) {
       throw new NotFoundError("ROUTINE_NOT_FOUND", "Rutina no encontrada.");
-    }
-    if (routine.trainerId !== user.id) {
-      throw new ForbiddenError("ROUTINE_NOT_OWNED", "Esta rutina no te pertenece.");
     }
 
     const now = new Date();
@@ -433,16 +428,14 @@ export async function archiveRoutine(
   return tryCatch(async () => {
     const user = await requireTrainer();
 
-    const routine = await prisma.routineTemplate.findUnique({
-      where: { id, deletedAt: null },
-      select: { id: true, trainerId: true },
+    // Tenant-scoped lookup.
+    const routine = await prisma.routineTemplate.findFirst({
+      where: { id, trainerId: user.id, deletedAt: null },
+      select: { id: true },
     });
 
     if (!routine) {
       throw new NotFoundError("ROUTINE_NOT_FOUND", "Rutina no encontrada.");
-    }
-    if (routine.trainerId !== user.id) {
-      throw new ForbiddenError("ROUTINE_NOT_OWNED", "Esta rutina no te pertenece.");
     }
 
     await prisma.routineTemplate.update({
@@ -479,16 +472,14 @@ export async function addDayToRoutine(
   return tryCatch(async () => {
     const user = await requireTrainer();
 
-    const routine = await prisma.routineTemplate.findUnique({
-      where: { id: routineId, deletedAt: null },
-      select: { id: true, trainerId: true },
+    // Tenant-scoped lookup.
+    const routine = await prisma.routineTemplate.findFirst({
+      where: { id: routineId, trainerId: user.id, deletedAt: null },
+      select: { id: true },
     });
 
     if (!routine) {
       throw new NotFoundError("ROUTINE_NOT_FOUND", "Rutina no encontrada.");
-    }
-    if (routine.trainerId !== user.id) {
-      throw new ForbiddenError("ROUTINE_NOT_OWNED", "Esta rutina no te pertenece.");
     }
 
     const trimmedName = name.trim();

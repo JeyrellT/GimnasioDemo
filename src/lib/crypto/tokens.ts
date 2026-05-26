@@ -21,6 +21,7 @@ import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { SignJWT, jwtVerify } from "jose";
 
 import { logger } from "@/lib/logger";
+import { serverEnv } from "@/server/env";
 
 // -----------------------------------------------------------------------------
 // Alphabet for human-readable secure strings (no 0/O/I/l/1 ambiguity)
@@ -162,7 +163,7 @@ export interface DownloadTokenPayload {
  * Audience narrowing ensures a download token cannot be reused as an auth token.
  */
 export async function signDownloadToken(payload: DownloadTokenPayload): Promise<string> {
-  const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);
+  const secret = new TextEncoder().encode(serverEnv.NEXTAUTH_SECRET);
 
   return new SignJWT({
     userId: payload.userId,
@@ -189,7 +190,7 @@ export async function signDownloadToken(payload: DownloadTokenPayload): Promise<
 export async function verifyDownloadToken(
   token: string,
 ): Promise<{ userId: string; requestId: string } | null> {
-  const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);
+  const secret = new TextEncoder().encode(serverEnv.NEXTAUTH_SECRET);
 
   try {
     const { payload } = await jwtVerify(token, secret, {

@@ -24,6 +24,7 @@ export function useCursor() {
     let rx = 0;
     let ry = 0;
     let raf = 0;
+    let isVisible = true;
 
     const onMove = (e: MouseEvent) => {
       mx = e.clientX;
@@ -38,8 +39,25 @@ export function useCursor() {
       raf = requestAnimationFrame(loop);
     };
 
+    const startLoop = () => {
+      if (raf === 0 && isVisible) raf = requestAnimationFrame(loop);
+    };
+    const stopLoop = () => {
+      if (raf !== 0) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    };
+
+    const onVisibilityChange = () => {
+      isVisible = document.visibilityState === "visible";
+      if (isVisible) startLoop();
+      else stopLoop();
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
     window.addEventListener("mousemove", onMove);
-    loop();
+    startLoop();
 
     // hover targets
     const hoverNodes = document.querySelectorAll<HTMLElement>("[data-hover]");
@@ -57,8 +75,9 @@ export function useCursor() {
     }
 
     return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("mousemove", onMove);
-      cancelAnimationFrame(raf);
+      stopLoop();
       for (const el of hoverNodes) {
         el.removeEventListener("mouseenter", onEnter);
         el.removeEventListener("mouseleave", onLeave);
