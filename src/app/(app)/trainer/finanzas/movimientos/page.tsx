@@ -135,6 +135,24 @@ interface PageState {
 }
 
 export default function MovimientosPage() {
+  // useSearchParams() requiere un Suspense boundary en Next 15.
+  return (
+    <React.Suspense fallback={<MovimientosSkeleton />}>
+      <MovimientosPageInner />
+    </React.Suspense>
+  );
+}
+
+function MovimientosSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      <div className="h-12 w-64 rounded-xl bg-[#18181B]" />
+      <div className="h-96 rounded-xl bg-[#18181B]" />
+    </div>
+  );
+}
+
+function MovimientosPageInner() {
   const searchParams = useSearchParams();
 
   const month = parseMonth(searchParams.get("month"));

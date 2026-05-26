@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -113,6 +113,28 @@ const FILTER_TABS: { value: FilterValue; label: string }[] = [
 // ---------------------------------------------------------------------------
 
 export default function RutinasPage() {
+  // useSearchParams() requiere un Suspense boundary en Next 15.
+  return (
+    <Suspense fallback={<RutinasSkeleton />}>
+      <RutinasPageInner />
+    </Suspense>
+  );
+}
+
+function RutinasSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      <div className="h-12 w-48 rounded-xl bg-[#18181B]" />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {["a", "b", "c", "d", "e", "f"].map((slot) => (
+          <div key={`rutinas-skel-${slot}`} className="h-32 rounded-xl bg-[#18181B]" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RutinasPageInner() {
   const searchParams = useSearchParams();
   const filterParam = searchParams.get("filter");
   const activeFilter: FilterValue =

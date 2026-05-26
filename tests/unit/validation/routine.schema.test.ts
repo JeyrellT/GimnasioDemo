@@ -56,10 +56,23 @@ describe('routine.schema — Rutina de Entrenamiento', () => {
       ).toBe(false)
     })
 
-    it('rechaza objetivo inválido', () => {
+    it('acepta objetivos personalizados — el trainer puede crear goals propios', () => {
+      // Diferente a un strict-enum: el producto permite goals customizados
+      // que el trainer agrega desde /trainer/rutinas/nueva. Solo bloqueamos
+      // strings vacios.
       const input = {
         name: 'Test',
-        goal: 'INVALID',
+        goal: 'Hipertrofia Lucia Q3',
+        splitDays: 4,
+      }
+      const result = createRoutineSchema.safeParse(input)
+      expect(result.success).toBe(true)
+    })
+
+    it('rechaza objetivo vacío', () => {
+      const input = {
+        name: 'Test',
+        goal: '',
         splitDays: 4,
       }
       const result = createRoutineSchema.safeParse(input)

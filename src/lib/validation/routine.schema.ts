@@ -15,6 +15,10 @@ import {
 } from "./shared.schema";
 
 // ── Create / update template ──────────────────────────────────────────────────
+// `goal` se deja como string libre para permitir objetivos personalizados que
+// el trainer puede crear desde la UI (ver /trainer/rutinas/nueva). Los goals
+// "built-in" (HYPERTROPHY/STRENGTH/ENDURANCE/FAT_LOSS/GENERAL) viven en
+// src/lib/ai/ocr-routine.ts:VALID_GOALS para el flujo de OCR estructurado.
 
 export const createRoutineSchema = z.object({
   name: z.string().trim().min(2, "Mínimo 2 caracteres").max(100, "Máximo 100 caracteres"),

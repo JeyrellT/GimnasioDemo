@@ -56,6 +56,16 @@ function DashboardSkeleton() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function FinanzasPage() {
+  // useSearchParams() requiere un Suspense boundary en Next 15. Sin esto el
+  // browser hace un client-side bailout completo del route.
+  return (
+    <React.Suspense fallback={<DashboardSkeleton />}>
+      <FinanzasPageInner />
+    </React.Suspense>
+  );
+}
+
+function FinanzasPageInner() {
   const searchParams = useSearchParams();
   const monthStr = searchParams.get("month") ?? currentMonthStr();
   const { user } = useAuth();
