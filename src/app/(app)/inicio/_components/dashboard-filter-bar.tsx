@@ -58,9 +58,8 @@ function getGreeting(hour: number): string {
   return "Buenas noches";
 }
 
-function getFormattedDate(): string {
-  const now = new Date();
-  const raw = now.toLocaleDateString("es-CR", {
+function getFormattedDate(date: Date): string {
+  const raw = date.toLocaleDateString("es-CR", {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -97,8 +96,13 @@ export function DashboardFilterBar({
   const currentParq =
     searchParams.get("parqStatuses")?.split(",").filter(Boolean) ?? [];
 
-  const { pendingGoals, pendingParqStatuses, setPendingGoals, setPendingParqStatuses, hydrate } =
-    useDashboardFilterStore();
+  // Selectores individuales para evitar re-renders cuando otros fields del
+  // store cambian. Antes: useDashboardFilterStore() (full store subscribe).
+  const pendingGoals = useDashboardFilterStore((s) => s.pendingGoals);
+  const pendingParqStatuses = useDashboardFilterStore((s) => s.pendingParqStatuses);
+  const setPendingGoals = useDashboardFilterStore((s) => s.setPendingGoals);
+  const setPendingParqStatuses = useDashboardFilterStore((s) => s.setPendingParqStatuses);
+  const hydrate = useDashboardFilterStore((s) => s.hydrate);
 
   // Hydrate pending state from URL on mount.
   useEffect(() => {
@@ -110,7 +114,9 @@ export function DashboardFilterBar({
   // Safe split: fall back to full name if split produces no first token.
   const firstName = trainerName.split(" ")[0] ?? trainerName;
   const greeting = `${getGreeting(now.getHours())}, ${firstName}.`;
-  const dateDisplay = getFormattedDate();
+  // Pasamos el `now` ya stabilizado por useState — evita SSR/CSR mismatch
+  // (server rendea con un Date, client con otro segundos despues).
+  const dateDisplay = getFormattedDate(now);
 
   const isDirty = !isDefaultFilters(currentRange, currentGoals, currentParq);
 
