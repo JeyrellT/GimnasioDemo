@@ -15,7 +15,6 @@ export const BRANDING_MODULES: BrandingModule[] = [
     desc: "Constructor con días, ejercicios, series y RPE. Plantillas reutilizables. Asignás a un cliente o a un grupo con un tap.",
     metaLeft: "Builder",
     metaRight: "+ Plantillas",
-    bgImage: "/branding/exercise-1.png",
   },
   {
     num: "/ 02",
@@ -23,7 +22,6 @@ export const BRANDING_MODULES: BrandingModule[] = [
     desc: "Tus clientes registran cada set sin señal. Timer de descanso automático. Sincronización al volver online. Funciona en el gym de sótano.",
     metaLeft: "Offline-first",
     metaRight: "+ PWA",
-    bgImage: "/branding/exercise-2.png",
   },
   {
     num: "/ 03",
@@ -31,7 +29,6 @@ export const BRANDING_MODULES: BrandingModule[] = [
     desc: "PRs, adherencia, volumen semanal y body metrics. Gráficos por cliente. Sabés quién progresa y quién se cae.",
     metaLeft: "Por cliente",
     metaRight: "+ Trends",
-    bgImage: "/branding/exercise-3.png",
   },
   {
     num: "/ 04",
