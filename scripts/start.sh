@@ -10,6 +10,28 @@ set -e
 MAX_RETRIES=3
 RETRY_DELAY=5
 
+# =============================================================================
+# Auto-resolve known stale "failed" migrations BEFORE migrate deploy.
+#
+# When a migration fails mid-apply, Prisma leaves the row in _prisma_migrations
+# with finished_at=NULL. The next `migrate deploy` then errors out (P3009) and
+# requires a manual `migrate resolve --rolled-back <name>` before it will retry.
+#
+# This block runs the resolve for KNOWN failed migrations (one-time recovery
+# from PR #96's CONCURRENTLY bug). Adding a name here is idempotent: if the
+# migration is NOT in failed state, prisma errors but we suppress and continue.
+# Once the migration applies cleanly, this block becomes a no-op.
+#
+# To clean up: delete the resolve line once you confirm the migration applied.
+# =============================================================================
+STALE_MIGRATIONS="20260525180000_restore_search_indexes"
+for stale in $STALE_MIGRATIONS; do
+  echo ">>> Attempting prisma migrate resolve --rolled-back $stale (idempotent)"
+  pnpm exec prisma migrate resolve --rolled-back "$stale" 2>&1 \
+    | grep -v "is not in a failed state" \
+    || true
+done
+
 echo ">>> Running prisma migrate deploy..."
 attempt=1
 migrate_ok=false

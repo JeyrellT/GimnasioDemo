@@ -11,7 +11,15 @@
 -- (2) WorkoutSession composite index on (status, clientUserId, startedAt) —
 --     dashboard.actions.ts filters on this triple ubiquitously (KPIs, sparklines,
 --     adherence). Partial index excluding soft-deleted rows keeps it lean.
---     Created CONCURRENTLY so it doesn't block writes during deployment.
+--
+-- Hotfix: removido CONCURRENTLY del index (2). `prisma migrate deploy` envuelve
+-- cada migration en una transaccion implicita, y `CREATE INDEX CONCURRENTLY`
+-- no puede correr dentro de un BEGIN/COMMIT — falla con:
+--   ERROR: CREATE INDEX CONCURRENTLY cannot run inside a transaction block
+-- Esto tumbo el deploy de PR #96. WorkoutSession aun es chica en prod, el
+-- lock momentaneo de un CREATE INDEX normal es aceptable. Si la tabla crece
+-- y se necesita zero-downtime, se puede recrear con CONCURRENTLY via psql
+-- directo (fuera de prisma migrate) en una ventana de mantenimiento.
 --
 -- Both indexes are safe to add: they don't change query results, only their cost.
 -- =============================================================================
@@ -19,8 +27,6 @@
 CREATE INDEX IF NOT EXISTS "Exercise_searchVector_idx"
   ON "Exercise" USING gin ("searchVector");
 
--- CONCURRENTLY requires no enclosing transaction. Prisma migrate runs each
--- statement separately, but flag in case downstream tooling wraps in BEGIN.
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "WorkoutSession_status_client_startedAt_idx"
+CREATE INDEX IF NOT EXISTS "WorkoutSession_status_client_startedAt_idx"
   ON "WorkoutSession" ("status", "clientUserId", "startedAt" DESC)
   WHERE "deletedAt" IS NULL;
