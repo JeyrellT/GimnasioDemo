@@ -28,8 +28,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { encode } from "next-auth/jwt";
 import { prisma } from "@/server/db";
-import { logError, logInfo, logWarn } from "@/lib/logger";
 import { serverEnv } from "@/server/env";
+import { logError, logInfo, logWarn } from "@/lib/logger";
 
 // Force Node.js runtime — we use Prisma which requires Node.js.
 export const runtime = "nodejs";
@@ -125,17 +125,33 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       return NextResponse.redirect(errorUrl);
     }
 
-    // ── 6. Mark invitation used ────────────────────────────────────────────────
-    await prisma.invitation.update({
-      where: { id: invitation.id },
-      data: { usedAt: new Date() },
-    });
+    // ── 6. Mark invitation used (atomic guard against race) ───────────────────
+    // The {id, usedAt: null} predicate ensures only ONE concurrent caller wins.
+    // P2025 (RecordNotFound) means another request already consumed the token —
+    // safe to treat as the "already used" branch.
+    try {
+      await prisma.invitation.update({
+        where: { id: invitation.id, usedAt: null },
+        data: { usedAt: new Date() },
+      });
+    } catch (err: unknown) {
+      const code = (err as { code?: string } | null)?.code;
+      if (code === "P2025") {
+        logWarn("aceptar-invitacion: token consumed concurrently", {
+          invitationId: invitation.id,
+        });
+        return NextResponse.redirect(errorUrl);
+      }
+      throw err;
+    }
 
     // ── 7. Mint session JWT ────────────────────────────────────────────────────
     // We build the JWT payload that matches what the jwt() callback writes
     // (see auth.ts). id, role, name, email, sub are the fields NextAuth reads
     // back from the token to populate session.user.
-    const secret = process.env.NEXTAUTH_SECRET ?? "";
+    // serverEnv validates NEXTAUTH_SECRET >= 32 chars at boot via Zod.
+    // No empty-string fallback — boot fails fast if unset.
+    const secret = serverEnv.NEXTAUTH_SECRET;
     const cookieName = sessionCookieName();
 
     const jwtToken = await encode({

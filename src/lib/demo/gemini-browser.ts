@@ -585,7 +585,10 @@ export async function chatWithTools(
     try {
       const generation = handle.generateContent({
         contents,
-        generationConfig: { temperature },
+        // maxOutputTokens cap protects against runaway agent loops + cost.
+        // 2048 is plenty for tool-dispatch turns; deep-reasoning turns that
+        // need more should call the structured-output path with a schema.
+        generationConfig: { temperature, maxOutputTokens: 2048 },
       });
 
       const timeoutPromise = new Promise<never>((_, reject) => {

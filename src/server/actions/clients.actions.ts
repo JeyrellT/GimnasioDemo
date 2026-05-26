@@ -322,6 +322,28 @@ export async function createInvitation(
       );
     }
 
+    // -- Block duplicate pending invitations: dedupe at the invitation row
+    //    level so the trainer can't accidentally (or maliciously) flood the
+    //    same inbox with multiple live tokens.
+    const now = new Date();
+    const pendingInvitation = await prisma.invitation.findFirst({
+      where: {
+        trainerId: trainer.id,
+        email,
+        usedAt: null,
+        expiresAt: { gt: now },
+        deletedAt: null,
+      },
+      select: { id: true },
+    });
+
+    if (pendingInvitation) {
+      throw new ConflictError(
+        "INVITATION_ALREADY_PENDING",
+        "Ya enviaste una invitación a ese correo electrónico que sigue vigente.",
+      );
+    }
+
     // -- Generate token and create Invitation record --
     const token = generateOpaqueToken(32);
     const expiresAt = new Date(

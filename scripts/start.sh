@@ -30,21 +30,29 @@ while [ "$attempt" -le "$MAX_RETRIES" ]; do
 done
 
 if [ "$migrate_ok" = false ]; then
-  echo ">>> All $MAX_RETRIES migrate attempts failed — resetting DB schema..."
-  echo ">>> WARNING: This will drop all tables and recreate them!"
-  pnpm exec prisma db push --force-reset --accept-data-loss --skip-generate
-  echo ">>> Marking ALL migrations as applied to keep _prisma_migrations in sync..."
-  # Iterate over every migration directory under prisma/migrations and mark it
-  # applied. This way the next deploy does NOT try to re-apply migrations whose
-  # schema is already live via db push (which would error and trigger another
-  # destructive reset on each deploy).
-  for dir in prisma/migrations/*/; do
-    name=$(basename "$dir")
-    if [ "$name" != "migration_lock.toml" ]; then
-      pnpm exec prisma migrate resolve --applied "$name" || true
-    fi
-  done
-  echo ">>> DB reset complete"
+  if [ "${ALLOW_DB_RESET:-false}" = "true" ]; then
+    echo ">>> All $MAX_RETRIES migrate attempts failed — resetting DB schema..."
+    echo ">>> ALLOW_DB_RESET=true; proceeding with destructive reset."
+    echo ">>> WARNING: This will drop all tables and recreate them!"
+    pnpm exec prisma db push --force-reset --accept-data-loss --skip-generate
+    echo ">>> Marking ALL migrations as applied to keep _prisma_migrations in sync..."
+    # Iterate over every migration directory under prisma/migrations and mark it
+    # applied. This way the next deploy does NOT try to re-apply migrations whose
+    # schema is already live via db push (which would error and trigger another
+    # destructive reset on each deploy).
+    for dir in prisma/migrations/*/; do
+      name=$(basename "$dir")
+      if [ "$name" != "migration_lock.toml" ]; then
+        pnpm exec prisma migrate resolve --applied "$name" || true
+      fi
+    done
+    echo ">>> DB reset complete"
+  else
+    echo ">>> FATAL: $MAX_RETRIES migrate attempts failed and ALLOW_DB_RESET is not 'true'."
+    echo ">>> Aborting boot. Set ALLOW_DB_RESET=true in Railway dashboard ONLY to allow"
+    echo ">>> destructive recovery (drops all tables). NEVER set on production."
+    exit 1
+  fi
 fi
 
 # =============================================================================
