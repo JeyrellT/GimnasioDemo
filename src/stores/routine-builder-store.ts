@@ -91,6 +91,19 @@ interface RoutineBuilderState {
     dayId: string,
     group: number,
   ) => { exercises: DraftExercise[]; affectedExerciseIds: string[] } | null;
+  /**
+   * Después de un reorder, normaliza los grupos: cualquier ejercicio con
+   * `supersetGroup != null` cuyo vecino inmediato (anterior o siguiente) NO
+   * comparta el mismo grupo, queda automáticamente desagrupado.
+   *
+   * Mantiene la invariante "miembros de un grupo deben ser contiguos" y
+   * elimina huérfanos (grupos de 1 miembro) que aparecen cuando arrastrás
+   * un ejercicio fuera del cluster.
+   *
+   * Devuelve los IDs locales afectados (para persistir su supersetGroup=null
+   * en el servidor). Si no hubo cambios, array vacío.
+   */
+  normalizeOrphansInDay: (dayId: string) => { affectedIds: string[] };
   markSaved: () => void;
   reset: () => void;
 }
@@ -376,6 +389,40 @@ export const useRoutineBuilderStore = create<RoutineBuilderState>()((set) => ({
     });
 
     return result;
+  },
+
+  normalizeOrphansInDay: (dayId) => {
+    const affectedIds: string[] = [];
+
+    set((state) => {
+      const day = state.days.find((d) => d.id === dayId);
+      if (!day) return state;
+
+      const exs = day.exercises;
+      const next = exs.map((ex, i) => {
+        if (ex.supersetGroup === null) return ex;
+        const prev = exs[i - 1];
+        const after = exs[i + 1];
+        const matchPrev = prev?.supersetGroup === ex.supersetGroup;
+        const matchNext = after?.supersetGroup === ex.supersetGroup;
+        if (matchPrev || matchNext) return ex;
+        // Huérfano: sin vecinos del mismo grupo → ungroup.
+        affectedIds.push(ex.id);
+        return { ...ex, supersetGroup: null };
+      });
+
+      if (affectedIds.length === 0) return state;
+
+      return {
+        ...state,
+        days: state.days.map((d) =>
+          d.id === dayId ? { ...d, exercises: next } : d,
+        ),
+        isDirty: true,
+      };
+    });
+
+    return { affectedIds };
   },
 
   ungroupExercise: (dayId, exerciseLocalId) => {
