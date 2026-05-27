@@ -10,6 +10,7 @@ import {
   Timer,
   Settings2,
   ClipboardList,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -62,6 +63,23 @@ export function AjustesClient({ initialPrefs, routines }: Props) {
   const [prefs, setPrefs] = useState<ClientRestPrefs>(initialPrefs);
   const [pending, startTransition] = useTransition();
   const hasRoutines = routines.length > 0;
+
+  // Acordeón por rutina: todo colapsado al entrar para que el cliente vea
+  // primero la lista de rutinas y elija dónde editar.
+  const [expandedRoutines, setExpandedRoutines] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const toggleRoutine = (id: string) => {
+    setExpandedRoutines((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
   // ── Global offset ─────────────────────────────────────────────────────────
   const handleSetOffset = (seconds: number) => {
@@ -206,39 +224,72 @@ export function AjustesClient({ initialPrefs, routines }: Props) {
             </div>
           </header>
 
-          <div className="space-y-5">
-            {routines.map((routine) => (
-              <div key={routine.assignedRoutineId} className="space-y-2">
-                <div className="flex items-center gap-2 px-0.5">
-                  <ClipboardList
-                    className="h-3.5 w-3.5 text-brand-primary"
-                    aria-hidden="true"
-                  />
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-brand-primary">
-                    {routine.routineName}
-                  </h3>
-                  <span className="text-[10px] text-[#52525B] tabular">
-                    · {routine.exercises.length}{" "}
-                    {routine.exercises.length === 1 ? "ejercicio" : "ejercicios"}
-                  </span>
-                </div>
-
-                <ul className="space-y-2">
-                  {routine.exercises.map((ex) => (
-                    <ExerciseRow
-                      key={`${routine.assignedRoutineId}:${ex.exerciseId}`}
-                      exercise={ex}
-                      override={prefs.exerciseOverrides[ex.exerciseId] ?? null}
-                      onSet={(seconds) =>
-                        handleSetExerciseOverride(ex.exerciseId, seconds)
-                      }
-                      onClear={() => handleClearExerciseOverride(ex.exerciseId)}
-                      disabled={pending}
+          <div className="space-y-3">
+            {routines.map((routine) => {
+              const isOpen = expandedRoutines.has(routine.assignedRoutineId);
+              const panelId = `routine-panel-${routine.assignedRoutineId}`;
+              return (
+                <div
+                  key={routine.assignedRoutineId}
+                  className="rounded-xl border border-[#27272A] bg-[#0F0F11] overflow-hidden"
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleRoutine(routine.assignedRoutineId)}
+                    className="w-full flex items-center gap-2.5 px-3 py-3 text-left hover:bg-[#18181B] transition-colors min-h-[48px]"
+                    aria-expanded={isOpen}
+                    aria-controls={panelId}
+                  >
+                    <ClipboardList
+                      className="h-4 w-4 shrink-0 text-brand-primary"
+                      aria-hidden="true"
                     />
-                  ))}
-                </ul>
-              </div>
-            ))}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-brand-primary truncate">
+                        {routine.routineName}
+                      </h3>
+                      <p className="text-[10px] text-[#71717A] tabular mt-0.5">
+                        {routine.exercises.length}{" "}
+                        {routine.exercises.length === 1
+                          ? "ejercicio"
+                          : "ejercicios"}
+                      </p>
+                    </div>
+                    <ChevronDown
+                      className={[
+                        "h-4 w-4 shrink-0 text-[#71717A] transition-transform",
+                        isOpen ? "rotate-180" : "",
+                      ].join(" ")}
+                      aria-hidden="true"
+                    />
+                  </button>
+
+                  {isOpen && (
+                    <ul
+                      id={panelId}
+                      className="border-t border-[#27272A] p-2 space-y-2 bg-[#09090B]"
+                    >
+                      {routine.exercises.map((ex) => (
+                        <ExerciseRow
+                          key={`${routine.assignedRoutineId}:${ex.exerciseId}`}
+                          exercise={ex}
+                          override={
+                            prefs.exerciseOverrides[ex.exerciseId] ?? null
+                          }
+                          onSet={(seconds) =>
+                            handleSetExerciseOverride(ex.exerciseId, seconds)
+                          }
+                          onClear={() =>
+                            handleClearExerciseOverride(ex.exerciseId)
+                          }
+                          disabled={pending}
+                        />
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
