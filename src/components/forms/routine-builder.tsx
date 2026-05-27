@@ -346,7 +346,10 @@ function SupersetCluster({
       className="rounded-xl border-2 bg-[#0F0F11] overflow-hidden"
       style={{ borderColor: color }}
     >
-      {/* Header con tinte del color del grupo */}
+      {/* Header con tinte del color del grupo. El ícono de cadena toma el
+          color del grupo y reemplaza al badge "SS-X" — el título a la derecha
+          ya dice "Superserie A" explícitamente, así que el badge sería
+          redundante (la pregunta "¿qué significa SS-A?" salió varias veces). */}
       <div
         className="flex items-center gap-2 px-3 py-2 border-b"
         style={{
@@ -354,9 +357,17 @@ function SupersetCluster({
           backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)`,
         }}
       >
-        <SupersetBadge group={group} size="sm" />
+        <div
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+          style={{
+            backgroundColor: `color-mix(in srgb, ${color} 20%, transparent)`,
+          }}
+          aria-hidden="true"
+        >
+          <Link2 className="h-4 w-4" style={{ color }} />
+        </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-[#FAFAFA] leading-tight">
+          <p className="text-xs font-semibold leading-tight" style={{ color }}>
             Superserie {letter}
           </p>
           <p className="text-[10px] text-[#A1A1AA] tabular">
