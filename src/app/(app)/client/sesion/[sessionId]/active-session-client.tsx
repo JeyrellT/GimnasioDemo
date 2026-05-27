@@ -317,8 +317,6 @@ export function ActiveSessionClient({ session, restPrefs }: ActiveSessionClientP
               <div className="mx-auto h-28 w-28 overflow-hidden rounded-xl bg-[#27272A]">
                 <ExerciseThumbnail
                   thumbnailUrl={currentExercise.thumbnailUrl}
-                  slug={currentExercise.slug}
-                  nameEn={currentExercise.nameEn}
                   alt={currentExercise.nameEs}
                 />
               </div>

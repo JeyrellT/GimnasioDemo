@@ -461,9 +461,6 @@ export default function ClientRutinasPage() {
                                       <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-[#27272A]">
                                         <ExerciseThumbnail
                                           thumbnailUrl={ex.thumbnailUrl}
-                                          gifUrl={ex.gifUrl}
-                                          slug={ex.slug}
-                                          nameEn={ex.nameEn}
                                           alt={ex.nameEs}
                                           iconSize="sm"
                                         />

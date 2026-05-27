@@ -321,13 +321,9 @@ export function ExerciseLibraryPage({
                     <div className="relative aspect-[3/4] w-full overflow-hidden bg-gradient-to-br from-[#27272A] to-[#18181B] flex items-center justify-center">
                       {hasMedia ? (
                         // ExerciseThumbnail handles Drive URL rewriting
-                        // (drive.google.com/file/d/X → lh3.googleusercontent.com/d/X)
-                        // plus a retry chain (slug → nameEn → SLUG_IMAGE_MAP).
+                        // (drive.google.com/file/d/X → lh3.googleusercontent.com/d/X).
                         <ExerciseThumbnail
                           thumbnailUrl={ex.thumbnailUrl}
-                          gifUrl={ex.gifUrl}
-                          slug={ex.slug}
-                          nameEn={ex.nameEn}
                           alt={ex.nameEs}
                         />
                       ) : (

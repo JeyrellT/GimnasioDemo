@@ -627,9 +627,6 @@ export function RoutinePlayerDialog({
                   <div className="aspect-square w-full">
                     <ExerciseThumbnail
                       thumbnailUrl={current.thumbnailUrl}
-                      gifUrl={current.gifUrl}
-                      slug={current.slug}
-                      nameEn={current.nameEn}
                       alt={current.nameEs}
                     />
                   </div>

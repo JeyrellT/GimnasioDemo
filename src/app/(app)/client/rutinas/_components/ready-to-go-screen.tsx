@@ -78,9 +78,6 @@ export function ReadyToGoScreen({
             <div className="aspect-square w-full">
               <ExerciseThumbnail
                 thumbnailUrl={firstExercise.thumbnailUrl}
-                gifUrl={firstExercise.gifUrl}
-                slug={firstExercise.slug}
-                nameEn={firstExercise.nameEn}
                 alt={firstExercise.nameEs}
               />
             </div>

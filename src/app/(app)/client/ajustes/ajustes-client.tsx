@@ -347,8 +347,6 @@ function ExerciseRow({
         <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-[#27272A]">
           <ExerciseThumbnail
             thumbnailUrl={exercise.thumbnailUrl}
-            slug={exercise.slug}
-            nameEn={exercise.nameEn}
             alt={exercise.nameEs}
             iconSize="sm"
           />
