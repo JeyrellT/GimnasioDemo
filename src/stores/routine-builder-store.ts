@@ -81,6 +81,16 @@ interface RoutineBuilderState {
     dayId: string,
     exerciseLocalId: string,
   ) => { exercises: DraftExercise[] } | null;
+  /**
+   * Disuelve una superserie entera: pone `supersetGroup = null` a todos los
+   * miembros del grupo `group` en el día `dayId`. Devuelve la lista
+   * actualizada y los `routineExerciseId` de los ejercicios afectados para
+   * que el caller los persista, o `null` si no había miembros en ese grupo.
+   */
+  dissolveSuperset: (
+    dayId: string,
+    group: number,
+  ) => { exercises: DraftExercise[]; affectedExerciseIds: string[] } | null;
   markSaved: () => void;
   reset: () => void;
 }
@@ -327,6 +337,39 @@ export const useRoutineBuilderStore = create<RoutineBuilderState>()((set) => ({
         ...state,
         days: state.days.map((d) =>
           d.id === dayId ? { ...d, exercises: finalList } : d,
+        ),
+        isDirty: true,
+      };
+    });
+
+    return result;
+  },
+
+  dissolveSuperset: (dayId, group) => {
+    let result:
+      | { exercises: DraftExercise[]; affectedExerciseIds: string[] }
+      | null = null;
+
+    set((state) => {
+      const day = state.days.find((d) => d.id === dayId);
+      if (!day) return state;
+
+      const affected = day.exercises.filter((e) => e.supersetGroup === group);
+      if (affected.length === 0) return state;
+
+      const next = day.exercises.map((e) =>
+        e.supersetGroup === group ? { ...e, supersetGroup: null } : e,
+      );
+
+      result = {
+        exercises: next,
+        affectedExerciseIds: affected.map((e) => e.id),
+      };
+
+      return {
+        ...state,
+        days: state.days.map((d) =>
+          d.id === dayId ? { ...d, exercises: next } : d,
         ),
         isDirty: true,
       };

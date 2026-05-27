@@ -276,6 +276,140 @@ function RestSecondsSelector({
   );
 }
 
+// ── Day exercise rendering — segments + cluster wrapper ──────────────────────
+
+type DaySegment =
+  | { kind: "single"; exercise: DraftExercise }
+  | { kind: "group"; group: number; exercises: DraftExercise[] };
+
+/**
+ * Convierte la lista de ejercicios de un día en "segmentos" para el render:
+ * - Ejercicios consecutivos con el mismo `supersetGroup` forman un segmento
+ *   `group` (se renderizará dentro de un <SupersetCluster>).
+ * - Cada ejercicio sin grupo (o cuyo grupo no es contiguo) es un segmento
+ *   `single`.
+ *
+ * La adyacencia la mantiene la action `groupExercises` del store, así que en
+ * la práctica los miembros de un grupo siempre quedan consecutivos.
+ */
+function computeDaySegments(exercises: DraftExercise[]): DaySegment[] {
+  const segments: DaySegment[] = [];
+  let i = 0;
+  while (i < exercises.length) {
+    const ex = exercises[i];
+    if (!ex) break;
+    if (ex.supersetGroup === null) {
+      segments.push({ kind: "single", exercise: ex });
+      i += 1;
+      continue;
+    }
+    const group = ex.supersetGroup;
+    const start = i;
+    while (i < exercises.length && exercises[i]?.supersetGroup === group) {
+      i += 1;
+    }
+    segments.push({
+      kind: "group",
+      group,
+      exercises: exercises.slice(start, i),
+    });
+  }
+  return segments;
+}
+
+/**
+ * Card visual que envuelve los miembros consecutivos de una superserie.
+ * - Header coloreado: badge SS-X + "Superserie X" + conteo + acciones.
+ * - Cuerpo: expandido (default) renderiza los children (rows sortable).
+ *   Colapsado renderiza chips con los nombres de los miembros.
+ * - Botón "Disolver" rompe el grupo entero (todos los miembros vuelven a
+ *   estar sueltos).
+ */
+function SupersetCluster({
+  group,
+  members,
+  onDissolve,
+  children,
+}: {
+  group: number;
+  members: DraftExercise[];
+  onDissolve: (group: number) => void;
+  children: React.ReactNode;
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const color = getSupersetColor(group);
+  const letter = getSupersetLetter(group);
+  const count = members.length;
+
+  return (
+    <div
+      className="rounded-xl border-2 bg-[#0F0F11] overflow-hidden"
+      style={{ borderColor: color }}
+    >
+      {/* Header con tinte del color del grupo */}
+      <div
+        className="flex items-center gap-2 px-3 py-2 border-b"
+        style={{
+          borderBottomColor: color,
+          backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)`,
+        }}
+      >
+        <SupersetBadge group={group} size="sm" />
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-semibold text-[#FAFAFA] leading-tight">
+            Superserie {letter}
+          </p>
+          <p className="text-[10px] text-[#A1A1AA] tabular">
+            {count} {count === 1 ? "ejercicio" : "ejercicios"} ·{" "}
+            <span className="text-[#71717A]">
+              hacer en bloque sin descanso largo entre miembros
+            </span>
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => onDissolve(group)}
+          className="inline-flex items-center gap-1 rounded-md border border-[#3F3F46] px-2 py-1 text-[10px] text-[#A1A1AA] hover:border-[#EF4444] hover:text-[#EF4444] transition-colors min-h-[28px]"
+          title="Disolver toda la superserie"
+          aria-label={`Disolver superserie ${letter}`}
+        >
+          <Link2Off className="h-3 w-3" aria-hidden="true" />
+          Disolver
+        </button>
+        <button
+          type="button"
+          onClick={() => setCollapsed((c) => !c)}
+          className="flex h-7 w-7 items-center justify-center rounded-md text-[#71717A] hover:text-[#FAFAFA] hover:bg-[#27272A] transition-colors"
+          aria-label={collapsed ? "Expandir superserie" : "Colapsar superserie"}
+          aria-expanded={!collapsed}
+        >
+          {collapsed ? (
+            <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+          ) : (
+            <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
+          )}
+        </button>
+      </div>
+
+      {/* Body: expandido (rows completos) o colapsado (chips). */}
+      {collapsed ? (
+        <div className="px-3 py-2 flex flex-wrap gap-1.5">
+          {members.map((m) => (
+            <span
+              key={m.id}
+              className="rounded-full bg-[#27272A] px-2.5 py-0.5 text-[11px] text-[#A1A1AA]"
+            >
+              {m.nameEs}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <div className="p-2 space-y-2">{children}</div>
+      )}
+    </div>
+  );
+}
+
 // ── Exercise Row ──────────────────────────────────────────────────────────────
 
 function SortableExerciseRow({
@@ -283,6 +417,7 @@ function SortableExerciseRow({
   dayId,
   index,
   isGroupDropTarget,
+  insideCluster,
   onUngroup,
 }: {
   exercise: DraftExercise;
@@ -291,6 +426,11 @@ function SortableExerciseRow({
   /** True cuando otro ejercicio se está arrastrando sobre la zona central
    *  de este (= drop = agrupar con éste). Pinta indicador visual. */
   isGroupDropTarget: boolean;
+  /** True cuando el row vive dentro de un <SupersetCluster>. En ese caso
+   *  ocultamos el badge SS-X inline (el header del cluster lo lleva) y la
+   *  banda lateral de color (el wrapper la pinta). Sigue mostrando "Desagrupar"
+   *  para sacar individualmente al ejercicio de la superserie. */
+  insideCluster: boolean;
   /** Quita este ejercicio de su superserie. */
   onUngroup: (exerciseId: string) => void;
 }) {
@@ -309,7 +449,9 @@ function SortableExerciseRow({
     transform: CSS.Transform.toString(transform),
     transition,
     zIndex: isDragging ? 10 : undefined,
-    ...(supersetColor
+    // Sólo aplicamos la banda lateral cuando el row está suelto. Dentro de
+    // un cluster, el wrapper se encarga de comunicar la pertenencia visual.
+    ...(supersetColor && !insideCluster
       ? { borderLeftColor: supersetColor, borderLeftWidth: 3 }
       : {}),
   };
@@ -393,17 +535,27 @@ function SortableExerciseRow({
             />
           </div>
           <p className="text-sm font-semibold text-[#FAFAFA] leading-tight">{exercise.nameEs}</p>
-          <SupersetBadge group={exercise.supersetGroup} size="sm" />
+          {/* Cuando el row está suelto (no en cluster), mostramos el badge
+              y el botón de desagrupar inline. Dentro de un cluster, el
+              header carga la identidad del grupo y agregamos sólo el botón
+              "Sacar" pequeñito para sacar individualmente. */}
+          {!insideCluster && (
+            <SupersetBadge group={exercise.supersetGroup} size="sm" />
+          )}
           {supersetLetter && (
             <button
               type="button"
               onClick={() => onUngroup(exercise.id)}
               className="inline-flex items-center gap-1 rounded-md border border-[#3F3F46] px-1.5 py-0.5 text-[10px] text-[#71717A] hover:border-[#52525B] hover:text-[#FAFAFA] transition-colors"
-              title="Quitar de superserie"
+              title={
+                insideCluster
+                  ? "Sacar este ejercicio de la superserie"
+                  : "Quitar de superserie"
+              }
               aria-label={`Quitar ${exercise.nameEs} de la superserie ${supersetLetter}`}
             >
               <Link2Off className="h-3 w-3" aria-hidden="true" />
-              Desagrupar
+              {insideCluster ? "Sacar" : "Desagrupar"}
             </button>
           )}
         </div>
@@ -482,7 +634,14 @@ function DayCard({
   const reorderExercisesInDay = useRoutineBuilderStore((s) => s.reorderExercisesInDay);
   const groupExercises = useRoutineBuilderStore((s) => s.groupExercises);
   const ungroupExercise = useRoutineBuilderStore((s) => s.ungroupExercise);
+  const dissolveSuperset = useRoutineBuilderStore((s) => s.dissolveSuperset);
   const accentColor = getDayColor(day.dayIndex);
+
+  // Segmentos del día: clusters de superserie + ejercicios sueltos. Se
+  // recalculan en cada render (la lista es pequeña). El SortableContext
+  // sigue recibiendo todos los IDs en orden, así que dnd-kit no se entera
+  // de los clusters — son sólo un wrapper visual.
+  const daySegments = computeDaySegments(day.exercises);
 
   // Estado del drag: cuál ejercicio se está arrastrando (active) y cuál es el
   // target de agrupación (sólo seteado cuando el puntero está en la banda
@@ -710,6 +869,50 @@ function DayCard({
     }
   };
 
+  /**
+   * Disuelve una superserie completa: todos los miembros pierden su
+   * `supersetGroup`. Mismo patrón de rollback que handleUngroup.
+   */
+  const handleDissolve = async (group: number) => {
+    const letter = getSupersetLetter(group);
+    if (!confirm(`¿Disolver la Superserie ${letter}? Los ejercicios quedarán sueltos.`)) {
+      return;
+    }
+
+    const before = day.exercises.map((e) => ({ ...e }));
+    const result = dissolveSuperset(day.id, group);
+    if (!result) return;
+
+    // Los IDs afectados son locales — necesitamos su routineExerciseId.
+    const affectedSet = new Set(result.affectedExerciseIds);
+    const persistable = result.exercises.filter(
+      (e) => affectedSet.has(e.id) && e.routineExerciseId,
+    );
+    if (persistable.length === 0) {
+      toast.success(`Superserie ${letter} disuelta.`);
+      return;
+    }
+
+    try {
+      const updates = persistable.map((e) =>
+        updateExerciseInDay({
+          routineExerciseId: e.routineExerciseId as string,
+          supersetGroup: null,
+        }),
+      );
+      const results = await Promise.all(updates);
+      if (results.some((r) => !r.ok)) throw new Error("dissolve_persist_failed");
+      toast.success(`Superserie ${letter} disuelta.`);
+    } catch {
+      for (const e of before) {
+        useRoutineBuilderStore
+          .getState()
+          .updateExercise(day.id, e.id, { supersetGroup: e.supersetGroup });
+      }
+      toast.error("No se pudo disolver la superserie.");
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -822,20 +1025,57 @@ function DayCard({
                   strategy={verticalListSortingStrategy}
                 >
                   <AnimatePresence initial={false}>
-                    {day.exercises.map((ex, idx) => (
-                      <SortableExerciseRow
-                        key={ex.id}
-                        exercise={ex}
-                        dayId={day.id}
-                        index={idx}
-                        isGroupDropTarget={
-                          activeDragId !== null &&
-                          activeDragId !== ex.id &&
-                          groupHoverTargetId === ex.id
-                        }
-                        onUngroup={handleUngroup}
-                      />
-                    ))}
+                    {daySegments.map((segment) => {
+                      if (segment.kind === "single") {
+                        const ex = segment.exercise;
+                        const idx = day.exercises.findIndex((e) => e.id === ex.id);
+                        return (
+                          <SortableExerciseRow
+                            key={ex.id}
+                            exercise={ex}
+                            dayId={day.id}
+                            index={idx}
+                            isGroupDropTarget={
+                              activeDragId !== null &&
+                              activeDragId !== ex.id &&
+                              groupHoverTargetId === ex.id
+                            }
+                            insideCluster={false}
+                            onUngroup={handleUngroup}
+                          />
+                        );
+                      }
+                      // Cluster de superserie
+                      return (
+                        <SupersetCluster
+                          key={`cluster-${day.id}-${segment.group}`}
+                          group={segment.group}
+                          members={segment.exercises}
+                          onDissolve={handleDissolve}
+                        >
+                          {segment.exercises.map((ex) => {
+                            const idx = day.exercises.findIndex(
+                              (e) => e.id === ex.id,
+                            );
+                            return (
+                              <SortableExerciseRow
+                                key={ex.id}
+                                exercise={ex}
+                                dayId={day.id}
+                                index={idx}
+                                isGroupDropTarget={
+                                  activeDragId !== null &&
+                                  activeDragId !== ex.id &&
+                                  groupHoverTargetId === ex.id
+                                }
+                                insideCluster={true}
+                                onUngroup={handleUngroup}
+                              />
+                            );
+                          })}
+                        </SupersetCluster>
+                      );
+                    })}
                   </AnimatePresence>
                 </SortableContext>
               </DndContext>
