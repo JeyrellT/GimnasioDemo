@@ -76,9 +76,6 @@ export function NextExercisePreview({
           <div className="h-20 w-16 shrink-0 overflow-hidden rounded-xl bg-[#27272A]">
             <ExerciseThumbnail
               thumbnailUrl={exercise.thumbnailUrl}
-              gifUrl={exercise.gifUrl}
-              slug={exercise.slug}
-              nameEn={exercise.nameEn}
               alt={exercise.nameEs}
             />
           </div>
@@ -115,9 +112,6 @@ export function NextExercisePreview({
       <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-[#27272A]">
         <ExerciseThumbnail
           thumbnailUrl={exercise.thumbnailUrl}
-          gifUrl={exercise.gifUrl}
-          slug={exercise.slug}
-          nameEn={exercise.nameEn}
           alt={exercise.nameEs}
           iconSize="sm"
         />

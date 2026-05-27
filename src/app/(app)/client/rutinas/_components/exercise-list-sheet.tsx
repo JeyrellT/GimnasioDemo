@@ -134,9 +134,6 @@ export function ExerciseListSheet({
                   <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-[#27272A]">
                     <ExerciseThumbnail
                       thumbnailUrl={ex.thumbnailUrl}
-                      gifUrl={ex.gifUrl}
-                      slug={ex.slug}
-                      nameEn={ex.nameEn}
                       alt={ex.nameEs}
                       iconSize="sm"
                     />

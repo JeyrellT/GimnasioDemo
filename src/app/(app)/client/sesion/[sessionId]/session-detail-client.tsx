@@ -81,8 +81,6 @@ export function SessionDetailClient() {
               <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-neutral-800">
                 <ExerciseThumbnail
                   thumbnailUrl={set.exercise.thumbnailUrl}
-                  slug={set.exercise.slug}
-                  nameEn={set.exercise.nameEn}
                   alt={set.exercise.nameEs}
                   iconSize="sm"
                 />

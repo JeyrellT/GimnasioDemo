@@ -2,46 +2,12 @@
 
 import * as React from "react";
 import { Dumbbell } from "lucide-react";
-import { SLUG_IMAGE_MAP } from "@/lib/constants/exercise-images";
 
 interface ExerciseThumbnailProps {
   thumbnailUrl?: string | null;
-  gifUrl?: string | null;
-  slug?: string | null;
-  nameEn?: string | null;
   alt: string;
   className?: string;
   iconSize?: "sm" | "md";
-}
-
-function slugify(s: string | null | undefined): string | null {
-  if (!s) return null;
-  return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
-    .replace(/['']/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-}
-
-/**
- * Devuelve una versión del slug sin palabras conectoras del español:
- *   "press-inclinado-con-mancuernas" → "press-inclinado-mancuernas"
- *   "jalon-al-pecho-en-polea-espalda" → "jalon-pecho-polea-espalda"
- *
- * Útil para hacer match contra el SLUG_IMAGE_MAP o archivos en /public sin
- * tener que listar manualmente cada variante de slug que la app pueda
- * generar a partir del nombre del ejercicio.
- */
-const CONNECTOR_WORDS = new Set([
-  "con", "de", "del", "en", "el", "la", "los", "las",
-  "y", "o", "u", "a", "al", "para", "por",
-]);
-function normalizeSlug(slug: string | null | undefined): string | null {
-  if (!slug) return null;
-  const parts = slug.split("-").filter((p) => p && !CONNECTOR_WORDS.has(p));
-  const out = parts.join("-");
-  return out && out !== slug ? out : null;
-}
-
-function isGoogleDriveUrl(url: string) {
-  return /drive\.google\.com/.test(url);
 }
 
 function getGoogleDriveImageUrl(url: string): string | null {
@@ -52,87 +18,36 @@ function getGoogleDriveImageUrl(url: string): string | null {
   return null;
 }
 
-function buildChain(
-  thumbnailUrl: string | null | undefined,
-  gifUrl: string | null | undefined,
-  slug: string | null | undefined,
-  nameEn: string | null | undefined,
-): string[] {
-  const urls: string[] = [];
-  const seen = new Set<string>();
-  const add = (u: string) => {
-    if (!seen.has(u)) {
-      seen.add(u);
-      urls.push(u);
-    }
-  };
-
-  const raw = thumbnailUrl ?? gifUrl;
-  if (raw) {
-    add(isGoogleDriveUrl(raw) ? (getGoogleDriveImageUrl(raw) ?? raw) : raw);
+function resolveUrl(thumbnailUrl: string | null | undefined): string | null {
+  if (!thumbnailUrl || thumbnailUrl.startsWith("/") || thumbnailUrl.startsWith("./")) {
+    return null;
   }
-  if (slug) {
-    add(`/exercises/${slug}.jpg`);
-    add(`/exercises/${slug}.png`);
+  if (/drive\.google\.com/.test(thumbnailUrl) || /googleusercontent\.com/.test(thumbnailUrl)) {
+    return getGoogleDriveImageUrl(thumbnailUrl) ?? thumbnailUrl;
   }
-  const enSlug = slugify(nameEn);
-  if (enSlug) {
-    add(`/exercises/${enSlug}.jpg`);
-    add(`/exercises/${enSlug}.png`);
+  // Any other https:// URL — use as-is
+  if (thumbnailUrl.startsWith("https://") || thumbnailUrl.startsWith("http://")) {
+    return thumbnailUrl;
   }
-  const mappedEs = slug ? SLUG_IMAGE_MAP[slug] : undefined;
-  if (mappedEs) {
-    add(`/exercises/${mappedEs}`);
-  }
-  const mappedEn = enSlug ? SLUG_IMAGE_MAP[enSlug] : undefined;
-  if (mappedEn) {
-    add(`/exercises/${mappedEn}`);
-  }
-  // Último intento: probar con el slug normalizado (sin "con", "en", "al",
-  // etc.). Esto resuelve muchos casos donde el slug del DB difiere del
-  // mapa sólo por una palabra conectora.
-  const normalizedEs = normalizeSlug(slug);
-  if (normalizedEs) {
-    add(`/exercises/${normalizedEs}.jpg`);
-    add(`/exercises/${normalizedEs}.png`);
-    const mappedNormEs = SLUG_IMAGE_MAP[normalizedEs];
-    if (mappedNormEs) add(`/exercises/${mappedNormEs}`);
-  }
-  const normalizedEn = normalizeSlug(enSlug);
-  if (normalizedEn) {
-    add(`/exercises/${normalizedEn}.jpg`);
-    add(`/exercises/${normalizedEn}.png`);
-    const mappedNormEn = SLUG_IMAGE_MAP[normalizedEn];
-    if (mappedNormEn) add(`/exercises/${mappedNormEn}`);
-  }
-  return urls;
+  return null;
 }
 
 export function ExerciseThumbnail({
   thumbnailUrl,
-  gifUrl,
-  slug,
-  nameEn,
   alt,
   className = "",
   iconSize = "md",
 }: ExerciseThumbnailProps) {
-  const chain = React.useMemo(
-    () => buildChain(thumbnailUrl, gifUrl, slug, nameEn),
-    [thumbnailUrl, gifUrl, slug, nameEn],
-  );
-  const [index, setIndex] = React.useState(0);
+  const src = React.useMemo(() => resolveUrl(thumbnailUrl), [thumbnailUrl]);
+  // Trackeamos "qué src falló" en lugar de un boolean para que el cambio de
+  // src resetee `failed` automáticamente sin necesidad de useEffect — evita
+  // el lint useExhaustiveDependencies y simplifica el flow.
+  const [failedSrc, setFailedSrc] = React.useState<string | null>(null);
+  const failed = src !== null && failedSrc === src;
 
-  React.useEffect(() => {
-    setIndex(0);
-  }, [thumbnailUrl, gifUrl, slug, nameEn]);
-
-  const src = index < chain.length ? chain[index] : null;
   const iconCls = iconSize === "sm" ? "h-5 w-5" : "h-10 w-10";
 
-  if (!src) {
-    // Derive 2-letter initials from the exercise name as a richer fallback in
-    // md size. Keeps the small "sm" icon-only look for tight list rows.
+  if (!src || failed) {
     const initials =
       iconSize === "md"
         ? alt
@@ -156,8 +71,6 @@ export function ExerciseThumbnail({
   }
 
   return (
-    // Outer wrapper paints the neutral background so object-contain shows the
-    // full exercise figure (cabeza + cuerpo + pies) centered without cropping.
     // eslint-disable-next-line @next/next/no-img-element
     <img
       key={src}
@@ -165,7 +78,7 @@ export function ExerciseThumbnail({
       alt={alt}
       className={`h-full w-full object-contain bg-gradient-to-br from-[#27272A] to-[#18181B] ${className}`}
       loading="lazy"
-      onError={() => setIndex((i) => i + 1)}
+      onError={() => setFailedSrc(src)}
     />
   );
 }

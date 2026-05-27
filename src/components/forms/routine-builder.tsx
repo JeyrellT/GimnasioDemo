@@ -539,8 +539,6 @@ function SortableExerciseRow({
           <div className="h-8 w-8 shrink-0 overflow-hidden rounded-md bg-[#27272A]">
             <ExerciseThumbnail
               thumbnailUrl={exercise.thumbnailUrl}
-              slug={exercise.slug}
-              nameEn={exercise.nameEn}
               alt={exercise.nameEs}
               iconSize="sm"
             />
@@ -1330,8 +1328,6 @@ function ExerciseSearchPanel({
               <div className="h-9 w-9 shrink-0 overflow-hidden rounded-md bg-[#27272A]">
                 <ExerciseThumbnail
                   thumbnailUrl={ex.thumbnailUrl}
-                  slug={ex.slug}
-                  nameEn={ex.nameEn}
                   alt={ex.nameEs}
                   iconSize="sm"
                 />
