@@ -15,6 +15,8 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragOverEvent,
+  type DragStartEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -39,6 +41,8 @@ import {
   Save,
   Pencil,
   Check,
+  Link2,
+  Link2Off,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,6 +113,43 @@ const DAY_COLORS = [
 
 function getDayColor(index: number): string {
   return DAY_COLORS[Math.min(index, DAY_COLORS.length - 1)] ?? "#EC4899";
+}
+
+// ── Superset visuals ──────────────────────────────────────────────────────────
+
+const SUPERSET_COLORS = [
+  "var(--brand-primary)", // SS-A
+  "#22C55E",              // SS-B — green
+  "#F59E0B",              // SS-C — amber
+  "#A855F7",              // SS-D — purple
+  "#EC4899",              // SS-E — pink
+  "#06B6D4",              // SS-F — cyan
+  "#84CC16",              // SS-G — lime
+  "#F97316",              // SS-H — orange
+  "#14B8A6",              // SS-I — teal
+  "#6366F1",              // SS-J — indigo
+] as const;
+
+function getSupersetColor(group: number): string {
+  return SUPERSET_COLORS[(group - 1) % SUPERSET_COLORS.length] ?? "var(--brand-primary)";
+}
+
+/** 1 → "A", 2 → "B", 10 → "J" — solo letras mientras schema permita 1..10. */
+function getSupersetLetter(group: number): string {
+  return String.fromCharCode(64 + group);
+}
+
+/**
+ * Decide qué tipo de drop está intentando el usuario en base a la posición
+ * vertical del puntero relativa al rectángulo del target.
+ *
+ * Banda central (35%–65% de la altura) → "group" (agrupar A con B).
+ * Resto → "reorder" (insertar antes o después según el lado).
+ */
+function detectDropZone(pointerY: number, rect: { top: number; height: number }): "group" | "reorder" {
+  if (rect.height <= 0) return "reorder";
+  const relY = (pointerY - rect.top) / rect.height;
+  return relY >= 0.35 && relY <= 0.65 ? "group" : "reorder";
 }
 
 // ── Rest Seconds Selector ─────────────────────────────────────────────────────
@@ -260,10 +301,17 @@ function SortableExerciseRow({
   exercise,
   dayId,
   index,
+  isGroupDropTarget,
+  onUngroup,
 }: {
   exercise: DraftExercise;
   dayId: string;
   index: number;
+  /** True cuando otro ejercicio se está arrastrando sobre la zona central
+   *  de este (= drop = agrupar con éste). Pinta indicador visual. */
+  isGroupDropTarget: boolean;
+  /** Quita este ejercicio de su superserie. */
+  onUngroup: (exerciseId: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: exercise.id });
@@ -271,10 +319,18 @@ function SortableExerciseRow({
   const updateExercise = useRoutineBuilderStore((s) => s.updateExercise);
   const [removing, setRemoving] = useState(false);
 
-  const style = {
+  const supersetColor =
+    exercise.supersetGroup !== null ? getSupersetColor(exercise.supersetGroup) : null;
+  const supersetLetter =
+    exercise.supersetGroup !== null ? getSupersetLetter(exercise.supersetGroup) : null;
+
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
     zIndex: isDragging ? 10 : undefined,
+    ...(supersetColor
+      ? { borderLeftColor: supersetColor, borderLeftWidth: 3 }
+      : {}),
   };
 
   const handleRemove = async () => {
@@ -306,10 +362,20 @@ function SortableExerciseRow({
       exit={{ opacity: 0, y: -6, transition: { duration: 0.15 } }}
       transition={{ duration: 0.18 }}
       className={[
-        "flex items-start gap-2 rounded-lg border border-[#3F3F46] p-3 transition-shadow",
+        "relative flex items-start gap-2 rounded-lg border border-[#3F3F46] p-3 transition-shadow",
         index % 2 === 0 ? "bg-[#18181B]" : "bg-[#1C1C1F]",
         isDragging ? "shadow-xl shadow-black/50 ring-1 ring-brand-primary/40" : "",
+        // Indicador visual cuando otro ejercicio está siendo arrastrado sobre
+        // la zona central de éste (= agrupar con éste al soltar).
+        isGroupDropTarget
+          ? "ring-2 ring-brand-primary ring-offset-1 ring-offset-[#0F0F11] bg-brand-primary/5"
+          : "",
       ].join(" ")}
+      aria-label={
+        supersetLetter
+          ? `${exercise.nameEs} (Superserie ${supersetLetter})`
+          : exercise.nameEs
+      }
     >
       {/* Drag handle */}
       <button
@@ -317,14 +383,25 @@ function SortableExerciseRow({
         {...attributes}
         {...listeners}
         className="mt-1 text-[#3F3F46] hover:text-brand-primary cursor-grab active:cursor-grabbing min-h-[24px] min-w-[24px] flex items-center transition-colors duration-150"
-        aria-label="Arrastrar para reordenar"
+        aria-label="Arrastrar para reordenar o soltar encima de otro para agrupar"
       >
         <GripVertical className="h-4 w-4" aria-hidden="true" />
       </button>
 
+      {/* Overlay "Agrupar" mientras se arrastra otro ejercicio sobre la zona
+          central de este. Pointer-events-none para no interferir con dnd-kit. */}
+      {isGroupDropTarget && (
+        <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center rounded-lg bg-brand-primary/10 backdrop-blur-[1px]">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-primary px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white shadow-lg shadow-brand-primary/30">
+            <Link2 className="h-3.5 w-3.5" aria-hidden="true" />
+            Agrupar en superserie
+          </span>
+        </div>
+      )}
+
       <div className="flex-1 space-y-2.5">
-        {/* Exercise name + thumbnail */}
-        <div className="flex items-center gap-2">
+        {/* Exercise name + thumbnail + superset badge */}
+        <div className="flex items-center gap-2 flex-wrap">
           <div className="h-8 w-8 shrink-0 overflow-hidden rounded-md bg-[#27272A]">
             <ExerciseThumbnail
               thumbnailUrl={exercise.thumbnailUrl}
@@ -335,6 +412,28 @@ function SortableExerciseRow({
             />
           </div>
           <p className="text-sm font-semibold text-[#FAFAFA] leading-tight">{exercise.nameEs}</p>
+          {supersetLetter && supersetColor && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm"
+              style={{ backgroundColor: supersetColor }}
+              title={`Parte de la superserie ${supersetLetter}`}
+            >
+              <Link2 className="h-2.5 w-2.5" aria-hidden="true" />
+              SS-{supersetLetter}
+            </span>
+          )}
+          {supersetLetter && (
+            <button
+              type="button"
+              onClick={() => onUngroup(exercise.id)}
+              className="inline-flex items-center gap-1 rounded-md border border-[#3F3F46] px-1.5 py-0.5 text-[10px] text-[#71717A] hover:border-[#52525B] hover:text-[#FAFAFA] transition-colors"
+              title="Quitar de superserie"
+              aria-label={`Quitar ${exercise.nameEs} de la superserie ${supersetLetter}`}
+            >
+              <Link2Off className="h-3 w-3" aria-hidden="true" />
+              Desagrupar
+            </button>
+          )}
         </div>
 
         {/* Prescription summary pill */}
@@ -409,7 +508,21 @@ function DayCard({
   const removeDay = useRoutineBuilderStore((s) => s.removeDay);
   const updateDayName = useRoutineBuilderStore((s) => s.updateDayName);
   const reorderExercisesInDay = useRoutineBuilderStore((s) => s.reorderExercisesInDay);
+  const groupExercises = useRoutineBuilderStore((s) => s.groupExercises);
+  const ungroupExercise = useRoutineBuilderStore((s) => s.ungroupExercise);
   const accentColor = getDayColor(day.dayIndex);
+
+  // Estado del drag: cuál ejercicio se está arrastrando (active) y cuál es el
+  // target de agrupación (sólo seteado cuando el puntero está en la banda
+  // central del item). Drives the visual "Agrupar" indicator.
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [groupHoverTargetId, setGroupHoverTargetId] = useState<string | null>(null);
+  // Ref espejo del state para leer dentro de handleDragEnd sin depender de
+  // re-renders (el callback se cierra sobre el valor inicial).
+  const groupHoverTargetRef = useRef<string | null>(null);
+  useEffect(() => {
+    groupHoverTargetRef.current = groupHoverTargetId;
+  }, [groupHoverTargetId]);
 
   const handleRemoveDay = async () => {
     if (removingDay) return;
@@ -433,9 +546,133 @@ function DayCard({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveDragId(String(event.active.id));
+    setGroupHoverTargetId(null);
+  };
+
+  /**
+   * Mientras se arrastra: determina si el puntero está en la banda central
+   * del ejercicio sobre el que se hover (intención = agrupar) o en los
+   * extremos (intención = reordenar). Actualiza el indicador visual.
+   */
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over, delta, activatorEvent } = event;
+    if (!over || over.id === active.id) {
+      if (groupHoverTargetRef.current !== null) setGroupHoverTargetId(null);
+      return;
+    }
+    const rect = over.rect;
+    if (!rect || rect.height <= 0) return;
+
+    // Reconstruir Y del puntero: clientY al iniciar el drag + delta acumulado.
+    const startY =
+      typeof (activatorEvent as PointerEvent).clientY === "number"
+        ? (activatorEvent as PointerEvent).clientY
+        : 0;
+    const pointerY = startY + delta.y;
+
+    const zone = detectDropZone(pointerY, { top: rect.top, height: rect.height });
+    const nextTarget = zone === "group" ? String(over.id) : null;
+    if (nextTarget !== groupHoverTargetRef.current) {
+      setGroupHoverTargetId(nextTarget);
+    }
+  };
+
+  const handleDragCancel = () => {
+    setActiveDragId(null);
+    setGroupHoverTargetId(null);
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
+    const groupTarget = groupHoverTargetRef.current;
+    // Limpiar estado visual antes de procesar.
+    setActiveDragId(null);
+    setGroupHoverTargetId(null);
+
     if (!over || active.id === over.id) return;
+
+    // ── Drop sobre la zona central → AGRUPAR ────────────────────────────
+    if (groupTarget && groupTarget === String(over.id)) {
+      const sourceId = String(active.id);
+      const targetId = groupTarget;
+
+      // Snapshot para rollback.
+      const oldExercises = day.exercises.map((e) => ({ ...e }));
+
+      const result = groupExercises(day.id, sourceId, targetId);
+      if (!result) {
+        toast.error("No se pudo agrupar. Probablemente alcanzaste el tope de 10 superseries.");
+        return;
+      }
+
+      // Persistir solo si todo tiene server ID. Si la rutina aún no se ha
+      // guardado por primera vez, dejamos que el botón Guardar haga el flush.
+      const allPersisted = result.exercises.every((e) => e.routineExerciseId);
+      if (!day.routineDayId || !allPersisted) {
+        toast.success(`Agrupado en superserie ${getSupersetLetter(result.group)}.`);
+        return;
+      }
+
+      // Detectar qué ejercicios cambiaron de supersetGroup para no spamear
+      // updates innecesarios. Compara contra oldExercises.
+      const oldGroupById = new Map(oldExercises.map((e) => [e.id, e.supersetGroup]));
+      const changedExercises = result.exercises.filter(
+        (e) => oldGroupById.get(e.id) !== e.supersetGroup,
+      );
+
+      // 1) Actualizar supersetGroup de los ejercicios afectados.
+      // 2) Reordenar día completo para reflejar la nueva adyacencia.
+      try {
+        const updates = changedExercises.map((e) =>
+          e.routineExerciseId
+            ? updateExerciseInDay({
+                routineExerciseId: e.routineExerciseId,
+                supersetGroup: e.supersetGroup,
+              })
+            : Promise.resolve({ ok: true as const, value: { updated: true as const } }),
+        );
+        const serverIds = result.exercises
+          .map((e) => e.routineExerciseId)
+          .filter((id): id is string => Boolean(id));
+        const reorder = reorderExercisesAction({
+          routineDayId: day.routineDayId,
+          orderedIds: serverIds,
+        });
+
+        const [updateResults, reorderResult] = await Promise.all([
+          Promise.all(updates),
+          reorder,
+        ]);
+
+        const failedUpdate = updateResults.find((r) => !r.ok);
+        if (failedUpdate || !reorderResult.ok) {
+          throw new Error("group_persist_failed");
+        }
+
+        toast.success(`Agrupado en superserie ${getSupersetLetter(result.group)}.`);
+      } catch {
+        // Rollback completo a la lista previa.
+        reorderExercisesInDay(day.id, oldExercises.map((e) => e.id));
+        for (const e of oldExercises) {
+          // No hacemos update remoto del rollback: si el server rechazó,
+          // las filas en DB siguen con su valor original.
+          // Solo restauramos el store para reflejar realidad.
+          const current = day.exercises.find((x) => x.id === e.id);
+          if (current && current.supersetGroup !== e.supersetGroup) {
+            // updateExercise vive en store; importarlo arriba.
+            useRoutineBuilderStore
+              .getState()
+              .updateExercise(day.id, e.id, { supersetGroup: e.supersetGroup });
+          }
+        }
+        toast.error("No se pudo guardar la superserie.");
+      }
+      return;
+    }
+
+    // ── Drop fuera de la zona central → REORDENAR (comportamiento original) ─
     const oldIndex = day.exercises.findIndex((e) => e.id === active.id);
     const newIndex = day.exercises.findIndex((e) => e.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
@@ -444,13 +681,9 @@ function DayCard({
     if (!moved) return;
     reordered.splice(newIndex, 0, moved);
 
-    // Bug #4: save old order for rollback before optimistic update
     const oldOrder = day.exercises.map((e) => e.id);
-
-    // Optimistic update in store
     reorderExercisesInDay(day.id, reordered.map((e) => e.id));
 
-    // Persist to DB if all exercises have server IDs
     const serverIds = reordered
       .map((e) => e.routineExerciseId)
       .filter((id): id is string => Boolean(id));
@@ -460,10 +693,48 @@ function DayCard({
         orderedIds: serverIds,
       });
       if (!result.ok) {
-        // Bug #4: roll back local state on failure
         reorderExercisesInDay(day.id, oldOrder);
         toast.error("No se pudo guardar el orden.");
       }
+    }
+  };
+
+  /**
+   * Quita un ejercicio de su superserie y persiste. Si la limpieza del store
+   * dejó otro ejercicio sin grupo (porque era el último par del grupo viejo),
+   * también lo guarda.
+   */
+  const handleUngroup = async (exerciseLocalId: string) => {
+    const before = day.exercises.map((e) => ({ ...e }));
+    const result = ungroupExercise(day.id, exerciseLocalId);
+    if (!result) return; // no estaba agrupado
+
+    const oldGroupById = new Map(before.map((e) => [e.id, e.supersetGroup]));
+    const changed = result.exercises.filter(
+      (e) => oldGroupById.get(e.id) !== e.supersetGroup,
+    );
+
+    const persistable = changed.filter((e) => e.routineExerciseId);
+    if (persistable.length === 0) return;
+
+    try {
+      const updates = persistable.map((e) =>
+        updateExerciseInDay({
+          routineExerciseId: e.routineExerciseId as string,
+          supersetGroup: e.supersetGroup,
+        }),
+      );
+      const results = await Promise.all(updates);
+      if (results.some((r) => !r.ok)) throw new Error("ungroup_persist_failed");
+      toast.success("Ejercicio sacado de la superserie.");
+    } catch {
+      // Rollback local — restaurar supersetGroup previo.
+      for (const e of before) {
+        useRoutineBuilderStore
+          .getState()
+          .updateExercise(day.id, e.id, { supersetGroup: e.supersetGroup });
+      }
+      toast.error("No se pudo guardar el cambio.");
     }
   };
 
@@ -569,6 +840,9 @@ function DayCard({
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragCancel={handleDragCancel}
                 onDragEnd={handleDragEnd}
               >
                 <SortableContext
@@ -582,11 +856,23 @@ function DayCard({
                         exercise={ex}
                         dayId={day.id}
                         index={idx}
+                        isGroupDropTarget={
+                          activeDragId !== null &&
+                          activeDragId !== ex.id &&
+                          groupHoverTargetId === ex.id
+                        }
+                        onUngroup={handleUngroup}
                       />
                     ))}
                   </AnimatePresence>
                 </SortableContext>
               </DndContext>
+
+              {day.exercises.length >= 2 && (
+                <p className="px-1 text-[10px] text-[#52525B]">
+                  Tip: arrastrá un ejercicio sobre <span className="font-medium text-[#71717A]">otro</span> para agruparlos como superserie.
+                </p>
+              )}
 
               {day.exercises.length === 0 && (
                 <p className="py-4 text-center text-xs text-[#52525B]">
