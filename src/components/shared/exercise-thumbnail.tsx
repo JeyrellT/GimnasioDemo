@@ -20,6 +20,26 @@ function slugify(s: string | null | undefined): string | null {
     .replace(/['']/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
+/**
+ * Devuelve una versión del slug sin palabras conectoras del español:
+ *   "press-inclinado-con-mancuernas" → "press-inclinado-mancuernas"
+ *   "jalon-al-pecho-en-polea-espalda" → "jalon-pecho-polea-espalda"
+ *
+ * Útil para hacer match contra el SLUG_IMAGE_MAP o archivos en /public sin
+ * tener que listar manualmente cada variante de slug que la app pueda
+ * generar a partir del nombre del ejercicio.
+ */
+const CONNECTOR_WORDS = new Set([
+  "con", "de", "del", "en", "el", "la", "los", "las",
+  "y", "o", "u", "a", "al", "para", "por",
+]);
+function normalizeSlug(slug: string | null | undefined): string | null {
+  if (!slug) return null;
+  const parts = slug.split("-").filter((p) => p && !CONNECTOR_WORDS.has(p));
+  const out = parts.join("-");
+  return out && out !== slug ? out : null;
+}
+
 function isGoogleDriveUrl(url: string) {
   return /drive\.google\.com/.test(url);
 }
@@ -67,6 +87,23 @@ function buildChain(
   const mappedEn = enSlug ? SLUG_IMAGE_MAP[enSlug] : undefined;
   if (mappedEn) {
     add(`/exercises/${mappedEn}`);
+  }
+  // Último intento: probar con el slug normalizado (sin "con", "en", "al",
+  // etc.). Esto resuelve muchos casos donde el slug del DB difiere del
+  // mapa sólo por una palabra conectora.
+  const normalizedEs = normalizeSlug(slug);
+  if (normalizedEs) {
+    add(`/exercises/${normalizedEs}.jpg`);
+    add(`/exercises/${normalizedEs}.png`);
+    const mappedNormEs = SLUG_IMAGE_MAP[normalizedEs];
+    if (mappedNormEs) add(`/exercises/${mappedNormEs}`);
+  }
+  const normalizedEn = normalizeSlug(enSlug);
+  if (normalizedEn) {
+    add(`/exercises/${normalizedEn}.jpg`);
+    add(`/exercises/${normalizedEn}.png`);
+    const mappedNormEn = SLUG_IMAGE_MAP[normalizedEn];
+    if (mappedNormEn) add(`/exercises/${mappedNormEn}`);
   }
   return urls;
 }
