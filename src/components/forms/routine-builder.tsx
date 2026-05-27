@@ -706,6 +706,12 @@ function DayCard({
    * Mientras se arrastra: determina si el puntero está en la banda central
    * del ejercicio sobre el que se hover (intención = agrupar) o en los
    * extremos (intención = reordenar). Actualiza el indicador visual.
+   *
+   * Caso especial — cross-group move: si la fuente YA está en una superserie
+   * y el target está en una superserie DIFERENTE, tratamos cualquier drop
+   * (no sólo zona central) como "mover al grupo del target". Coincide con la
+   * expectativa natural del usuario: si arrastrás un miembro de SS-A sobre
+   * cualquier parte de un miembro de SS-B, querés que SE MUEVA a SS-B.
    */
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over, delta, activatorEvent } = event;
@@ -713,6 +719,20 @@ function DayCard({
       if (groupHoverTargetRef.current !== null) setGroupHoverTargetId(null);
       return;
     }
+
+    const sourceEx = day.exercises.find((e) => e.id === active.id);
+    const targetEx = day.exercises.find((e) => e.id === over.id);
+    const isCrossGroupMove =
+      sourceEx?.supersetGroup != null &&
+      targetEx?.supersetGroup != null &&
+      sourceEx.supersetGroup !== targetEx.supersetGroup;
+
+    if (isCrossGroupMove) {
+      const next = String(over.id);
+      if (next !== groupHoverTargetRef.current) setGroupHoverTargetId(next);
+      return;
+    }
+
     const rect = over.rect;
     if (!rect || rect.height <= 0) return;
 
