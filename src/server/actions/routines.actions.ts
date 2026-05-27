@@ -673,7 +673,7 @@ export async function addExerciseToDay(
         routine: { select: { trainerId: true } },
         exercises: {
           where: { deletedAt: null },
-          select: { id: true, order: true },
+          select: { id: true, order: true, exerciseId: true },
           orderBy: { order: "desc" },
         },
       },
@@ -690,6 +690,19 @@ export async function addExerciseToDay(
       throw new ValidationError(
         "MAX_EXERCISES_REACHED",
         `Un día puede tener máximo ${ROUTINE_MAX_EXERCISES_PER_DAY} ejercicios.`,
+      );
+    }
+
+    // No permitir el mismo ejercicio dos veces en el mismo día — evita
+    // confusiones del tipo "VUELTA 1/2 / VUELTA 2/2" que aparecían como
+    // duplicados en la UI. El usuario debe usar superseries para repeticiones
+    // de patrones (ver groupExercises) o sets adicionales (targetSets) en
+    // lugar de duplicar la fila.
+    const dup = day.exercises.find((e) => e.exerciseId === exerciseId);
+    if (dup) {
+      throw new ValidationError(
+        "DUPLICATE_EXERCISE",
+        "Ese ejercicio ya está en este día. Si querés más volumen, aumentá sets o agregá una superserie.",
       );
     }
 
