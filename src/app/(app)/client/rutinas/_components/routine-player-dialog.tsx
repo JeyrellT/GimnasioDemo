@@ -8,6 +8,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { ExerciseThumbnail } from "@/components/shared/exercise-thumbnail";
+import { SupersetBadge } from "@/components/shared/superset-badge";
+import { getSupersetGroupAt, areInSameSuperset } from "@/lib/supersets";
 import {
   ChevronLeft,
   ChevronRight,
@@ -20,6 +22,7 @@ import {
   ListTodo,
   Volume2,
   VolumeX,
+  Link2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getVideoLoopEmbed, type LoopEmbed } from "@/lib/media/video-url";
@@ -424,6 +427,17 @@ export function RoutinePlayerDialog({
   if (!current) return null;
 
   const totalSets = Math.max(1, current.targetSets);
+  // ── Superset awareness ────────────────────────────────────────────────────
+  // Si el ejercicio actual pertenece a un superset, exponemos su info al
+  // header (badge "SS-A · 2/3") y resaltamos la transición al "siguiente"
+  // cuando comparte grupo (cambio dentro de la superserie vs. descanso normal
+  // entre ejercicios).
+  const currentSupersetGroup = getSupersetGroupAt(exercises, currentIndex);
+  const nextInSameSuperset = areInSameSuperset(
+    exercises,
+    currentIndex,
+    currentIndex + 1,
+  );
   const restTarget = restAnchor.current.targetSec || current.restSeconds || 0;
   const restProgressPct =
     restTarget > 0
@@ -633,9 +647,18 @@ export function RoutinePlayerDialog({
                 {/* Rest overlay */}
                 {phase.kind === "rest" && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/65 backdrop-blur-sm">
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-primary">
+                    <span
+                      className="text-[10px] font-semibold uppercase tracking-[0.18em]"
+                      style={
+                        restingForExercise && nextInSameSuperset
+                          ? { color: getSupersetGroupAt(exercises, currentIndex)?.color }
+                          : { color: "var(--brand-primary)" }
+                      }
+                    >
                       {restingForExercise
-                        ? "Descanso entre ejercicios"
+                        ? nextInSameSuperset
+                          ? "Cambio en superserie"
+                          : "Descanso entre ejercicios"
                         : "Descanso"}
                     </span>
                     <span
@@ -666,9 +689,18 @@ export function RoutinePlayerDialog({
               <div className="px-5 py-4 space-y-4">
                 {/* Exercise name + meta */}
                 <div>
-                  <p className="text-lg font-bold text-[#FAFAFA] leading-tight">
-                    {current.nameEs}
-                  </p>
+                  <div className="flex items-start gap-2 flex-wrap">
+                    <p className="text-lg font-bold text-[#FAFAFA] leading-tight">
+                      {current.nameEs}
+                    </p>
+                    {currentSupersetGroup && (
+                      <SupersetBadge
+                        group={current.supersetGroup}
+                        size="sm"
+                        position={`${currentSupersetGroup.positionInGroup}/${currentSupersetGroup.totalInGroup}`}
+                      />
+                    )}
+                  </div>
                   <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-[#A1A1AA]">
                     <span className="inline-flex items-center gap-1">
                       <Dumbbell className="h-3 w-3" aria-hidden="true" />
@@ -684,6 +716,40 @@ export function RoutinePlayerDialog({
                     </span>
                     {current.tempo && <span>Tempo {current.tempo}</span>}
                   </div>
+                  {/* Chain de la superserie: muestra el orden de los miembros
+                      con el ejercicio actual resaltado. Sólo aparece cuando
+                      el current está agrupado. */}
+                  {currentSupersetGroup && (
+                    <div
+                      className="mt-2 flex items-center gap-1.5 flex-wrap rounded-lg border bg-[#09090B]/40 px-2.5 py-1.5"
+                      style={{
+                        borderColor: currentSupersetGroup.color,
+                      }}
+                    >
+                      <Link2
+                        className="h-3 w-3 shrink-0"
+                        aria-hidden="true"
+                        style={{ color: currentSupersetGroup.color }}
+                      />
+                      {currentSupersetGroup.members.map((m, i) => {
+                        const isMe = m === current;
+                        return (
+                          <span
+                            key={`${m.exerciseId}_${i}`}
+                            className={cn(
+                              "text-[10px] truncate max-w-[100px]",
+                              isMe
+                                ? "font-semibold text-[#FAFAFA]"
+                                : "text-[#71717A]",
+                            )}
+                          >
+                            {i > 0 && <span className="mx-1 text-[#3F3F46]">→</span>}
+                            {m.nameEs}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
                   {current.notes && (
                     <p className="mt-2 text-xs italic text-[#71717A]">
                       {current.notes}
@@ -736,6 +802,7 @@ export function RoutinePlayerDialog({
                         positionHuman={currentIndex + 2}
                         total={exercises.length}
                         variant="full"
+                        sameSupersetAsCurrent={nextInSameSuperset}
                       />
                     ) : (
                       <div className="rounded-2xl border border-[#3F3F46] bg-[#09090B]/40 px-4 py-3 text-center">
@@ -814,6 +881,7 @@ export function RoutinePlayerDialog({
                     positionHuman={currentIndex + 2}
                     total={exercises.length}
                     variant="compact"
+                    sameSupersetAsCurrent={nextInSameSuperset}
                   />
                 )}
               </div>
