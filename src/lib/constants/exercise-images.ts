@@ -28,13 +28,19 @@ export const SLUG_IMAGE_MAP: Record<string, string> = {
   // Chest
   "press-de-banca-con-barra": "barbell-bench-press.jpg",
   "press-inclinado-mancuernas": "incline-bench-press.jpg",
+  // Variante de slug usada en prod (genera 404 sin este alias):
+  "press-inclinado-con-mancuernas": "incline-bench-press.jpg",
   "aperturas-mancuernas-plano": "dumbbell-fly.jpg",
   "fondos-pecho": "dips.jpg",
 
   // Back
   "dominadas-agarre-prono": "pull-up.jpg",
   "remo-con-barra": "barbell-bent-over-row.jpg",
+  // Variantes de slug usadas en prod:
+  "remo-con-barra-o-en-polea-baja": "barbell-bent-over-row.jpg",
   "jalon-polea-agarre-amplio": "lat-pulldown.jpg",
+  "jalon-al-pecho-en-polea-espalda": "lat-pulldown.jpg",
+  "jalon-al-pecho-en-polea": "lat-pulldown.jpg",
   "peso-muerto-convencional": "conventional-deadlift.png",
   "remo-con-mancuerna": "barbell-bent-over-row.jpg",
   "pullover-mancuerna": "dumbbell-fly.jpg",
@@ -42,8 +48,12 @@ export const SLUG_IMAGE_MAP: Record<string, string> = {
   // Shoulders
   "press-militar-con-barra": "overhead-press.jpg",
   "elevaciones-laterales-mancuernas": "dumbbell-lateral-raise.jpg",
+  // Variantes usadas en prod:
+  "elevaciones-laterales": "dumbbell-lateral-raise.jpg",
   "press-arnold": "arnold-press.jpg",
   "press-militar-mancuernas": "overhead-press.jpg",
+  "press-militar-con-mancuernas": "overhead-press.jpg",
+  "press-militar-con-mancuernas-hombros": "overhead-press.jpg",
   "remo-al-cuello-barra-z": "dumbbell-lateral-raise.jpg",
 
   // Biceps
@@ -54,6 +64,10 @@ export const SLUG_IMAGE_MAP: Record<string, string> = {
 
   // Triceps
   "extensiones-triceps-polea": "cable-pushdown.jpg",
+  // Variantes usadas en prod:
+  "extension-de-triceps-en-polea-alta": "cable-pushdown.jpg",
+  "extension-de-triceps-en-polea": "cable-pushdown.jpg",
+  "extension-triceps-polea-alta": "cable-pushdown.jpg",
   "fondos-triceps-banco": "bench-dip.jpg",
 
   // Quads
@@ -81,6 +95,8 @@ export const SLUG_IMAGE_MAP: Record<string, string> = {
   // Abs
   "plancha-isometrica": "plank.jpg",
   "crunch-abdominal": "crunch.jpg",
+  // Variante usada en prod:
+  "crunch-abdominal-en-polea-alta": "crunch.jpg",
   "rueda-de-abdomen": "ab-rollout.jpg",
   "russian-twist": "crunch.jpg",
 
@@ -91,6 +107,12 @@ export const SLUG_IMAGE_MAP: Record<string, string> = {
   // ── Warmups (calentamientos) ──
   // Cardio
   "cardio-en-maquina": "barbell-back-squat.jpg",
+  // Variantes de cardio HIIT/LISS usadas en prod (las imágenes son
+  // genéricas — la idea es no caer al ícono dumbbell vacío):
+  "cardio-hiit-en-caminadora-o-eliptica": "cardio-en-maquina.jpg",
+  "cardio-hiit": "cardio-en-maquina.jpg",
+  "cardio-liss-baja-intensidad-ritmo-constante": "cardio-en-maquina.jpg",
+  "cardio-liss": "cardio-en-maquina.jpg",
   "saltos-de-tijera": "standing-calf-raise.jpg",
   "rodillas-altas": "barbell-back-squat.jpg",
   "talones-a-gluteos": "lying-leg-curl.jpg",
