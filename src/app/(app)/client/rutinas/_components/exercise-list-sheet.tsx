@@ -9,6 +9,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { ExerciseThumbnail } from "@/components/shared/exercise-thumbnail";
+import { SupersetBadge } from "@/components/shared/superset-badge";
+import { getSupersetColor } from "@/lib/supersets";
 import { CheckCircle, ListTodo } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -78,6 +80,12 @@ export function ExerciseListSheet({
               seenCount.set(ex.exerciseId, occurrence);
               const total = totalCount.get(ex.exerciseId) ?? 1;
               const isRepeat = total > 1;
+              // Left-border de color cuando el ejercicio es parte de una
+              // superserie — visualmente liga los miembros consecutivos.
+              const groupColor =
+                ex.supersetGroup !== null && ex.supersetGroup !== undefined
+                  ? getSupersetColor(ex.supersetGroup)
+                  : null;
 
               return (
                 <button
@@ -97,6 +105,11 @@ export function ExerciseListSheet({
                       ? "bg-brand-primary/15 border border-brand-primary/40"
                       : "border border-transparent hover:bg-[#27272A]",
                   )}
+                  style={
+                    groupColor
+                      ? { boxShadow: `inset 3px 0 0 ${groupColor}` }
+                      : undefined
+                  }
                   aria-current={isCurrent ? "true" : undefined}
                 >
                   {/* Estado */}
@@ -149,6 +162,7 @@ export function ExerciseListSheet({
                           {occurrence}/{total}
                         </span>
                       )}
+                      <SupersetBadge group={ex.supersetGroup} size="xs" />
                     </div>
                     <p className="text-xs text-[#71717A]">
                       {ex.targetSets}{" "}

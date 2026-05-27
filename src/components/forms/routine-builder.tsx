@@ -63,6 +63,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ExerciseThumbnail } from "@/components/shared/exercise-thumbnail";
+import { SupersetBadge } from "@/components/shared/superset-badge";
+import { getSupersetColor, getSupersetLetter } from "@/lib/supersets";
 import { useRoutineBuilderStore } from "@/stores/routine-builder-store";
 import type { DraftExercise, DraftDay } from "@/stores/routine-builder-store";
 import {
@@ -115,29 +117,8 @@ function getDayColor(index: number): string {
   return DAY_COLORS[Math.min(index, DAY_COLORS.length - 1)] ?? "#EC4899";
 }
 
-// ── Superset visuals ──────────────────────────────────────────────────────────
-
-const SUPERSET_COLORS = [
-  "var(--brand-primary)", // SS-A
-  "#22C55E",              // SS-B — green
-  "#F59E0B",              // SS-C — amber
-  "#A855F7",              // SS-D — purple
-  "#EC4899",              // SS-E — pink
-  "#06B6D4",              // SS-F — cyan
-  "#84CC16",              // SS-G — lime
-  "#F97316",              // SS-H — orange
-  "#14B8A6",              // SS-I — teal
-  "#6366F1",              // SS-J — indigo
-] as const;
-
-function getSupersetColor(group: number): string {
-  return SUPERSET_COLORS[(group - 1) % SUPERSET_COLORS.length] ?? "var(--brand-primary)";
-}
-
-/** 1 → "A", 2 → "B", 10 → "J" — solo letras mientras schema permita 1..10. */
-function getSupersetLetter(group: number): string {
-  return String.fromCharCode(64 + group);
-}
+// ── Superset visuals — getSupersetColor / getSupersetLetter viven en
+//    `@/lib/supersets` (compartidos con el player del cliente). ─────────────
 
 /**
  * Decide qué tipo de drop está intentando el usuario en base a la posición
@@ -412,16 +393,7 @@ function SortableExerciseRow({
             />
           </div>
           <p className="text-sm font-semibold text-[#FAFAFA] leading-tight">{exercise.nameEs}</p>
-          {supersetLetter && supersetColor && (
-            <span
-              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm"
-              style={{ backgroundColor: supersetColor }}
-              title={`Parte de la superserie ${supersetLetter}`}
-            >
-              <Link2 className="h-2.5 w-2.5" aria-hidden="true" />
-              SS-{supersetLetter}
-            </span>
-          )}
+          <SupersetBadge group={exercise.supersetGroup} size="sm" />
           {supersetLetter && (
             <button
               type="button"
