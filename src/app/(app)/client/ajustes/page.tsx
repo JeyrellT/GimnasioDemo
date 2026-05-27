@@ -1,6 +1,6 @@
 import { getMyRestPreferences } from "@/app/actions/rest-preferences";
 import { getMyAssignedRoutines } from "@/app/actions/client-portal";
-import { AjustesClient, type UniqueExercise } from "./ajustes-client";
+import { AjustesClient, type RoutineGroup, type UniqueExercise } from "./ajustes-client";
 import type { RoutineSnapshot, RoutineSnapshotExercise } from "@/types/domain";
 
 function parseSnapshot(json: unknown): RoutineSnapshot | null {
@@ -9,45 +9,62 @@ function parseSnapshot(json: unknown): RoutineSnapshot | null {
 }
 
 /**
- * Collects all unique exercises (by exerciseId) across the client's assigned
- * routines, keeping the base restSeconds the trainer prescribed so the editor
- * can show "Original: 60s · Tu ajuste: 90s".
- *
- * Strategy: iterate active assignments first so their baseline wins for shared
- * exercises across overlapping routines.
+ * Builds one RoutineGroup per ACTIVE assigned routine, with its unique
+ * exercises (deduped by exerciseId within the routine, preserving the order
+ * they appear across days). Non-ACTIVE assignments (COMPLETED / ARCHIVED /
+ * CANCELLED) are skipped — the client is no longer working on them, so they
+ * shouldn't clutter the per-exercise rest editor.
  */
-function collectUniqueExercises(
-  assignments: Array<{ snapshotJson: unknown; status: string }>,
-): UniqueExercise[] {
-  const map = new Map<string, UniqueExercise>();
+function collectRoutineGroups(
+  assignments: Array<{
+    id: string;
+    snapshotJson: unknown;
+    status: string;
+    assignedAt: Date;
+  }>,
+): RoutineGroup[] {
+  const active = assignments
+    .filter((a) => a.status === "ACTIVE")
+    .sort(
+      (a, b) =>
+        new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime(),
+    );
 
-  const ordered = [...assignments].sort((a, b) => {
-    if (a.status === b.status) return 0;
-    return a.status === "ACTIVE" ? -1 : 1;
-  });
+  const groups: RoutineGroup[] = [];
 
-  for (const assignment of ordered) {
+  for (const assignment of active) {
     const snap = parseSnapshot(assignment.snapshotJson);
     if (!snap) continue;
+
+    const seen = new Set<string>();
+    const exercises: UniqueExercise[] = [];
+
     for (const day of snap.days ?? []) {
-      const exercises = (day.exercises ?? []) as RoutineSnapshotExercise[];
-      for (const ex of exercises) {
-        if (!ex.exerciseId || map.has(ex.exerciseId)) continue;
-        map.set(ex.exerciseId, {
+      const dayExercises = (day.exercises ?? []) as RoutineSnapshotExercise[];
+      for (const ex of dayExercises) {
+        if (!ex.exerciseId || seen.has(ex.exerciseId)) continue;
+        seen.add(ex.exerciseId);
+        exercises.push({
           exerciseId: ex.exerciseId,
           nameEs: ex.nameEs ?? "Ejercicio",
           slug: ex.slug ?? null,
-          nameEn: null,
+          nameEn: ex.nameEn ?? null,
           thumbnailUrl: ex.thumbnailUrl ?? null,
           baseRestSeconds: ex.restSeconds ?? 0,
         });
       }
     }
+
+    if (exercises.length === 0) continue;
+
+    groups.push({
+      assignedRoutineId: assignment.id,
+      routineName: snap.templateName ?? "Rutina",
+      exercises,
+    });
   }
 
-  return [...map.values()].sort((a, b) =>
-    a.nameEs.localeCompare(b.nameEs, "es", { sensitivity: "base" }),
-  );
+  return groups;
 }
 
 export default async function AjustesPage() {
@@ -61,14 +78,14 @@ export default async function AjustesPage() {
     : { globalOffsetSec: 0, exerciseOverrides: {} };
 
   const assignments = routinesResult.ok ? routinesResult.value : [];
-  const uniqueExercises = collectUniqueExercises(
-    assignments.map((a) => ({ snapshotJson: a.snapshotJson, status: a.status })),
+  const routines = collectRoutineGroups(
+    assignments.map((a) => ({
+      id: a.id,
+      snapshotJson: a.snapshotJson,
+      status: a.status,
+      assignedAt: a.assignedAt,
+    })),
   );
 
-  return (
-    <AjustesClient
-      initialPrefs={prefs}
-      exercises={uniqueExercises}
-    />
-  );
+  return <AjustesClient initialPrefs={prefs} routines={routines} />;
 }

@@ -1,7 +1,16 @@
 "use client";
 
 import { useState, useRef, useEffect, useTransition } from "react";
-import { Clock, Pencil, Check, X, RotateCcw, Timer, Settings2 } from "lucide-react";
+import {
+  Clock,
+  Pencil,
+  Check,
+  X,
+  RotateCcw,
+  Timer,
+  Settings2,
+  ClipboardList,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,9 +37,15 @@ export interface UniqueExercise {
   baseRestSeconds: number;
 }
 
+export interface RoutineGroup {
+  assignedRoutineId: string;
+  routineName: string;
+  exercises: UniqueExercise[];
+}
+
 interface Props {
   initialPrefs: ClientRestPrefs;
-  exercises: UniqueExercise[];
+  routines: RoutineGroup[];
 }
 
 const GLOBAL_OFFSET_PRESETS = [-30, -15, 0, 15, 30, 60, 90] as const;
@@ -43,9 +58,10 @@ function formatOffsetLabel(seconds: number): string {
   return `${sign}${abs}s`;
 }
 
-export function AjustesClient({ initialPrefs, exercises }: Props) {
+export function AjustesClient({ initialPrefs, routines }: Props) {
   const [prefs, setPrefs] = useState<ClientRestPrefs>(initialPrefs);
   const [pending, startTransition] = useTransition();
+  const hasRoutines = routines.length > 0;
 
   // ── Global offset ─────────────────────────────────────────────────────────
   const handleSetOffset = (seconds: number) => {
@@ -168,47 +184,64 @@ export function AjustesClient({ initialPrefs, exercises }: Props) {
       </section>
 
       {/* ── Section: Per-exercise overrides ─────────────────────────────── */}
-      <section className="rounded-2xl border border-[#3F3F46] bg-[#18181B] p-4 sm:p-5 space-y-4">
-        <header className="flex items-start gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-primary/15">
-            <Pencil className="h-4 w-4 text-brand-primary" aria-hidden="true" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-sm font-semibold text-[#FAFAFA]">
-              Descanso por ejercicio
-            </h2>
-            <p className="text-xs text-[#A1A1AA] mt-0.5">
-              Si un ejercicio específico te queda corto o largo, ajustalo acá.
-              Este valor reemplaza el global para ese ejercicio.
-            </p>
-          </div>
-        </header>
+      {/*
+        Sólo se renderiza cuando el cliente tiene al menos una rutina ACTIVA
+        con ejercicios. Sin rutina asignada, la sección entera desaparece — no
+        tiene sentido editar descansos de ejercicios que no vas a hacer.
+      */}
+      {hasRoutines && (
+        <section className="rounded-2xl border border-[#3F3F46] bg-[#18181B] p-4 sm:p-5 space-y-4">
+          <header className="flex items-start gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-primary/15">
+              <Pencil className="h-4 w-4 text-brand-primary" aria-hidden="true" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-sm font-semibold text-[#FAFAFA]">
+                Descanso por ejercicio
+              </h2>
+              <p className="text-xs text-[#A1A1AA] mt-0.5">
+                Si un ejercicio específico te queda corto o largo, ajustalo acá.
+                Este valor reemplaza el global para ese ejercicio.
+              </p>
+            </div>
+          </header>
 
-        {exercises.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-[#3F3F46] py-8 px-4 text-center">
-            <p className="text-sm text-[#A1A1AA]">
-              Aún no tenés rutinas asignadas con ejercicios.
-            </p>
-            <p className="text-xs text-[#71717A] mt-1">
-              Una vez que tu coach te asigne una rutina, vas a poder personalizar
-              los descansos acá.
-            </p>
-          </div>
-        ) : (
-          <ul className="space-y-2">
-            {exercises.map((ex) => (
-              <ExerciseRow
-                key={ex.exerciseId}
-                exercise={ex}
-                override={prefs.exerciseOverrides[ex.exerciseId] ?? null}
-                onSet={(seconds) => handleSetExerciseOverride(ex.exerciseId, seconds)}
-                onClear={() => handleClearExerciseOverride(ex.exerciseId)}
-                disabled={pending}
-              />
+          <div className="space-y-5">
+            {routines.map((routine) => (
+              <div key={routine.assignedRoutineId} className="space-y-2">
+                <div className="flex items-center gap-2 px-0.5">
+                  <ClipboardList
+                    className="h-3.5 w-3.5 text-brand-primary"
+                    aria-hidden="true"
+                  />
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-brand-primary">
+                    {routine.routineName}
+                  </h3>
+                  <span className="text-[10px] text-[#52525B] tabular">
+                    · {routine.exercises.length}{" "}
+                    {routine.exercises.length === 1 ? "ejercicio" : "ejercicios"}
+                  </span>
+                </div>
+
+                <ul className="space-y-2">
+                  {routine.exercises.map((ex) => (
+                    <ExerciseRow
+                      key={`${routine.assignedRoutineId}:${ex.exerciseId}`}
+                      exercise={ex}
+                      override={prefs.exerciseOverrides[ex.exerciseId] ?? null}
+                      onSet={(seconds) =>
+                        handleSetExerciseOverride(ex.exerciseId, seconds)
+                      }
+                      onClear={() => handleClearExerciseOverride(ex.exerciseId)}
+                      disabled={pending}
+                    />
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
-        )}
-      </section>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
