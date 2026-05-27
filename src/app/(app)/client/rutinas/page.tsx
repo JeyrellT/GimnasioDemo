@@ -11,9 +11,15 @@ import {
   CalendarDays,
   Play,
   CheckCircle2,
+  Link2,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ExerciseThumbnail } from "@/components/shared/exercise-thumbnail";
+import { SupersetBadge } from "@/components/shared/superset-badge";
+import {
+  getSupersetColor,
+  getSupersetLetter,
+} from "@/lib/supersets";
 import { useAuth } from "@/components/providers/auth-provider";
 import { getMyAssignedRoutines } from "@/app/actions/client-portal";
 import { needsMedicalPrompt } from "@/app/actions/medical-conditions";
@@ -418,89 +424,196 @@ export default function ClientRutinasPage() {
                                     (totalCount.get(e.exerciseId) ?? 0) + 1,
                                   );
                                 }
-                                return day.exercises.map(
-                                  (
-                                    ex: RoutineSnapshotExercise,
-                                    idx: number,
-                                  ) => {
-                                    const occurrence =
-                                      (seenCount.get(ex.exerciseId) ?? 0) + 1;
-                                    seenCount.set(ex.exerciseId, occurrence);
-                                    const total =
-                                      totalCount.get(ex.exerciseId) ?? 1;
-                                    const isRepeat = total > 1;
 
-                                    return (
-                                      <button
-                                        type="button"
-                                        key={`${ex.exerciseId}_${idx}`}
-                                        onClick={() =>
-                                          openPlayer(
-                                            assigned.id,
-                                            snapshot,
-                                            day,
-                                            idx,
-                                          )
-                                        }
-                                        aria-label={`Reproducir ${ex.nameEs}${isRepeat ? ` (vuelta ${occurrence} de ${total})` : ""}`}
-                                        className="group flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-[#18181B] transition-colors"
-                                      >
-                                        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-[#27272A]">
-                                          <ExerciseThumbnail
-                                            thumbnailUrl={ex.thumbnailUrl}
-                                            gifUrl={ex.gifUrl}
-                                            slug={ex.slug}
-                                            nameEn={ex.nameEn}
-                                            alt={ex.nameEs}
-                                            iconSize="sm"
+                                // Helper para renderizar un row de ejercicio.
+                                // Cuando `insideSuperset` es true, agregamos
+                                // padding extra a la izquierda + SS badge para
+                                // dejar claro que pertenece al grupo.
+                                const renderExerciseRow = (
+                                  ex: RoutineSnapshotExercise,
+                                  idx: number,
+                                  insideSuperset: boolean,
+                                ) => {
+                                  const occurrence =
+                                    (seenCount.get(ex.exerciseId) ?? 0) + 1;
+                                  seenCount.set(ex.exerciseId, occurrence);
+                                  const total =
+                                    totalCount.get(ex.exerciseId) ?? 1;
+                                  const isRepeat = total > 1;
+                                  return (
+                                    <button
+                                      type="button"
+                                      key={`${ex.exerciseId}_${idx}`}
+                                      onClick={() =>
+                                        openPlayer(
+                                          assigned.id,
+                                          snapshot,
+                                          day,
+                                          idx,
+                                        )
+                                      }
+                                      aria-label={`Reproducir ${ex.nameEs}${isRepeat ? ` (vuelta ${occurrence} de ${total})` : ""}`}
+                                      className={cn(
+                                        "group flex w-full items-center gap-3 py-2.5 text-left hover:bg-[#18181B] transition-colors",
+                                        insideSuperset ? "px-3 pl-5" : "px-3",
+                                      )}
+                                    >
+                                      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-[#27272A]">
+                                        <ExerciseThumbnail
+                                          thumbnailUrl={ex.thumbnailUrl}
+                                          gifUrl={ex.gifUrl}
+                                          slug={ex.slug}
+                                          nameEn={ex.nameEn}
+                                          alt={ex.nameEs}
+                                          iconSize="sm"
+                                        />
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                                          <Play
+                                            className="h-4 w-4 fill-white text-white"
+                                            aria-hidden="true"
                                           />
-                                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Play
-                                              className="h-4 w-4 fill-white text-white"
-                                              aria-hidden="true"
-                                            />
-                                          </div>
                                         </div>
-                                        <div className="min-w-0 flex-1">
-                                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                                            <p className="text-sm font-medium text-[#E4E4E7]">
-                                              {ex.nameEs}
-                                            </p>
-                                            {isRepeat && (
-                                              <span className="inline-flex items-center rounded-full bg-brand-primary/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-primary">
-                                                Vuelta {occurrence}/{total}
-                                              </span>
-                                            )}
-                                          </div>
-                                          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-[#71717A]">
-                                            <span>{ex.targetSets} series</span>
-                                            <span>
-                                              {ex.targetRepsMin === ex.targetRepsMax
-                                                ? `${ex.targetRepsMin} reps`
-                                                : `${ex.targetRepsMin}-${ex.targetRepsMax} reps`}
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                          <p className="text-sm font-medium text-[#E4E4E7]">
+                                            {ex.nameEs}
+                                          </p>
+                                          {isRepeat && (
+                                            <span className="inline-flex items-center rounded-full bg-brand-primary/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-primary">
+                                              Vuelta {occurrence}/{total}
                                             </span>
-                                            {ex.targetRpe && (
-                                              <span>RPE {ex.targetRpe}</span>
-                                            )}
-                                            <span className="inline-flex items-center gap-0.5">
-                                              <Clock className="h-3 w-3" />
-                                              {ex.restSeconds}s
-                                            </span>
-                                          </div>
-                                          {ex.notes && (
-                                            <p className="mt-1 text-xs text-[#52525B] italic">
-                                              {ex.notes}
-                                            </p>
+                                          )}
+                                          {insideSuperset && (
+                                            <SupersetBadge
+                                              group={ex.supersetGroup}
+                                              size="xs"
+                                            />
                                           )}
                                         </div>
-                                        <Play
-                                          className="h-4 w-4 shrink-0 text-[#52525B] group-hover:text-brand-primary transition-colors"
+                                        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-[#71717A]">
+                                          <span>{ex.targetSets} series</span>
+                                          <span>
+                                            {ex.targetRepsMin === ex.targetRepsMax
+                                              ? `${ex.targetRepsMin} reps`
+                                              : `${ex.targetRepsMin}-${ex.targetRepsMax} reps`}
+                                          </span>
+                                          {ex.targetRpe && (
+                                            <span>RPE {ex.targetRpe}</span>
+                                          )}
+                                          <span className="inline-flex items-center gap-0.5">
+                                            <Clock className="h-3 w-3" />
+                                            {ex.restSeconds}s
+                                          </span>
+                                        </div>
+                                        {ex.notes && (
+                                          <p className="mt-1 text-xs text-[#52525B] italic">
+                                            {ex.notes}
+                                          </p>
+                                        )}
+                                      </div>
+                                      <Play
+                                        className="h-4 w-4 shrink-0 text-[#52525B] group-hover:text-brand-primary transition-colors"
+                                        aria-hidden="true"
+                                      />
+                                    </button>
+                                  );
+                                };
+
+                                // Computo de segmentos: ejercicios consecutivos
+                                // con el mismo supersetGroup forman un cluster.
+                                type Segment =
+                                  | { kind: "single"; exercise: RoutineSnapshotExercise; idx: number }
+                                  | {
+                                      kind: "group";
+                                      group: number;
+                                      exercises: RoutineSnapshotExercise[];
+                                      startIdx: number;
+                                    };
+                                const segments: Segment[] = [];
+                                {
+                                  let i = 0;
+                                  while (i < day.exercises.length) {
+                                    const ex = day.exercises[i];
+                                    if (!ex) break;
+                                    if (
+                                      ex.supersetGroup === null ||
+                                      ex.supersetGroup === undefined
+                                    ) {
+                                      segments.push({
+                                        kind: "single",
+                                        exercise: ex,
+                                        idx: i,
+                                      });
+                                      i += 1;
+                                      continue;
+                                    }
+                                    const group = ex.supersetGroup;
+                                    const startIdx = i;
+                                    while (
+                                      i < day.exercises.length &&
+                                      day.exercises[i]?.supersetGroup === group
+                                    ) {
+                                      i += 1;
+                                    }
+                                    segments.push({
+                                      kind: "group",
+                                      group,
+                                      exercises: day.exercises.slice(
+                                        startIdx,
+                                        i,
+                                      ),
+                                      startIdx,
+                                    });
+                                  }
+                                }
+
+                                return segments.map((seg) => {
+                                  if (seg.kind === "single") {
+                                    return renderExerciseRow(
+                                      seg.exercise,
+                                      seg.idx,
+                                      false,
+                                    );
+                                  }
+                                  const color = getSupersetColor(seg.group);
+                                  const letter = getSupersetLetter(seg.group);
+                                  const count = seg.exercises.length;
+                                  return (
+                                    <div
+                                      key={`ss-${day.dayIndex}-${seg.group}`}
+                                      className="overflow-hidden"
+                                      style={{
+                                        borderLeft: `3px solid ${color}`,
+                                        backgroundColor: `color-mix(in srgb, ${color} 8%, transparent)`,
+                                      }}
+                                    >
+                                      {/* Group header strip */}
+                                      <div
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide"
+                                        style={{ color }}
+                                      >
+                                        <Link2
+                                          className="h-3 w-3"
                                           aria-hidden="true"
                                         />
-                                      </button>
-                                    );
-                                  },
-                                );
+                                        <span>Superserie {letter}</span>
+                                        <span className="text-[#71717A] font-medium normal-case tracking-normal">
+                                          · {count} ejercicios en bloque
+                                        </span>
+                                      </div>
+                                      <div className="divide-y divide-[#3F3F46]/30">
+                                        {seg.exercises.map((ex, i) =>
+                                          renderExerciseRow(
+                                            ex,
+                                            seg.startIdx + i,
+                                            true,
+                                          ),
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                });
                               })()}
                             </div>
                           )}
