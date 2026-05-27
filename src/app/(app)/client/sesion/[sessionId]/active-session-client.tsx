@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle, X, ChevronLeft, ChevronRight, Trophy, Dumbbell } from "lucide-react";
+import { CheckCircle, X, ChevronLeft, ChevronRight, Trophy, Dumbbell, Timer } from "lucide-react";
 import Link from "next/link";
 import { ExerciseThumbnail } from "@/components/shared/exercise-thumbnail";
 import { useSessionStore } from "@/stores/session-store";
@@ -16,12 +16,17 @@ import { SetInput } from "@/components/forms/set-input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { SessionInProgress } from "@/types/domain";
+import {
+  applyClientRestPrefs,
+  type ClientRestPrefs,
+} from "@/lib/rest-preferences";
 
 interface ActiveSessionClientProps {
   session: SessionInProgress;
+  restPrefs?: ClientRestPrefs;
 }
 
-export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
+export function ActiveSessionClient({ session, restPrefs }: ActiveSessionClientProps) {
   const router = useRouter();
   const isOnline = useOnlineStatus();
 
@@ -57,17 +62,28 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
 
   const [sessionStartTime] = useState(Date.now());
   const [elapsed, setElapsed] = useState(0);
+  const [exerciseStartTime, setExerciseStartTime] = useState(Date.now());
+  const [exerciseElapsed, setExerciseElapsed] = useState(0);
   const [fatigue, setFatigue] = useState<number | null>(null);
   const [showComplete, setShowComplete] = useState(false);
   const [completing, setCompleting] = useState(false);
 
-  // Elapsed timer
+  // Reset exercise timer when the active exercise changes.
+  useEffect(() => {
+    const now = Date.now();
+    setExerciseStartTime(now);
+    setExerciseElapsed(0);
+  }, [currentExerciseIndex]);
+
+  // Single tick that drives both the session elapsed and the per-exercise elapsed.
   useEffect(() => {
     const interval = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - sessionStartTime) / 1000));
+      const now = Date.now();
+      setElapsed(Math.floor((now - sessionStartTime) / 1000));
+      setExerciseElapsed(Math.floor((now - exerciseStartTime) / 1000));
     }, 1000);
     return () => clearInterval(interval);
-  }, [sessionStartTime]);
+  }, [sessionStartTime, exerciseStartTime]);
 
   // Get exercises from session snapshot using the session's dayIndex so
   // multi-day splits show the correct day's exercises (not always day 0).
@@ -101,8 +117,12 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
     : 0;
 
   function formatElapsed(s: number): string {
-    const m = Math.floor(s / 60);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
     const sec = s % 60;
+    if (h > 0) {
+      return `${h}:${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
+    }
     return `${m}:${sec.toString().padStart(2, "0")}`;
   }
 
@@ -143,9 +163,14 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
       performedAt: new Date(),
     });
 
-    // Auto-start rest timer
-    if (currentExercise.restSeconds > 0) {
-      startTimer(currentExercise.restSeconds);
+    // Auto-start rest timer with client preferences applied (override > global offset > base)
+    const effectiveRestSeconds = applyClientRestPrefs(
+      currentExercise.restSeconds,
+      currentExercise.exerciseId,
+      restPrefs ?? null,
+    );
+    if (effectiveRestSeconds > 0) {
+      startTimer(effectiveRestSeconds);
     }
 
     if (isOnline) {
@@ -215,12 +240,27 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
     <div className="flex flex-col min-h-[calc(100dvh-56px)]">
       {/* Sticky header */}
       <div className="sticky top-14 z-30 flex items-center justify-between border-b border-[#3F3F46] bg-[#09090B] px-4 py-3">
-        <div className="flex items-center gap-3">
-          <div className="text-sm font-bold tabular text-brand-primary">
-            {formatElapsed(elapsed)}
+        <div
+          className="flex items-center gap-2"
+          aria-label="Tiempo total de sesión"
+        >
+          <Timer
+            className="h-4 w-4 text-brand-primary"
+            aria-hidden="true"
+          />
+          <div className="flex flex-col leading-tight">
+            <span className="text-[10px] uppercase tracking-wide text-[#71717A]">
+              Sesión
+            </span>
+            <span
+              className="text-base font-bold tabular text-brand-primary"
+              aria-live="polite"
+            >
+              {formatElapsed(elapsed)}
+            </span>
           </div>
           {!isOnline && (
-            <span className="rounded-full bg-[#451A03] px-2 py-0.5 text-xs text-[#F59E0B]">
+            <span className="ml-2 rounded-full bg-[#451A03] px-2 py-0.5 text-xs text-[#F59E0B]">
               Offline {pendingSyncCount > 0 ? `· ${pendingSyncCount}` : ""}
             </span>
           )}
@@ -292,6 +332,26 @@ export function ActiveSessionClient({ session }: ActiveSessionClientProps) {
                   ? `${currentExercise.targetSets} sets · ${currentExercise.targetRepsMin}-${currentExercise.targetRepsMax} reps`
                   : ""}
               </p>
+              {currentExercise && (
+                <div
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-[#3F3F46] bg-[#18181B] px-3 py-1"
+                  aria-label="Tiempo en el ejercicio actual"
+                >
+                  <Timer
+                    className="h-3.5 w-3.5 text-[#A1A1AA]"
+                    aria-hidden="true"
+                  />
+                  <span className="text-xs tabular text-[#A1A1AA]">
+                    En este ejercicio
+                  </span>
+                  <span
+                    className="text-xs font-semibold tabular text-[#FAFAFA]"
+                    aria-live="polite"
+                  >
+                    {formatElapsed(exerciseElapsed)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 

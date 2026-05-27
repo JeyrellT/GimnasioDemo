@@ -37,7 +37,8 @@ import {
   Calendar,
   Clock,
   Save,
-  Video,
+  Pencil,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -108,6 +109,149 @@ const DAY_COLORS = [
 
 function getDayColor(index: number): string {
   return DAY_COLORS[Math.min(index, DAY_COLORS.length - 1)] ?? "#EC4899";
+}
+
+// ── Rest Seconds Selector ─────────────────────────────────────────────────────
+
+const REST_PRESETS = [30, 45, 60, 90, 120, 180] as const;
+
+function formatRestLabel(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  if (s === 0) return `${m}m`;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+function RestSecondsSelector({
+  value,
+  onChange,
+  inputId,
+}: {
+  value: number;
+  onChange: (seconds: number) => void;
+  inputId: string;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<string>(String(value));
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) {
+      setDraft(String(value));
+      setTimeout(() => inputRef.current?.focus(), 0);
+    }
+  }, [editing, value]);
+
+  const commit = () => {
+    const next = Math.max(0, Math.min(900, Number(draft) || 0));
+    onChange(next);
+    setEditing(false);
+  };
+
+  const cancel = () => {
+    setEditing(false);
+  };
+
+  const isPreset = (REST_PRESETS as readonly number[]).includes(value);
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between">
+        <Label
+          htmlFor={inputId}
+          className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-[#52525B]"
+        >
+          <Clock className="h-3 w-3" aria-hidden="true" />
+          Descanso entre sets
+        </Label>
+        {!editing && (
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="flex items-center gap-1 text-[10px] text-[#71717A] hover:text-brand-primary transition-colors min-h-[28px] px-1.5"
+            aria-label="Editar descanso manualmente"
+          >
+            <Pencil className="h-3 w-3" aria-hidden="true" />
+            Editar
+          </button>
+        )}
+      </div>
+
+      {editing ? (
+        <div className="flex items-center gap-1.5">
+          <Input
+            ref={inputRef}
+            id={inputId}
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={900}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                commit();
+              } else if (e.key === "Escape") {
+                e.preventDefault();
+                cancel();
+              }
+            }}
+            className="h-8 w-24 text-xs px-2 bg-[#09090B] border-[#3F3F46] focus:border-brand-primary"
+          />
+          <span className="text-[11px] text-[#71717A]">segundos</span>
+          <button
+            type="button"
+            onClick={commit}
+            className="ml-auto flex h-8 w-8 items-center justify-center rounded-md bg-brand-primary text-white hover:bg-brand-primary-hover transition-colors"
+            aria-label="Guardar descanso"
+          >
+            <Check className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            onClick={cancel}
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-[#3F3F46] text-[#71717A] hover:text-[#FAFAFA] hover:bg-[#27272A] transition-colors"
+            aria-label="Cancelar"
+          >
+            <X className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-1.5">
+          {REST_PRESETS.map((sec) => {
+            const active = value === sec;
+            return (
+              <button
+                key={sec}
+                type="button"
+                onClick={() => onChange(sec)}
+                className={[
+                  "rounded-full px-2.5 py-1 text-[11px] font-medium tabular transition-colors min-h-[28px]",
+                  active
+                    ? "bg-brand-primary text-white shadow-sm shadow-brand-primary/30"
+                    : "bg-[#27272A] text-[#A1A1AA] hover:bg-[#3F3F46] hover:text-[#FAFAFA]",
+                ].join(" ")}
+                aria-pressed={active}
+              >
+                {formatRestLabel(sec)}
+              </button>
+            );
+          })}
+          {!isPreset && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full bg-brand-primary px-2.5 py-1 text-[11px] font-medium tabular text-white shadow-sm shadow-brand-primary/30"
+              aria-label={`Descanso personalizado de ${value} segundos`}
+            >
+              {formatRestLabel(value)}
+              <span className="text-[9px] uppercase tracking-wide opacity-80">custom</span>
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ── Exercise Row ──────────────────────────────────────────────────────────────
@@ -199,14 +343,13 @@ function SortableExerciseRow({
           {prescriptionSummary}
         </div>
 
-        {/* Numeric inputs */}
-        <div className="grid grid-cols-4 gap-2">
+        {/* Numeric inputs: sets / reps min / reps max */}
+        <div className="grid grid-cols-3 gap-2">
           {(
             [
               ["targetSets",    "Sets"],
               ["targetRepsMin", "Reps mín"],
               ["targetRepsMax", "Reps máx"],
-              ["restSeconds",   "Desc (s)"],
             ] as const
           ).map(([field, label]) => (
             <div key={field} className="space-y-0.5">
@@ -226,30 +369,14 @@ function SortableExerciseRow({
           ))}
         </div>
 
-        {/* Video URL (per-routine override) — YouTube / Vimeo / Google Drive */}
-        <div className="space-y-0.5">
-          <Label
-            htmlFor={`media-${exercise.id}`}
-            className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-[#52525B]"
-          >
-            <Video className="h-3 w-3" aria-hidden="true" />
-            Video (YouTube / Vimeo / Drive)
-          </Label>
-          <Input
-            id={`media-${exercise.id}`}
-            type="url"
-            inputMode="url"
-            autoComplete="off"
-            placeholder="https://drive.google.com/file/d/..."
-            className="h-7 text-xs px-2 bg-[#09090B] border-[#3F3F46] focus:border-brand-primary"
-            value={exercise.mediaUrl ?? ""}
-            onChange={(e) =>
-              updateExercise(dayId, exercise.id, {
-                mediaUrl: e.target.value === "" ? null : e.target.value,
-              })
-            }
-          />
-        </div>
+        {/* Rest selector: preset chips + pencil to edit manually */}
+        <RestSecondsSelector
+          value={exercise.restSeconds}
+          onChange={(seconds) =>
+            updateExercise(dayId, exercise.id, { restSeconds: seconds })
+          }
+          inputId={`rest-${exercise.id}`}
+        />
       </div>
 
       {/* Delete */}
