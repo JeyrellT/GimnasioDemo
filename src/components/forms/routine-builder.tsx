@@ -329,14 +329,20 @@ function SupersetCluster({
   group,
   members,
   onDissolve,
+  forceExpanded,
   children,
 }: {
   group: number;
   members: DraftExercise[];
   onDissolve: (group: number) => void;
+  /** Cuando true, ignora el state local de colapsado — siempre renderiza
+   *  expandido. Lo usamos durante drag para que los miembros sean drop
+   *  targets aunque el usuario los hubiera colapsado. */
+  forceExpanded: boolean;
   children: React.ReactNode;
 }) {
   const [collapsed, setCollapsed] = useState(false);
+  const effectivelyCollapsed = collapsed && !forceExpanded;
   const color = getSupersetColor(group);
   const letter = getSupersetLetter(group);
   const count = members.length;
@@ -390,11 +396,12 @@ function SupersetCluster({
         <button
           type="button"
           onClick={() => setCollapsed((c) => !c)}
-          className="flex h-7 w-7 items-center justify-center rounded-md text-[#71717A] hover:text-[#FAFAFA] hover:bg-[#27272A] transition-colors"
-          aria-label={collapsed ? "Expandir superserie" : "Colapsar superserie"}
-          aria-expanded={!collapsed}
+          disabled={forceExpanded}
+          className="flex h-7 w-7 items-center justify-center rounded-md text-[#71717A] hover:text-[#FAFAFA] hover:bg-[#27272A] transition-colors disabled:opacity-50"
+          aria-label={effectivelyCollapsed ? "Expandir superserie" : "Colapsar superserie"}
+          aria-expanded={!effectivelyCollapsed}
         >
-          {collapsed ? (
+          {effectivelyCollapsed ? (
             <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
           ) : (
             <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
@@ -403,7 +410,7 @@ function SupersetCluster({
       </div>
 
       {/* Body: expandido (rows completos) o colapsado (chips). */}
-      {collapsed ? (
+      {effectivelyCollapsed ? (
         <div className="px-3 py-2 flex flex-wrap gap-1.5">
           {members.map((m) => (
             <span
@@ -645,6 +652,9 @@ function DayCard({
   const groupExercises = useRoutineBuilderStore((s) => s.groupExercises);
   const ungroupExercise = useRoutineBuilderStore((s) => s.ungroupExercise);
   const dissolveSuperset = useRoutineBuilderStore((s) => s.dissolveSuperset);
+  const normalizeOrphansInDay = useRoutineBuilderStore(
+    (s) => s.normalizeOrphansInDay,
+  );
   const accentColor = getDayColor(day.dayIndex);
 
   // Segmentos del día: clusters de superserie + ejercicios sueltos. Se
@@ -813,7 +823,7 @@ function DayCard({
       return;
     }
 
-    // ── Drop fuera de la zona central → REORDENAR (comportamiento original) ─
+    // ── Drop fuera de la zona central → REORDENAR (+ normalizar huérfanos) ─
     const oldIndex = day.exercises.findIndex((e) => e.id === active.id);
     const newIndex = day.exercises.findIndex((e) => e.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
@@ -822,20 +832,65 @@ function DayCard({
     if (!moved) return;
     reordered.splice(newIndex, 0, moved);
 
-    const oldOrder = day.exercises.map((e) => e.id);
-    reorderExercisesInDay(day.id, reordered.map((e) => e.id));
+    // Snapshot pre-reorder para rollback completo (orden + supersetGroup
+    // de cualquier huérfano que normalicemos abajo).
+    const beforeExercises = day.exercises.map((e) => ({ ...e }));
 
-    const serverIds = reordered
+    // Optimistic: aplicar reorder y luego normalizar huérfanos.
+    reorderExercisesInDay(day.id, reordered.map((e) => e.id));
+    const { affectedIds } = normalizeOrphansInDay(day.id);
+    // Leer el state post-normalización para conocer los routineExerciseId
+    // de los huérfanos que hay que persistir como supersetGroup=null.
+    const afterExercises =
+      useRoutineBuilderStore
+        .getState()
+        .days.find((d) => d.id === day.id)?.exercises ?? reordered;
+
+    // Persist: reorder + updates de huérfanos en paralelo.
+    const serverIds = afterExercises
       .map((e) => e.routineExerciseId)
       .filter((id): id is string => Boolean(id));
-    if (day.routineDayId && serverIds.length === reordered.length) {
-      const result = await reorderExercisesAction({
-        routineDayId: day.routineDayId,
-        orderedIds: serverIds,
-      });
-      if (!result.ok) {
-        reorderExercisesInDay(day.id, oldOrder);
+    if (day.routineDayId && serverIds.length === afterExercises.length) {
+      const orphanUpdates = afterExercises
+        .filter(
+          (e) =>
+            affectedIds.includes(e.id) && Boolean(e.routineExerciseId),
+        )
+        .map((e) =>
+          updateExerciseInDay({
+            routineExerciseId: e.routineExerciseId as string,
+            supersetGroup: null,
+          }),
+        );
+      const [reorderResult, ...updateResults] = await Promise.all([
+        reorderExercisesAction({
+          routineDayId: day.routineDayId,
+          orderedIds: serverIds,
+        }),
+        ...orphanUpdates,
+      ]);
+      const reorderOk = reorderResult?.ok === true;
+      const updatesOk = updateResults.every((r) => r.ok);
+      if (!reorderOk || !updatesOk) {
+        // Rollback: orden + supersetGroup originales.
+        reorderExercisesInDay(
+          day.id,
+          beforeExercises.map((e) => e.id),
+        );
+        for (const e of beforeExercises) {
+          useRoutineBuilderStore
+            .getState()
+            .updateExercise(day.id, e.id, { supersetGroup: e.supersetGroup });
+        }
         toast.error("No se pudo guardar el orden.");
+        return;
+      }
+      if (affectedIds.length > 0) {
+        toast.success(
+          affectedIds.length === 1
+            ? "Ejercicio sacado de la superserie."
+            : `${affectedIds.length} ejercicios sacados de su superserie.`,
+        );
       }
     }
   };
@@ -1062,6 +1117,7 @@ function DayCard({
                           group={segment.group}
                           members={segment.exercises}
                           onDissolve={handleDissolve}
+                          forceExpanded={activeDragId !== null}
                         >
                           {segment.exercises.map((ex) => {
                             const idx = day.exercises.findIndex(
