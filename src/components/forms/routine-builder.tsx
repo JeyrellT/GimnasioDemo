@@ -539,6 +539,7 @@ function SortableExerciseRow({
           <div className="h-8 w-8 shrink-0 overflow-hidden rounded-md bg-[#27272A]">
             <ExerciseThumbnail
               thumbnailUrl={exercise.thumbnailUrl}
+              videoUrl={exercise.mediaUrl}
               alt={exercise.nameEs}
               iconSize="sm"
             />
