@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ClipboardList, TrendingUp, Scale } from "lucide-react";
+import { Home, ClipboardList, TrendingUp, Scale, Settings2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -11,6 +11,7 @@ const navItems = [
   { href: "/client/rutinas", label: "Rutinas", icon: ClipboardList },
   { href: "/client/progreso", label: "Progreso", icon: TrendingUp },
   { href: "/client/mediciones", label: "Mediciones", icon: Scale },
+  { href: "/client/ajustes", label: "Ajustes", icon: Settings2 },
 ] as const;
 
 // ─── Bottom Nav (mobile) ──────────────────────────────────────────────────────

@@ -320,6 +320,9 @@ model User {
   trainerProfile TrainerProfile?
   clientProfile  ClientProfile?
 
+  // Client rest preferences (1-1, optional — lazily created when first edited)
+  restPreferences ClientRestPreference?
+
   // Auth.js relations
   accounts Account[]
   sessions Session[]
@@ -510,6 +513,28 @@ model ClientProfile {
 
   @@index([parqStatus])
   @@index([deletedAt])
+}
+
+/// Per-client overrides for routine rest periods.
+/// Survives across routine reassignments — applied at runtime when the
+/// client starts a rest timer in an active session.
+///
+/// Resolution order at runtime:
+///   1. If `exerciseOverrides[exerciseId]` is set → use that absolute value.
+///   2. Else → `baseRestSeconds + globalOffsetSec` (clamped to ≥ 0).
+model ClientRestPreference {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  /// Seconds to add (or subtract) to all rest timers globally. Range: -60..+180.
+  globalOffsetSec Int      @default(0)
+  /// Per-exercise absolute overrides keyed by Exercise.id.
+  /// Shape: { [exerciseId: string]: number (seconds) }.
+  /// Wins over `globalOffsetSec` when an entry exists for the exercise.
+  exerciseOverrides Json   @default("{}")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // =============================================================================
