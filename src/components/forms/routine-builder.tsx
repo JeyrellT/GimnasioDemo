@@ -1262,6 +1262,13 @@ function ExerciseSearchPanel({
   const [adding, setAdding] = useState<string | null>(null); // exerciseId being added
   const debouncedSearch = useDebounce(search, 250);
 
+  // exerciseIds que ya están en el día (para bloquear duplicados antes de
+  // enviar la request al server). Se recalcula reactivamente.
+  const existingExerciseIds = useRoutineBuilderStore((s) => {
+    const day = s.days.find((d) => d.id === dayId);
+    return new Set((day?.exercises ?? []).map((e) => e.exerciseId));
+  });
+
   // Real search effect — fires when debouncedSearch changes
   useEffect(() => {
     let cancelled = false;
@@ -1301,6 +1308,14 @@ function ExerciseSearchPanel({
 
     if (!routineDayId) {
       toast.error("Guardá la rutina primero antes de agregar ejercicios.");
+      return;
+    }
+
+    // Pre-check de duplicados (cliente). El server también valida defensivamente.
+    if (existingExerciseIds.has(ex.id)) {
+      toast.error(
+        `"${ex.nameEs}" ya está en este día. Aumentá sets o agregá una superserie en vez de duplicarlo.`,
+      );
       return;
     }
 
@@ -1410,14 +1425,22 @@ function ExerciseSearchPanel({
           const muscle = MUSCLE_LABELS[ex.primaryMuscle];
           const equipment = EQUIPMENT_LABELS[ex.equipment] ?? ex.equipment;
           const isAdding = adding === ex.id;
+          const alreadyAdded = existingExerciseIds.has(ex.id);
 
           return (
             <button
               key={ex.id}
               type="button"
               onClick={() => handleSelect(ex)}
-              disabled={isAdding || adding !== null}
-              className="w-full text-left rounded-lg border border-[#3F3F46] bg-[#09090B] p-2.5 hover:border-brand-primary hover:bg-brand-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 group"
+              disabled={isAdding || adding !== null || alreadyAdded}
+              title={alreadyAdded ? "Ya está en este día" : undefined}
+              className={[
+                "w-full text-left rounded-lg border p-2.5 transition-colors flex items-center gap-3 group",
+                alreadyAdded
+                  ? "border-[#27272A] bg-[#0F0F11] cursor-not-allowed"
+                  : "border-[#3F3F46] bg-[#09090B] hover:border-brand-primary hover:bg-brand-primary/5",
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+              ].join(" ")}
             >
               <div className="h-9 w-9 shrink-0 overflow-hidden rounded-md bg-[#27272A]">
                 <ExerciseThumbnail
@@ -1427,9 +1450,24 @@ function ExerciseSearchPanel({
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[#FAFAFA] truncate group-hover:text-brand-primary transition-colors">
-                  {ex.nameEs}
-                </p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p
+                    className={[
+                      "text-sm font-medium truncate transition-colors",
+                      alreadyAdded
+                        ? "text-[#71717A]"
+                        : "text-[#FAFAFA] group-hover:text-brand-primary",
+                    ].join(" ")}
+                  >
+                    {ex.nameEs}
+                  </p>
+                  {alreadyAdded && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[#22C55E]/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[#22C55E]">
+                      <Check className="h-2.5 w-2.5" aria-hidden="true" />
+                      Ya agregado
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center gap-1.5 mt-1">
                   {muscle && (
                     <span
@@ -1445,6 +1483,11 @@ function ExerciseSearchPanel({
               </div>
               {isAdding ? (
                 <Loader2 className="h-4 w-4 text-brand-primary animate-spin shrink-0" aria-hidden="true" />
+              ) : alreadyAdded ? (
+                <Check
+                  className="h-4 w-4 text-[#52525B] shrink-0"
+                  aria-hidden="true"
+                />
               ) : (
                 <Plus className="h-4 w-4 text-[#52525B] group-hover:text-brand-primary transition-colors shrink-0" aria-hidden="true" />
               )}
