@@ -902,7 +902,24 @@ function DayCard({
             .getState()
             .updateExercise(day.id, e.id, { supersetGroup: e.supersetGroup });
         }
-        toast.error("No se pudo guardar el orden.");
+        // Surface el error específico del server para que sea debuggable
+        // ("INVALID_EXERCISE_ID: x no pertenece a este día." etc.) en vez del
+        // mensaje genérico que oculta la causa.
+        const failedReorder =
+          !reorderOk && reorderResult && !reorderResult.ok
+            ? reorderResult.error.message
+            : null;
+        const failedUpdate = updateResults.find((r) => !r.ok);
+        const failedUpdateMsg =
+          failedUpdate && !failedUpdate.ok ? failedUpdate.error.message : null;
+        const detail = failedReorder ?? failedUpdateMsg ?? "Error desconocido";
+        console.error("[reorder] failed:", {
+          reorder: reorderResult,
+          updates: updateResults,
+          orderedIds: serverIds,
+          orphanIds: orphanUpdates.length,
+        });
+        toast.error(`No se pudo guardar el orden — ${detail}`);
         return;
       }
       if (affectedIds.length > 0) {
