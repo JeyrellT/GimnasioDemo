@@ -897,15 +897,37 @@ export async function reorderExercisesInDay(
       }
     }
 
-    // Update each exercise's order in a transaction
-    await prisma.$transaction(
-      orderedIds.map((id, index) =>
+    // Orden completo del día: los IDs provistos primero, luego cualquier
+    // ejercicio del día NO incluido (defensa contra estado cliente stale),
+    // para garantizar que TODA fila reciba un order único 0..M-1.
+    const providedSet = new Set(orderedIds);
+    const trailing = day.exercises
+      .map((e) => e.id)
+      .filter((id) => !providedSet.has(id));
+    const finalOrder = [...orderedIds, ...trailing];
+
+    // Update en DOS FASES para evitar colisiones del unique
+    // (routineDayId, order). El constraint se chequea por statement (no se
+    // difiere al fin de la transacción), así que asignar el order final
+    // directo colisiona cuando dos filas se cruzan (mover A a la posición
+    // que B todavía ocupa). Solución:
+    //   Fase 1 → todos a orders negativos temporales (únicos, no chocan con
+    //            los >= 0 existentes).
+    //   Fase 2 → todos a su order final 0..M-1.
+    await prisma.$transaction([
+      ...finalOrder.map((id, index) =>
+        prisma.routineExercise.update({
+          where: { id },
+          data: { order: -(index + 1) },
+        }),
+      ),
+      ...finalOrder.map((id, index) =>
         prisma.routineExercise.update({
           where: { id },
           data: { order: index },
         }),
       ),
-    );
+    ]);
 
     return { updated: true as const };
   });
