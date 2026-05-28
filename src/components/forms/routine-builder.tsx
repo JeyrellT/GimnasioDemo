@@ -75,7 +75,7 @@ import {
   updateExerciseInDay,
   addRoutineDay,
   deleteRoutineDay,
-  reorderExercises as reorderExercisesAction,
+  reorderAndUpdateExercises,
   createCustomGoal,
   listCustomGoals,
 } from "@/app/actions/routines";
@@ -786,60 +786,30 @@ function DayCard({
         return;
       }
 
-      // Detectar qué ejercicios cambiaron de supersetGroup para no spamear
-      // updates innecesarios. Compara contra oldExercises.
-      const oldGroupById = new Map(oldExercises.map((e) => [e.id, e.supersetGroup]));
-      const changedExercises = result.exercises.filter(
-        (e) => oldGroupById.get(e.id) !== e.supersetGroup,
-      );
-
-      // 1) Actualizar supersetGroup de los ejercicios afectados.
-      // 2) Reordenar día completo para reflejar la nueva adyacencia.
-      try {
-        const updates = changedExercises.map((e) =>
-          e.routineExerciseId
-            ? updateExerciseInDay({
-                routineExerciseId: e.routineExerciseId,
-                supersetGroup: e.supersetGroup,
-              })
-            : Promise.resolve({ ok: true as const, value: { updated: true as const } }),
-        );
-        const serverIds = result.exercises
-          .map((e) => e.routineExerciseId)
-          .filter((id): id is string => Boolean(id));
-        const reorder = reorderExercisesAction({
-          routineDayId: day.routineDayId,
-          orderedIds: serverIds,
-        });
-
-        const [updateResults, reorderResult] = await Promise.all([
-          Promise.all(updates),
-          reorder,
-        ]);
-
-        const failedUpdate = updateResults.find((r) => !r.ok);
-        if (failedUpdate || !reorderResult.ok) {
-          throw new Error("group_persist_failed");
-        }
-
-        toast.success(`Agrupado en superserie ${getSupersetLetter(result.group)}.`);
-      } catch {
-        // Rollback completo a la lista previa.
+      // Persistir orden + supersetGroup en UNA transacción atómica.
+      const items = result.exercises
+        .filter((e) => e.routineExerciseId)
+        .map((e) => ({
+          id: e.routineExerciseId as string,
+          supersetGroup: e.supersetGroup,
+        }));
+      const res = await reorderAndUpdateExercises({
+        routineDayId: day.routineDayId,
+        items,
+      });
+      if (!res.ok) {
+        // Rollback completo: orden + supersetGroup originales.
         reorderExercisesInDay(day.id, oldExercises.map((e) => e.id));
         for (const e of oldExercises) {
-          // No hacemos update remoto del rollback: si el server rechazó,
-          // las filas en DB siguen con su valor original.
-          // Solo restauramos el store para reflejar realidad.
-          const current = day.exercises.find((x) => x.id === e.id);
-          if (current && current.supersetGroup !== e.supersetGroup) {
-            // updateExercise vive en store; importarlo arriba.
-            useRoutineBuilderStore
-              .getState()
-              .updateExercise(day.id, e.id, { supersetGroup: e.supersetGroup });
-          }
+          useRoutineBuilderStore
+            .getState()
+            .updateExercise(day.id, e.id, { supersetGroup: e.supersetGroup });
         }
-        toast.error("No se pudo guardar la superserie.");
+        console.error("[group] persist failed:", res.error);
+        toast.error(`No se pudo guardar la superserie — ${res.error.message}`);
+        return;
       }
+      toast.success(`Agrupado en superserie ${getSupersetLetter(result.group)}.`);
       return;
     }
 
@@ -866,32 +836,19 @@ function DayCard({
         .getState()
         .days.find((d) => d.id === day.id)?.exercises ?? reordered;
 
-    // Persist: reorder + updates de huérfanos en paralelo.
-    const serverIds = afterExercises
-      .map((e) => e.routineExerciseId)
-      .filter((id): id is string => Boolean(id));
-    if (day.routineDayId && serverIds.length === afterExercises.length) {
-      const orphanUpdates = afterExercises
-        .filter(
-          (e) =>
-            affectedIds.includes(e.id) && Boolean(e.routineExerciseId),
-        )
-        .map((e) =>
-          updateExerciseInDay({
-            routineExerciseId: e.routineExerciseId as string,
-            supersetGroup: null,
-          }),
-        );
-      const [reorderResult, ...updateResults] = await Promise.all([
-        reorderExercisesAction({
-          routineDayId: day.routineDayId,
-          orderedIds: serverIds,
-        }),
-        ...orphanUpdates,
-      ]);
-      const reorderOk = reorderResult?.ok === true;
-      const updatesOk = updateResults.every((r) => r.ok);
-      if (!reorderOk || !updatesOk) {
+    // Persist: orden + supersetGroup en UNA transacción atómica.
+    const items = afterExercises
+      .filter((e) => e.routineExerciseId)
+      .map((e) => ({
+        id: e.routineExerciseId as string,
+        supersetGroup: e.supersetGroup,
+      }));
+    if (day.routineDayId && items.length === afterExercises.length) {
+      const res = await reorderAndUpdateExercises({
+        routineDayId: day.routineDayId,
+        items,
+      });
+      if (!res.ok) {
         // Rollback: orden + supersetGroup originales.
         reorderExercisesInDay(
           day.id,
@@ -902,24 +859,11 @@ function DayCard({
             .getState()
             .updateExercise(day.id, e.id, { supersetGroup: e.supersetGroup });
         }
-        // Surface el error específico del server para que sea debuggable
-        // ("INVALID_EXERCISE_ID: x no pertenece a este día." etc.) en vez del
-        // mensaje genérico que oculta la causa.
-        const failedReorder =
-          !reorderOk && reorderResult && !reorderResult.ok
-            ? reorderResult.error.message
-            : null;
-        const failedUpdate = updateResults.find((r) => !r.ok);
-        const failedUpdateMsg =
-          failedUpdate && !failedUpdate.ok ? failedUpdate.error.message : null;
-        const detail = failedReorder ?? failedUpdateMsg ?? "Error desconocido";
         console.error("[reorder] failed:", {
-          reorder: reorderResult,
-          updates: updateResults,
-          orderedIds: serverIds,
-          orphanIds: orphanUpdates.length,
+          error: res.error,
+          itemIds: items.map((i) => i.id),
         });
-        toast.error(`No se pudo guardar el orden — ${detail}`);
+        toast.error(`No se pudo guardar el orden — ${res.error.message}`);
         return;
       }
       if (affectedIds.length > 0) {

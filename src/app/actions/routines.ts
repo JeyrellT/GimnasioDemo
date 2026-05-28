@@ -12,6 +12,7 @@ export {
   removeExerciseFromDay,
   updateExerciseInDay,
   reorderExercises,
+  reorderAndUpdateExercises,
   assignRoutineToClient,
   addRoutineComment,
   listMyRoutines,

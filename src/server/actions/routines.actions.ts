@@ -934,6 +934,96 @@ export async function reorderExercisesInDay(
 }
 
 // =============================================================================
+// Reorder + superset update (atómico)
+// =============================================================================
+
+export interface ReorderAndUpdateItem {
+  /** routineExerciseId */
+  id: string;
+  /** Nuevo supersetGroup (null = sin grupo). */
+  supersetGroup: number | null;
+}
+
+/**
+ * Reordena los ejercicios de un día Y actualiza su `supersetGroup` en UNA
+ * sola transacción atómica. Reemplaza el patrón anterior de llamar
+ * `reorderExercises` + N `updateExerciseInDay` en paralelo, que:
+ *   1. Corría el reorder (transacción) concurrente con los updates de grupo
+ *      sobre las mismas filas → contención de locks / estados raros.
+ *   2. Podía aplicar parcialmente (reorder OK, un update falla) dejando el
+ *      día inconsistente.
+ *
+ * `items` define el orden final (índice del array) y el supersetGroup de
+ * cada fila. Los ejercicios del día NO incluidos se anexan al final con su
+ * order recalculado (no se les toca el supersetGroup).
+ *
+ * Usa el mismo truco de dos fases (orders negativos temporales) para no
+ * violar el unique(routineDayId, order).
+ */
+export async function reorderAndUpdateExercises(input: {
+  routineDayId: string;
+  items: ReorderAndUpdateItem[];
+}): Promise<ActionResult<{ updated: true }>> {
+  return tryCatch(async () => {
+    const user = await requireTrainer();
+
+    const day = await prisma.routineDay.findUnique({
+      where: { id: input.routineDayId, deletedAt: null },
+      include: {
+        routine: { select: { trainerId: true } },
+        exercises: { where: { deletedAt: null }, select: { id: true } },
+      },
+    });
+
+    if (!day) {
+      throw new NotFoundError("DAY_NOT_FOUND", "Día de rutina no encontrado.");
+    }
+    if (day.routine.trainerId !== user.id) {
+      throw new ForbiddenError("ROUTINE_NOT_OWNED", "Esta rutina no te pertenece.");
+    }
+
+    const orderedIds = input.items.map((i) => i.id);
+    const existingIds = new Set(day.exercises.map((e) => e.id));
+    for (const id of orderedIds) {
+      if (!existingIds.has(id)) {
+        throw new ValidationError(
+          "INVALID_EXERCISE_ID",
+          `El ejercicio ${id} no pertenece a este día.`,
+        );
+      }
+    }
+
+    const providedSet = new Set(orderedIds);
+    const trailing = day.exercises
+      .map((e) => e.id)
+      .filter((id) => !providedSet.has(id));
+    const finalOrder = [...orderedIds, ...trailing];
+    const groupById = new Map(input.items.map((i) => [i.id, i.supersetGroup]));
+
+    await prisma.$transaction([
+      // Fase 1: orders negativos temporales para no chocar con el unique.
+      ...finalOrder.map((id, index) =>
+        prisma.routineExercise.update({
+          where: { id },
+          data: { order: -(index + 1) },
+        }),
+      ),
+      // Fase 2: order final + supersetGroup (sólo para los items provistos).
+      ...finalOrder.map((id, index) =>
+        prisma.routineExercise.update({
+          where: { id },
+          data: groupById.has(id)
+            ? { order: index, supersetGroup: groupById.get(id) ?? null }
+            : { order: index },
+        }),
+      ),
+    ]);
+
+    return { updated: true as const };
+  });
+}
+
+// =============================================================================
 // Assignment
 // =============================================================================
 
