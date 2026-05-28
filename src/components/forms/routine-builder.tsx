@@ -124,13 +124,15 @@ function getDayColor(index: number): string {
  * Decide qué tipo de drop está intentando el usuario en base a la posición
  * vertical del puntero relativa al rectángulo del target.
  *
- * Banda central (35%–65% de la altura) → "group" (agrupar A con B).
- * Resto → "reorder" (insertar antes o después según el lado).
+ * Banda central (25%–75% de la altura) → "group" (agrupar A con B).
+ * Solo los bordes (25% superior / 25% inferior) → "reorder" (insertar antes o
+ * después). Banda generosa para que soltar "sobre" un ejercicio agrupe sin
+ * exigir puntería: la queja era que costaba reagrupar arrastrando.
  */
 function detectDropZone(pointerY: number, rect: { top: number; height: number }): "group" | "reorder" {
   if (rect.height <= 0) return "reorder";
   const relY = (pointerY - rect.top) / rect.height;
-  return relY >= 0.35 && relY <= 0.65 ? "group" : "reorder";
+  return relY >= 0.25 && relY <= 0.75 ? "group" : "reorder";
 }
 
 // ── Rest Seconds Selector ─────────────────────────────────────────────────────
@@ -263,11 +265,17 @@ function RestSecondsSelector({
           })}
           {!isPreset && (
             <span
-              className="inline-flex items-center gap-1 rounded-full bg-brand-primary px-2.5 py-1 text-[11px] font-medium tabular text-white shadow-sm shadow-brand-primary/30"
+              className="inline-flex items-center justify-center gap-1.5 rounded-full bg-brand-primary px-3 py-1 text-[11px] font-medium tabular text-white shadow-sm shadow-brand-primary/30 min-h-[28px] leading-none"
               aria-label={`Descanso personalizado de ${value} segundos`}
             >
-              {formatRestLabel(value)}
-              <span className="text-[9px] uppercase tracking-wide opacity-80">custom</span>
+              <span className="leading-none">{formatRestLabel(value)}</span>
+              <span
+                aria-hidden="true"
+                className="h-2.5 w-px shrink-0 bg-white/40"
+              />
+              <span className="text-[9px] uppercase tracking-wider opacity-90 leading-none">
+                custom
+              </span>
             </span>
           )}
         </div>
