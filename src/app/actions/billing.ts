@@ -21,34 +21,45 @@ import type { InvoiceListItem } from "@/types/api";
 
 // Async wrappers — Next.js "use server" files require all exports to be async functions.
 import {
-  createCharge as _createCharge,
-  generateMonthlyCharges as _generateMonthlyCharges,
-  waiveCharge as _waiveCharge,
-  cancelCharge as _cancelCharge,
-  listCharges as _listCharges,
-  getMySubscription as _getMySubscription,
-  listInvoices as _listInvoices,
+	createCharge as _createCharge,
+	generateMonthlyCharges as _generateMonthlyCharges,
+	waiveCharge as _waiveCharge,
+	cancelCharge as _cancelCharge,
+	listCharges as _listCharges,
+	getMySubscription as _getMySubscription,
+	listInvoices as _listInvoices,
 } from "@/server/actions/billing.actions";
+import { createSubscriptionPaymentIntent as _createSubscriptionPaymentIntent } from "@/server/actions/onvo.actions";
 export async function createCharge(...args: Parameters<typeof _createCharge>) {
-  return _createCharge(...args);
+	return _createCharge(...args);
 }
-export async function generateMonthlyCharges(...args: Parameters<typeof _generateMonthlyCharges>) {
-  return _generateMonthlyCharges(...args);
+export async function generateMonthlyCharges(
+	...args: Parameters<typeof _generateMonthlyCharges>
+) {
+	return _generateMonthlyCharges(...args);
 }
 export async function waiveCharge(...args: Parameters<typeof _waiveCharge>) {
-  return _waiveCharge(...args);
+	return _waiveCharge(...args);
 }
 export async function cancelCharge(...args: Parameters<typeof _cancelCharge>) {
-  return _cancelCharge(...args);
+	return _cancelCharge(...args);
 }
 export async function listCharges(...args: Parameters<typeof _listCharges>) {
-  return _listCharges(...args);
+	return _listCharges(...args);
 }
-export async function getMySubscription(...args: Parameters<typeof _getMySubscription>) {
-  return _getMySubscription(...args);
+export async function getMySubscription(
+	...args: Parameters<typeof _getMySubscription>
+) {
+	return _getMySubscription(...args);
 }
 export async function listInvoices(...args: Parameters<typeof _listInvoices>) {
-  return _listInvoices(...args);
+	return _listInvoices(...args);
+}
+// ONVO — create a payment intent to pay the trainer's own SaaS subscription.
+export async function createSubscriptionPaymentIntent(
+	...args: Parameters<typeof _createSubscriptionPaymentIntent>
+) {
+	return _createSubscriptionPaymentIntent(...args);
 }
 
 // =============================================================================
@@ -60,12 +71,10 @@ export async function listInvoices(...args: Parameters<typeof _listInvoices>) {
 // =============================================================================
 
 export async function getMyTrainerInvoices(): Promise<InvoiceListItem[]> {
-  const { listInvoices } = await import(
-    "@/server/actions/billing.actions"
-  );
-  const result = await listInvoices();
-  if (!result.ok) return [];
-  return result.value.invoices;
+	const { listInvoices } = await import("@/server/actions/billing.actions");
+	const result = await listInvoices();
+	if (!result.ok) return [];
+	return result.value.invoices;
 }
 
 // =============================================================================
@@ -75,48 +84,48 @@ export async function getMyTrainerInvoices(): Promise<InvoiceListItem[]> {
 // =============================================================================
 
 export async function markChargePaid(
-  chargeId: string,
+	chargeId: string,
 ): Promise<ActionResult<{ updated: true }>> {
-  return tryCatch(async () => {
-    const trainer = await requireTrainer();
+	return tryCatch(async () => {
+		const trainer = await requireTrainer();
 
-    const charge = await prisma.clientCharge.findUnique({
-      where: { id: chargeId },
-      select: { id: true, trainerUserId: true, status: true },
-    });
+		const charge = await prisma.clientCharge.findUnique({
+			where: { id: chargeId },
+			select: { id: true, trainerUserId: true, status: true },
+		});
 
-    if (!charge) {
-      throw new ValidationError("CHARGE_NOT_FOUND", "Cobro no encontrado.");
-    }
+		if (!charge) {
+			throw new ValidationError("CHARGE_NOT_FOUND", "Cobro no encontrado.");
+		}
 
-    if (charge.trainerUserId !== trainer.id) {
-      throw new ValidationError(
-        "CHARGE_NOT_OWNED",
-        "No tenés permiso para modificar este cobro.",
-      );
-    }
+		if (charge.trainerUserId !== trainer.id) {
+			throw new ValidationError(
+				"CHARGE_NOT_OWNED",
+				"No tenés permiso para modificar este cobro.",
+			);
+		}
 
-    if (charge.status === "PAID") {
-      throw new ValidationError(
-        "CHARGE_ALREADY_PAID",
-        "El cobro ya está marcado como pagado.",
-      );
-    }
+		if (charge.status === "PAID") {
+			throw new ValidationError(
+				"CHARGE_ALREADY_PAID",
+				"El cobro ya está marcado como pagado.",
+			);
+		}
 
-    if (charge.status === "CANCELLED" || charge.status === "WAIVED") {
-      throw new ValidationError(
-        "CHARGE_TERMINAL",
-        "No se puede marcar como pagado un cobro cancelado o anulado.",
-      );
-    }
+		if (charge.status === "CANCELLED" || charge.status === "WAIVED") {
+			throw new ValidationError(
+				"CHARGE_TERMINAL",
+				"No se puede marcar como pagado un cobro cancelado o anulado.",
+			);
+		}
 
-    await prisma.clientCharge.update({
-      where: { id: chargeId },
-      data: { status: "PAID", paidAt: new Date() },
-    });
+		await prisma.clientCharge.update({
+			where: { id: chargeId },
+			data: { status: "PAID", paidAt: new Date() },
+		});
 
-    return { updated: true };
-  });
+		return { updated: true };
+	});
 }
 
 // =============================================================================
@@ -127,18 +136,18 @@ export async function markChargePaid(
 // =============================================================================
 
 export async function generateInvoiceXml(
-  _chargeId: string,
+	_chargeId: string,
 ): Promise<ActionResult<{ invoiceId: string; status: "DRAFT" }>> {
-  return tryCatch(async () => {
-    await requireTrainer();
-    // Full Hacienda XML generation (signing + ATV submission) is gated behind
-    // BILLING_LIVE flag and not available in MVP. Return a typed result so
-    // callers that already handle both arms continue to work.
-    throw new ValidationError(
-      "BILLING_NOT_LIVE",
-      "La generación de facturas electrónicas estará disponible en V1.1.",
-    );
-  });
+	return tryCatch(async () => {
+		await requireTrainer();
+		// Full Hacienda XML generation (signing + ATV submission) is gated behind
+		// BILLING_LIVE flag and not available in MVP. Return a typed result so
+		// callers that already handle both arms continue to work.
+		throw new ValidationError(
+			"BILLING_NOT_LIVE",
+			"La generación de facturas electrónicas estará disponible en V1.1.",
+		);
+	});
 }
 
 // =============================================================================
@@ -148,32 +157,32 @@ export async function generateInvoiceXml(
 // =============================================================================
 
 interface BillingDataInput {
-  cedulaType: "FISICA" | "JURIDICA";
-  cedulaNumber: string;
-  haciendaId?: string | "";
-  address: string;
+	cedulaType: "FISICA" | "JURIDICA";
+	cedulaNumber: string;
+	haciendaId?: string | "";
+	address: string;
 }
 
 export async function saveTrainerBillingData(
-  data: BillingDataInput,
+	data: BillingDataInput,
 ): Promise<ActionResult<{ updated: true }>> {
-  return tryCatch(async () => {
-    const trainer = await requireTrainer();
+	return tryCatch(async () => {
+		const trainer = await requireTrainer();
 
-    const fiscalIdType = data.cedulaType === "FISICA" ? "FISICA" : "JURIDICA";
+		const fiscalIdType = data.cedulaType === "FISICA" ? "FISICA" : "JURIDICA";
 
-    await prisma.trainerProfile.update({
-      where: { userId: trainer.id },
-      data: {
-        fiscalIdType,
-        fiscalIdNumber: data.cedulaNumber.trim(),
-        haciendaUsername: data.haciendaId?.trim() || null,
-        fiscalAddress: data.address.trim(),
-      },
-    });
+		await prisma.trainerProfile.update({
+			where: { userId: trainer.id },
+			data: {
+				fiscalIdType,
+				fiscalIdNumber: data.cedulaNumber.trim(),
+				haciendaUsername: data.haciendaId?.trim() || null,
+				fiscalAddress: data.address.trim(),
+			},
+		});
 
-    return { updated: true };
-  });
+		return { updated: true };
+	});
 }
 
 // =============================================================================
@@ -182,32 +191,32 @@ export async function saveTrainerBillingData(
 // =============================================================================
 
 interface PricingDefaultsInput {
-  defaultMonthlyPriceCRC: number;
+	defaultMonthlyPriceCRC: number;
 }
 
 export async function saveTrainerPricingDefaults(
-  data: PricingDefaultsInput,
+	data: PricingDefaultsInput,
 ): Promise<ActionResult<{ updated: true }>> {
-  return tryCatch(async () => {
-    const trainer = await requireTrainer();
+	return tryCatch(async () => {
+		const trainer = await requireTrainer();
 
-    if (
-      !Number.isFinite(data.defaultMonthlyPriceCRC) ||
-      data.defaultMonthlyPriceCRC < 0
-    ) {
-      throw new ValidationError(
-        "INVALID_PRICE",
-        "El precio mensual debe ser un número mayor o igual a cero.",
-      );
-    }
+		if (
+			!Number.isFinite(data.defaultMonthlyPriceCRC) ||
+			data.defaultMonthlyPriceCRC < 0
+		) {
+			throw new ValidationError(
+				"INVALID_PRICE",
+				"El precio mensual debe ser un número mayor o igual a cero.",
+			);
+		}
 
-    await prisma.trainerProfile.update({
-      where: { userId: trainer.id },
-      data: {
-        defaultMonthlyPriceCRC: data.defaultMonthlyPriceCRC,
-      },
-    });
+		await prisma.trainerProfile.update({
+			where: { userId: trainer.id },
+			data: {
+				defaultMonthlyPriceCRC: data.defaultMonthlyPriceCRC,
+			},
+		});
 
-    return { updated: true };
-  });
+		return { updated: true };
+	});
 }
