@@ -60,6 +60,7 @@ const envSchema = z.object({
 	GMAIL_USER: z.string().email().optional(),
 	GMAIL_APP_PASSWORD: z.string().min(1).optional(),
 	GMAIL_FROM_NAME: z.string().default("Blackline Fitness"),
+	CLIENT_INVITATION_FROM_EMAIL: z.string().email().default("jeug777@gmail.com"),
 
 	// ── Email — Resend (legacy, kept for backward compat) ─────────────────────
 	RESEND_API_KEY: z.string().optional(),
