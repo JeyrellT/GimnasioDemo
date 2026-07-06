@@ -19,6 +19,7 @@ export {
   getRoutine,
   getClientRoutines,
   getClientAssignedRoutines,
+  syncAssignedRoutineFromTemplate,
   createCustomGoal,
   listCustomGoals,
   getActiveRoutineForClient,

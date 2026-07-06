@@ -11,7 +11,8 @@
 //
 // Soft-delete: all queries filter `deletedAt: null`.
 // Snapshot: AssignedRoutine.snapshotJson is built from the live template at
-// assignment time and never mutated afterwards (frozen prescription).
+// assignment time. A trainer may explicitly refresh it when editing from a
+// client's assigned-routine context.
 // =============================================================================
 
 import { revalidatePath } from "next/cache";
@@ -1364,6 +1365,7 @@ export async function getClientRoutines(
 
 export interface ClientAssignedRoutine {
   id: string;
+  routineTemplateId: string;
   status: string;
   startsOn: Date;
   endsOn: Date | null;
@@ -1387,6 +1389,7 @@ export async function getClientAssignedRoutines(
       orderBy: [{ status: "asc" }, { assignedAt: "desc" }],
       select: {
         id: true,
+        routineTemplateId: true,
         status: true,
         startsOn: true,
         endsOn: true,
@@ -1397,6 +1400,79 @@ export async function getClientAssignedRoutines(
     });
 
     return assigned;
+  });
+}
+
+// =============================================================================
+// syncAssignedRoutineFromTemplate — refresh client's assigned snapshot after edit
+// =============================================================================
+
+export async function syncAssignedRoutineFromTemplate(
+  assignedRoutineId: string,
+  expectedRoutineTemplateId?: string,
+): Promise<ActionResult<{ updated: true }>> {
+  return tryCatch(async () => {
+    const user = await requireTrainer();
+
+    const assigned = await prisma.assignedRoutine.findUnique({
+      where: { id: assignedRoutineId, deletedAt: null },
+      select: {
+        id: true,
+        clientUserId: true,
+        routineTemplateId: true,
+        startsOn: true,
+        routineTemplate: {
+          include: ROUTINE_INCLUDE,
+        },
+      },
+    });
+
+    if (!assigned) {
+      throw new NotFoundError("ASSIGNED_ROUTINE_NOT_FOUND", "Rutina asignada no encontrada.");
+    }
+
+    if (
+      expectedRoutineTemplateId &&
+      assigned.routineTemplateId !== expectedRoutineTemplateId
+    ) {
+      throw new ValidationError(
+        "ASSIGNED_ROUTINE_TEMPLATE_MISMATCH",
+        "La rutina asignada no corresponde a esta plantilla.",
+      );
+    }
+
+    await assertOwnsClient(user.id, assigned.clientUserId);
+
+    if (assigned.routineTemplate.trainerId !== user.id) {
+      throw new ForbiddenError("ROUTINE_NOT_OWNED", "Esta rutina no te pertenece.");
+    }
+
+    const snapshot = buildSnapshot(assigned.routineTemplate as RoutineDetail);
+    const endsOn = new Date(assigned.startsOn);
+    endsOn.setDate(endsOn.getDate() + assigned.routineTemplate.durationWeeks * 7);
+
+    await prisma.assignedRoutine.update({
+      where: { id: assigned.id },
+      data: {
+        snapshotJson: snapshot as unknown as Prisma.InputJsonValue,
+        endsOn,
+      },
+    });
+
+    revalidatePath(`/trainer/clientes/${assigned.clientUserId}/rutinas`);
+    revalidatePath(`/trainer/rutinas/${assigned.routineTemplateId}`);
+    revalidatePath("/client/rutinas");
+    revalidatePath("/client/sesion");
+    revalidatePath("/inicio");
+
+    logInfo("routines.syncAssignedRoutineFromTemplate", {
+      userId: user.id,
+      clientUserId: assigned.clientUserId,
+      routineTemplateId: assigned.routineTemplateId,
+      assignedRoutineId: assigned.id,
+    });
+
+    return { updated: true as const };
   });
 }
 

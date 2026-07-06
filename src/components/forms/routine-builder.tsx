@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useTransition } from "react";
+import { useState, useEffect, useMemo, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -76,6 +76,7 @@ import {
   addRoutineDay,
   deleteRoutineDay,
   reorderAndUpdateExercises,
+  syncAssignedRoutineFromTemplate,
   createCustomGoal,
   listCustomGoals,
 } from "@/app/actions/routines";
@@ -133,6 +134,26 @@ function detectDropZone(pointerY: number, rect: { top: number; height: number })
   if (rect.height <= 0) return "reorder";
   const relY = (pointerY - rect.top) / rect.height;
   return relY >= 0.25 && relY <= 0.75 ? "group" : "reorder";
+}
+
+async function refreshAssignedRoutineSnapshot(
+  assignedRoutineId: string,
+  routineTemplateId: string,
+): Promise<boolean> {
+  const result = await syncAssignedRoutineFromTemplate(
+    assignedRoutineId,
+    routineTemplateId,
+  );
+
+  if (!result.ok) {
+    console.error("[assigned-routine-sync] failed:", result.error);
+    toast.error(
+      "Cambio guardado, pero no se pudo actualizar la rutina asignada del cliente.",
+    );
+    return false;
+  }
+
+  return true;
 }
 
 // ── Rest Seconds Selector ─────────────────────────────────────────────────────
@@ -445,6 +466,7 @@ function SortableExerciseRow({
   isGroupDropTarget,
   insideCluster,
   onUngroup,
+  onPersistedChange,
 }: {
   exercise: DraftExercise;
   dayId: string;
@@ -459,6 +481,7 @@ function SortableExerciseRow({
   insideCluster: boolean;
   /** Quita este ejercicio de su superserie. */
   onUngroup: (exerciseId: string) => void;
+  onPersistedChange: () => Promise<boolean>;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: exercise.id });
@@ -498,6 +521,7 @@ function SortableExerciseRow({
 
     // Remove from local store
     removeExerciseFromDay(dayId, exercise.id);
+    await onPersistedChange();
   };
 
   const prescriptionSummary = `${exercise.targetSets} × ${exercise.targetRepsMin}–${exercise.targetRepsMax}${exercise.targetRpe != null ? ` @ RPE ${exercise.targetRpe}` : ""} · ${exercise.restSeconds}s desc`;
@@ -648,9 +672,11 @@ function SortableExerciseRow({
 function DayCard({
   day,
   onAddExercise,
+  onPersistedChange,
 }: {
   day: DraftDay;
   onAddExercise: (dayId: string) => void;
+  onPersistedChange: () => Promise<boolean>;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [removingDay, setRemovingDay] = useState(false);
@@ -697,6 +723,7 @@ function DayCard({
       }
     }
     removeDay(day.id);
+    await onPersistedChange();
     toast.success("Día eliminado.");
   };
 
@@ -817,6 +844,7 @@ function DayCard({
         toast.error(`No se pudo guardar la superserie — ${res.error.message}`);
         return;
       }
+      await onPersistedChange();
       toast.success(`Agrupado en superserie ${getSupersetLetter(result.group)}.`);
       return;
     }
@@ -874,6 +902,7 @@ function DayCard({
         toast.error(`No se pudo guardar el orden — ${res.error.message}`);
         return;
       }
+      await onPersistedChange();
       if (affectedIds.length > 0) {
         toast.success(
           affectedIds.length === 1
@@ -911,6 +940,7 @@ function DayCard({
       );
       const results = await Promise.all(updates);
       if (results.some((r) => !r.ok)) throw new Error("ungroup_persist_failed");
+      await onPersistedChange();
       toast.success("Ejercicio sacado de la superserie.");
     } catch {
       // Rollback local — restaurar supersetGroup previo.
@@ -956,6 +986,7 @@ function DayCard({
       );
       const results = await Promise.all(updates);
       if (results.some((r) => !r.ok)) throw new Error("dissolve_persist_failed");
+      await onPersistedChange();
       toast.success(`Superserie ${letter} disuelta.`);
     } catch {
       for (const e of before) {
@@ -1096,6 +1127,7 @@ function DayCard({
                             }
                             insideCluster={false}
                             onUngroup={handleUngroup}
+                            onPersistedChange={onPersistedChange}
                           />
                         );
                       }
@@ -1125,6 +1157,7 @@ function DayCard({
                                 }
                                 insideCluster={true}
                                 onUngroup={handleUngroup}
+                                onPersistedChange={onPersistedChange}
                               />
                             );
                           })}
@@ -1205,7 +1238,7 @@ function ExerciseSearchPanel({
 }: {
   dayId: string;
   routineDayId: string | null;
-  onAdded: (dayId: string, exercise: DraftExercise) => void;
+  onAdded: (dayId: string, exercise: DraftExercise) => void | Promise<void>;
   onCancel: () => void;
 }) {
   const [search, setSearch] = useState("");
@@ -1215,11 +1248,18 @@ function ExerciseSearchPanel({
   const debouncedSearch = useDebounce(search, 250);
 
   // exerciseIds que ya están en el día (para bloquear duplicados antes de
-  // enviar la request al server). Se recalcula reactivamente.
-  const existingExerciseIds = useRoutineBuilderStore((s) => {
-    const day = s.days.find((d) => d.id === dayId);
-    return new Set((day?.exercises ?? []).map((e) => e.exerciseId));
-  });
+  // enviar la request al server). El selector devuelve el array del store
+  // tal cual (referencia estable entre renders); el Set se deriva con
+  // useMemo. Construir el Set dentro del selector crea una referencia nueva
+  // por snapshot y useSyncExternalStore entra en re-render infinito
+  // (React #185).
+  const dayExercises = useRoutineBuilderStore(
+    (s) => s.days.find((d) => d.id === dayId)?.exercises,
+  );
+  const existingExerciseIds = useMemo(
+    () => new Set((dayExercises ?? []).map((e) => e.exerciseId)),
+    [dayExercises],
+  );
 
   // Real search effect — fires when debouncedSearch changes
   useEffect(() => {
@@ -1314,7 +1354,7 @@ function ExerciseSearchPanel({
       mediaUrl: null,
     };
 
-    onAdded(dayId, draft);
+    await onAdded(dayId, draft);
     toast.success(`"${ex.nameEs}" agregado.`);
   };
 
@@ -1631,10 +1671,15 @@ function MetaForm({
 
 interface RoutineBuilderProps {
   routineId?: string;
+  assignedRoutineId?: string;
   onSaved?: (routineId: string) => void;
 }
 
-export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilderProps) {
+export function RoutineBuilder({
+  routineId: _routineId,
+  assignedRoutineId,
+  onSaved,
+}: RoutineBuilderProps) {
   const router = useRouter();
 
   // Bug #1: per-field selectors — never subscribe to the whole store
@@ -1693,6 +1738,11 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routineId]);
 
+  const handlePersistedChange = async (): Promise<boolean> => {
+    if (!assignedRoutineId || !routineId) return true;
+    return refreshAssignedRoutineSnapshot(assignedRoutineId, routineId);
+  };
+
   const handleSave = async (values: MetaValues) => {
     setSaving(true);
     try {
@@ -1744,6 +1794,7 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
         }
       }
       await Promise.all(updates);
+      await handlePersistedChange();
 
       markSaved();
       toast.success("Cambios guardados.");
@@ -1754,10 +1805,11 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
     }
   };
 
-  const handleExerciseAdded = (dayId: string, exercise: DraftExercise) => {
+  const handleExerciseAdded = async (dayId: string, exercise: DraftExercise) => {
     addExerciseToDayStore(dayId, exercise);
     markSaved(); // already persisted to DB
     setAddExerciseDayId(null);
+    await handlePersistedChange();
     startTransition(() => router.refresh());
   };
 
@@ -1803,7 +1855,12 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
 
         <AnimatePresence initial={false}>
           {days.map((day) => (
-            <DayCard key={day.id} day={day} onAddExercise={setAddExerciseDayId} />
+            <DayCard
+              key={day.id}
+              day={day}
+              onAddExercise={setAddExerciseDayId}
+              onPersistedChange={handlePersistedChange}
+            />
           ))}
         </AnimatePresence>
 
@@ -1829,6 +1886,7 @@ export function RoutineBuilder({ routineId: _routineId, onSaved }: RoutineBuilde
               return;
             }
             addDay(dayName, result.value.dayId);
+            await handlePersistedChange();
             toast.success("Día agregado.");
             startTransition(() => router.refresh());
           }}
