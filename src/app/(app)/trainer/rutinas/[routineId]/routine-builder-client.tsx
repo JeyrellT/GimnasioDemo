@@ -7,14 +7,18 @@ import type { RoutineWithDays } from "@/types/domain";
 
 interface RoutineBuilderClientProps {
   routine: RoutineWithDays;
+  assignedRoutineId?: string;
 }
 
-export function RoutineBuilderClient({ routine }: RoutineBuilderClientProps) {
+export function RoutineBuilderClient({
+  routine,
+  assignedRoutineId,
+}: RoutineBuilderClientProps) {
   const initFromExisting = useRoutineBuilderStore((s) => s.initFromExisting);
 
   useEffect(() => {
     initFromExisting(routine);
   }, [routine, initFromExisting]);
 
-  return <RoutineBuilder routineId={routine.id} />;
+  return <RoutineBuilder routineId={routine.id} assignedRoutineId={assignedRoutineId} />;
 }

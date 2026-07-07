@@ -18,7 +18,7 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { uploadAvatar } from "@/app/actions/auth";
+import { deleteAvatar, uploadAvatar } from "@/app/actions/auth";
 import {
   getGeminiKey,
   setGeminiKey,
@@ -26,10 +26,10 @@ import {
 } from "@/lib/demo/settings-store";
 
 const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
-// Gated on storage being configured. Flip the env var to "true" in Railway
-// once R2_* vars are set so the upload UI re-appears without a code deploy.
-const AVATAR_UPLOAD_ENABLED =
-  process.env.NEXT_PUBLIC_AVATAR_UPLOAD_ENABLED === "true";
+const AVATAR_SOURCE_MAX_BYTES = 10 * 1024 * 1024;
+const AVATAR_UPLOAD_MAX_BYTES = 1024 * 1024;
+const AVATAR_TARGET_PX = 512;
+const AVATAR_JPEG_QUALITY = 0.86;
 
 const ReferralSection = lazy(
   () => import("@/app/(app)/perfil/_components/referral-section"),
@@ -46,6 +46,52 @@ function getInitials(name: string): string {
   const parts = name.trim().split(" ");
   if (parts.length === 1) return (parts[0]?.[0] ?? "V").toUpperCase();
   return ((parts[0]?.[0] ?? "") + (parts[parts.length - 1]?.[0] ?? "")).toUpperCase();
+}
+
+async function resizeAvatar(file: File): Promise<File> {
+  if (file.type === "image/gif" && file.size <= AVATAR_UPLOAD_MAX_BYTES) {
+    return file;
+  }
+
+  try {
+    const bitmap = await createImageBitmap(file);
+    const side = Math.min(bitmap.width, bitmap.height);
+    const sourceX = Math.round((bitmap.width - side) / 2);
+    const sourceY = Math.round((bitmap.height - side) / 2);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = AVATAR_TARGET_PX;
+    canvas.height = AVATAR_TARGET_PX;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      bitmap.close();
+      return file;
+    }
+
+    ctx.fillStyle = "#18181B";
+    ctx.fillRect(0, 0, AVATAR_TARGET_PX, AVATAR_TARGET_PX);
+    ctx.drawImage(
+      bitmap,
+      sourceX,
+      sourceY,
+      side,
+      side,
+      0,
+      0,
+      AVATAR_TARGET_PX,
+      AVATAR_TARGET_PX,
+    );
+    bitmap.close();
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", AVATAR_JPEG_QUALITY),
+    );
+
+    if (!blob) return file;
+    return new File([blob], "avatar.jpg", { type: "image/jpeg" });
+  } catch {
+    return file;
+  }
 }
 
 export default function PerfilPage() {
@@ -99,8 +145,8 @@ export default function PerfilPage() {
       toast.error("Solo se admiten archivos de imagen.");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("La imagen pesa más de 5 MB. Reducila e intentá de nuevo.");
+    if (file.size > AVATAR_SOURCE_MAX_BYTES) {
+      toast.error("La imagen pesa más de 10 MB. Reducila e intentá de nuevo.");
       return;
     }
     if (IS_DEMO) {
@@ -111,8 +157,14 @@ export default function PerfilPage() {
 
     setUploading(true);
     try {
+      const resizedFile = await resizeAvatar(file);
+      if (resizedFile.size > AVATAR_UPLOAD_MAX_BYTES) {
+        toast.error("No pudimos reducir la imagen lo suficiente. Probá con otra foto.");
+        return;
+      }
+
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", resizedFile);
       const result = await uploadAvatar(fd);
       if (!result.ok) {
         toast.error(result.error.message ?? "No se pudo subir la foto.");
@@ -126,6 +178,26 @@ export default function PerfilPage() {
       toast.success("Foto actualizada.");
     } catch {
       toast.error("Error inesperado al subir la foto.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleDeleteAvatar() {
+    if (!avatarUrl || uploading || IS_DEMO) return;
+
+    setUploading(true);
+    try {
+      const result = await deleteAvatar();
+      if (!result.ok) {
+        toast.error(result.error.message ?? "No se pudo eliminar la foto.");
+        return;
+      }
+      await updateSession();
+      router.refresh();
+      toast.success("Foto eliminada.");
+    } catch {
+      toast.error("Error inesperado al eliminar la foto.");
     } finally {
       setUploading(false);
     }
@@ -160,7 +232,7 @@ export default function PerfilPage() {
           )}
         </button>
 
-        {AVATAR_UPLOAD_ENABLED && (
+        {!IS_DEMO && (
           <div className="space-y-2">
             <button
               type="button"
@@ -180,6 +252,7 @@ export default function PerfilPage() {
             {avatarUrl && !uploading && (
               <button
                 type="button"
+                onClick={handleDeleteAvatar}
                 className="flex items-center gap-1 text-xs text-neutral-500 hover:text-danger transition-colors"
               >
                 <Trash2 className="h-3 w-3" />
@@ -189,7 +262,7 @@ export default function PerfilPage() {
           </div>
         )}
 
-        {AVATAR_UPLOAD_ENABLED && (
+        {!IS_DEMO && (
           <input
             ref={fileRef}
             type="file"

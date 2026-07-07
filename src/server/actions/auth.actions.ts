@@ -42,12 +42,6 @@ import {
   requestMagicLinkSchema,
   updateProfileBasicSchema,
 } from "@/lib/validation/auth.schema";
-import {
-  uploadFile,
-  generateStorageKey,
-  BucketType,
-} from "@/lib/storage/upload";
-
 // Local trainer-profile update schema (not in auth.schema.ts — domain-specific)
 const updateTrainerProfileSchema = z.object({
   tradeName: z.string().trim().min(1).max(120).optional(),
@@ -582,7 +576,7 @@ export async function updateTrainerProfile(
 // uploadAvatar
 // =============================================================================
 
-const AVATAR_MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+const AVATAR_MAX_BYTES = 1024 * 1024; // 1 MB after client-side resize
 const AVATAR_ALLOWED_MIMES = new Set([
   "image/jpeg",
   "image/png",
@@ -590,19 +584,16 @@ const AVATAR_ALLOWED_MIMES = new Set([
   "image/gif",
 ]);
 
-function extFromMime(mime: string): string {
-  if (mime === "image/jpeg") return "jpg";
-  if (mime === "image/png") return "png";
-  if (mime === "image/webp") return "webp";
-  if (mime === "image/gif") return "gif";
-  return "bin";
+function buildAvatarUrl(userId: string, updatedAt: Date): string {
+  return `/api/avatar/${encodeURIComponent(userId)}?v=${updatedAt.getTime()}`;
 }
 
 /**
- * Upload an avatar image for the authenticated user. The file is sent as
- * multipart/form-data from the browser (no presigned roundtrip needed for
- * small images). Server-side validates type + size, writes to R2/MinIO,
- * then updates User.avatarUrl.
+ * Upload an avatar image for the authenticated user.
+ *
+ * The browser resizes the image before sending it. The server validates type
+ * and size, stores the bytes in Postgres, then updates User.avatarUrl to a
+ * small authenticated route URL.
  */
 export async function uploadAvatar(
   formData: FormData,
@@ -626,7 +617,7 @@ export async function uploadAvatar(
     if (file.size > AVATAR_MAX_BYTES) {
       throw new ValidationError(
         "AVATAR_TOO_LARGE",
-        "La imagen pesa más de 5 MB. Reducila e intentá de nuevo.",
+        "La imagen pesa más de 1 MB. Reducila e intentá de nuevo.",
       );
     }
     if (!AVATAR_ALLOWED_MIMES.has(file.type)) {
@@ -636,20 +627,28 @@ export async function uploadAvatar(
       );
     }
 
-    const ext = extFromMime(file.type);
-    const key = generateStorageKey("avatars", user.id, ext);
     const bytes = Buffer.from(await file.arrayBuffer());
-
-    const { url } = await uploadFile({
-      bucket: BucketType.PHOTOS,
-      key,
-      body: bytes,
-      contentType: file.type,
-    });
-
     const { ipAddress, userAgent } = await getRequestMeta();
 
-    await prisma.$transaction(async (tx) => {
+    const avatarUrl = await prisma.$transaction(async (tx) => {
+      const avatar = await tx.userAvatar.upsert({
+        where: { userId: user.id },
+        create: {
+          userId: user.id,
+          mimeType: file.type,
+          data: bytes,
+          sizeBytes: bytes.length,
+        },
+        update: {
+          mimeType: file.type,
+          data: bytes,
+          sizeBytes: bytes.length,
+        },
+        select: { updatedAt: true },
+      });
+
+      const url = buildAvatarUrl(user.id, avatar.updatedAt);
+
       await tx.user.update({
         where: { id: user.id },
         data: { avatarUrl: url },
@@ -662,13 +661,47 @@ export async function uploadAvatar(
           entityId: user.id,
           ipAddress,
           userAgent,
-          metadata: { fields: ["avatarUrl"], avatarKey: key },
+          metadata: { fields: ["avatarUrl"], avatarStorage: "postgres" },
+        },
+      });
+
+      return url;
+    });
+
+    logInfo("user.avatar_uploaded", { userId: user.id, storage: "postgres" });
+
+    return { avatarUrl };
+  });
+}
+
+export async function deleteAvatar(): Promise<ActionResult<{ deleted: true }>> {
+  return tryCatch(async () => {
+    const user = await requireUser();
+    const { ipAddress, userAgent } = await getRequestMeta();
+
+    await prisma.$transaction(async (tx) => {
+      await tx.userAvatar.deleteMany({
+        where: { userId: user.id },
+      });
+      await tx.user.update({
+        where: { id: user.id },
+        data: { avatarUrl: null },
+      });
+      await tx.auditLog.create({
+        data: {
+          actorUserId: user.id,
+          action: "UPDATE",
+          entityType: "User",
+          entityId: user.id,
+          ipAddress,
+          userAgent,
+          metadata: { fields: ["avatarUrl"], avatarDeleted: true },
         },
       });
     });
 
-    logInfo("user.avatar_uploaded", { userId: user.id, key });
+    logInfo("user.avatar_deleted", { userId: user.id });
 
-    return { avatarUrl: url };
+    return { deleted: true };
   });
 }

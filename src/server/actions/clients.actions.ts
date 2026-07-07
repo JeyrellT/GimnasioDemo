@@ -91,6 +91,27 @@ async function getRequestMeta(): Promise<{
   }
 }
 
+type TrainerEmailIdentity = {
+  trainerName: string;
+  fromName: string;
+  fromAddress: string;
+  replyTo: string;
+};
+
+function getTrainerEmailIdentity(trainer: {
+  email: string;
+  name: string;
+  trainerProfile?: { tradeName?: string | null } | null;
+}): TrainerEmailIdentity {
+  const trainerName = trainer.trainerProfile?.tradeName?.trim() || trainer.name;
+  return {
+    trainerName,
+    fromName: `${trainerName} | Blackline Fitness`,
+    fromAddress: serverEnv.CLIENT_INVITATION_FROM_EMAIL,
+    replyTo: trainer.email,
+  };
+}
+
 // =============================================================================
 // listMyClients
 // =============================================================================
@@ -383,15 +404,17 @@ export async function createInvitation(
 
     // Send email (outside transaction — side-effectful)
     try {
-      const trainerName =
-        (trainer as { trainerProfile?: { tradeName?: string }; name: string })
-          .trainerProfile?.tradeName ?? trainer.name;
+      const emailIdentity = getTrainerEmailIdentity(trainer);
 
       await sendEmail({
         to: email,
-        subject: `${trainerName} te invitó a Blackline Fitness`,
+        subject: `${emailIdentity.trainerName} te invitó a Blackline Fitness`,
+        fromName: emailIdentity.fromName,
+        fromAddress: emailIdentity.fromAddress,
+        replyTo: emailIdentity.replyTo,
+        requireFromAddress: true,
         react: React.createElement(InvitationEmail, {
-          trainerName,
+          trainerName: emailIdentity.trainerName,
           invitationUrl,
           expiresAt: expiresAt.toISOString(),
           appUrl: serverEnv.APP_URL,
@@ -1637,6 +1660,7 @@ export async function quickAddClient(input: {
     }
 
     const { email, name } = parsed.data;
+    const appUrl = process.env.APP_URL ?? "https://blacklinefitness.app";
 
     // -- Check email not already taken --
     const existing = await prisma.user.findUnique({
@@ -1645,6 +1669,40 @@ export async function quickAddClient(input: {
     });
 
     if (existing && existing.deletedAt === null) {
+      const now = new Date();
+      const [existingLink, reusableInvitation] = await Promise.all([
+        prisma.trainerClient.findFirst({
+          where: {
+            trainerId: trainer.id,
+            clientId: existing.id,
+            status: { in: ["ACTIVE", "PENDING"] },
+            deletedAt: null,
+          },
+          select: { id: true },
+        }),
+        prisma.invitation.findFirst({
+          where: {
+            trainerId: trainer.id,
+            clientId: existing.id,
+            email,
+            usedAt: null,
+            expiresAt: { gt: now },
+            deletedAt: null,
+          },
+          select: { id: true, token: true },
+          orderBy: { createdAt: "desc" },
+        }),
+      ]);
+
+      if (existingLink && reusableInvitation) {
+        return {
+          clientId: existing.id,
+          invitationId: reusableInvitation.id,
+          emailSent: false,
+          welcomeUrl: `${appUrl}/api/cliente/aceptar-invitacion?token=${reusableInvitation.token}`,
+        };
+      }
+
       throw new ConflictError(
         "EMAIL_ALREADY_USED",
         "Ya existe una cuenta con ese correo electrónico.",
@@ -1664,7 +1722,6 @@ export async function quickAddClient(input: {
       Date.now() + INVITATION_EXPIRY_DAYS * 24 * 60 * 60 * 1000,
     );
 
-    const appUrl = process.env.APP_URL ?? "https://blacklinefitness.app";
     // Link goes through the auto-login API which validates the token, sets the
     // session cookie, and redirects to /client/bienvenida.
     const welcomeUrl = `${appUrl}/api/cliente/aceptar-invitacion?token=${token}`;
@@ -1736,15 +1793,17 @@ export async function quickAddClient(input: {
     // wrap with a defensive 20s race so a stuck send never holds the request.
     let emailSent = false;
     try {
-      const trainerName =
-        (trainer as { trainerProfile?: { tradeName?: string }; name: string })
-          .trainerProfile?.tradeName ?? trainer.name;
+      const emailIdentity = getTrainerEmailIdentity(trainer);
 
       const sendPromise = sendEmail({
         to: email,
-        subject: `${trainerName} creó tu cuenta en Blackline Fitness`,
+        subject: `${emailIdentity.trainerName} creó tu cuenta en Blackline Fitness`,
+        fromName: emailIdentity.fromName,
+        fromAddress: emailIdentity.fromAddress,
+        replyTo: emailIdentity.replyTo,
+        requireFromAddress: true,
         react: React.createElement(ClientWelcomeEmail, {
-          trainerName,
+          trainerName: emailIdentity.trainerName,
           welcomeUrl,
           appUrl: serverEnv.APP_URL,
         }),

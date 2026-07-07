@@ -107,6 +107,7 @@ const NO_SOFT_DELETE = new Set([
   "OnboardingDraft",
   "PaymentEvent",
   "Referral",
+  "UserAvatar",
 ]);
 
 /**

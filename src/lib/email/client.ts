@@ -26,7 +26,7 @@ import type { ReactElement } from "react";
 
 import { serverEnv as env } from "@/server/env";
 import { ExternalServiceError } from "@/lib/errors";
-import { logError, logInfo } from "@/lib/logger";
+import { logError, logInfo, logWarn } from "@/lib/logger";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -189,15 +189,41 @@ export interface SendEmailInput {
   react?: ReactElement;
   html?: string;
   text?: string;
+  /** Display name for the From header. Defaults to GMAIL_FROM_NAME. */
+  fromName?: string;
+  /** Email address for the From header. Must be authorized by the SMTP account. */
+  fromAddress?: string;
   replyTo?: string;
+  /** When true, never retry with GMAIL_USER if the requested From is rejected. */
+  requireFromAddress?: boolean;
 }
 
 export interface SendEmailResult {
   id: string;
 }
 
+function cleanHeaderValue(value: string): string {
+  return value.replace(/[\r\n"]/g, "").trim();
+}
+
+function formatAddress(name: string, address: string): string {
+  const safeName = cleanHeaderValue(name);
+  const safeAddress = cleanHeaderValue(address);
+  return safeName ? `${safeName} <${safeAddress}>` : safeAddress;
+}
+
 export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
-  const { to, subject, react, html, text, replyTo } = input;
+  const {
+    to,
+    subject,
+    react,
+    html,
+    text,
+    fromName,
+    fromAddress,
+    replyTo,
+    requireFromAddress = false,
+  } = input;
 
   // React Email components → render to HTML + plain-text fallback
   let finalHtml = html;
@@ -207,18 +233,25 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
     finalText = await render(react, { plainText: true });
   }
 
-  const fromName = env.GMAIL_FROM_NAME ?? "Blackline Fitness";
-  const fromAddress = env.GMAIL_USER ?? "";
-  const from = `${fromName} <${fromAddress}>`;
+  const defaultFromName = env.GMAIL_FROM_NAME ?? "Blackline Fitness";
+  const defaultFromAddress = env.GMAIL_USER ?? "";
+  const requestedFromName = fromName ?? defaultFromName;
+  const requestedFromAddress = fromAddress ?? defaultFromAddress;
+  const requestedFrom = formatAddress(requestedFromName, requestedFromAddress);
+  const fallbackFrom = formatAddress(defaultFromName, defaultFromAddress);
+
+  const mail = {
+    to: Array.isArray(to) ? to.join(", ") : to,
+    subject,
+    html: finalHtml,
+    text: finalText ?? finalHtml ?? "",
+    ...(replyTo ? { replyTo } : {}),
+  };
 
   try {
     const info = await getTransporter().sendMail({
-      from,
-      to: Array.isArray(to) ? to.join(", ") : to,
-      subject,
-      html: finalHtml,
-      text: finalText ?? finalHtml ?? "",
-      ...(replyTo ? { replyTo } : {}),
+      from: requestedFrom,
+      ...mail,
     });
 
     logInfo("email.sent", {
@@ -230,8 +263,41 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
     });
     return { id: info.messageId };
   } catch (error) {
-    const classified = classifyError(error);
-    logError(error, {
+    let sendError: unknown = error;
+    const hasCustomFrom =
+      requestedFromAddress &&
+      defaultFromAddress &&
+      requestedFromAddress.toLowerCase() !== defaultFromAddress.toLowerCase();
+
+    if (hasCustomFrom && !requireFromAddress) {
+      logWarn("email.custom_from_failed_retrying_default", {
+        subject,
+        to,
+        requestedFromAddress,
+      });
+
+      try {
+        const info = await getTransporter().sendMail({
+          from: fallbackFrom,
+          ...mail,
+        });
+
+        logInfo("email.sent", {
+          messageId: info.messageId,
+          subject,
+          to,
+          accepted: info.accepted,
+          rejected: info.rejected,
+          fallbackFrom: true,
+        });
+        return { id: info.messageId };
+      } catch (fallbackError) {
+        sendError = fallbackError;
+      }
+    }
+
+    const classified = classifyError(sendError);
+    logError(sendError, {
       action: "email.failed",
       subject,
       to,
@@ -241,7 +307,7 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
     throw new ExternalServiceError(
       `EMAIL_${classified.class}`,
       classified.message,
-      error,
+      sendError,
     );
   }
 }

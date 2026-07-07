@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Loader2, UserCheck, CalendarDays, Dumbbell, Clock, Target } from "lucide-react";
+import { ArrowLeft, Loader2, UserCheck, CalendarDays, Dumbbell, Clock, Target } from "lucide-react";
 import { getRoutine } from "@/app/actions/routines";
 import { searchExercises } from "@/app/actions/exercises";
 import { RoutineBuilderClient } from "./routine-builder-client";
@@ -28,11 +28,17 @@ function getGoalMeta(goal: string) {
 
 interface Props {
   routineId: string;
+  assignedRoutineId?: string;
+  returnToClientId?: string;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function RoutineDetailClient({ routineId }: Props) {
+export default function RoutineDetailClient({
+  routineId,
+  assignedRoutineId,
+  returnToClientId,
+}: Props) {
   const [routine, setRoutine] = useState<RoutineDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [missing, setMissing] = useState(false);
@@ -96,6 +102,15 @@ export default function RoutineDetailClient({ routineId }: Props) {
 
   return (
     <div className="space-y-6">
+      {returnToClientId && (
+        <Link
+          href={`/trainer/clientes/${returnToClientId}/rutinas`}
+          className="inline-flex min-h-[40px] items-center gap-2 rounded-lg border border-[#3F3F46] bg-[#18181B] px-3 py-2 text-xs font-semibold text-[#A1A1AA] transition-colors hover:border-brand-primary/40 hover:text-[#FAFAFA]"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Rutinas del cliente
+        </Link>
+      )}
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <div className="rounded-2xl border border-[#3F3F46] bg-[#18181B] overflow-hidden">
         {/* Gradient accent line */}
@@ -160,7 +175,10 @@ export default function RoutineDetailClient({ routineId }: Props) {
       </div>
 
       {/* ── Builder ───────────────────────────────────────────────────────── */}
-      <RoutineBuilderClient routine={routine as unknown as RoutineWithDays} />
+      <RoutineBuilderClient
+        routine={routine as unknown as RoutineWithDays}
+        assignedRoutineId={assignedRoutineId}
+      />
     </div>
   );
 }

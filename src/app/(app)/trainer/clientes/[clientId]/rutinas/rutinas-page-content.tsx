@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, ArrowLeft, Dumbbell, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, Dumbbell, Loader2, Pencil } from "lucide-react";
 import { getClientAssignedRoutines } from "@/app/actions/routines";
 import { formatDateCR } from "@/lib/utils";
 import type { RoutineSnapshot } from "@/types/domain";
 
 type AssignedRoutineRow = {
   id: string;
+  routineTemplateId: string;
   status: string;
   startsOn: Date;
   endsOn: Date | null;
@@ -190,6 +191,7 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
 
             const dateFrom = formatDateCR(startsOnDate, "d MMM yyyy");
             const dateTo = endsOnDate ? formatDateCR(endsOnDate, "d MMM yyyy") : "En curso";
+            const editHref = `/trainer/rutinas/${r.routineTemplateId}?clientId=${encodeURIComponent(clientId)}&assignedRoutineId=${encodeURIComponent(r.id)}`;
 
             return (
               <li
@@ -218,7 +220,17 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
                       </p>
                     )}
                   </div>
-                  <StatusBadge status={r.status} />
+                  <div className="flex shrink-0 items-center gap-2">
+                    <Link
+                      href={editHref}
+                      title="Editar rutina"
+                      aria-label={`Editar ${templateName}`}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#3F3F46] bg-[#27272A]/80 text-[#71717A] transition-colors hover:border-brand-primary/40 hover:bg-brand-primary/10 hover:text-brand-primary"
+                    >
+                      <Pencil className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
+                    </Link>
+                    <StatusBadge status={r.status} />
+                  </div>
                 </div>
 
                 {/* Date range */}

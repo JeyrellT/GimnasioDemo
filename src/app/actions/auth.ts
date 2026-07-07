@@ -6,5 +6,6 @@ export {
   updateTrainerProfile,
   searchTrainersByName,
   uploadAvatar,
+  deleteAvatar,
 } from "@/server/actions/auth.actions";
 export type { TrainerSearchResult } from "@/server/actions/auth.actions";

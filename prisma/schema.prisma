@@ -320,6 +320,7 @@ model User {
   // 1-1 profiles
   trainerProfile TrainerProfile?
   clientProfile  ClientProfile?
+  avatar          UserAvatar?
 
   // Client rest preferences (1-1, optional — lazily created when first edited)
   restPreferences ClientRestPreference?
@@ -384,6 +385,22 @@ model User {
 
   @@index([role])
   @@index([deletedAt])
+}
+
+/// Binary avatar image for the user's topbar/profile photo.
+/// Kept separate from User so the JWT/session only carries a small URL.
+model UserAvatar {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  mimeType  String
+  data      Bytes
+  sizeBytes Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([updatedAt])
 }
 
 /// Auth.js account row (OAuth providers, future use).
