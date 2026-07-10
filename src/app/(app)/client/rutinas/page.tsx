@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Loader2,
   ClipboardList,
@@ -104,12 +104,32 @@ export default function ClientRutinasPage() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // `medicalResolvedInSession` garantiza el contrato "una vez resuelto, nunca
+  // más" dentro de la misma sesión. Sin esto, al navegar a inicio y volver a
+  // rutinas el componente se remonta, `showMedicalPrompt` vuelve a false y el
+  // effect reabría el modal usando el valor cacheado (`shouldShow: true`) de la
+  // query — aunque el cliente ya guardó sus padecimientos y se notificó al
+  // coach. Se resetea solo en un reload completo, momento en que la query ya
+  // devuelve `shouldShow: false` desde la DB (medicalPromptShownAt persistido).
+  const [medicalResolvedInSession, setMedicalResolvedInSession] =
+    useState(false);
   const [showMedicalPrompt, setShowMedicalPrompt] = useState(false);
   useEffect(() => {
-    if (medicalQuery.data?.shouldShow) {
+    if (medicalQuery.data?.shouldShow && !medicalResolvedInSession) {
       setShowMedicalPrompt(true);
     }
-  }, [medicalQuery.data]);
+  }, [medicalQuery.data, medicalResolvedInSession]);
+
+  // Cierre del prompt médico (guardar o "Después"). Marca la sesión como
+  // resuelta e invalida la query para que el refetch refleje el estado ya
+  // persistido en la DB (medicalPromptShownAt = now()).
+  const handleMedicalClose = useCallback(() => {
+    setMedicalResolvedInSession(true);
+    setShowMedicalPrompt(false);
+    void queryClient.invalidateQueries({
+      queryKey: ["medical-prompt-needed", user?.id ?? null],
+    });
+  }, [queryClient, user?.id]);
 
   // PAR-Q gate: show modal the moment the client lands here while parqStatus
   // is NOT_COMPLETED. Dismissible (so they can still browse) but reopens on
@@ -183,7 +203,7 @@ export default function ClientRutinasPage() {
       <>
         <MedicalConditionsPrompt
           open={showMedicalPrompt}
-          onClose={() => setShowMedicalPrompt(false)}
+          onClose={handleMedicalClose}
         />
         {user?.id && (
           <ParqClientPrompt
@@ -234,7 +254,7 @@ export default function ClientRutinasPage() {
     <>
       <MedicalConditionsPrompt
         open={showMedicalPrompt}
-        onClose={() => setShowMedicalPrompt(false)}
+        onClose={handleMedicalClose}
       />
       {user?.id && (
         <ParqClientPrompt
