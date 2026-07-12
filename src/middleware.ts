@@ -16,6 +16,8 @@
 //   /                   — marketing landing
 //   /ingresar           — sign-in / magic link
 //   /registrarse        — sign-up (trainer onboarding entry point)
+//   /recuperar          — request a password-reset link
+//   /restablecer        — set a new password from the reset link
 //   /verificar          — email verification landing
 //   /invitacion/*       — client invitation flows
 //   /pricing            — public pricing page
@@ -45,6 +47,8 @@ const { auth } = NextAuth(authConfig);
 const PUBLIC_PREFIXES: string[] = [
   "/ingresar",
   "/registrarse",
+  "/recuperar",
+  "/restablecer",
   "/verificar",
   "/invitacion",
   "/pricing",

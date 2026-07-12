@@ -51,6 +51,27 @@ export const requestMagicLinkSchema = z.object({
 
 export type RequestMagicLinkInput = z.infer<typeof requestMagicLinkSchema>;
 
+// ── Password reset ────────────────────────────────────────────────────────────
+
+/** Step 1: user submits their email to receive a reset link. */
+export const requestPasswordResetSchema = z.object({
+  email: emailSchema,
+});
+
+export type RequestPasswordResetInput = z.infer<typeof requestPasswordResetSchema>;
+
+/** Step 2: user submits the token from the email plus a new password. */
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, "Token de recuperación requerido"),
+  email: emailSchema,
+  password: z
+    .string()
+    .min(8, "La contraseña debe tener al menos 8 caracteres")
+    .max(1024, "La contraseña es demasiado larga"),
+});
+
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
 // ── Accept invitation ─────────────────────────────────────────────────────────
 
 export const acceptInvitationSchema = z.object({

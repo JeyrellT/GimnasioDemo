@@ -2,6 +2,8 @@
 export {
   registerUser,
   requestMagicLink,
+  requestPasswordReset,
+  resetPassword,
   updateProfile,
   updateTrainerProfile,
   searchTrainersByName,

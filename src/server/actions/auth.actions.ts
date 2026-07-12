@@ -28,11 +28,12 @@ import {
   NotFoundError,
 } from "@/lib/errors";
 import { logInfo, logError } from "@/lib/logger";
-import { TRIAL_DAYS, MAGIC_LINK_EXPIRY_MIN } from "@/lib/consts";
+import { TRIAL_DAYS, MAGIC_LINK_EXPIRY_MIN, PASSWORD_RESET_EXPIRY_MIN } from "@/lib/consts";
 import { hashPassword } from "@/lib/crypto/passwords";
-import { generateOpaqueToken } from "@/lib/crypto/tokens";
+import { generateOpaqueToken, hashToken } from "@/lib/crypto/tokens";
 import { sendEmail } from "@/lib/email/client";
 import MagicLinkEmail from "@/lib/email/templates/magic-link";
+import PasswordResetEmail from "@/lib/email/templates/password-reset";
 
 import type { ActionResult } from "@/types/api";
 import type { RequestMagicLinkResult } from "@/types/api";
@@ -40,8 +41,15 @@ import type { RequestMagicLinkResult } from "@/types/api";
 import {
   signUpSchema,
   requestMagicLinkSchema,
+  requestPasswordResetSchema,
+  resetPasswordSchema,
   updateProfileBasicSchema,
 } from "@/lib/validation/auth.schema";
+
+/** Namespace prefix for password-reset tokens in the VerificationToken table.
+ *  Keeps them in a separate keyspace from magic-link tokens (identifier = raw
+ *  email) so the two flows can never collide or consume each other's tokens. */
+const PWRESET_IDENTIFIER_PREFIX = "pwreset:";
 // Local trainer-profile update schema (not in auth.schema.ts — domain-specific)
 const updateTrainerProfileSchema = z.object({
   tradeName: z.string().trim().min(1).max(120).optional(),
@@ -126,6 +134,52 @@ async function sendMagicLinkForUser(
     logInfo("magic_link.sent", { userId, tokenExpiry: expires.toISOString() });
   } catch (e) {
     logError(e, { action: "sendMagicLinkForUser", userId });
+    // Intentional swallow: callers return ok({ sent: true }) regardless.
+  }
+}
+
+/** Build a password-reset token and send the reset email.
+ *  Does NOT throw — errors are swallowed intentionally so callers never
+ *  reveal whether an email address is registered or not.
+ *
+ *  Security: only the SHA-256 hash of the token is persisted (via hashToken).
+ *  The raw token travels in the email URL only. A DB leak therefore cannot be
+ *  replayed to reset anyone's password.
+ */
+async function sendPasswordResetForUser(
+  userId: string,
+  email: string,
+): Promise<void> {
+  const rawToken = generateOpaqueToken(32);
+  const tokenHash = hashToken(rawToken);
+  const expires = new Date(Date.now() + PASSWORD_RESET_EXPIRY_MIN * 60 * 1000);
+  const appUrl = process.env.APP_URL ?? "https://blacklinefitness.app";
+  const identifier = `${PWRESET_IDENTIFIER_PREFIX}${email}`;
+
+  try {
+    // Single active reset token per email: delete stale ones, then create fresh.
+    await prisma.$transaction(async (tx) => {
+      await tx.verificationToken.deleteMany({ where: { identifier } });
+      await tx.verificationToken.create({
+        data: { identifier, token: tokenHash, expires },
+      });
+    });
+
+    const url = `${appUrl}/restablecer?token=${rawToken}&email=${encodeURIComponent(email)}`;
+
+    await sendEmail({
+      to: email,
+      subject: "Restablecé tu contraseña — Blackline Fitness",
+      react: React.createElement(PasswordResetEmail, {
+        url,
+        email,
+        expiresInMinutes: PASSWORD_RESET_EXPIRY_MIN,
+      }),
+    });
+
+    logInfo("password_reset.sent", { userId, tokenExpiry: expires.toISOString() });
+  } catch (e) {
+    logError(e, { action: "sendPasswordResetForUser", userId });
     // Intentional swallow: callers return ok({ sent: true }) regardless.
   }
 }
@@ -379,6 +433,148 @@ export async function requestMagicLink(
     }
 
     return { sent: true, email };
+  });
+}
+
+// =============================================================================
+// requestPasswordReset
+// =============================================================================
+
+/**
+ * Request a password-reset email.
+ *
+ * Design: always returns ok({ sent: true }) regardless of whether the email
+ * exists or has a password set. This prevents user enumeration attacks.
+ * Users authenticated only via magic link (no passwordHash) get no email — but
+ * the response is identical, so an attacker learns nothing.
+ */
+export async function requestPasswordReset(
+  emailOrInput: string | FormData,
+): Promise<ActionResult<RequestMagicLinkResult>> {
+  return tryCatch(async () => {
+    const parsed = requestPasswordResetSchema.safeParse(
+      typeof emailOrInput === "string"
+        ? { email: emailOrInput }
+        : { email: emailOrInput.get("email") },
+    );
+
+    if (!parsed.success) {
+      throw new ValidationError(
+        "PASSWORD_RESET_INPUT",
+        parsed.error.issues[0]?.message ?? "Correo electrónico inválido",
+        parsed.error,
+      );
+    }
+
+    const { email } = parsed.data;
+
+    // Intentionally do NOT reveal if the user exists.
+    const user = await prisma.user.findUnique({
+      where: { email, deletedAt: null },
+      select: { id: true, passwordHash: true },
+    });
+
+    if (user) {
+      await sendPasswordResetForUser(user.id, email);
+    } else {
+      logInfo("password_reset.user_not_found_silenced", {});
+    }
+
+    return { sent: true, email };
+  });
+}
+
+// =============================================================================
+// resetPassword
+// =============================================================================
+
+/**
+ * Complete a password reset: validate the token from the email and set a new
+ * password. On success the token is consumed (deleted) and mustChangePassword
+ * is cleared so a provisioned client can finish onboarding here too.
+ */
+export async function resetPassword(
+  input: { token: string; email: string; password: string } | FormData,
+): Promise<ActionResult<{ reset: true }>> {
+  return tryCatch(async () => {
+    const raw = input instanceof FormData
+      ? {
+          token: input.get("token"),
+          email: input.get("email"),
+          password: input.get("password"),
+        }
+      : input;
+
+    const parsed = resetPasswordSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      throw new ValidationError(
+        "RESET_PASSWORD_INPUT",
+        parsed.error.issues[0]?.message ?? "Datos inválidos",
+        parsed.error,
+      );
+    }
+
+    const { token, email, password } = parsed.data;
+    const identifier = `${PWRESET_IDENTIFIER_PREFIX}${email}`;
+    const tokenHash = hashToken(token);
+
+    // Look up the token by its hash bound to this exact email.
+    const record = await prisma.verificationToken.findUnique({
+      where: { identifier_token: { identifier, token: tokenHash } },
+    });
+
+    if (!record || record.expires.getTime() < Date.now()) {
+      // Clean up an expired record if present, then fail with a generic message.
+      if (record) {
+        await prisma.verificationToken.deleteMany({ where: { identifier } });
+      }
+      throw new ValidationError(
+        "RESET_TOKEN_INVALID",
+        "El enlace de recuperación es inválido o expiró. Solicitá uno nuevo.",
+      );
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email, deletedAt: null },
+      select: { id: true },
+    });
+
+    if (!user) {
+      // Token matched an identifier with no live user — consume it and fail.
+      await prisma.verificationToken.deleteMany({ where: { identifier } });
+      throw new ValidationError(
+        "RESET_TOKEN_INVALID",
+        "El enlace de recuperación es inválido o expiró. Solicitá uno nuevo.",
+      );
+    }
+
+    const passwordHash = await hashPassword(password);
+    const { ipAddress, userAgent } = await getRequestMeta();
+
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: user.id },
+        data: { passwordHash, mustChangePassword: false },
+      });
+      // Consume every reset token for this identifier — single use.
+      await tx.verificationToken.deleteMany({ where: { identifier } });
+      await tx.auditLog.create({
+        data: {
+          actorUserId: user.id,
+          action: "UPDATE",
+          entityType: "User",
+          entityId: user.id,
+          ipAddress,
+          userAgent,
+          metadata: { fields: ["passwordHash"], source: "password_reset" },
+        },
+      });
+    });
+
+    logInfo("user.password_reset", { userId: user.id });
+
+    return { reset: true };
   });
 }
 

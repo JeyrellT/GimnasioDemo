@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -143,6 +144,14 @@ export function SignInForm({ callbackUrl = "/inicio", onSuccess }: SignInFormPro
                 </FormItem>
               )}
             />
+            <div className="flex justify-end -mt-1">
+              <Link
+                href="/recuperar"
+                className="text-xs text-[#A1A1AA] hover:text-[#FAFAFA] underline-offset-4 hover:underline transition-colors"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
             <Button
               type="submit"
               className="w-full"
