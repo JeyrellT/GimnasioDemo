@@ -193,10 +193,13 @@ export async function getAdminDashboardStats(): Promise<
       prisma.user.count({ where: { role: "ADMIN" } }),
       prisma.user.count({ where: { role: "SUPER_ADMIN" } }),
       prisma.user.count({ where: { suspendedAt: { not: null } } }),
-      prisma.trainerSubscription.count({ where: { status: "ACTIVE" } }),
-      prisma.trainerSubscription.count({ where: { status: "TRIAL" } }),
-      prisma.trainerSubscription.count({ where: { status: "CANCELLED" } }),
-      prisma.trainerSubscription.count({ where: { status: "READ_ONLY" } }),
+      // The soft-delete extension only filters top-level models, not the
+      // `trainer` relation — so exclude subscriptions of soft-deleted trainers
+      // explicitly, otherwise deleted accounts inflate the license counts.
+      prisma.trainerSubscription.count({ where: { status: "ACTIVE", trainer: { deletedAt: null } } }),
+      prisma.trainerSubscription.count({ where: { status: "TRIAL", trainer: { deletedAt: null } } }),
+      prisma.trainerSubscription.count({ where: { status: "CANCELLED", trainer: { deletedAt: null } } }),
+      prisma.trainerSubscription.count({ where: { status: "READ_ONLY", trainer: { deletedAt: null } } }),
       prisma.user.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
       prisma.user.count({
         where: { role: "TRAINER", createdAt: { gte: thirtyDaysAgo } },
@@ -595,7 +598,14 @@ export async function listAllSubscriptions(input?: {
     const page = parsed?.page ?? 1;
     const pageSize = parsed?.pageSize ?? 50;
 
-    const where = parsed?.status ? { status: parsed.status as SubscriptionStatus } : {};
+    // Exclude subscriptions whose trainer was soft-deleted. The soft-delete
+    // extension only injects `deletedAt: null` on the top-level model
+    // (TrainerSubscription has no deletedAt), never on the `trainer` relation —
+    // so deleted trainers' subscriptions leak into the admin list without this.
+    const where: Prisma.TrainerSubscriptionWhereInput = {
+      trainer: { deletedAt: null },
+      ...(parsed?.status ? { status: parsed.status as SubscriptionStatus } : {}),
+    };
 
     const [rows, total] = await prisma.$transaction([
       prisma.trainerSubscription.findMany({
