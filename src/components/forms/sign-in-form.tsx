@@ -37,21 +37,24 @@ type MagicValues = z.infer<typeof magicLinkSchema>;
 interface SignInFormProps {
   callbackUrl?: string;
   onSuccess?: () => void;
+  /** Optional email to pre-fill (e.g. from the super-admin quick-access link).
+   *  Convenience only — the password is always required, never bypassed. */
+  defaultEmail?: string;
 }
 
-export function SignInForm({ callbackUrl = "/inicio", onSuccess }: SignInFormProps) {
+export function SignInForm({ callbackUrl = "/inicio", onSuccess, defaultEmail = "" }: SignInFormProps) {
   const router = useRouter();
   const [mode, setMode] = useState<"password" | "magic">("password");
   const [showPassword, setShowPassword] = useState(false);
 
   const passwordForm = useForm<PasswordValues>({
     resolver: zodResolver(passwordSchema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { email: defaultEmail, password: "" },
   });
 
   const magicForm = useForm<MagicValues>({
     resolver: zodResolver(magicLinkSchema),
-    defaultValues: { email: "" },
+    defaultValues: { email: defaultEmail },
   });
 
   const onPasswordSubmit = async (values: PasswordValues) => {
@@ -103,7 +106,7 @@ export function SignInForm({ callbackUrl = "/inicio", onSuccess }: SignInFormPro
                       placeholder="vos@ejemplo.com"
                       autoComplete="email"
                       inputMode="email"
-                      autoFocus
+                      autoFocus={!defaultEmail}
                       {...field}
                     />
                   </FormControl>
@@ -124,6 +127,7 @@ export function SignInForm({ callbackUrl = "/inicio", onSuccess }: SignInFormPro
                         placeholder="••••••••"
                         autoComplete="current-password"
                         className="pr-10"
+                        autoFocus={Boolean(defaultEmail)}
                         {...field}
                       />
                       <button

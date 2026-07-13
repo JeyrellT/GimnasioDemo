@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Dumbbell, Eye, EyeOff, User, ArrowRight, Loader2 } from "lucide-react";
+import { Dumbbell, Eye, EyeOff, User, ArrowRight, Loader2, ShieldCheck } from "lucide-react";
 import { SignInForm } from "@/components/forms/sign-in-form";
 import {
   Dialog,
@@ -23,6 +23,12 @@ import { registerUser } from "@/app/actions/auth";
 // ---------------------------------------------------------------------------
 
 const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+
+// Super-admin quick access: when this public env var is set, a discreet
+// "Acceso administrador" link appears in the login hub that opens the sign-in
+// dialog with the email pre-filled. The password is ALWAYS required — this is a
+// convenience shortcut, never an auth bypass.
+const SUPER_ADMIN_EMAIL = process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAIL;
 
 interface DemoProfile {
   id: string;
@@ -161,9 +167,10 @@ interface LoginDialogProps {
   open: boolean;
   onClose: () => void;
   onGoToRegister: () => void;
+  defaultEmail?: string;
 }
 
-function LoginDialog({ open, onClose, onGoToRegister }: LoginDialogProps) {
+function LoginDialog({ open, onClose, onGoToRegister, defaultEmail }: LoginDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
       <DialogContent className="max-w-sm">
@@ -174,7 +181,7 @@ function LoginDialog({ open, onClose, onGoToRegister }: LoginDialogProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <SignInForm callbackUrl="/inicio" />
+        <SignInForm callbackUrl="/inicio" defaultEmail={defaultEmail} />
 
         {/* Enlace hacia el registro */}
         <p className="text-center text-sm text-[#71717A]">
@@ -502,13 +509,16 @@ type View = "landing" | "login" | "register";
 function ProdHub() {
   const [view, setView] = useState<View>("landing");
   const [selectedRole, setSelectedRole] = useState<"TRAINER" | "CLIENT">("TRAINER");
+  // Email to pre-fill in the login dialog (set by the admin quick-access link).
+  const [loginEmail, setLoginEmail] = useState<string | undefined>(undefined);
 
   function openRegister(role: "TRAINER" | "CLIENT") {
     setSelectedRole(role);
     setView("register");
   }
 
-  function openLogin() {
+  function openLogin(prefillEmail?: string) {
+    setLoginEmail(prefillEmail);
     setView("login");
   }
 
@@ -523,6 +533,7 @@ function ProdHub() {
   }
 
   function switchToLogin() {
+    setLoginEmail(undefined);
     setView("login");
   }
 
@@ -569,12 +580,27 @@ function ProdHub() {
           ¿Ya tenés cuenta?{" "}
           <button
             type="button"
-            onClick={openLogin}
+            onClick={() => openLogin()}
             className="font-medium text-brand-primary hover:text-brand-primary-hover transition-colors underline-offset-4 hover:underline"
           >
             Ingresá
           </button>
         </p>
+
+        {/* Acceso rápido a super admin — pre-llena el correo; la contraseña
+            sigue siendo obligatoria. Solo aparece si la env pública está seteada. */}
+        {SUPER_ADMIN_EMAIL && (
+          <div className="flex justify-center pt-1">
+            <button
+              type="button"
+              onClick={() => openLogin(SUPER_ADMIN_EMAIL)}
+              className="inline-flex items-center gap-1.5 text-[11px] text-[#52525B] hover:text-[#A1A1AA] transition-colors"
+            >
+              <ShieldCheck className="h-3 w-3" aria-hidden="true" />
+              Acceso administrador
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ------------------------------------------------------------------ */}
@@ -584,6 +610,7 @@ function ProdHub() {
         open={view === "login"}
         onClose={closeBothDialogs}
         onGoToRegister={switchToRegister}
+        defaultEmail={loginEmail}
       />
 
       {/* ------------------------------------------------------------------ */}
