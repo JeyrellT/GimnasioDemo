@@ -2,17 +2,31 @@
 
 import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { AuthProvider, useAuth } from "@/components/providers/auth-provider";
+import {
+  AuthProvider,
+  useAuth,
+  type AuthUser,
+} from "@/components/providers/auth-provider";
 import { BrandingProvider } from "@/lib/branding/branding-context";
 import { Topbar } from "@/components/layout/topbar";
-import { TrainerBottomNav, TrainerSidebar } from "@/components/layout/trainer-nav";
+import {
+  TrainerBottomNav,
+  TrainerSidebar,
+} from "@/components/layout/trainer-nav";
 import { ClientBottomNav, ClientSidebar } from "@/components/layout/client-nav";
 import { AdminSuperNav } from "@/app/(app)/admin/_components/admin-super-nav";
 import { AdminBottomNav } from "@/components/layout/admin-bottom-nav";
 import { OfflineBanner } from "@/components/shared/offline-banner";
 import { CoachAssistant } from "@/components/chat/coach-assistant";
+import type { MirrorViewSwitcherState } from "@/app/(app)/admin/_components/mirror-view-switcher";
 
-function AppShell({ children }: { children: ReactNode }) {
+function AppShell({
+  children,
+  mirrorSwitcher,
+}: {
+  children: ReactNode;
+  mirrorSwitcher?: MirrorViewSwitcherState;
+}) {
   const { user, avatarUrl, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
 
@@ -45,14 +59,25 @@ function AppShell({ children }: { children: ReactNode }) {
   const isAdmin = user.role === "SUPER_ADMIN" || user.role === "ADMIN";
   const isTrainer = user.role === "TRAINER";
 
-  const Sidebar = isAdmin ? AdminSuperNav : isTrainer ? TrainerSidebar : ClientSidebar;
-  const BottomNav = isAdmin ? AdminBottomNav : isTrainer ? TrainerBottomNav : ClientBottomNav;
+  const Sidebar = isAdmin
+    ? AdminSuperNav
+    : isTrainer
+      ? TrainerSidebar
+      : ClientSidebar;
+  const BottomNav = isAdmin
+    ? AdminBottomNav
+    : isTrainer
+      ? TrainerBottomNav
+      : ClientBottomNav;
 
   return (
     <div className="flex min-h-dvh flex-col bg-canvas">
       <div className="sticky top-0 z-40 bg-canvas">
         <OfflineBanner />
-        <Topbar user={{ name: user.name, avatarUrl }} />
+        <Topbar
+          user={{ name: user.name, avatarUrl }}
+          mirrorSwitcher={mirrorSwitcher}
+        />
       </div>
 
       <div className="flex flex-1 overflow-hidden">
@@ -74,11 +99,19 @@ function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-export function ClientLayout({ children }: { children: ReactNode }) {
+export function ClientLayout({
+  children,
+  effectiveUser,
+  mirrorSwitcher,
+}: {
+  children: ReactNode;
+  effectiveUser?: AuthUser;
+  mirrorSwitcher?: MirrorViewSwitcherState;
+}) {
   return (
-    <AuthProvider>
+    <AuthProvider effectiveUser={effectiveUser}>
       <BrandingProvider>
-        <AppShell>{children}</AppShell>
+        <AppShell mirrorSwitcher={mirrorSwitcher}>{children}</AppShell>
       </BrandingProvider>
     </AuthProvider>
   );

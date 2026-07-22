@@ -9,8 +9,18 @@ import { motion, AnimatePresence } from "framer-motion";
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: BarChart3, exact: true },
   { href: "/admin/users", label: "Usuarios", icon: Users, exact: false },
-  { href: "/admin/subscriptions", label: "Licencias", icon: CreditCard, exact: false },
-  { href: "/admin/referrals", label: "Referidos", icon: UserPlus, exact: false },
+  {
+    href: "/admin/subscriptions",
+    label: "Licencias",
+    icon: CreditCard,
+    exact: false,
+  },
+  {
+    href: "/admin/referrals",
+    label: "Referidos",
+    icon: UserPlus,
+    exact: false,
+  },
 ] as const;
 
 export function AdminBottomNav() {

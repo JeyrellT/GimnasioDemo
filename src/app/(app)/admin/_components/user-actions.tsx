@@ -9,7 +9,7 @@
 import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, ShieldCheck, Ban, UserCheck, LogIn, Trash2 } from "lucide-react";
+import { Loader2, ShieldCheck, Ban, UserCheck, Eye, Trash2 } from "lucide-react";
 import type { UserRole } from "@/types/domain";
 import {
   Dialog,
@@ -133,7 +133,9 @@ export function UserActions({
       const result = await startImpersonation({ userId });
       if (result.ok) {
         toast.success("Impersonación iniciada. Redirigiendo...");
-        router.push(result.value.redirectTo);
+        // Force the shared app layout to read the newly-set mirror cookie and
+        // replace the Super Admin shell with the coach/client shell.
+        window.location.assign(result.value.redirectTo);
       } else {
         toast.error(result.error.message);
       }
@@ -232,9 +234,9 @@ export function UserActions({
           {isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           ) : (
-            <LogIn className="h-4 w-4" aria-hidden="true" />
+            <Eye className="h-4 w-4" aria-hidden="true" />
           )}
-          Impersonar
+          Abrir vista espejo
         </button>
 
         {/* Delete */}

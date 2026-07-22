@@ -68,6 +68,18 @@ export interface AdminUserListItem {
   createdAt: Date;
 }
 
+export interface AdminMirrorAccount {
+  id: string;
+  email: string;
+  name: string;
+  suspended: boolean;
+}
+
+export interface AdminMirrorDirectory {
+  trainers: AdminMirrorAccount[];
+  clients: AdminMirrorAccount[];
+}
+
 export interface AdminUserDetail {
   id: string;
   email: string;
@@ -301,6 +313,57 @@ export async function listAllUsers(
     ]);
 
     return { users: rows, total, page, pageSize };
+  });
+}
+
+// =============================================================================
+// getAdminMirrorDirectory
+// =============================================================================
+
+/**
+ * Lightweight directory used by the Super Admin "Vista espejo" screen.
+ * Keeping the two roles separate makes it quick to open either side of the
+ * product without exposing passwords or changing the target user's session.
+ */
+export async function getAdminMirrorDirectory(): Promise<
+  ActionResult<AdminMirrorDirectory>
+> {
+  return tryCatch(async () => {
+    await requireSuperAdmin();
+
+    const select = {
+      id: true,
+      email: true,
+      name: true,
+      suspendedAt: true,
+    } as const;
+
+    const [trainerRows, clientRows] = await prisma.$transaction([
+      prisma.user.findMany({
+        where: { role: "TRAINER" },
+        select,
+        orderBy: [{ name: "asc" }, { email: "asc" }],
+        take: 200,
+      }),
+      prisma.user.findMany({
+        where: { role: "CLIENT" },
+        select,
+        orderBy: [{ name: "asc" }, { email: "asc" }],
+        take: 500,
+      }),
+    ]);
+
+    const toAccount = (row: (typeof trainerRows)[number]): AdminMirrorAccount => ({
+      id: row.id,
+      email: row.email,
+      name: row.name,
+      suspended: row.suspendedAt !== null,
+    });
+
+    return {
+      trainers: trainerRows.map(toAccount),
+      clients: clientRows.map(toAccount),
+    };
   });
 }
 
@@ -826,12 +889,10 @@ export async function startImpersonation(input: {
       maxAge: IMPERSONATION_MAX_AGE_SEC,
     });
 
-    const redirectTo =
-      target.role === "TRAINER"
-        ? "/trainer/inicio"
-        : target.role === "CLIENT"
-          ? "/client/inicio"
-          : "/inicio";
+    // Coach and client dashboards share /inicio and branch by the effective
+    // (possibly impersonated) role. The old role-prefixed routes never existed
+    // and caused a 404 immediately after starting impersonation.
+    const redirectTo = "/inicio";
 
     await writeAdminAuditLog(
       actor.id,

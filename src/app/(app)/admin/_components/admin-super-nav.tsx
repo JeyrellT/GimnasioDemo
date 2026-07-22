@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Users, CreditCard, Shield, UserPlus, Activity, HeartPulse } from "lucide-react";
+import {
+  BarChart3,
+  Users,
+  CreditCard,
+  Shield,
+  UserPlus,
+  Activity,
+  HeartPulse,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -48,7 +56,10 @@ export function AdminSuperNav() {
       {/* SUPER_ADMIN badge */}
       <div className="flex items-center gap-2 border-b border-[#3F3F46]/60 px-4 py-3">
         <div className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-primary/20">
-          <Shield className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
+          <Shield
+            className="h-3.5 w-3.5 text-brand-primary"
+            aria-hidden="true"
+          />
         </div>
         <span className="text-xs font-bold uppercase tracking-widest text-brand-primary">
           Super Admin

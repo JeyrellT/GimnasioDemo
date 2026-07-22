@@ -16,6 +16,7 @@ export interface AuthUser {
   name: string;
   email: string;
   role: "TRAINER" | "CLIENT" | "ADMIN" | "SUPER_ADMIN";
+  avatarUrl?: string | null;
 }
 
 export interface AuthContextValue {
@@ -36,21 +37,35 @@ const AuthContext = createContext<AuthContextValue>({
 // Bridge: reads NextAuth session and writes to AuthContext
 // ---------------------------------------------------------------------------
 
-function ProdAuthBridge({ children }: { children: ReactNode }) {
+function ProdAuthBridge({
+  children,
+  effectiveUser,
+}: {
+  children: ReactNode;
+  effectiveUser?: AuthUser;
+}) {
   const { data: session, status } = useSession();
 
+  const sessionUser: AuthUser | null = session?.user
+    ? {
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+        role: session.user.role,
+        avatarUrl: session.user.avatarUrl ?? null,
+      }
+    : null;
+
+  // The JWT remains attached to the real Super Admin. During a mirror session
+  // the server supplies the effective target so client-side navigation,
+  // branding and role gates match the account being observed.
+  const user = effectiveUser ?? sessionUser;
+
   const value: AuthContextValue = {
-    user: session?.user
-      ? {
-          id: session.user.id,
-          name: session.user.name,
-          email: session.user.email,
-          role: session.user.role,
-        }
-      : null,
+    user,
     isLoading: status === "loading",
     isAuthenticated: status === "authenticated",
-    avatarUrl: session?.user?.avatarUrl ?? null,
+    avatarUrl: user?.avatarUrl ?? null,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -60,10 +75,16 @@ function ProdAuthBridge({ children }: { children: ReactNode }) {
 // Public API
 // ---------------------------------------------------------------------------
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({
+  children,
+  effectiveUser,
+}: {
+  children: ReactNode;
+  effectiveUser?: AuthUser;
+}) {
   return (
     <SessionProvider>
-      <ProdAuthBridge>{children}</ProdAuthBridge>
+      <ProdAuthBridge effectiveUser={effectiveUser}>{children}</ProdAuthBridge>
     </SessionProvider>
   );
 }
