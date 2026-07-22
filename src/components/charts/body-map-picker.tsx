@@ -333,11 +333,11 @@ function ZoneHotspot({
   // Visual colors per state
   const fillColor =
     state === "primary"
-      ? "#3B82F6"
+      ? "var(--brand-primary)"
       : state === "secondary"
         ? "#F59E0B"
         : hovered
-          ? "#3B82F6"
+          ? "var(--brand-primary)"
           : "#3F3F46";
 
   const fillOpacity =
@@ -456,7 +456,7 @@ function MuscleChip({ muscle, variant, onRemove }: MuscleChipProps) {
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold",
         variant === "primary"
-          ? "bg-[#3B82F6]/20 text-[#3B82F6] ring-1 ring-[#3B82F6]/40"
+          ? "bg-brand-primary/20 text-brand-primary ring-1 ring-brand-primary/40"
           : "bg-[#F59E0B]/15 text-[#F59E0B] ring-1 ring-[#F59E0B]/30",
       )}
     >
@@ -672,7 +672,7 @@ export function BodyMapPicker({
       <div className="flex flex-wrap gap-x-4 gap-y-1.5">
         {(
           [
-            { color: "#3B82F6", label: "Principal" },
+            { color: "var(--brand-primary)", label: "Principal" },
             { color: "#F59E0B", label: "Secundario" },
           ] as const
         ).map(({ color, label }) => (

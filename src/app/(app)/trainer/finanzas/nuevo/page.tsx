@@ -12,6 +12,7 @@ import Link from "next/link";
 import { ArrowLeft, TrendingDown, TrendingUp, Loader2, CheckCircle2 } from "lucide-react";
 import { createExpense, createOneOffSale } from "@/app/actions/finance";
 import type { ExpenseCategory, IncomeCategory } from "@prisma/client";
+import { CurrencyInput } from "@/components/shared/currency-input";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -57,7 +58,7 @@ function todayLocal(): string {
 }
 
 const inputCls =
-  "w-full rounded-lg border border-[#3F3F46] bg-[#09090B] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder:text-[#52525B] focus:border-[#3B82F6]/60 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/20 transition-colors";
+  "w-full rounded-lg border border-[#3F3F46] bg-[#09090B] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder:text-[#52525B] focus:border-brand-primary/60 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-colors";
 
 const labelCls = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#A1A1AA]";
 
@@ -67,7 +68,7 @@ export default function NuevaEntradaPage() {
   const router = useRouter();
 
   const [mode, setMode] = React.useState<Mode>("gasto");
-  const [amount, setAmount] = React.useState("");
+  const [amount, setAmount] = React.useState(0);
   const [category, setCategory] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [date, setDate] = React.useState(todayLocal());
@@ -87,8 +88,8 @@ export default function NuevaEntradaPage() {
     e.preventDefault();
     setError(null);
 
-    const amountNum = parseFloat(amount.replace(/,/g, ""));
-    if (isNaN(amountNum) || amountNum <= 0) {
+    const amountNum = amount;
+    if (amountNum <= 0) {
       setError("Ingresá un monto válido mayor a 0.");
       return;
     }
@@ -104,7 +105,7 @@ export default function NuevaEntradaPage() {
     if (mode === "gasto") {
       result = await createExpense({ occurredAt, amountCRC: amountNum, category: category as ExpenseCategory, description: description || undefined });
     } else {
-      result = await createOneOffSale({ occurredAt, amountCRC: amountNum, category: category as IncomeCategory, description: description || undefined, paidStatus: "PAID" });
+      result = await createOneOffSale({ occurredAt, amountCRC: amountNum, category: category as IncomeCategory, description: description || undefined, paidStatus: "PAID", paymentMethod: paymentMethod || undefined });
     }
 
     setSaving(false);
@@ -173,19 +174,13 @@ export default function NuevaEntradaPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Amount */}
-          <div>
-            <label className={labelCls}>Monto (₡)</label>
-            <input
-              type="number"
-              min="1"
-              step="500"
-              placeholder="35 000"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className={inputCls}
-              required
-            />
-          </div>
+          <CurrencyInput
+            label="Monto"
+            value={amount}
+            onChange={setAmount}
+            placeholder="35 000"
+            required
+          />
 
           {/* Category */}
           <div>
@@ -257,7 +252,7 @@ export default function NuevaEntradaPage() {
           <button
             type="submit"
             disabled={saving}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#3B82F6] py-3 text-sm font-bold text-white shadow-md shadow-[#3B82F6]/20 transition-colors hover:bg-[#E55D0F] disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-primary py-3 text-sm font-bold text-white shadow-md shadow-brand-primary/20 transition-colors hover:bg-brand-primary-hover disabled:opacity-60"
           >
             {saving ? (
               <>

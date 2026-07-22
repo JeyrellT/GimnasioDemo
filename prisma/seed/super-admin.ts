@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — SUPER_ADMIN bootstrap seed
+// BLACKLINE FITNESS — SUPER_ADMIN bootstrap seed
 // Owner: database-architect.
 //
 // Promotes the user identified by SUPER_ADMIN_EMAIL to the SUPER_ADMIN role.

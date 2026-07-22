@@ -23,6 +23,9 @@
 
 import {
   GoogleGenerativeAI,
+  type Content,
+  type FunctionCall,
+  type FunctionDeclaration,
   type GenerativeModel,
   type InlineDataPart,
   type ResponseSchema,
@@ -98,12 +101,36 @@ export class GeminiKeyMissingError extends ValidationError {
 // -----------------------------------------------------------------------------
 
 const MODEL_NAMES: Record<ModelKind, string> = {
-  ocr: "gemini-2.0-flash-lite",
-  reasoning: "gemini-2.0-flash",
+  ocr: "gemini-2.5-flash",
+  reasoning: "gemini-2.5-pro",
+};
+
+/**
+ * Fallback ids for when the primary model is rejected with "model not found"
+ * or 404. Empty string means "no fallback". OCR stays on Flash regardless.
+ */
+const MODEL_FALLBACKS: Record<ModelKind, string> = {
+  ocr: "",
+  reasoning: "gemini-2.5-flash",
 };
 
 function resolveModelId(kind: ModelKind): string {
   return MODEL_NAMES[kind];
+}
+
+/**
+ * True when the error message looks like "the requested model does not exist
+ * or you don't have access" — typical 404 from the Gemini REST endpoint.
+ */
+function isModelNotFound(e: unknown): boolean {
+  const x = (e ?? {}) as UnknownErrorShape;
+  const status = x.status ?? x.statusCode;
+  if (status === 404) return true;
+  const msg = String(x.message ?? "").toLowerCase();
+  if (msg.includes("model not found")) return true;
+  if (msg.includes("model") && msg.includes("not found")) return true;
+  if (msg.includes("model") && msg.includes("404")) return true;
+  return false;
 }
 
 // -----------------------------------------------------------------------------
@@ -433,4 +460,317 @@ export async function pingGeminiKey(): Promise<
       ),
     );
   }
+}
+
+// =============================================================================
+// chatWithTools — multi-turn chat with native function calling
+// =============================================================================
+//
+// Used by the trainer assistant (src/lib/ai/agent). Wraps Gemini's
+// tool-calling protocol: the caller passes a full message history plus a
+// catalog of FunctionDeclarations; we return either a final assistant text
+// (finishReason "STOP") or the list of function calls the model wants us to
+// run (finishReason "TOOL_CALLS"). The caller is responsible for executing
+// the calls, appending the function responses to history, and calling us
+// again to continue the loop.
+//
+// Why we surface the raw FunctionCall[] instead of running tools here:
+//   - Tool execution touches server actions (auth, mutations) — the agent
+//     runtime owns that policy (e.g., confirmation prompts for writes).
+//   - This file stays a thin SDK wrapper.
+// =============================================================================
+
+export type ChatRole = "user" | "model" | "function";
+
+/** A single turn already in the conversation. Mirrors @google/generative-ai Content. */
+export interface ChatTurn {
+  role: ChatRole;
+  /** Free-form parts — text, inline image, function-call, or function-response. */
+  parts: Content["parts"];
+}
+
+export interface ChatWithToolsArgs {
+  model?: ModelKind;
+  systemInstruction: string;
+  history: ChatTurn[];
+  tools: FunctionDeclaration[];
+  temperature?: number;
+  timeoutMs?: number;
+  maxAttempts?: number;
+  requestId?: string;
+}
+
+export type ChatWithToolsResult =
+  | {
+      kind: "text";
+      text: string;
+      usage?: UsageMetadata;
+      attempts: number;
+      latencyMs: number;
+      modelId: string;
+      /**
+       * Raw finishReason from Gemini (`STOP`, `MAX_TOKENS`, `SAFETY`,
+       * `TOOL_CALLS`, ...). Typed as `string` so callers don't have to import
+       * the SDK enum.
+       */
+      finishReason?: string;
+    }
+  | {
+      kind: "tool_calls";
+      functionCalls: FunctionCall[];
+      usage?: UsageMetadata;
+      attempts: number;
+      latencyMs: number;
+      modelId: string;
+      finishReason?: string;
+    };
+
+export async function chatWithTools(
+  args: ChatWithToolsArgs,
+): Promise<Result<ChatWithToolsResult, AppError>> {
+  const {
+    model = "reasoning",
+    systemInstruction,
+    history,
+    tools,
+    // Tool calling is deterministic-ish; 0.4 made Flash narrate instead of
+    // emitting a function_call. 0.2 keeps a hair of variability for natural
+    // phrasing in the text branch.
+    temperature = 0.2,
+    timeoutMs = 45_000,
+    // Aligned with generateStructured; transient 5xx/429 deserve a third shot.
+    maxAttempts = 3,
+    requestId,
+  } = args;
+
+  const primaryModelId = resolveModelId(model);
+  const fallbackModelId = MODEL_FALLBACKS[model] || "";
+
+  // Map our ChatTurn[] into the SDK's Content[] shape.
+  const contents: Content[] = history.map((turn) => ({
+    role: turn.role === "function" ? "function" : turn.role,
+    parts: turn.parts,
+  }));
+
+  // Build a handle for a given concrete model id. Throws GeminiKeyMissingError
+  // if the API key is gone. We split this out so the model-not-found fallback
+  // can rebuild against a different id without duplicating init code.
+  const buildHandle = (concreteModelId: string): GenerativeModel =>
+    getSdk().getGenerativeModel({
+      model: concreteModelId,
+      systemInstruction,
+      tools: tools.length > 0 ? [{ functionDeclarations: tools }] : undefined,
+    });
+
+  let modelId = primaryModelId;
+  let handle: GenerativeModel;
+  try {
+    handle = buildHandle(modelId);
+  } catch (e) {
+    if (e instanceof GeminiKeyMissingError) return err(e);
+    return err(
+      new ExternalServiceError(
+        "GEMINI_INIT_FAILED",
+        "No se pudo inicializar el cliente de Gemini.",
+        e,
+      ),
+    );
+  }
+
+  const start = Date.now();
+  let lastError: unknown = null;
+  let fallbackUsed = false;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const generation = handle.generateContent({
+        contents,
+        // maxOutputTokens cap protects against runaway agent loops + cost.
+        // 2048 is plenty for tool-dispatch turns; deep-reasoning turns that
+        // need more should call the structured-output path with a schema.
+        generationConfig: { temperature, maxOutputTokens: 2048 },
+      });
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        const id = setTimeout(() => {
+          clearTimeout(id);
+          reject(new Error("AI_TIMEOUT"));
+        }, timeoutMs);
+      });
+
+      const response = await Promise.race([generation, timeoutPromise]);
+
+      const usage = response.response.usageMetadata;
+      const latencyMs = Date.now() - start;
+
+      const functionCalls = response.response.functionCalls() ?? [];
+      const finishReason = response.response.candidates?.[0]?.finishReason as
+        | string
+        | undefined;
+
+      logger.info(
+        {
+          requestId,
+          modelId,
+          attempt,
+          latencyMs,
+          promptTokens: usage?.promptTokenCount,
+          candidateTokens: usage?.candidatesTokenCount,
+          totalTokens: usage?.totalTokenCount,
+          finishReason,
+          toolCallCount: functionCalls.length,
+        },
+        "gemini.chat_with_tools.success",
+      );
+
+      // SAFETY: Gemini blocked the candidate. text() will be empty and there
+      // won't be function calls. Surface a coach-friendly explanation instead
+      // of letting downstream code render "" or silently retry.
+      if (finishReason === "SAFETY" && functionCalls.length === 0) {
+        logger.warn(
+          { requestId, modelId, attempt, finishReason },
+          "gemini.chat_with_tools.safety_blocked",
+        );
+        return err(
+          new ExternalServiceError(
+            "GEMINI_SAFETY_BLOCKED",
+            "El modelo bloqueó la respuesta por filtros de seguridad. Reformulá la pregunta sin referencias clínicas detalladas o derivá a un médico/nutricionista.",
+          ),
+        );
+      }
+
+      // MAX_TOKENS: response was truncated. text() may be partial JSON or a
+      // half-sentence. Treat as recoverable but distinct from a transient
+      // failure — the caller decides whether to continue or shrink scope.
+      if (finishReason === "MAX_TOKENS" && functionCalls.length === 0) {
+        logger.warn(
+          { requestId, modelId, attempt, finishReason },
+          "gemini.chat_with_tools.max_tokens",
+        );
+        return err(
+          new ExternalServiceError(
+            "GEMINI_MAX_TOKENS",
+            "El asistente alcanzó su límite de tokens en este turno. Pedile que continúe o acotá el alcance.",
+          ),
+        );
+      }
+
+      if (functionCalls.length > 0) {
+        return ok({
+          kind: "tool_calls",
+          functionCalls,
+          usage,
+          attempts: attempt,
+          latencyMs,
+          modelId,
+          finishReason,
+        });
+      }
+
+      // STOP with empty text is handled downstream (PR #7). We pass through.
+      const text = response.response.text();
+      return ok({
+        kind: "text",
+        text,
+        usage,
+        attempts: attempt,
+        latencyMs,
+        modelId,
+        finishReason,
+      });
+    } catch (e) {
+      lastError = e;
+
+      // Model-not-found fallback: try once with the configured fallback id.
+      // Counts as the *same* attempt so we don't burn retries on a config
+      // mismatch (e.g. account without access to gemini-2.5-pro).
+      if (!fallbackUsed && fallbackModelId && isModelNotFound(e)) {
+        logger.warn(
+          {
+            requestId,
+            fromModelId: modelId,
+            toModelId: fallbackModelId,
+            attempt,
+            error: shortError(e),
+          },
+          "gemini.model_fallback",
+        );
+        try {
+          handle = buildHandle(fallbackModelId);
+          modelId = fallbackModelId;
+          fallbackUsed = true;
+          // Re-enter the loop body for this same attempt index by decrementing.
+          attempt--;
+          continue;
+        } catch (initErr) {
+          if (initErr instanceof GeminiKeyMissingError) return err(initErr);
+          lastError = initErr;
+          break;
+        }
+      }
+
+      const transient = isTransient(e);
+      logger.warn(
+        {
+          requestId,
+          modelId,
+          attempt,
+          maxAttempts,
+          transient,
+          error: shortError(e),
+        },
+        "gemini.chat_with_tools.attempt_failed",
+      );
+
+      if (!transient || attempt >= maxAttempts) break;
+
+      const backoff = BACKOFF_MS[attempt - 1] ?? 2700;
+      await sleep(backoff);
+    }
+  }
+
+  const msg = shortError(lastError).toLowerCase();
+  if (msg.includes("api key") || msg.includes("api_key") || msg.includes("401") || msg.includes("403")) {
+    return err(
+      new ValidationError(
+        "GEMINI_KEY_INVALID",
+        "Tu API key de Gemini no es válida. Revisala en Ajustes.",
+        lastError,
+      ),
+    );
+  }
+  if (msg.includes("quota") || msg.includes("429")) {
+    return err(
+      new ExternalServiceError(
+        "GEMINI_QUOTA",
+        "Excediste tu cuota de Gemini. Esperá unos minutos o revisá tu plan.",
+        lastError,
+      ),
+    );
+  }
+  // History malformed — típicamente "Invalid Content", "function call without
+  // function response" o similares. Causa raíz: tool calls zombies del turno
+  // anterior. Damos un mensaje accionable al coach.
+  if (
+    msg.includes("invalid content") ||
+    msg.includes("function call") ||
+    msg.includes("function response") ||
+    msg.includes("invalid_argument") ||
+    msg.includes("malformed")
+  ) {
+    return err(
+      new ExternalServiceError(
+        "GEMINI_HISTORY_MALFORMED",
+        `La conversación tiene un estado inconsistente (probablemente un turno previo se interrumpió). Tocá "Nueva conversación" arriba a la derecha para empezar limpio. Detalle: ${shortError(lastError)}`,
+        lastError,
+      ),
+    );
+  }
+  return err(
+    new ExternalServiceError(
+      "GEMINI_FAILED",
+      `El asistente no respondió. Detalle: ${shortError(lastError)}`,
+      lastError,
+    ),
+  );
 }

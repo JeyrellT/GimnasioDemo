@@ -109,6 +109,7 @@ export function SaleForm({ clients, onSuccess, onCancel }: SaleFormProps) {
         category: values.category,
         paidStatus: values.paidStatus,
         ...(values.clientUserId ? { clientUserId: values.clientUserId } : {}),
+        ...(values.paymentMethod?.trim() ? { paymentMethod: values.paymentMethod.trim() } : {}),
         ...(values.description?.trim() ? { description: values.description.trim() } : {}),
       };
 
@@ -142,7 +143,7 @@ export function SaleForm({ clients, onSuccess, onCancel }: SaleFormProps) {
               <FormControl>
                 <Input
                   type="date"
-                  className="bg-[#09090B] border-[#3F3F46] focus:border-[#3B82F6] h-11 text-sm"
+                  className="bg-[#09090B] border-[#3F3F46] focus:border-brand-primary h-11 text-sm"
                   {...field}
                 />
               </FormControl>
@@ -192,7 +193,7 @@ export function SaleForm({ clients, onSuccess, onCancel }: SaleFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs uppercase tracking-wide text-[#A1A1AA]">
-                Tipo <span className="text-[#3B82F6]">*</span>
+                Tipo <span className="text-brand-primary">*</span>
               </FormLabel>
               <Select onValueChange={field.onChange} value={field.value ?? ""}>
                 <FormControl>
@@ -220,7 +221,7 @@ export function SaleForm({ clients, onSuccess, onCancel }: SaleFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs uppercase tracking-wide text-[#A1A1AA]">
-                Monto <span className="text-[#3B82F6]">*</span>
+                Monto <span className="text-brand-primary">*</span>
               </FormLabel>
               <FormControl>
                 <CurrencyInput
@@ -247,7 +248,7 @@ export function SaleForm({ clients, onSuccess, onCancel }: SaleFormProps) {
               <FormControl>
                 <Input
                   placeholder="Sinpe, Efectivo, Tarjeta..."
-                  className="bg-[#09090B] border-[#3F3F46] focus:border-[#3B82F6] h-11 text-sm"
+                  className="bg-[#09090B] border-[#3F3F46] focus:border-brand-primary h-11 text-sm"
                   {...field}
                 />
               </FormControl>
@@ -301,7 +302,7 @@ export function SaleForm({ clients, onSuccess, onCancel }: SaleFormProps) {
                 <Textarea
                   placeholder="Notas adicionales..."
                   maxLength={500}
-                  className="bg-[#09090B] border-[#3F3F46] focus-visible:ring-[#3B82F6] text-sm resize-none min-h-[72px]"
+                  className="bg-[#09090B] border-[#3F3F46] focus-visible:ring-brand-primary text-sm resize-none min-h-[72px]"
                   {...field}
                 />
               </FormControl>
@@ -325,7 +326,7 @@ export function SaleForm({ clients, onSuccess, onCancel }: SaleFormProps) {
               variant="outline"
               onClick={onCancel}
               disabled={pending}
-              className="flex-1 border-[#3F3F46] text-[#A1A1AA] hover:border-[#3B82F6] hover:text-[#FAFAFA] h-11"
+              className="flex-1 border-[#3F3F46] text-[#A1A1AA] hover:border-brand-primary hover:text-[#FAFAFA] h-11"
             >
               Cancelar
             </Button>
@@ -333,7 +334,7 @@ export function SaleForm({ clients, onSuccess, onCancel }: SaleFormProps) {
           <Button
             type="submit"
             disabled={pending}
-            className="flex-1 bg-[#3B82F6] hover:bg-[#2563EB] text-white h-11 font-semibold disabled:opacity-50"
+            className="flex-1 bg-brand-primary hover:bg-brand-primary-hover text-white h-11 font-semibold disabled:opacity-50"
           >
             {pending ? (
               <>

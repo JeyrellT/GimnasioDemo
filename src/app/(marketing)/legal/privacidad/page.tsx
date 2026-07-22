@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BrandingShell } from "@/branding/components/branding-shell";
 
 export const metadata: Metadata = {
   title: "Política de privacidad",
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
 
 export default function PrivacidadPage() {
   return (
+    <BrandingShell>
     <article className="mx-auto max-w-3xl px-4 py-16">
       <header className="mb-10">
         <p className="mb-2 text-sm text-[#A1A1AA]">
@@ -33,7 +35,7 @@ export default function PrivacidadPage() {
           </p>
           <p>
             Delegado de Protección de Datos (DPO):{" "}
-            <a href="mailto:dpo@blacklinefitness.app" className="text-[#3B82F6]">
+            <a href="mailto:dpo@blacklinefitness.app" className="text-brand-primary">
               dpo@blacklinefitness.app
             </a>
           </p>
@@ -166,7 +168,7 @@ export default function PrivacidadPage() {
           </ul>
           <p>
             Para ejercer estos derechos o presentar una queja:{" "}
-            <a href="mailto:dpo@blacklinefitness.app" className="text-[#3B82F6]">
+            <a href="mailto:dpo@blacklinefitness.app" className="text-brand-primary">
               dpo@blacklinefitness.app
             </a>
             . Respondemos en máximo 20 días hábiles.
@@ -199,6 +201,7 @@ export default function PrivacidadPage() {
         </Section>
       </div>
     </article>
+    </BrandingShell>
   );
 }
 

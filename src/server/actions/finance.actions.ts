@@ -218,7 +218,7 @@ export async function listLocations(): Promise<
     const trainer = await requireTrainer();
 
     const rows = await prisma.trainerLocation.findMany({
-      where: { trainerUserId: trainer.id },
+      where: { trainerUserId: trainer.id, deletedAt: null },
       orderBy: { name: "asc" },
     });
 
@@ -784,7 +784,7 @@ export async function listExpenses(filters?: ListExpensesInput): Promise<ActionR
         include: {
           location: { select: { name: true } },
         },
-        take: 200,
+        take: 1000,
       }),
       prisma.trainerExpense.count({ where }),
     ]);
@@ -928,7 +928,7 @@ export async function listOneOffSales(filters?: ListOneOffSalesInput): Promise<A
         include: {
           client: { select: { name: true } },
         },
-        take: 200,
+        take: 1000,
       }),
       prisma.oneOffSale.count({ where }),
     ]);
@@ -1147,4 +1147,203 @@ export async function getFinanceDashboard(
   const d = input.fromDate ?? new Date();
   const month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   return getFinanceSummary(input.month ?? month);
+}
+
+// =============================================================================
+// getFinanceDashboardData
+// Assembles the rich FinanceDashboardPayload consumed by the finance dashboard
+// page. Includes KPIs with MoM deltas, income/expense breakdowns, location
+// costs, and the 20 most recent transactions.
+// =============================================================================
+
+import type {
+  FinanceDashboardPayload,
+  FinanceKPIs,
+  FinanceExpenseBreakdown,
+  FinanceLocationCost,
+  FinanceTransaction,
+  FinanceIncomeBreakdown,
+} from "@/types/finance";
+
+export async function getFinanceDashboardData(
+  monthStr: string, // "YYYY-MM"
+): Promise<ActionResult<FinanceDashboardPayload>> {
+  return tryCatch(async () => {
+    const trainer = await requireTrainer();
+
+    const parts = monthStr.split("-");
+    if (parts.length !== 2) {
+      throw new ValidationError("INVALID_MONTH", "El mes debe tener formato YYYY-MM.");
+    }
+    const year = Number(parts[0]);
+    const monthNum = Number(parts[1]);
+    if (isNaN(year) || isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
+      throw new ValidationError("INVALID_MONTH", "Mes inválido.");
+    }
+
+    const from = new Date(year, monthNum - 1, 1);
+    const to = new Date(year, monthNum, 1);
+
+    // Prior month window for delta computation
+    const priorFrom = new Date(year, monthNum - 2, 1);
+    const priorTo = new Date(year, monthNum - 1, 1);
+
+    const [
+      charges,
+      sales,
+      expenses,
+      visits,
+      priorCharges,
+      priorSales,
+      priorExpenses,
+    ] = await Promise.all([
+      prisma.clientCharge.findMany({
+        where: { trainerUserId: trainer.id, status: "PAID", periodStart: { gte: from, lt: to } },
+        select: { amountCRC: true },
+      }),
+      prisma.oneOffSale.findMany({
+        where: { trainerUserId: trainer.id, paidStatus: "PAID", occurredAt: { gte: from, lt: to } },
+        select: { id: true, amountCRC: true, category: true, description: true, occurredAt: true, clientUserId: true },
+        orderBy: { occurredAt: "desc" },
+      }),
+      prisma.trainerExpense.findMany({
+        where: { trainerUserId: trainer.id, occurredAt: { gte: from, lt: to } },
+        select: { id: true, amountCRC: true, category: true, description: true, occurredAt: true, source: true, locationId: true, visitId: true },
+        orderBy: { occurredAt: "desc" },
+      }),
+      prisma.locationVisit.findMany({
+        where: { trainerUserId: trainer.id, visitedAt: { gte: from, lt: to } },
+        select: {
+          id: true,
+          locationId: true,
+          computedCostCRC: true,
+          visitedAt: true,
+          location: { select: { name: true } },
+        },
+      }),
+      // Prior month — charges
+      prisma.clientCharge.findMany({
+        where: { trainerUserId: trainer.id, status: "PAID", periodStart: { gte: priorFrom, lt: priorTo } },
+        select: { amountCRC: true },
+      }),
+      // Prior month — sales
+      prisma.oneOffSale.findMany({
+        where: { trainerUserId: trainer.id, paidStatus: "PAID", occurredAt: { gte: priorFrom, lt: priorTo } },
+        select: { amountCRC: true },
+      }),
+      // Prior month — expenses
+      prisma.trainerExpense.findMany({
+        where: { trainerUserId: trainer.id, occurredAt: { gte: priorFrom, lt: priorTo } },
+        select: { amountCRC: true },
+      }),
+    ]);
+
+    // ── KPIs ───────────────────────────────────────────────────────────────
+    const chargesIncomeCRC = charges.reduce((s, c) => s + Number(c.amountCRC), 0);
+    const salesIncomeCRC = sales.reduce((s, c) => s + Number(c.amountCRC), 0);
+    const ingresosCRC = chargesIncomeCRC + salesIncomeCRC;
+    const gastosCRC = expenses.reduce((s, e) => s + Number(e.amountCRC), 0);
+    const utilidadCRC = ingresosCRC - gastosCRC;
+    const margenPct = ingresosCRC > 0
+      ? Math.round((utilidadCRC / ingresosCRC) * 1000) / 10
+      : null;
+
+    const priorIngresosCRC =
+      priorCharges.reduce((s, c) => s + Number(c.amountCRC), 0) +
+      priorSales.reduce((s, c) => s + Number(c.amountCRC), 0);
+    const priorGastosCRC = priorExpenses.reduce((s, e) => s + Number(e.amountCRC), 0);
+    const priorUtilidadCRC = priorIngresosCRC - priorGastosCRC;
+
+    function deltaPct(curr: number, prev: number): number | null {
+      if (prev === 0) return null;
+      return Math.round(((curr - prev) / Math.abs(prev)) * 1000) / 10;
+    }
+
+    const kpis: FinanceKPIs = {
+      ingresosCRC,
+      gastosCRC,
+      utilidadCRC,
+      margenPct,
+      ingresosDeltaPct: deltaPct(ingresosCRC, priorIngresosCRC),
+      gastosDeltaPct: deltaPct(gastosCRC, priorGastosCRC),
+      utilidadDeltaPct: deltaPct(utilidadCRC, priorUtilidadCRC),
+    };
+
+    // ── Income breakdown ──────────────────────────────────────────────────
+    const incomeBreakdown: FinanceIncomeBreakdown = {
+      recurringCRC: chargesIncomeCRC,
+      oneOffCRC: salesIncomeCRC,
+    };
+
+    // ── Expense breakdown ─────────────────────────────────────────────────
+    const expCatMap = new Map<string, number>();
+    for (const e of expenses) {
+      expCatMap.set(e.category, (expCatMap.get(e.category) ?? 0) + Number(e.amountCRC));
+    }
+    const expenseBreakdown: FinanceExpenseBreakdown[] = Array.from(expCatMap.entries()).map(
+      ([category, amountCRC]) => ({
+        category: category as FinanceExpenseBreakdown["category"],
+        amountCRC,
+        pct: gastosCRC > 0 ? Math.round((amountCRC / gastosCRC) * 1000) / 10 : 0,
+      }),
+    );
+
+    // ── Location costs ────────────────────────────────────────────────────
+    const locMap = new Map<string, { name: string; totalCRC: number; count: number }>();
+    for (const v of visits) {
+      const existing = locMap.get(v.locationId);
+      const cost = Number(v.computedCostCRC);
+      if (existing) {
+        existing.totalCRC += cost;
+        existing.count += 1;
+      } else {
+        locMap.set(v.locationId, {
+          name: (v as typeof v & { location: { name: string } }).location.name,
+          totalCRC: cost,
+          count: 1,
+        });
+      }
+    }
+    const locationCosts: FinanceLocationCost[] = Array.from(locMap.entries()).map(
+      ([locationId, { name, totalCRC, count }]) => ({
+        locationId,
+        locationName: name,
+        visitCount: count,
+        costPerVisitAvg: count > 0 ? Math.round(totalCRC / count) : 0,
+        totalCostCRC: totalCRC,
+        clientCount: 0,
+      }),
+    );
+
+    // ── Recent transactions ───────────────────────────────────────────────
+    const txExpenses: FinanceTransaction[] = expenses.map((e) => ({
+      id: e.id,
+      type: "expense" as const,
+      occurredAt: e.occurredAt.toISOString(),
+      amountCRC: Number(e.amountCRC),
+      description: e.description ?? e.category,
+      category: e.category,
+    }));
+
+    const txSales: FinanceTransaction[] = sales.map((s) => ({
+      id: s.id,
+      type: "sale" as const,
+      occurredAt: s.occurredAt.toISOString(),
+      amountCRC: Number(s.amountCRC),
+      description: s.description ?? s.category,
+      category: s.category,
+    }));
+
+    const recentTransactions: FinanceTransaction[] = [...txExpenses, ...txSales]
+      .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt))
+      .slice(0, 20);
+
+    return {
+      kpis,
+      incomeBreakdown,
+      expenseBreakdown,
+      locationCosts,
+      recentTransactions,
+    };
+  });
 }

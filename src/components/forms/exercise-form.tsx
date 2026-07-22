@@ -18,7 +18,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import type { MuscleGroup, ExerciseEquipment, ExerciseDifficulty } from "@prisma/client";
+import type { MuscleGroup, ExerciseEquipment, ExerciseDifficulty, ExerciseCategory } from "@prisma/client";
 
 import { createPrivateExercise, updateExercise } from "@/app/actions/exercises";
 import { BodyMapPicker } from "@/components/charts/body-map-picker";
@@ -84,6 +84,16 @@ const DIFFICULTY_VALUES = [
   "ADVANCED",
 ] as const satisfies readonly ExerciseDifficulty[];
 
+const CATEGORY_VALUES = [
+  "STRENGTH",
+  "WARMUP",
+] as const satisfies readonly ExerciseCategory[];
+
+export const CATEGORY_LABELS: Record<ExerciseCategory, string> = {
+  STRENGTH: "Ejercicio",
+  WARMUP: "Calentamiento",
+};
+
 export const EQUIPMENT_LABELS: Record<ExerciseEquipment, string> = {
   BODYWEIGHT: "Peso corporal",
   BARBELL: "Barra",
@@ -122,9 +132,26 @@ const exerciseFormSchema = z.object({
   difficulty: z.enum(DIFFICULTY_VALUES, {
     required_error: "Seleccioná la dificultad",
   }),
-  thumbnailUrl: z.string().url("URL inválida").optional().or(z.literal("")),
-  gifUrl: z.string().url("URL inválida").optional().or(z.literal("")),
-  mediaUrl: z.string().url("URL inválida").optional().or(z.literal("")),
+  category: z.enum(CATEGORY_VALUES).default("STRENGTH"),
+  thumbnailUrl: z
+    .union([
+      z.string().url("URL inválida"),
+      z.string().startsWith("data:", "URL de imagen inválida").max(2_500_000, "La imagen supera el límite de 2.5 MB"),
+      z.literal(""),
+    ])
+    .optional(),
+  gifUrl: z
+    .union([
+      z.string().url("URL inválida"),
+      z.literal(""),
+    ])
+    .optional(),
+  mediaUrl: z
+    .union([
+      z.string().url("URL inválida"),
+      z.literal(""),
+    ])
+    .optional(),
 });
 
 type ExerciseFormValues = z.infer<typeof exerciseFormSchema>;
@@ -142,6 +169,7 @@ interface ExerciseData {
   secondaryMuscles: MuscleGroup[];
   equipment: ExerciseEquipment;
   difficulty: ExerciseDifficulty;
+  category: ExerciseCategory;
   thumbnailUrl: string | null;
   gifUrl: string | null;
   mediaUrl: string | null;
@@ -149,13 +177,15 @@ interface ExerciseData {
 
 export interface ExerciseFormProps {
   exercise: ExerciseData | null;
+  defaultCategory?: ExerciseCategory;
+  basePath?: string;
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-export function ExerciseForm({ exercise }: ExerciseFormProps) {
+export function ExerciseForm({ exercise, defaultCategory, basePath = "/trainer/ejercicios" }: ExerciseFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -169,6 +199,7 @@ export function ExerciseForm({ exercise }: ExerciseFormProps) {
           secondaryMuscles: exercise.secondaryMuscles,
           equipment: exercise.equipment,
           difficulty: exercise.difficulty,
+          category: exercise.category,
           thumbnailUrl: exercise.thumbnailUrl ?? "",
           gifUrl: exercise.gifUrl ?? "",
           mediaUrl: exercise.mediaUrl ?? "",
@@ -177,6 +208,7 @@ export function ExerciseForm({ exercise }: ExerciseFormProps) {
           nameEs: "",
           instructionsEs: "",
           secondaryMuscles: [],
+          category: defaultCategory ?? ("STRENGTH" as const),
           thumbnailUrl: "",
           gifUrl: "",
           mediaUrl: "",
@@ -192,10 +224,13 @@ export function ExerciseForm({ exercise }: ExerciseFormProps) {
         secondaryMuscles: values.secondaryMuscles,
         equipment: values.equipment,
         difficulty: values.difficulty,
-        // Normalize empty string → undefined so actions see clean optionals
-        thumbnailUrl: values.thumbnailUrl || undefined,
-        gifUrl: values.gifUrl || undefined,
-        mediaUrl: values.mediaUrl || undefined,
+        category: values.category,
+        // "" means the user cleared the field → send undefined so the action
+        // skips the column (the upload widget already cleared it server-side).
+        // A real URL or data URL passes through unchanged.
+        thumbnailUrl: values.thumbnailUrl !== "" ? values.thumbnailUrl : undefined,
+        gifUrl: values.gifUrl !== "" ? values.gifUrl : undefined,
+        mediaUrl: values.mediaUrl !== "" ? values.mediaUrl : undefined,
       };
 
       if (exercise) {
@@ -206,7 +241,7 @@ export function ExerciseForm({ exercise }: ExerciseFormProps) {
           return;
         }
         toast.success("Ejercicio actualizado.");
-        router.push(`/trainer/ejercicios/${exercise.id}`);
+        router.push(`${basePath}/${exercise.id}`);
       } else {
         // Create path
         const result = await createPrivateExercise(payload);
@@ -215,7 +250,7 @@ export function ExerciseForm({ exercise }: ExerciseFormProps) {
           return;
         }
         toast.success("Ejercicio creado.");
-        router.push(`/trainer/ejercicios/${result.value.exerciseId}`);
+        router.push(`${basePath}/${result.value.exerciseId}`);
       }
     });
   }
@@ -243,6 +278,37 @@ export function ExerciseForm({ exercise }: ExerciseFormProps) {
                       autoComplete="off"
                       {...field}
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Categoría */}
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex gap-6"
+                    >
+                      {CATEGORY_VALUES.map((c) => (
+                        <div key={c} className="flex items-center gap-2">
+                          <RadioGroupItem value={c} id={`category-${c}`} />
+                          <Label
+                            htmlFor={`category-${c}`}
+                            className="cursor-pointer text-sm text-[#A1A1AA] font-normal"
+                          >
+                            {CATEGORY_LABELS[c]}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -447,7 +513,7 @@ export function ExerciseForm({ exercise }: ExerciseFormProps) {
           <Button
             type="submit"
             disabled={isPending}
-            className="min-w-[160px] bg-[#3B82F6] hover:bg-[#2563EB] text-white font-semibold disabled:opacity-60"
+            className="min-w-[160px] bg-brand-primary hover:bg-brand-primary-hover text-white font-semibold disabled:opacity-60"
           >
             {isPending
               ? exercise

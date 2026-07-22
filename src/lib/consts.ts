@@ -41,6 +41,8 @@ export const TRIAL_DAYS = 30 as const;
 export const READ_ONLY_GRACE_DAYS = 14 as const;
 export const INVITATION_EXPIRY_DAYS = 7 as const;
 export const MAGIC_LINK_EXPIRY_MIN = 15 as const;
+/** Password reset link validity window (minutes). */
+export const PASSWORD_RESET_EXPIRY_MIN = 30 as const;
 
 // ── Storage ──────────────────────────────────────────────────────────────────
 

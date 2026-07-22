@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Prisma schema
+// BLACKLINE FITNESS — Prisma schema
 // PWA gym management for Costa Rica.
 // Owner: database-architect.
 // All comments in English (per AGENT_BRIEF). All UI copy lives in es-CR voseo.
@@ -48,6 +48,21 @@ enum ParqStatus {
   RED
 }
 
+enum MedicalConditionKind {
+  ALLERGY
+  INJURY
+  CHRONIC
+  MEDICATION
+  SURGERY
+  OTHER
+}
+
+enum ConditionSeverity {
+  MILD
+  MODERATE
+  SEVERE
+}
+
 enum Goal {
   FAT_LOSS
   MUSCLE_GAIN
@@ -80,6 +95,11 @@ enum ExerciseDifficulty {
   BEGINNER
   INTERMEDIATE
   ADVANCED
+}
+
+enum ExerciseCategory {
+  STRENGTH
+  WARMUP
 }
 
 enum ExerciseEquipment {
@@ -169,6 +189,7 @@ enum InvoiceStatus {
 
 enum PaymentEventType {
   TILOPAY
+  ONVO
   RESEND
   OTHER
 }
@@ -299,6 +320,10 @@ model User {
   // 1-1 profiles
   trainerProfile TrainerProfile?
   clientProfile  ClientProfile?
+  avatar          UserAvatar?
+
+  // Client rest preferences (1-1, optional — lazily created when first edited)
+  restPreferences ClientRestPreference?
 
   // Auth.js relations
   accounts Account[]
@@ -319,16 +344,18 @@ model User {
   invitations         Invitation[]         @relation("TrainerInvitations")
   routinesCreated     RoutineTemplate[]    @relation("RoutineAuthor")
   exercisesCreated    Exercise[]           @relation("ExerciseAuthor")
+  exerciseMediaOverrides TrainerExerciseMedia[] @relation("TrainerExerciseMediaTrainer")
   trainerSubscription TrainerSubscription? @relation("TrainerSub")
   chargesIssued       ClientCharge[]       @relation("TrainerCharges")
 
   // Client-only authoring
-  assessments      InitialAssessment[]
-  bodyMetrics      BodyMetric[]
-  progressPhotos   ProgressPhoto[]
-  workoutSessions  WorkoutSession[]
-  assignedRoutines AssignedRoutine[]
-  chargesReceived  ClientCharge[]      @relation("ClientCharges")
+  assessments       InitialAssessment[]
+  bodyMetrics       BodyMetric[]
+  progressPhotos    ProgressPhoto[]
+  workoutSessions   WorkoutSession[]
+  assignedRoutines  AssignedRoutine[]
+  chargesReceived   ClientCharge[]      @relation("ClientCharges")
+  medicalConditions MedicalCondition[]  @relation("ClientMedicalConditions")
 
   // Comments authored on assigned routines (trainer or client)
   routineComments RoutineComment[]
@@ -358,6 +385,22 @@ model User {
 
   @@index([role])
   @@index([deletedAt])
+}
+
+/// Binary avatar image for the user's topbar/profile photo.
+/// Kept separate from User so the JWT/session only carries a small URL.
+model UserAvatar {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  mimeType  String
+  data      Bytes
+  sizeBytes Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([updatedAt])
 }
 
 /// Auth.js account row (OAuth providers, future use).
@@ -445,6 +488,11 @@ model TrainerProfile {
   fiscalAddress          String?
   haciendaUsername       String?
   defaultMonthlyPriceCRC Decimal?  @db.Decimal(12, 2)
+  // -- Trainer branding (palette, logos, business name) --
+  brandPaletteId    String  @default("blue")
+  brandBusinessName String  @default("")
+  brandLogoFull     String? @db.Text
+  brandLogoMark     String? @db.Text
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
   deletedAt              DateTime?
@@ -468,6 +516,13 @@ model ClientProfile {
   heightCm         Decimal?   @db.Decimal(5, 1)
   restingHrBpm     Int?
   lastWeightUpdate DateTime?
+  // Medical conditions popup lifecycle:
+  // - `medicalPromptShownAt` is set the first time the client sees the popup
+  //   that asks them to declare allergies / injuries / chronic conditions.
+  // - `medicalConditionsReviewedAt` is bumped every time the client updates
+  //   or confirms their MedicalCondition list (used to nudge periodic review).
+  medicalPromptShownAt        DateTime?
+  medicalConditionsReviewedAt DateTime?
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
   deletedAt        DateTime?
@@ -476,6 +531,28 @@ model ClientProfile {
 
   @@index([parqStatus])
   @@index([deletedAt])
+}
+
+/// Per-client overrides for routine rest periods.
+/// Survives across routine reassignments — applied at runtime when the
+/// client starts a rest timer in an active session.
+///
+/// Resolution order at runtime:
+///   1. If `exerciseOverrides[exerciseId]` is set → use that absolute value.
+///   2. Else → `baseRestSeconds + globalOffsetSec` (clamped to ≥ 0).
+model ClientRestPreference {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  /// Seconds to add (or subtract) to all rest timers globally. Range: -60..+180.
+  globalOffsetSec Int      @default(0)
+  /// Per-exercise absolute overrides keyed by Exercise.id.
+  /// Shape: { [exerciseId: string]: number (seconds) }.
+  /// Wins over `globalOffsetSec` when an entry exists for the exercise.
+  exerciseOverrides Json   @default("{}")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // =============================================================================
@@ -578,6 +655,32 @@ model ParqAnswer {
   @@index([questionCode])
 }
 
+/// Live, client-editable list of medical conditions / ailments.
+/// Complementary to PAR-Q (which is a binary one-shot questionnaire captured
+/// in `InitialAssessment` + `ParqAnswer`): this table is a long-lived register
+/// the client themselves curates (allergies, injuries, chronic conditions,
+/// medications, surgeries). Only the owning client can write to it; trainers
+/// may read it through API guards but cannot mutate.
+/// Soft-deletable so a "resolved" or "deleted" condition can still be audited.
+model MedicalCondition {
+  id           String               @id @default(cuid())
+  clientUserId String
+  kind         MedicalConditionKind
+  label        String
+  detail       String?              @db.Text
+  severity     ConditionSeverity?
+  startedAt    DateTime?
+  isActive     Boolean              @default(true)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  deletedAt    DateTime?
+
+  clientUser User @relation("ClientMedicalConditions", fields: [clientUserId], references: [id], onDelete: Restrict)
+
+  @@index([clientUserId, isActive])
+  @@index([clientUserId, deletedAt])
+}
+
 // =============================================================================
 // BODY METRICS — recurring weight / circumferences / photos
 // =============================================================================
@@ -596,6 +699,24 @@ model BodyMetric {
   chestCm       Decimal?         @db.Decimal(4, 1)
   armCm         Decimal?         @db.Decimal(4, 1)
   thighCm       Decimal?         @db.Decimal(4, 1)
+  // Extended bilateral circumferences (added 2026-05 for full OCR coverage)
+  shoulderLeftCm   Decimal? @db.Decimal(4, 1)
+  shoulderRightCm  Decimal? @db.Decimal(4, 1)
+  abdomenCm        Decimal? @db.Decimal(4, 1)
+  gluteLeftCm      Decimal? @db.Decimal(4, 1)
+  gluteRightCm     Decimal? @db.Decimal(4, 1)
+  bicepLeftCm      Decimal? @db.Decimal(4, 1)
+  bicepRightCm     Decimal? @db.Decimal(4, 1)
+  forearmLeftCm    Decimal? @db.Decimal(4, 1)
+  forearmRightCm   Decimal? @db.Decimal(4, 1)
+  thighLeftCm      Decimal? @db.Decimal(4, 1)
+  thighRightCm     Decimal? @db.Decimal(4, 1)
+  hamstringLeftCm  Decimal? @db.Decimal(4, 1)
+  hamstringRightCm Decimal? @db.Decimal(4, 1)
+  calfLeftCm       Decimal? @db.Decimal(4, 1)
+  calfRightCm      Decimal? @db.Decimal(4, 1)
+  visceralFat      Int?
+  basalMetabolicRate Int?
   source        BodyMetricSource @default(MANUAL)
   notes         String?          @db.Text
   scaleImageKey String?
@@ -652,6 +773,7 @@ model Exercise {
   secondaryMuscles MuscleGroup[]
   equipment        ExerciseEquipment
   difficulty       ExerciseDifficulty
+  category         ExerciseCategory             @default(STRENGTH)
   mediaUrl         String?
   gifUrl           String?
   thumbnailUrl     String?
@@ -665,11 +787,82 @@ model Exercise {
   createdBy        User?             @relation("ExerciseAuthor", fields: [createdById], references: [id], onDelete: SetNull)
   routineExercises RoutineExercise[]
   performedSets    PerformedSet[]
+  trainerMediaOverrides TrainerExerciseMedia[] @relation("TrainerExerciseMediaExercise")
 
   @@index([primaryMuscle])
   @@index([equipment])
+  @@index([category])
   @@index([isPublic])
   @@index([createdById])
+}
+
+/// Per-trainer override of an Exercise's video URL.
+/// Lets a coach set a personal Drive/YouTube/Vimeo link on any exercise
+/// (including public seed entries that would otherwise be read-only) without
+/// mutating the shared catalog row — so the override is scoped to that coach's
+/// view + the routines they assign, never leaking to other trainers.
+/// `mediaUrl` stores the source URL; the thumbnail shown in lists is derived
+/// from it at render time (Drive lh3 trick, YouTube hqdefault).
+model TrainerExerciseMedia {
+  id            String    @id @default(cuid())
+  trainerUserId String
+  exerciseId    String
+  mediaUrl      String    @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  trainer  User     @relation("TrainerExerciseMediaTrainer", fields: [trainerUserId], references: [id], onDelete: Cascade)
+  exercise Exercise @relation("TrainerExerciseMediaExercise", fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@unique([trainerUserId, exerciseId])
+  @@index([trainerUserId])
+  @@index([exerciseId])
+}
+
+// =============================================================================
+// KNOWLEDGE BASE — chunks de documentos científicos para RAG del asistente IA
+//
+// Cada chunk es un fragmento autocontenido de un documento maestro
+// (`sourceDocument`). El asistente lo consulta vía la action searchKnowledge
+// usando full-text search sobre `searchVector` (mantenido por trigger PG).
+//
+// Ingestión: prisma/seed/knowledge.ts parsea los .md en prisma/seed/data/
+// knowledge/ y hace upsert por `slug` (idempotente). Bumpeá `version` cuando
+// edites el contenido para forzar re-indexación.
+// =============================================================================
+
+/// Fragmento indexable de la base de conocimiento del asistente.
+model KnowledgeChunk {
+  id               String                   @id @default(cuid())
+  /// Identificador estable derivado de sourceDocument + path jerárquico
+  /// (ej: "fitness-base-cr-v1__1.2-ciencia-de-la-hipertrofia"). Único.
+  slug             String                   @unique
+  /// Sección de nivel alto a la que pertenece el chunk (ej: "1.2 Ciencia de la hipertrofia").
+  section          String
+  /// Título del chunk; suele coincidir con el último heading del path.
+  title            String
+  /// Contenido completo en markdown.
+  content          String                   @db.Text
+  /// Tags para filtrado: ["hipertrofia", "volumen", "atletas-cr", "principiante", …].
+  tags             String[]                 @default([])
+  /// Marca opcional de fortaleza de evidencia: STRONG | MODERATE | EMERGING | CONTESTED.
+  evidenceStrength String?
+  /// Identifica el documento de origen (permite múltiples fuentes en el futuro).
+  sourceDocument   String                   @default("fitness-base-cr-v1")
+  /// Bumpeá al editar el contenido — el seed re-indexa cuando ve un version mayor.
+  version          Int                      @default(1)
+  /// Largo en palabras (para chunking decisions del RAG y métricas).
+  wordCount        Int                      @default(0)
+  /// Idioma del chunk (ISO BCP 47).
+  locale           String                   @default("es-CR")
+  /// tsvector mantenido por trigger PG sobre title + content + tags.
+  searchVector     Unsupported("tsvector")?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  @@index([sourceDocument])
+  @@index([section])
 }
 
 // =============================================================================
@@ -718,6 +911,10 @@ model RoutineDay {
 
 /// Ordered list of exercises within a RoutineDay with prescription parameters.
 /// `supersetGroup` ties 2-3 exercises together (null if standalone).
+/// `mediaUrl` is a per-routine video link (YouTube / Vimeo / Google Drive) that
+/// the trainer can paste for this prescription — overrides Exercise.mediaUrl
+/// for clients running this specific routine, without mutating the shared
+/// catalog row (which is what keeps public seed exercises safe).
 model RoutineExercise {
   id            String    @id @default(cuid())
   routineDayId  String
@@ -731,6 +928,7 @@ model RoutineExercise {
   tempo         String?
   supersetGroup Int?
   notes         String?   @db.Text
+  mediaUrl      String?   @db.Text
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   deletedAt     DateTime?
@@ -866,7 +1064,7 @@ model SubscriptionPlan {
   deletedAt  DateTime?
 }
 
-/// Trainer's Forja subscription. One per trainer.
+/// Trainer's Blackline Fitness subscription. One per trainer.
 model TrainerSubscription {
   id                 String             @id @default(cuid())
   trainerUserId      String             @unique
@@ -948,6 +1146,10 @@ model PaymentEvent {
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
+  // Idempotency for provider webhooks (e.g. ONVO): at most one event per
+  // (provider, external payment-intent id). NULL externalId rows are exempt
+  // (Postgres treats NULLs as distinct), so non-id events are unaffected.
+  @@unique([type, externalId])
   @@index([type, processed])
   @@index([externalId])
 }
@@ -1101,7 +1303,7 @@ model TrainerExpense {
 
 /// Ad-hoc income outside the recurring monthly subscription (drop-in session,
 /// nutrition plan, group class, product). `clientUserId` is optional because
-/// the buyer may not be a registered Forja user.
+/// the buyer may not be a registered Blackline Fitness user.
 model OneOffSale {
   id            String           @id @default(cuid())
   trainerUserId String

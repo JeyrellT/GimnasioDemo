@@ -22,7 +22,9 @@ interface WizardShellProps {
 }
 
 export function WizardShell({ draft, trainerId }: WizardShellProps) {
-  const { currentStep, hydrate } = useOnboardingStore();
+  // Selectores individuales para evitar re-renders en cambios de otros fields.
+  const currentStep = useOnboardingStore((s) => s.currentStep);
+  const hydrate = useOnboardingStore((s) => s.hydrate);
 
   useEffect(() => {
     hydrate(draft);

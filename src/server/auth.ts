@@ -190,9 +190,41 @@ export const fullAuthConfig: NextAuthConfig = {
     async signIn({ user }: { user: User | AdapterUser }) {
       if (!user.id) return false;
 
+      // ── Guard 1: block re-registration of a previously soft-deleted email ──
+      // SUPER_ADMIN's deleteUser action scrambles the deleted user's email to
+      // "<localpart>+deleted-<timestamp>@blackline.local". Without this guard,
+      // someone could re-register with the original email via magic link (the
+      // PrismaAdapter would create a fresh CLIENT row because the original
+      // email no longer matches any User row). That contradicts the LPDP-grade
+      // "the user can never sign in again" promise of deleteUser.
+      if (user.email) {
+        const attemptedEmail = user.email.toLowerCase();
+        const localPart = attemptedEmail.split("@")[0];
+        if (localPart && !localPart.includes("+deleted-")) {
+          // Match any soft-deleted user whose scrambled email starts with
+          // "<localpart>+deleted-" — the canonical pattern emitted by
+          // deleteUser. Uses prismaRaw to bypass the soft-delete filter.
+          const previouslyDeleted = await prismaRaw.user.findFirst({
+            where: {
+              deletedAt: { not: null },
+              email: { startsWith: `${localPart}+deleted-` },
+            },
+            select: { id: true },
+          });
+          if (previouslyDeleted) {
+            logWarn(
+              "Blocked sign-in: email belongs to a soft-deleted account",
+              { attemptedEmail, deletedUserId: previouslyDeleted.id },
+            );
+            return false;
+          }
+        }
+      }
+
+      // ── Guard 2: block sign-in by user id for soft-deleted rows ────────────
       // Verify the user is not soft-deleted. For magic links, the adapter may
       // create a new user row if the email is new — we only block *existing*
-      // deleted rows.
+      // deleted rows here.
       const dbUser = await prisma.user.findUnique({
         where: { id: user.id },
         select: { deletedAt: true, id: true },
@@ -240,29 +272,41 @@ export const fullAuthConfig: NextAuthConfig = {
       if (user?.id) {
         token.id = user.id;
 
-        // Fetch the authoritative role, name, and mustChangePassword from DB
-        // on first sign-in. Subsequent refreshes use the cached token values;
-        // role changes take effect on the next sign-in or explicit rotation.
+        // Fetch the authoritative role, name, mustChangePassword, and avatarUrl
+        // from DB on first sign-in. Subsequent refreshes use the cached token
+        // values; changes take effect on the next sign-in or explicit rotation.
         const dbUser = await prisma.user.findUnique({
           where: { id: user.id },
-          select: { role: true, name: true, mustChangePassword: true },
+          select: {
+            role: true,
+            name: true,
+            mustChangePassword: true,
+            avatarUrl: true,
+          },
         });
 
         token.role = dbUser?.role ?? ("CLIENT" as UserRole);
         token.name = dbUser?.name ?? (user.name ?? "");
         token.mustChangePassword = dbUser?.mustChangePassword ?? false;
+        token.avatarUrl = dbUser?.avatarUrl ?? null;
       } else if (trigger === "update" && token.id) {
         // Explicit session refresh (e.g. after the client completes the forced
-        // password change). Re-read mustChangePassword from DB so the middleware
-        // stops redirecting them to /client/bienvenida.
+        // password change OR uploads a new avatar). Re-read the same fields
+        // from DB so the JWT stays in sync.
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { role: true, name: true, mustChangePassword: true },
+          select: {
+            role: true,
+            name: true,
+            mustChangePassword: true,
+            avatarUrl: true,
+          },
         });
         if (dbUser) {
           token.role = dbUser.role;
           token.name = dbUser.name;
           token.mustChangePassword = dbUser.mustChangePassword;
+          token.avatarUrl = dbUser.avatarUrl;
         }
       }
 
@@ -280,6 +324,7 @@ export const fullAuthConfig: NextAuthConfig = {
         name: token.name,
         role: token.role,
         mustChangePassword: token.mustChangePassword ?? false,
+        avatarUrl: token.avatarUrl ?? null,
       };
       return session;
     },

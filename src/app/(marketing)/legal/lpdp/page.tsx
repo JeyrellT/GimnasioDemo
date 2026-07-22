@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BrandingShell } from "@/branding/components/branding-shell";
 
 export const metadata: Metadata = {
   title: "Derechos LPDP",
@@ -8,6 +9,7 @@ export const metadata: Metadata = {
 
 export default function LpdpPage() {
   return (
+    <BrandingShell>
     <article className="mx-auto max-w-3xl px-4 py-16">
       <header className="mb-10">
         <h1 className="text-3xl font-bold text-[#FAFAFA]">
@@ -50,7 +52,7 @@ export default function LpdpPage() {
             Podés corregir tus datos personales en cualquier momento desde tu
             perfil. Para datos clínicos (mediciones, PAR-Q) que requieren
             validación del entrenador, enviá la solicitud a{" "}
-            <a href="mailto:dpo@blacklinefitness.app" className="text-[#3B82F6]">
+            <a href="mailto:dpo@blacklinefitness.app" className="text-brand-primary">
               dpo@blacklinefitness.app
             </a>
             .
@@ -115,13 +117,13 @@ export default function LpdpPage() {
           <ul className="ml-4 list-disc space-y-1">
             <li>
               Email DPO:{" "}
-              <a href="mailto:dpo@blacklinefitness.app" className="text-[#3B82F6]">
+              <a href="mailto:dpo@blacklinefitness.app" className="text-brand-primary">
                 dpo@blacklinefitness.app
               </a>
             </li>
             <li>
               Soporte general:{" "}
-              <a href="mailto:soporte@blacklinefitness.app" className="text-[#3B82F6]">
+              <a href="mailto:soporte@blacklinefitness.app" className="text-brand-primary">
                 soporte@blacklinefitness.app
               </a>
             </li>
@@ -133,7 +135,7 @@ export default function LpdpPage() {
               href="https://www.prodhab.go.cr"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#3B82F6]"
+              className="text-brand-primary"
             >
               prodhab.go.cr
             </a>
@@ -142,6 +144,7 @@ export default function LpdpPage() {
         </Section>
       </div>
     </article>
+    </BrandingShell>
   );
 }
 

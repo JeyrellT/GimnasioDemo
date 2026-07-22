@@ -9,7 +9,7 @@
 //   3. Volumen por grupo muscular — vertical BarChart
 // =============================================================================
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, memo } from "react";
 import {
   BarChart,
   Bar,
@@ -25,6 +25,7 @@ import {
 } from "recharts";
 import type { MuscleGroup } from "@prisma/client";
 import { cn } from "@/lib/utils";
+import { useBranding } from "@/lib/branding/branding-context";
 import type {
   DashboardAggregates,
   ClientAdherenceData,
@@ -49,8 +50,9 @@ const TOKEN = {
   canvas: "#09090B",
   card: "#18181B",
   hover: "#27272A",
-  primary: "#3B82F6",
-  primaryBand: "rgba(255,106,26,0.15)",
+  // primary/primaryBand are derived per-render from the active palette via
+  // useBranding() — SVG attributes do not resolve CSS variables, so we must
+  // pass the literal hex from the trainer's chosen palette.
   text: "#FAFAFA",
   muted: "#71717A",
   mutedLight: "#A1A1AA",
@@ -351,6 +353,7 @@ function WeightTooltipContent({
 }
 
 function WeightTrendChart({ data }: { data: WeightTrendPoint[] }) {
+  const { palette } = useBranding();
   const [activeMetric, setActiveMetric] = useState<WeightMetric>("weight");
 
   const handleMetricChange = useCallback((metric: WeightMetric) => {
@@ -386,7 +389,7 @@ function WeightTrendChart({ data }: { data: WeightTrendPoint[] }) {
               className={cn(
                 "rounded-full px-2.5 py-0.5 text-[11px] font-medium transition-colors",
                 activeMetric === metric
-                  ? "bg-[#3B82F6] text-white"
+                  ? "bg-brand-primary text-white"
                   : "bg-[#27272A] text-[#A1A1AA] hover:bg-[#3F3F46] hover:text-[#FAFAFA]",
               )}
               aria-pressed={activeMetric === metric}
@@ -435,7 +438,7 @@ function WeightTrendChart({ data }: { data: WeightTrendPoint[] }) {
             type="monotone"
             dataKey="p75Kg"
             stroke="none"
-            fill={TOKEN.primaryBand}
+            fill={palette.tint}
             activeDot={false}
             legendType="none"
             isAnimationActive={false}
@@ -453,7 +456,7 @@ function WeightTrendChart({ data }: { data: WeightTrendPoint[] }) {
           <Line
             type="monotone"
             dataKey="avgKg"
-            stroke={TOKEN.primary}
+            stroke={palette.primary}
             strokeWidth={2.5}
             dot={(dotProps: {
               index?: number;
@@ -469,13 +472,13 @@ function WeightTrendChart({ data }: { data: WeightTrendPoint[] }) {
                   cx={dotProps.cx}
                   cy={dotProps.cy}
                   r={4}
-                  fill={TOKEN.primary}
+                  fill={palette.primary}
                   stroke={TOKEN.card}
                   strokeWidth={2}
                 />
               );
             }}
-            activeDot={{ r: 5, fill: TOKEN.primary, stroke: TOKEN.card, strokeWidth: 2 }}
+            activeDot={{ r: 5, fill: palette.primary, stroke: TOKEN.card, strokeWidth: 2 }}
             isAnimationActive={false}
           />
         </ComposedChart>
@@ -523,6 +526,7 @@ interface VolumeChartData extends VolumeByMuscleData {
 }
 
 function VolumeByMuscleChart({ data }: { data: VolumeByMuscleData[] }) {
+  const { palette } = useBranding();
   if (data.length === 0) {
     return (
       <EmptyState message="Sin sesiones registradas en el periodo." />
@@ -570,10 +574,10 @@ function VolumeByMuscleChart({ data }: { data: VolumeByMuscleData[] }) {
         />
         <Bar
           dataKey="totalSets"
-          fill={TOKEN.primary}
+          fill={palette.primary}
           radius={[4, 4, 0, 0]}
           maxBarSize={32}
-          activeBar={{ fill: "rgba(255,106,26,0.75)" }}
+          activeBar={{ fill: palette.primaryHover }}
         />
       </BarChart>
     </ResponsiveContainer>
@@ -584,7 +588,7 @@ function VolumeByMuscleChart({ data }: { data: VolumeByMuscleData[] }) {
 // Main component
 // -----------------------------------------------------------------------------
 
-export function AggregateCharts({ aggregates, className }: AggregateChartsProps) {
+function AggregateChartsInner({ aggregates, className }: AggregateChartsProps) {
   return (
     <section
       aria-label="Gráficos agregados del periodo"
@@ -598,7 +602,7 @@ export function AggregateCharts({ aggregates, className }: AggregateChartsProps)
         title="Adherencia por cliente"
         subtitle="Top 10 · últimos 30 días"
       >
-        <ClientAdherenceChart data={aggregates.adherenceChart.data} />
+        <ClientAdherenceChart data={aggregates.adherenceChart?.data ?? []} />
       </ChartCard>
 
       {/* Chart 2 — Tendencia de peso */}
@@ -606,7 +610,7 @@ export function AggregateCharts({ aggregates, className }: AggregateChartsProps)
         title="Tendencia de peso"
         subtitle="Promedio del grupo, banda P25-P75"
       >
-        <WeightTrendChart data={aggregates.weightTrend.data} />
+        <WeightTrendChart data={aggregates.weightTrend?.data ?? []} />
       </ChartCard>
 
       {/* Chart 3 — Volumen por grupo muscular */}
@@ -614,8 +618,10 @@ export function AggregateCharts({ aggregates, className }: AggregateChartsProps)
         title="Volumen por grupo muscular"
         subtitle="Sets totales en últimos 30 días"
       >
-        <VolumeByMuscleChart data={aggregates.volumeByMuscle.data} />
+        <VolumeByMuscleChart data={aggregates.volumeByMuscle?.data ?? []} />
       </ChartCard>
     </section>
   );
 }
+
+export const AggregateCharts = memo(AggregateChartsInner);

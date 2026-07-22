@@ -1,0 +1,247 @@
+{
+  "$schema": "Defaults de video por ejercicio. Pegá un link de YouTube/Vimeo/Drive en \"videoUrl\" cuando lo tengas. null = sin video por defecto. Corré pnpm db:seed:videos para aplicar. Inventario completo del catálogo: 30 strength + 30 warmup = 60 ejercicios.",
+  "strength": {
+    "barbell-back-squat": {
+      "nameEs": "Sentadilla con barra",
+      "videoUrl": "https://drive.google.com/file/d/118ZQmmz9hg_qCsJXKDVsaLxdGLoms162/view?usp=drive_link"
+    },
+    "front-squat": {
+      "nameEs": "Sentadilla frontal",
+      "videoUrl": "https://drive.google.com/file/d/15S3VIri6mpcN2BQr0lod5bz4GMdb2BXB/view?usp=drive_link"
+    },
+    "conventional-deadlift": {
+      "nameEs": "Peso muerto convencional",
+      "videoUrl": "https://drive.google.com/file/d/1sfVMTBakVSOpivThbdPdp2-fJRprmi1M/view?usp=drive_link"
+    },
+    "romanian-deadlift": {
+      "nameEs": "Peso muerto rumano",
+      "videoUrl": "https://drive.google.com/file/d/1WCns_FfIuln1Nl9rRqLvRYvuy9GC5joq/view?usp=drive_link"
+    },
+    "barbell-lunge": {
+      "nameEs": "Estocada con barra",
+      "videoUrl": "https://drive.google.com/file/d/1gpgA3XqM7Kn040uN_G0FhVv4wbED6uiG/view?usp=drive_link"
+    },
+    "leg-press": {
+      "nameEs": "Prensa de piernas",
+      "videoUrl": "https://drive.google.com/file/d/1eslLE5ZAcNyI5LdcYKklEULw7ycBCTgC/view?usp=drive_link"
+    },
+    "lying-leg-curl": {
+      "nameEs": "Curl de piernas acostado",
+      "videoUrl": "https://drive.google.com/file/d/1K1Y0CHl7avY1jj8B972r3ahC9V_8qNMw/view?usp=drive_link"
+    },
+    "leg-extension": {
+      "nameEs": "Extensión de piernas",
+      "videoUrl": "https://drive.google.com/file/d/1rk-UVdz8V6iP7Dryysgk2kztvFqnON4l/view?usp=drive_link"
+    },
+    "barbell-bench-press": {
+      "nameEs": "Press de banca con barra",
+      "videoUrl": "https://drive.google.com/file/d/1k2wN1LWFy-fda0UrGclBHGeJC92kmYv0/view?usp=drive_link"
+    },
+    "incline-barbell-bench-press": {
+      "nameEs": "Press de banca inclinado con barra",
+      "videoUrl": "https://drive.google.com/file/d/1OQZ1b7naiDnsCyxaKey47xR6bm6VjOo4/view?usp=drive_link"
+    },
+    "overhead-press": {
+      "nameEs": "Press militar con barra",
+      "videoUrl": "https://drive.google.com/file/d/1F3cHb_o3EX5wlb9pqttxLy0ZeI3PWXxY/view?usp=drive_link"
+    },
+    "push-up": {
+      "nameEs": "Flexión de pecho (lagartija)",
+      "videoUrl": "https://drive.google.com/file/d/1QXl9m4hKOExL4M6TmQ9OPsQjC1y25Uyk/view?usp=drive_link"
+    },
+    "dips": {
+      "nameEs": "Fondos en paralelas",
+      "videoUrl": "https://drive.google.com/file/d/1VpGRDPFQCW19d0wu_S8kwPRlATRoVmr9/view?usp=drive_link"
+    },
+    "dumbbell-bench-press": {
+      "nameEs": "Press de banca con mancuernas",
+      "videoUrl": "https://drive.google.com/file/d/1HM9yyacjT0JOlNDwDVk9b6oCT1Hv-6My/view?usp=drive_link"
+    },
+    "pull-up": {
+      "nameEs": "Dominada (agarre prono)",
+      "videoUrl": "https://drive.google.com/file/d/1rFz0RU9BfUbQT1JC0Z4_n5ql1O0b8di1/view?usp=drive_link"
+    },
+    "close-grip-pull-up": {
+      "nameEs": "Dominada con agarre supino cerrado",
+      "videoUrl": "https://drive.google.com/file/d/1DJ7QWB6D-Upj_ofmUGR9329HysVJvqHk/view?usp=drive_link"
+    },
+    "barbell-bent-over-row": {
+      "nameEs": "Remo con barra inclinado",
+      "videoUrl": "https://drive.google.com/file/d/1vKSB3zLH4qD7RFwXUJuraUiDz-5PVrmi/view?usp=drive_link"
+    },
+    "dumbbell-single-arm-row": {
+      "nameEs": "Remo con mancuerna a un brazo",
+      "videoUrl": "https://drive.google.com/file/d/1YGX4sRGJXuMj3yN6TE0WVdEWz_ISO73s/view?usp=drive_link"
+    },
+    "cable-lat-pulldown": {
+      "nameEs": "Jalón al pecho en polea",
+      "videoUrl": "https://drive.google.com/file/d/1JnifxfueCCZmzFwft60eODABGKU_jMuO/view?usp=drive_link"
+    },
+    "seated-cable-row": {
+      "nameEs": "Remo en polea sentado",
+      "videoUrl": "https://drive.google.com/file/d/1DqJ7UhGjl0vKcEC5Ei4IDpwqkg_qz-a8/view?usp=drive_link"
+    },
+    "barbell-curl": {
+      "nameEs": "Curl de bíceps con barra",
+      "videoUrl": "https://drive.google.com/file/d/1q_fVgFMP8HPVy-qix0ARHb6PuIjXDdrq/view?usp=drive_link"
+    },
+    "hammer-curl": {
+      "nameEs": "Curl martillo",
+      "videoUrl": "https://drive.google.com/file/d/1kdnSkBDiTsTPtMSHiXhGOGxNXRUqbATp/view?usp=drive_link"
+    },
+    "cable-tricep-pushdown": {
+      "nameEs": "Extensión de tríceps en polea alta",
+      "videoUrl": "https://drive.google.com/file/d/13BMZxcnUHAHvLhj4GzrZPBvI1d4dcGKa/view?usp=drive_link"
+    },
+    "ez-bar-skull-crusher": {
+      "nameEs": "Press francés con barra EZ",
+      "videoUrl": "https://drive.google.com/file/d/1Nw3vePZsNxsIhKdI7aGtitn8iRfL1Q7h/view?usp=drive_link"
+    },
+    "dumbbell-lateral-raise": {
+      "nameEs": "Elevación lateral con mancuernas",
+      "videoUrl": "https://drive.google.com/file/d/1WOH31IzlK5xPDyCABa4c9ZMTjRFapwQ4/view?usp=drive_link"
+    },
+    "dumbbell-front-raise": {
+      "nameEs": "Elevación frontal con mancuernas",
+      "videoUrl": "https://drive.google.com/file/d/1O8UBBVNZa3_jVm0A0rByNvntmv6ImQLz/view?usp=drive_link"
+    },
+    "cable-rear-delt-fly": {
+      "nameEs": "Apertura para deltoides posterior en polea",
+      "videoUrl": "https://drive.google.com/file/d/1ri_Zz0GFsd2mef7RlXbdzTHIFou2BR7v/view?usp=drive_link"
+    },
+    "plank": {
+      "nameEs": "Plancha abdominal",
+      "videoUrl": "https://drive.google.com/file/d/14_YFavc2mUdoh1jk_TA-11GYhSA8ksqI/view?usp=drive_link"
+    },
+    "ab-wheel-rollout": {
+      "nameEs": "Extensión abdominal con rueda",
+      "videoUrl": "https://drive.google.com/file/d/1QCgJjc2QwfLzVflYxsioc3DY6fB8tPf7/view?usp=drive_link"
+    },
+    "hanging-leg-raise": {
+      "nameEs": "Elevación de piernas colgado",
+      "videoUrl": "https://drive.google.com/file/d/1Ym7NDY6xMX_pwagp05r2a3XW_YbBNcef/view?usp=drive_link"
+    }
+  },
+  "warmup": {
+    "cardio-en-maquina": {
+      "nameEs": "Cardio en máquina",
+      "videoUrl": "https://drive.google.com/file/d/1lq44HpZYFVapCWxsd64a8wmMCe2WS5cq/view?usp=drive_link"
+    },
+    "saltos-de-tijera": {
+      "nameEs": "Saltos de tijera",
+      "videoUrl": null
+    },
+    "rodillas-altas": {
+      "nameEs": "Rodillas altas",
+      "videoUrl": null
+    },
+    "talones-a-gluteos": {
+      "nameEs": "Talones a glúteos",
+      "videoUrl": null
+    },
+    "saltar-la-cuerda": {
+      "nameEs": "Saltar la cuerda",
+      "videoUrl": null
+    },
+    "mountain-climbers": {
+      "nameEs": "Mountain climbers",
+      "videoUrl": null
+    },
+    "circulos-de-hombros": {
+      "nameEs": "Círculos de hombros",
+      "videoUrl": null
+    },
+    "circulos-de-brazos": {
+      "nameEs": "Círculos de brazos",
+      "videoUrl": null
+    },
+    "circulos-de-cadera": {
+      "nameEs": "Círculos de cadera",
+      "videoUrl": null
+    },
+    "circulos-de-tobillos": {
+      "nameEs": "Círculos de tobillos",
+      "videoUrl": null
+    },
+    "gato-camello": {
+      "nameEs": "Gato-camello",
+      "videoUrl": null
+    },
+    "inchworm": {
+      "nameEs": "Inchworm",
+      "videoUrl": null
+    },
+    "sentadilla-con-peso-corporal": {
+      "nameEs": "Sentadilla con peso corporal",
+      "videoUrl": null
+    },
+    "zancadas-caminando": {
+      "nameEs": "Zancadas caminando",
+      "videoUrl": "https://drive.google.com/file/d/1E9f68BK0r2RBnhoYQ1m610o3usgkk0Ge/view?usp=drive_link"
+    },
+    "puente-de-gluteo": {
+      "nameEs": "Puente de glúteo",
+      "videoUrl": null
+    },
+    "bird-dog": {
+      "nameEs": "Bird dog",
+      "videoUrl": null
+    },
+    "plancha-isometrica": {
+      "nameEs": "Plancha",
+      "videoUrl": "https://drive.google.com/file/d/1nuhyJ4dR4VrISoe3_pbTgOR393oLzC66/view?usp=drive_link"
+    },
+    "push-ups-lentos": {
+      "nameEs": "Push-ups lentos",
+      "videoUrl": null
+    },
+    "band-pull-aparts": {
+      "nameEs": "Band pull-aparts",
+      "videoUrl": null
+    },
+    "face-pulls-con-banda": {
+      "nameEs": "Face pulls con banda",
+      "videoUrl": null
+    },
+    "monster-walks-con-banda": {
+      "nameEs": "Monster walks con banda",
+      "videoUrl": null
+    },
+    "estiramiento-cuadriceps-de-pie": {
+      "nameEs": "Estiramiento de cuádriceps de pie",
+      "videoUrl": null
+    },
+    "estiramiento-isquiotibiales-sentado": {
+      "nameEs": "Estiramiento de isquiotibiales sentado",
+      "videoUrl": null
+    },
+    "estiramiento-gemelos-en-pared": {
+      "nameEs": "Estiramiento de gemelos en pared",
+      "videoUrl": null
+    },
+    "figura-4-supino": {
+      "nameEs": "Figura 4 supino",
+      "videoUrl": null
+    },
+    "estiramiento-flexor-de-cadera": {
+      "nameEs": "Estiramiento de flexor de cadera",
+      "videoUrl": null
+    },
+    "estiramiento-pecho-en-puerta": {
+      "nameEs": "Estiramiento de pecho en puerta",
+      "videoUrl": null
+    },
+    "postura-del-nino": {
+      "nameEs": "Postura del niño",
+      "videoUrl": null
+    },
+    "estiramiento-triceps-sobre-cabeza": {
+      "nameEs": "Estiramiento de tríceps sobre la cabeza",
+      "videoUrl": null
+    },
+    "worlds-greatest-stretch": {
+      "nameEs": "World's greatest stretch",
+      "videoUrl": null
+    }
+  }
+}

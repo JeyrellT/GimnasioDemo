@@ -90,6 +90,10 @@ const REDACT_PATHS = [
 // -----------------------------------------------------------------------------
 
 const isDev = process.env.NODE_ENV !== "production";
+// Workaround for pino-pretty worker thread failures in dev (pnpm + Windows
+// hoisted layout can resolve thread-stream/worker.js against a non-existent
+// path). Opt out by setting PINO_PRETTY_DISABLED=1.
+const prettyDisabled = process.env.PINO_PRETTY_DISABLED === "1";
 
 export const logger = pino({
   level: isDev ? "debug" : "info",
@@ -97,7 +101,7 @@ export const logger = pino({
     paths: REDACT_PATHS,
     censor: "[Redacted]",
   },
-  ...(isDev
+  ...(isDev && !prettyDisabled
     ? {
         transport: {
           target: "pino-pretty",
@@ -109,7 +113,9 @@ export const logger = pino({
         },
       }
     : {
-        // Production: structured JSON for log aggregators (Datadog, Loki, etc.)
+        // Production / pretty-disabled: structured JSON for log aggregators
+        // (Datadog, Loki, etc.) or for routes where the pretty worker is
+        // brittle in dev.
         formatters: {
           level(label: string) {
             return { level: label };

@@ -26,7 +26,11 @@ interface Step5AnthropometryProps {
 }
 
 export function Step5Anthropometry({ draftId }: Step5AnthropometryProps) {
-  const { goNext, goBack, setStepData, payload } = useOnboardingStore();
+  // Bug 10: granular selectors
+  const goNext = useOnboardingStore((s) => s.goNext);
+  const goBack = useOnboardingStore((s) => s.goBack);
+  const setStepData = useOnboardingStore((s) => s.setStepData);
+  const payload = useOnboardingStore((s) => s.payload);
   const existing = payload.step5;
 
   const form = useForm<Step5Input>({
@@ -147,7 +151,7 @@ export function Step5Anthropometry({ draftId }: Step5AnthropometryProps) {
 
         {/* Optional */}
         <details className="rounded-xl border border-[#3F3F46] bg-[#18181B]">
-          <summary className="cursor-pointer select-none px-5 py-4 text-sm text-[#3B82F6] hover:text-[#2563EB] list-none">
+          <summary className="cursor-pointer select-none px-5 py-4 text-sm text-brand-primary hover:text-brand-primary-hover list-none">
             + Medidas adicionales (opcional)
           </summary>
           <div className="px-5 pb-5 space-y-4 border-t border-[#3F3F46] pt-4">

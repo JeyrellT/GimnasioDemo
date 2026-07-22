@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Dumbbell, Eye, EyeOff, User, ArrowRight, Loader2 } from "lucide-react";
+import { Dumbbell, Eye, EyeOff, User, ArrowRight, Loader2, ShieldCheck } from "lucide-react";
 import { SignInForm } from "@/components/forms/sign-in-form";
 import {
   Dialog,
@@ -23,6 +23,12 @@ import { registerUser } from "@/app/actions/auth";
 // ---------------------------------------------------------------------------
 
 const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+
+// Super-admin quick access: when this public env var is set, a discreet
+// "Acceso administrador" link appears in the login hub that opens the sign-in
+// dialog with the email pre-filled. The password is ALWAYS required — this is a
+// convenience shortcut, never an auth bypass.
+const SUPER_ADMIN_EMAIL = process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAIL;
 
 interface DemoProfile {
   id: string;
@@ -60,9 +66,9 @@ function DemoProfileSelector() {
           <button
             key={profile.id}
             onClick={() => handleSelect(profile)}
-            className="group flex items-center gap-4 rounded-xl border border-[#3F3F46] bg-[#27272A]/60 px-4 py-3.5 text-left transition-all hover:border-[#3B82F6]/50 hover:bg-[#27272A]/80"
+            className="group flex items-center gap-4 rounded-xl border border-[#3F3F46] bg-[#27272A]/60 px-4 py-3.5 text-left transition-all hover:border-brand-primary/50 hover:bg-[#27272A]/80"
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#3F3F46] text-sm font-semibold text-[#D4D4D8] group-hover:bg-[#3B82F6]/20 group-hover:text-[#3B82F6]">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#3F3F46] text-sm font-semibold text-[#D4D4D8] group-hover:bg-brand-primary/20 group-hover:text-brand-primary">
               {profile.avatarInitials}
             </div>
             <div className="min-w-0 flex-1">
@@ -83,7 +89,7 @@ function DemoProfileSelector() {
                 {profile.email}
               </p>
             </div>
-            <ArrowRight className="h-4 w-4 shrink-0 text-[#52525B] transition-colors group-hover:text-[#3B82F6]" />
+            <ArrowRight className="h-4 w-4 shrink-0 text-[#52525B] transition-colors group-hover:text-brand-primary" />
           </button>
         ))}
       </div>
@@ -151,7 +157,7 @@ function getPasswordStrength(password: string): PasswordStrength {
 // ---------------------------------------------------------------------------
 
 const inputClassName =
-  "w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6] transition-colors";
+  "w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary transition-colors";
 
 // ---------------------------------------------------------------------------
 // Dialog de Login
@@ -161,9 +167,10 @@ interface LoginDialogProps {
   open: boolean;
   onClose: () => void;
   onGoToRegister: () => void;
+  defaultEmail?: string;
 }
 
-function LoginDialog({ open, onClose, onGoToRegister }: LoginDialogProps) {
+function LoginDialog({ open, onClose, onGoToRegister, defaultEmail }: LoginDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
       <DialogContent className="max-w-sm">
@@ -174,7 +181,7 @@ function LoginDialog({ open, onClose, onGoToRegister }: LoginDialogProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <SignInForm callbackUrl="/inicio" />
+        <SignInForm callbackUrl="/inicio" defaultEmail={defaultEmail} />
 
         {/* Enlace hacia el registro */}
         <p className="text-center text-sm text-[#71717A]">
@@ -182,7 +189,7 @@ function LoginDialog({ open, onClose, onGoToRegister }: LoginDialogProps) {
           <button
             type="button"
             onClick={onGoToRegister}
-            className="font-medium text-[#3B82F6] hover:text-[#2563EB] transition-colors underline-offset-4 hover:underline"
+            className="font-medium text-brand-primary hover:text-brand-primary-hover transition-colors underline-offset-4 hover:underline"
           >
             Registrate
           </button>
@@ -283,7 +290,7 @@ function RegisterDialog({
           <DialogHeader>
               {/* Badge del rol seleccionado */}
               <div className="mb-1">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#3B82F6]/30 bg-[#3B82F6]/10 px-2.5 py-0.5 text-xs font-medium text-[#3B82F6]">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-primary/30 bg-brand-primary/10 px-2.5 py-0.5 text-xs font-medium text-brand-primary">
                   {selectedRole === "TRAINER" ? (
                     <Dumbbell className="h-3 w-3" aria-hidden="true" />
                   ) : (
@@ -461,7 +468,7 @@ function RegisterDialog({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#2563EB] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#18181B] disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-brand-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-[#18181B] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSubmitting ? (
                   <>
@@ -483,7 +490,7 @@ function RegisterDialog({
               <button
                 type="button"
                 onClick={onGoToLogin}
-                className="font-medium text-[#3B82F6] hover:text-[#2563EB] transition-colors underline-offset-4 hover:underline"
+                className="font-medium text-brand-primary hover:text-brand-primary-hover transition-colors underline-offset-4 hover:underline"
               >
                 Ingresá
               </button>
@@ -502,13 +509,16 @@ type View = "landing" | "login" | "register";
 function ProdHub() {
   const [view, setView] = useState<View>("landing");
   const [selectedRole, setSelectedRole] = useState<"TRAINER" | "CLIENT">("TRAINER");
+  // Email to pre-fill in the login dialog (set by the admin quick-access link).
+  const [loginEmail, setLoginEmail] = useState<string | undefined>(undefined);
 
   function openRegister(role: "TRAINER" | "CLIENT") {
     setSelectedRole(role);
     setView("register");
   }
 
-  function openLogin() {
+  function openLogin(prefillEmail?: string) {
+    setLoginEmail(prefillEmail);
     setView("login");
   }
 
@@ -523,6 +533,7 @@ function ProdHub() {
   }
 
   function switchToLogin() {
+    setLoginEmail(undefined);
     setView("login");
   }
 
@@ -544,10 +555,10 @@ function ProdHub() {
           <button
             type="button"
             onClick={() => openRegister("TRAINER")}
-            className="group flex w-full max-w-xs cursor-pointer flex-col items-start gap-3 rounded-xl border border-[#3F3F46] p-4 text-left transition-all hover:border-[#3B82F6] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#18181B]"
-            style={{ borderLeftWidth: "3px", borderLeftColor: "#3B82F6" }}
+            className="group flex w-full max-w-xs cursor-pointer flex-col items-start gap-3 rounded-xl border border-[#3F3F46] p-4 text-left transition-all hover:border-brand-primary focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-[#18181B]"
+            style={{ borderLeftWidth: "3px", borderLeftColor: "var(--brand-primary)" }}
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#3B82F6]/10 text-[#3B82F6] transition-colors group-hover:bg-[#3B82F6]/20">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-primary/10 text-brand-primary transition-colors group-hover:bg-brand-primary/20">
               <Dumbbell className="h-5 w-5" aria-hidden="true" />
             </div>
             <div className="space-y-0.5">
@@ -569,12 +580,27 @@ function ProdHub() {
           ¿Ya tenés cuenta?{" "}
           <button
             type="button"
-            onClick={openLogin}
-            className="font-medium text-[#3B82F6] hover:text-[#2563EB] transition-colors underline-offset-4 hover:underline"
+            onClick={() => openLogin()}
+            className="font-medium text-brand-primary hover:text-brand-primary-hover transition-colors underline-offset-4 hover:underline"
           >
             Ingresá
           </button>
         </p>
+
+        {/* Acceso rápido a super admin — pre-llena el correo; la contraseña
+            sigue siendo obligatoria. Solo aparece si la env pública está seteada. */}
+        {SUPER_ADMIN_EMAIL && (
+          <div className="flex justify-center pt-1">
+            <button
+              type="button"
+              onClick={() => openLogin(SUPER_ADMIN_EMAIL)}
+              className="inline-flex items-center gap-1.5 text-[11px] text-[#52525B] hover:text-[#A1A1AA] transition-colors"
+            >
+              <ShieldCheck className="h-3 w-3" aria-hidden="true" />
+              Acceso administrador
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ------------------------------------------------------------------ */}
@@ -584,6 +610,7 @@ function ProdHub() {
         open={view === "login"}
         onClose={closeBothDialogs}
         onGoToRegister={switchToRegister}
+        defaultEmail={loginEmail}
       />
 
       {/* ------------------------------------------------------------------ */}

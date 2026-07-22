@@ -8,6 +8,7 @@
 // =============================================================================
 
 import * as React from "react";
+import { Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { BodyComposition } from "@/types/profile";
 
@@ -19,6 +20,7 @@ interface CircumferencesTableProps {
   data: BodyComposition;
   selectedZone?: string | null;
   onZoneClick?: (zone: string) => void;
+  onEditZone?: (zone: string) => void;
   className?: string;
 }
 
@@ -81,15 +83,18 @@ export function CircumferencesTable({
   data,
   selectedZone,
   onZoneClick,
+  onEditZone,
   className,
 }: CircumferencesTableProps) {
   const c = data.circumferences;
+  const deltaFor = (zone: string) =>
+    data.circumferenceDeltas[zone as keyof typeof data.circumferenceDeltas]?.deltaCm ?? null;
 
   const groups: CircGroup[] = [
     {
       title: "Tronco",
-      accentClass: "border-l-2 border-l-[rgba(59,130,246,0.6)]",
-      headerBg: "bg-[rgba(59,130,246,0.06)]",
+      accentClass: "border-l-2 border-l-brand-primary/60",
+      headerBg: "bg-brand-primary/[0.06]",
       rows: [
         { zone: "neck", label: "Cuello", value: c.neckCm },
         { zone: "shoulderL", label: "Hombro izq.", value: c.shoulderLeftCm },
@@ -128,6 +133,12 @@ export function CircumferencesTable({
     },
   ];
 
+  for (const group of groups) {
+    for (const row of group.rows) {
+      row.delta = deltaFor(row.zone);
+    }
+  }
+
   return (
     <div
       className={cn("space-y-4", className)}
@@ -149,6 +160,7 @@ export function CircumferencesTable({
                   <th scope="col">Zona</th>
                   <th scope="col">Valor</th>
                   <th scope="col">Cambio</th>
+                  {onEditZone && <th scope="col">Editar</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-[rgba(39,39,42,0.8)]">
@@ -164,7 +176,7 @@ export function CircumferencesTable({
                         "flex items-center justify-between py-3 transition-all duration-150",
                         // Selection overrides accent border and background
                         isSelected
-                          ? "border-l-2 border-l-[#3B82F6] bg-[rgba(255,106,26,0.10)] pl-3 pr-4"
+                          ? "border-l-2 border-l-brand-primary bg-[rgba(255,106,26,0.10)] pl-3 pr-4"
                           : hasValue
                             ? cn("pl-3 pr-4", group.accentClass)
                             : "px-4",
@@ -211,6 +223,26 @@ export function CircumferencesTable({
                       <td className="w-16 text-right">
                         <DeltaBadge delta={row.delta} />
                       </td>
+                      {onEditZone && (
+                        <td className="w-9 text-right">
+                          <button
+                            type="button"
+                            aria-label={`Editar ${row.label}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEditZone(row.zone);
+                            }}
+                            className={cn(
+                              "inline-flex h-7 w-7 items-center justify-center rounded-md",
+                              "text-[#71717A] transition-colors",
+                              "hover:bg-[#3F3F46]/40 hover:text-brand-primary",
+                              "focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-[-2px]",
+                            )}
+                          >
+                            <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}

@@ -181,6 +181,41 @@ async function assertSessionOwnerInProgress(
   return session;
 }
 
+function buildPrescriptionSetRows(
+  sessionId: string,
+  snapshotJson: Prisma.JsonValue | null | undefined,
+  dayIndex: number | null,
+) {
+  if (dayIndex === null || !snapshotJson || typeof snapshotJson !== "object") {
+    return [];
+  }
+
+  const snapshot = snapshotJson as unknown as RoutineSnapshot;
+  const day = snapshot.days?.find((d) => d.dayIndex === dayIndex);
+  if (!day) return [];
+
+  let setNumber = 1;
+  const rows: Prisma.PerformedSetCreateManyInput[] = [];
+
+  for (const exercise of day.exercises ?? []) {
+    const targetSets = Math.max(1, Number(exercise.targetSets ?? 1));
+    if (!exercise.exerciseId) continue;
+
+    for (let i = 0; i < targetSets; i++) {
+      rows.push({
+        sessionId,
+        exerciseId: exercise.exerciseId,
+        setNumber,
+        restTakenSec: exercise.restSeconds ?? null,
+        notes: "Registrado automáticamente al completar la rutina guiada.",
+      });
+      setNumber += 1;
+    }
+  }
+
+  return rows;
+}
+
 // =============================================================================
 // startSession
 // =============================================================================
@@ -217,17 +252,35 @@ export async function startSession(
         status: "IN_PROGRESS",
         deletedAt: null,
       },
-      select: { id: true },
+      select: {
+        id: true,
+        assignedRoutineId: true,
+        dayIndex: true,
+        isFreeWorkout: true,
+      },
     });
 
+    const isFreeWorkout = !assignedRoutineId;
+
     if (existing) {
+      if (
+        existing.assignedRoutineId === assignedRoutineId &&
+        existing.dayIndex === dayIndex &&
+        existing.isFreeWorkout === isFreeWorkout
+      ) {
+        return {
+          sessionId: existing.id,
+          daySnapshot: null,
+          isFreeWorkout: existing.isFreeWorkout,
+        };
+      }
+
       throw new ConflictError(
         "SESSION_IN_PROGRESS",
         "Ya tenés una sesión en curso. Completála o abortala antes de empezar una nueva.",
       );
     }
 
-    const isFreeWorkout = !assignedRoutineId;
     let daySnapshot: RoutineSnapshot["days"][number] | null = null;
 
     if (assignedRoutineId) {
@@ -589,8 +642,13 @@ export async function completeSession(
       where: { id: sessionId },
       select: {
         assignedRoutineId: true,
+        dayIndex: true,
+        _count: {
+          select: { performedSets: true },
+        },
         assignedRoutine: {
           select: {
+            snapshotJson: true,
             routineTemplate: {
               select: {
                 trainerId: true,
@@ -603,6 +661,18 @@ export async function completeSession(
     });
 
     await prisma.$transaction(async (tx) => {
+      const prescribedSets = fullSession?._count.performedSets === 0
+        ? buildPrescriptionSetRows(
+            sessionId,
+            fullSession.assignedRoutine?.snapshotJson,
+            fullSession.dayIndex,
+          )
+        : [];
+
+      if (prescribedSets.length > 0) {
+        await tx.performedSet.createMany({ data: prescribedSets });
+      }
+
       await tx.workoutSession.update({
         where: { id: sessionId },
         data: {

@@ -1,10 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { CheckCircle2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DashboardAlert, AlertSeverity } from "@/types/dashboard";
+
+// ── Persistence key ───────────────────────────────────────────────────────────
+
+const DISMISSED_KEY = "dashboard.alerts.dismissed";
+
+function readDismissed(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const raw = sessionStorage.getItem(DISMISSED_KEY);
+    if (!raw) return new Set();
+    const parsed: unknown = JSON.parse(raw);
+    if (Array.isArray(parsed)) return new Set(parsed as string[]);
+  } catch {
+    // Corrupt storage — treat as empty.
+  }
+  return new Set();
+}
+
+function writeDismissed(ids: Set<string>): void {
+  try {
+    sessionStorage.setItem(DISMISSED_KEY, JSON.stringify([...ids]));
+  } catch {
+    // Storage full or blocked — silently ignore.
+  }
+}
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -44,7 +69,13 @@ interface AlertsFeedProps {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function AlertsFeed({ alerts, className }: AlertsFeedProps) {
-  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  // Initialise from sessionStorage so dismissed alerts survive filter-driven refetches.
+  const [dismissed, setDismissed] = useState<Set<string>>(readDismissed);
+
+  // Keep sessionStorage in sync whenever the set changes.
+  useEffect(() => {
+    writeDismissed(dismissed);
+  }, [dismissed]);
 
   const sorted = [...alerts].sort((a, b) => {
     const severityDiff =
@@ -99,7 +130,7 @@ export function AlertsFeed({ alerts, className }: AlertsFeedProps) {
             {overflow > 0 && (
               <Link
                 href="/trainer/clientes"
-                className="mt-1 text-center text-xs text-[#3B82F6] hover:text-[#2563EB] transition-colors"
+                className="mt-1 text-center text-xs text-brand-primary hover:text-brand-primary-hover transition-colors"
               >
                 + {overflow} {overflow === 1 ? "alerta más" : "alertas más"}
               </Link>
@@ -147,7 +178,7 @@ function AlertCard({
       <div className="flex items-center gap-2 mt-0.5">
         <Link
           href={profileUrl}
-          className="text-xs font-medium text-[#3B82F6] hover:text-[#2563EB] transition-colors"
+          className="text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors"
         >
           Ver perfil
         </Link>

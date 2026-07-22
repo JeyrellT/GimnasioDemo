@@ -58,9 +58,8 @@ function getGreeting(hour: number): string {
   return "Buenas noches";
 }
 
-function getFormattedDate(): string {
-  const now = new Date();
-  const raw = now.toLocaleDateString("es-CR", {
+function getFormattedDate(date: Date): string {
+  const raw = date.toLocaleDateString("es-CR", {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -97,8 +96,13 @@ export function DashboardFilterBar({
   const currentParq =
     searchParams.get("parqStatuses")?.split(",").filter(Boolean) ?? [];
 
-  const { pendingGoals, pendingParqStatuses, setPendingGoals, setPendingParqStatuses, hydrate } =
-    useDashboardFilterStore();
+  // Selectores individuales para evitar re-renders cuando otros fields del
+  // store cambian. Antes: useDashboardFilterStore() (full store subscribe).
+  const pendingGoals = useDashboardFilterStore((s) => s.pendingGoals);
+  const pendingParqStatuses = useDashboardFilterStore((s) => s.pendingParqStatuses);
+  const setPendingGoals = useDashboardFilterStore((s) => s.setPendingGoals);
+  const setPendingParqStatuses = useDashboardFilterStore((s) => s.setPendingParqStatuses);
+  const hydrate = useDashboardFilterStore((s) => s.hydrate);
 
   // Hydrate pending state from URL on mount.
   useEffect(() => {
@@ -110,7 +114,9 @@ export function DashboardFilterBar({
   // Safe split: fall back to full name if split produces no first token.
   const firstName = trainerName.split(" ")[0] ?? trainerName;
   const greeting = `${getGreeting(now.getHours())}, ${firstName}.`;
-  const dateDisplay = getFormattedDate();
+  // Pasamos el `now` ya stabilizado por useState — evita SSR/CSR mismatch
+  // (server rendea con un Date, client con otro segundos despues).
+  const dateDisplay = getFormattedDate(now);
 
   const isDirty = !isDefaultFilters(currentRange, currentGoals, currentParq);
 
@@ -130,9 +136,14 @@ export function DashboardFilterBar({
     }) => {
       const params = new URLSearchParams(searchParams.toString());
 
+      // Read pending values directly from the store at call-time to avoid
+      // stale closure bugs on rapid successive chip clicks.
+      const { pendingGoals: freshGoals, pendingParqStatuses: freshParq } =
+        useDashboardFilterStore.getState();
+
       const range = overrides.range ?? currentRange;
-      const goals = overrides.goals ?? pendingGoals;
-      const parq = overrides.parqStatuses ?? pendingParqStatuses;
+      const goals = overrides.goals ?? freshGoals;
+      const parq = overrides.parqStatuses ?? freshParq;
 
       if (range === "30d") {
         params.delete("range");
@@ -154,7 +165,7 @@ export function DashboardFilterBar({
 
       router.replace(`?${params.toString()}`, { scroll: false });
     },
-    [router, searchParams, currentRange, pendingGoals, pendingParqStatuses],
+    [router, searchParams, currentRange],
   );
 
   function handleRangeChange(range: RangeChip) {
@@ -212,7 +223,7 @@ export function DashboardFilterBar({
               className={cn(
                 "rounded-md px-3 py-1 text-xs font-medium transition-colors min-h-[28px]",
                 currentRange === range
-                  ? "bg-[#3B82F6] text-[#FAFAFA]"
+                  ? "bg-brand-primary text-[#FAFAFA]"
                   : "text-[#71717A] hover:text-[#A1A1AA] hover:bg-[#27272A]",
               )}
             >
@@ -270,7 +281,7 @@ export function DashboardFilterBar({
           <div className="flex items-center gap-1.5">
             {/* Badge showing count of active filter dimensions */}
             <span
-              className="inline-flex items-center gap-1 rounded-full bg-[#3B82F6]/15 px-2.5 py-0.5 text-xs font-semibold text-[#3B82F6]"
+              className="inline-flex items-center gap-1 rounded-full bg-brand-primary/15 px-2.5 py-0.5 text-xs font-semibold text-brand-primary"
               aria-live="polite"
               aria-label={`${activeFilterCount} ${activeFilterCount === 1 ? "filtro activo" : "filtros activos"}`}
             >
@@ -353,7 +364,7 @@ function MultiSelectDropdown({
         className={cn(
           "flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors min-h-[36px]",
           hasSelection
-            ? "border-[#3B82F6]/40 bg-[#3B82F6]/8 text-[#3B82F6]"
+            ? "border-brand-primary/40 bg-brand-primary/8 text-brand-primary"
             : "border-[#3F3F46] bg-[#18181B] text-[#71717A] hover:text-[#A1A1AA] hover:border-[#52525B]",
         )}
       >
@@ -389,7 +400,7 @@ function MultiSelectDropdown({
                 className={cn(
                   "flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm transition-colors",
                   isSelected
-                    ? "bg-[#3B82F6]/10 text-[#3B82F6]"
+                    ? "bg-brand-primary/10 text-brand-primary"
                     : "text-[#A1A1AA] hover:bg-[#27272A] hover:text-[#FAFAFA]",
                 )}
               >
@@ -398,7 +409,7 @@ function MultiSelectDropdown({
                   className={cn(
                     "flex h-4 w-4 shrink-0 items-center justify-center rounded border",
                     isSelected
-                      ? "border-[#3B82F6] bg-[#3B82F6]"
+                      ? "border-brand-primary bg-brand-primary"
                       : "border-[#52525B] bg-transparent",
                   )}
                   aria-hidden="true"

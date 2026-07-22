@@ -14,7 +14,6 @@ import type {
   RoutineSummary,
   RoutineSnapshot,
   NotificationItem,
-  BodyMetric,
 } from "./domain";
 import type {
   AssignedRoutineStatus,
@@ -180,9 +179,11 @@ export interface ExerciseSearchResult {
   id: string;
   slug: string;
   nameEs: string;
+  nameEn: string | null;
   primaryMuscle: import("@prisma/client").MuscleGroup;
   equipment: import("@prisma/client").ExerciseEquipment;
   difficulty: import("@prisma/client").ExerciseDifficulty;
+  category: import("@prisma/client").ExerciseCategory;
   gifUrl: string | null;
   thumbnailUrl: string | null;
 }
@@ -390,6 +391,35 @@ export interface BodyComposition {
   >;
 }
 
+export interface ProfileMetricHistoryPoint {
+  id: string;
+  recordedAt: string;
+  weightKg: number | null;
+  bodyFatPct: number | null;
+  muscleMassKg: number | null;
+  neckCm: number | null;
+  shoulderLeftCm: number | null;
+  shoulderRightCm: number | null;
+  chestCm: number | null;
+  armCm: number | null;
+  bicepLeftCm: number | null;
+  bicepRightCm: number | null;
+  forearmLeftCm: number | null;
+  forearmRightCm: number | null;
+  abdomenCm: number | null;
+  waistCm: number | null;
+  hipCm: number | null;
+  gluteLeftCm: number | null;
+  gluteRightCm: number | null;
+  thighCm: number | null;
+  thighLeftCm: number | null;
+  thighRightCm: number | null;
+  hamstringLeftCm: number | null;
+  hamstringRightCm: number | null;
+  calfLeftCm: number | null;
+  calfRightCm: number | null;
+}
+
 export interface ActiveRoutine {
   id: string;
   name: string;
@@ -437,9 +467,9 @@ export interface ClientProfileDetail {
     weightKg: number | null;
     heightCm: number | null;
   } | null;
-  latestMetric: BodyMetric | null;
+  latestMetric: ProfileMetricHistoryPoint | null;
   /** Last 12 weeks of metrics, ascending by recordedAt. */
-  metricsHistory: BodyMetric[];
+  metricsHistory: ProfileMetricHistoryPoint[];
   bodyComposition: BodyComposition;
   /** Body-map zone map. null for a zone means no measurement exists at all. */
   zones: Record<BodyZone, ZoneMetric | null>;

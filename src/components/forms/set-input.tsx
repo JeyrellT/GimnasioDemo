@@ -78,7 +78,7 @@ export function SetInput({
               step="0.5"
               value={weight || ""}
               onChange={(e) => setWeight(Number(e.target.value) || 0)}
-              className="flex-1 rounded-lg border border-[#3F3F46] bg-[#27272A] px-2 py-2 text-center text-lg font-bold tabular text-[#FAFAFA] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] min-h-[44px]"
+              className="flex-1 rounded-lg border border-[#3F3F46] bg-[#27272A] px-2 py-2 text-center text-lg font-bold tabular text-[#FAFAFA] focus:outline-none focus:ring-2 focus:ring-brand-primary min-h-[44px]"
               placeholder="0"
               aria-label="Peso en kg"
             />
@@ -110,7 +110,7 @@ export function SetInput({
               inputMode="numeric"
               value={reps || ""}
               onChange={(e) => setReps(Number(e.target.value) || 0)}
-              className="flex-1 rounded-lg border border-[#3F3F46] bg-[#27272A] px-2 py-2 text-center text-lg font-bold tabular text-[#FAFAFA] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] min-h-[44px]"
+              className="flex-1 rounded-lg border border-[#3F3F46] bg-[#27272A] px-2 py-2 text-center text-lg font-bold tabular text-[#FAFAFA] focus:outline-none focus:ring-2 focus:ring-brand-primary min-h-[44px]"
               placeholder="0"
               aria-label="Número de repeticiones"
             />
@@ -149,7 +149,7 @@ export function SetInput({
           "mt-4 w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-all min-h-[44px]",
           marked
             ? "bg-[#22C55E] text-white"
-            : "bg-[#3B82F6] text-white hover:bg-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed",
+            : "bg-brand-primary text-white hover:bg-brand-primary-hover disabled:opacity-50 disabled:cursor-not-allowed",
         )}
         aria-label={marked ? "Set completado" : "Marcar set como completado"}
       >

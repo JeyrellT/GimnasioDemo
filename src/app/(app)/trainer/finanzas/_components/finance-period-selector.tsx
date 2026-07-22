@@ -16,15 +16,10 @@ import { motion, AnimatePresence } from "framer-motion";
 
 function buildOptions(): Array<{ label: string; value: string }> {
   const now = new Date();
-  return Array.from({ length: 4 }, (_, i) => {
+  return Array.from({ length: 13 }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    const label =
-      i === 0
-        ? "Mes actual"
-        : i === 1
-          ? "Mes anterior"
-          : `Hace ${i} meses`;
+    const label = d.toLocaleDateString("es-CR", { month: "short", year: "numeric" });
     return { label, value };
   });
 }
@@ -78,8 +73,8 @@ export function FinancePeriodSelector({ currentMonth }: FinancePeriodSelectorPro
         className={cn(
           "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors duration-150",
           "border-[#3F3F46]/70 bg-[#18181B] text-[#A1A1AA]",
-          "hover:border-[#3B82F6]/50 hover:text-[#FAFAFA]",
-          open && "border-[#3B82F6]/50 text-[#FAFAFA]",
+          "hover:border-brand-primary/50 hover:text-[#FAFAFA]",
+          open && "border-brand-primary/50 text-[#FAFAFA]",
         )}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -116,7 +111,7 @@ export function FinancePeriodSelector({ currentMonth }: FinancePeriodSelectorPro
                   className={cn(
                     "w-full px-3 py-2 text-left text-sm transition-colors duration-100",
                     value === currentMonth
-                      ? "text-[#3B82F6] font-semibold bg-[#3B82F6]/10"
+                      ? "text-brand-primary font-semibold bg-brand-primary/10"
                       : "text-[#A1A1AA] hover:bg-[#27272A] hover:text-[#FAFAFA]",
                   )}
                 >

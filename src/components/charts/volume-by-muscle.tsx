@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useBranding } from "@/lib/branding/branding-context";
 
 interface DataPoint {
   muscle: string;
@@ -20,6 +21,7 @@ interface VolumeByMuscleProps {
 }
 
 export default function VolumeByMuscle({ data }: VolumeByMuscleProps) {
+  const { palette } = useBranding();
   if (data.length === 0) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -51,7 +53,7 @@ export default function VolumeByMuscle({ data }: VolumeByMuscleProps) {
           itemStyle={{ color: "#FAFAFA", fontSize: 12 }}
           formatter={(v: number) => [v + " sets", "Volumen"]}
         />
-        <Bar dataKey="volume" fill="#3B82F6" radius={[0, 4, 4, 0]} />
+        <Bar dataKey="volume" fill={palette.primary} radius={[0, 4, 4, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

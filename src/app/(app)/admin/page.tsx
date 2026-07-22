@@ -39,9 +39,9 @@ function StatCard({
     { bg: string; icon: string; border: string }
   > = {
     blue: {
-      bg: "bg-[#3B82F6]/10",
-      icon: "text-[#3B82F6]",
-      border: "border-[#3B82F6]/20",
+      bg: "bg-brand-primary/10",
+      icon: "text-brand-primary",
+      border: "border-brand-primary/20",
     },
     green: {
       bg: "bg-[#22C55E]/10",

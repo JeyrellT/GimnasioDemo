@@ -1,34 +1,53 @@
 "use client";
 
-// =============================================================================
-// BLACKLINE FITNESS — App Shell (client component)
-// Formerly the full (app)/layout.tsx client component.
-// Now called by the server layout.tsx which handles the ImpersonationBanner.
-// =============================================================================
-
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { AuthProvider, useAuth } from "@/components/providers/auth-provider";
+import {
+  AuthProvider,
+  useAuth,
+  type AuthUser,
+} from "@/components/providers/auth-provider";
+import { BrandingProvider } from "@/lib/branding/branding-context";
 import { Topbar } from "@/components/layout/topbar";
-import { TrainerBottomNav, TrainerSidebar } from "@/components/layout/trainer-nav";
+import {
+  TrainerBottomNav,
+  TrainerSidebar,
+} from "@/components/layout/trainer-nav";
 import { ClientBottomNav, ClientSidebar } from "@/components/layout/client-nav";
 import { AdminSuperNav } from "@/app/(app)/admin/_components/admin-super-nav";
 import { AdminBottomNav } from "@/components/layout/admin-bottom-nav";
 import { OfflineBanner } from "@/components/shared/offline-banner";
+import { CoachAssistant } from "@/components/chat/coach-assistant";
+import type { MirrorViewSwitcherState } from "@/app/(app)/admin/_components/mirror-view-switcher";
 
-const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
-
-function AppShell({ children }: { children: ReactNode }) {
+function AppShell({
+  children,
+  mirrorSwitcher,
+}: {
+  children: ReactNode;
+  mirrorSwitcher?: MirrorViewSwitcherState;
+}) {
   const { user, avatarUrl, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
 
-  // Production: redirect to login if not authenticated
-  if (!IS_DEMO && !isLoading && !isAuthenticated) {
-    router.replace("/ingresar");
-    return null;
+  // Redirect unauthenticated users to /ingresar. Must run in useEffect:
+  // calling router.replace() during render is a setState-during-render
+  // which React 19 punishes by halting Suspense streaming on subsequent
+  // navigations, leaving the page permanently blank in the browser.
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.replace("/ingresar");
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  if (!isLoading && !isAuthenticated) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-canvas text-neutral-400">
+        <p className="text-sm">Redirigiendo…</p>
+      </div>
+    );
   }
 
-  // Show loading state while session is being fetched
   if (isLoading || !user) {
     return (
       <div className="flex h-screen items-center justify-center bg-canvas text-neutral-400">
@@ -40,23 +59,27 @@ function AppShell({ children }: { children: ReactNode }) {
   const isAdmin = user.role === "SUPER_ADMIN" || user.role === "ADMIN";
   const isTrainer = user.role === "TRAINER";
 
-  const Sidebar = isAdmin ? AdminSuperNav : isTrainer ? TrainerSidebar : ClientSidebar;
-  const BottomNav = isAdmin ? AdminBottomNav : isTrainer ? TrainerBottomNav : ClientBottomNav;
+  const Sidebar = isAdmin
+    ? AdminSuperNav
+    : isTrainer
+      ? TrainerSidebar
+      : ClientSidebar;
+  const BottomNav = isAdmin
+    ? AdminBottomNav
+    : isTrainer
+      ? TrainerBottomNav
+      : ClientBottomNav;
 
   return (
     <div className="flex min-h-dvh flex-col bg-canvas">
-      {/* Sticky header block: banner + topbar together */}
       <div className="sticky top-0 z-40 bg-canvas">
-        {IS_DEMO && (
-          <div className="bg-brand-primary/10 border-b border-brand-primary/30 px-4 py-1.5 text-center text-xs text-brand-primary">
-            Modo demo &middot; Tus datos se guardan solo en este navegador
-          </div>
-        )}
         <OfflineBanner />
-        <Topbar user={{ name: user.name, avatarUrl }} />
+        <Topbar
+          user={{ name: user.name, avatarUrl }}
+          mirrorSwitcher={mirrorSwitcher}
+        />
       </div>
 
-      {/* Body: sidebar + content */}
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
 
@@ -69,42 +92,27 @@ function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       <BottomNav />
+
+      {/* Coach AI assistant — only for trainers */}
+      {isTrainer && <CoachAssistant />}
     </div>
   );
 }
 
-export function ClientLayout({ children }: { children: ReactNode }) {
-  const [ready, setReady] = useState(!IS_DEMO);
-
-  // Demo mode only: seed IndexedDB before rendering
-  useEffect(() => {
-    if (!IS_DEMO) return;
-    import("@/lib/demo/seed-runner")
-      .then(({ ensureDemoSeeded }) => {
-        ensureDemoSeeded()
-          .then(() => setReady(true))
-          .catch((err: unknown) => {
-            console.error("[demo] seed failed:", err);
-            setReady(true);
-          });
-      })
-      .catch((err: unknown) => {
-        console.error("[demo] seed-runner not found:", err);
-        setReady(true);
-      });
-  }, []);
-
-  if (!ready) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-canvas text-neutral-400">
-        <p className="text-sm">Cargando demo...</p>
-      </div>
-    );
-  }
-
+export function ClientLayout({
+  children,
+  effectiveUser,
+  mirrorSwitcher,
+}: {
+  children: ReactNode;
+  effectiveUser?: AuthUser;
+  mirrorSwitcher?: MirrorViewSwitcherState;
+}) {
   return (
-    <AuthProvider>
-      <AppShell>{children}</AppShell>
+    <AuthProvider effectiveUser={effectiveUser}>
+      <BrandingProvider>
+        <AppShell mirrorSwitcher={mirrorSwitcher}>{children}</AppShell>
+      </BrandingProvider>
     </AuthProvider>
   );
 }

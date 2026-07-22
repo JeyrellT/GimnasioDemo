@@ -25,7 +25,7 @@ function DifficultyDots({ level }: { level: string }) {
             key={n}
             className={
               n <= meta.filled
-                ? "h-2 w-2 rounded-full bg-[#3B82F6]"
+                ? "h-2 w-2 rounded-full bg-brand-primary"
                 : "h-2 w-2 rounded-full bg-[#3F3F46]"
             }
           />
@@ -58,13 +58,14 @@ function MuscleBadge({ muscle }: { muscle: string }) {
 
 interface Props {
   exerciseId: string;
+  basePath?: string;
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-export default function ExerciseDetailClient({ exerciseId }: Props) {
+export default function ExerciseDetailClient({ exerciseId, basePath = "/trainer/ejercicios" }: Props) {
   const { user } = useAuth();
   const [exercise, setExercise] = useState<Exercise | null>(null);
   const [loading, setLoading] = useState(true);
@@ -89,7 +90,7 @@ export default function ExerciseDetailClient({ exerciseId }: Props) {
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-[#3B82F6]" aria-label="Cargando ejercicio" />
+        <Loader2 className="h-6 w-6 animate-spin text-brand-primary" aria-label="Cargando ejercicio" />
       </div>
     );
   }
@@ -105,8 +106,8 @@ export default function ExerciseDetailClient({ exerciseId }: Props) {
           </p>
         </div>
         <Link
-          href="/trainer/ejercicios"
-          className="text-xs text-[#3B82F6] hover:text-[#2563EB] transition-colors"
+          href={basePath}
+          className="text-xs text-brand-primary hover:text-brand-primary-hover transition-colors"
         >
           Volver a la biblioteca
         </Link>
@@ -150,7 +151,7 @@ export default function ExerciseDetailClient({ exerciseId }: Props) {
     <div className="space-y-4">
       {/* Back navigation */}
       <Link
-        href="/trainer/ejercicios"
+        href={basePath}
         className="inline-flex items-center gap-1.5 text-sm text-[#71717A] transition-colors hover:text-[#FAFAFA]"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -166,7 +167,7 @@ export default function ExerciseDetailClient({ exerciseId }: Props) {
               {exercise.nameEs}
             </h1>
             {isOwner && (
-              <span className="inline-flex items-center rounded-full bg-[#3B82F6]/20 px-2.5 py-0.5 text-[11px] font-semibold text-[#3B82F6]">
+              <span className="inline-flex items-center rounded-full bg-brand-primary/20 px-2.5 py-0.5 text-[11px] font-semibold text-brand-primary">
                 Tuyo
               </span>
             )}
@@ -174,10 +175,10 @@ export default function ExerciseDetailClient({ exerciseId }: Props) {
 
           {isOwner && (
             <Link
-              href={`/trainer/ejercicios/${exerciseId}/editar`}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-1.5 text-xs font-medium text-[#FAFAFA] transition-colors hover:border-[#3B82F6]/40 hover:bg-[#3F3F46]"
+              href={`${basePath}/${exerciseId}/editar`}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-1.5 text-xs font-medium text-[#FAFAFA] transition-colors hover:border-brand-primary/40 hover:bg-[#3F3F46]"
             >
-              <Pencil className="h-3.5 w-3.5 text-[#3B82F6]" aria-hidden="true" />
+              <Pencil className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
               Editar
             </Link>
           )}
@@ -187,7 +188,7 @@ export default function ExerciseDetailClient({ exerciseId }: Props) {
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <MuscleBadge muscle={exercise.primaryMuscle} />
 
-          {exercise.secondaryMuscles.map((m) => {
+          {(exercise.secondaryMuscles ?? []).map((m) => {
             const colors = MUSCLE_COLORS[m] ?? { bg: "bg-[#27272A]", text: "text-[#A1A1AA]" };
             return (
               <span
@@ -219,25 +220,49 @@ export default function ExerciseDetailClient({ exerciseId }: Props) {
 
       {/* Two-column body */}
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Left column: body map */}
-        <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+        {/* Left column (desktop): body map. On mobile it stacks second so
+            media is seen first — achieved via order-last on mobile. */}
+        <div className="order-last flex flex-col rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] md:order-first">
           <h2 className="mb-3 text-sm font-semibold text-[#FAFAFA]">Músculos trabajados</h2>
-          <ExerciseBodyMapView
-            primaryMuscle={exercise.primaryMuscle as MuscleGroup}
-            secondaryMuscles={exercise.secondaryMuscles as MuscleGroup[]}
-          />
+          <div className="flex flex-1 items-center justify-center">
+            <ExerciseBodyMapView
+              primaryMuscle={exercise.primaryMuscle as MuscleGroup}
+              secondaryMuscles={exercise.secondaryMuscles as MuscleGroup[]}
+            />
+          </div>
+          {/* Text labels for muscles */}
+          <div className="mt-3 space-y-1.5 border-t border-[#27272A] pt-3">
+            <div className="flex items-center gap-2">
+              <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-brand-primary" />
+              <span className="text-xs text-[#A1A1AA]">
+                <span className="font-medium text-[#FAFAFA]">Primario:</span>{" "}
+                {MUSCLE_LABELS[exercise.primaryMuscle] ?? exercise.primaryMuscle}
+              </span>
+            </div>
+            {(exercise.secondaryMuscles ?? []).length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-[#F59E0B]" />
+                <span className="text-xs text-[#A1A1AA]">
+                  <span className="font-medium text-[#FAFAFA]">Secundario:</span>{" "}
+                  {(exercise.secondaryMuscles as string[]).map((m) => MUSCLE_LABELS[m] ?? m).join(", ")}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Right column: media + instructions */}
-        <div className="flex flex-col gap-4">
+        {/* Right column (desktop): media + instructions. Appears first on mobile. */}
+        <div className="order-first flex flex-col gap-4 md:order-last">
           {/* Media gallery — always visible, with static fallback for photos */}
           <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
             <h2 className="mb-2 text-sm font-semibold text-[#FAFAFA]">Multimedia</h2>
             <ExerciseMediaGallery
-              thumbnailUrl={exercise.thumbnailUrl}
-              gifUrl={exercise.gifUrl}
+              exerciseId={exercise.id}
               mediaUrl={exercise.mediaUrl}
-              slug={exercise.slug}
+              canEdit={user !== null}
+              onMediaChanged={(url) =>
+                setExercise((prev) => (prev ? { ...prev, mediaUrl: url } : prev))
+              }
             />
           </div>
 
@@ -250,7 +275,7 @@ export default function ExerciseDetailClient({ exerciseId }: Props) {
                   type="button"
                   onClick={handleEditInstructions}
                   aria-label="Editar instrucciones"
-                  className="rounded p-0.5 text-[#52525B] transition-colors hover:text-[#A1A1AA] focus:outline-none focus:ring-1 focus:ring-[#3B82F6]"
+                  className="rounded p-0.5 text-[#52525B] transition-colors hover:text-[#A1A1AA] focus:outline-none focus:ring-1 focus:ring-brand-primary"
                 >
                   <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                 </button>
@@ -262,7 +287,7 @@ export default function ExerciseDetailClient({ exerciseId }: Props) {
                 <textarea
                   value={instructionsDraft}
                   onChange={(e) => setInstructionsDraft(e.target.value)}
-                  className="w-full rounded-lg border border-[#3F3F46] bg-[#09090B] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] resize-y min-h-[120px]"
+                  className="w-full rounded-lg border border-[#3F3F46] bg-[#09090B] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary resize-y min-h-[120px]"
                   placeholder="Describe los pasos del ejercicio..."
                   autoFocus
                 />

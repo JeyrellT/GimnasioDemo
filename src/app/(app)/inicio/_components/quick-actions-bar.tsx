@@ -11,7 +11,7 @@ function QuickAction({ href, icon: Icon, label }: QuickActionProps) {
   return (
     <Link
       href={href}
-      className="flex items-center gap-2 rounded-full border border-[#3F3F46] bg-[#18181B] px-4 py-2 text-sm font-medium text-[#A1A1AA] transition-all duration-200 hover:border-[#3B82F6]/40 hover:bg-[#3B82F6]/8 hover:text-[#3B82F6] min-h-[36px]"
+      className="flex items-center gap-2 rounded-full border border-[#3F3F46] bg-[#18181B] px-4 py-2 text-sm font-medium text-[#A1A1AA] transition-all duration-200 hover:border-brand-primary/40 hover:bg-brand-primary/8 hover:text-brand-primary min-h-[36px]"
     >
       <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
       {label}

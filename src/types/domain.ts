@@ -193,6 +193,12 @@ export interface RoutineSnapshotExercise {
   tempo: string | null;
   supersetGroup: number | null;
   notes: string | null;
+  slug?: string | null;
+  thumbnailUrl?: string | null;
+  gifUrl?: string | null;
+  /** External video URL set by the trainer (YouTube / Vimeo / Google Drive). */
+  mediaUrl?: string | null;
+  nameEn?: string | null;
 }
 
 export interface RoutineSnapshotDay {

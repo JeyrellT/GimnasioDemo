@@ -11,7 +11,7 @@
 //   if (isFlagOn("PAYMENT")) { ... }
 // =============================================================================
 
-import { env } from "@/env";
+import { serverEnv as env } from "@/server/env";
 import { ForbiddenError } from "@/lib/errors";
 
 // -----------------------------------------------------------------------------

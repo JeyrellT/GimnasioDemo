@@ -7,14 +7,15 @@
 
 import * as React from "react";
 import { useSearchParams } from "next/navigation";
-import { getFinanceDashboard } from "@/app/actions/finance";
+import { getFinanceDashboardData } from "@/app/actions/finance";
 import { FinanceShell } from "./_components/finance-shell";
 import { FinanceKPIRow } from "./_components/finance-kpi-row";
 import { IncomeBreakdownCard } from "./_components/income-breakdown-card";
 import { ExpenseBreakdownChart } from "./_components/expense-breakdown-chart";
 import { LocationCostTable } from "./_components/location-cost-table";
 import { RecentTransactionsList } from "./_components/recent-transactions-list";
-import type { FinanceSummary } from "@/server/actions/finance.actions";
+import { useAuth } from "@/components/providers/auth-provider";
+import type { FinanceDashboardPayload } from "@/types/finance";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -25,10 +26,10 @@ function currentMonthStr(): string {
 function monthToRange(monthStr: string): { fromDate: Date; toDate: Date } {
   const parts = monthStr.split("-");
   const year = parseInt(parts[0] ?? "2026", 10);
-  const month = parseInt(parts[1] ?? "01", 10);
+  const monthNum = parseInt(parts[1] ?? "01", 10);
   return {
-    fromDate: new Date(year, month - 1, 1),
-    toDate: new Date(year, month, 0, 23, 59, 59, 999),
+    fromDate: new Date(Date.UTC(year, monthNum - 1, 1, 0, 0, 0, 0)),
+    toDate: new Date(Date.UTC(year, monthNum, 1, 0, 0, 0, 0) - 1),
   };
 }
 
@@ -55,10 +56,22 @@ function DashboardSkeleton() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function FinanzasPage() {
+  // useSearchParams() requiere un Suspense boundary en Next 15. Sin esto el
+  // browser hace un client-side bailout completo del route.
+  return (
+    <React.Suspense fallback={<DashboardSkeleton />}>
+      <FinanzasPageInner />
+    </React.Suspense>
+  );
+}
+
+function FinanzasPageInner() {
   const searchParams = useSearchParams();
   const monthStr = searchParams.get("month") ?? currentMonthStr();
+  const { user } = useAuth();
+  const trainerName = user?.name ?? user?.email ?? null;
 
-  const [payload, setPayload] = React.useState<FinanceSummary | null>(null);
+  const [payload, setPayload] = React.useState<FinanceDashboardPayload | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
 
@@ -66,11 +79,11 @@ export default function FinanzasPage() {
     setLoading(true);
     setError(null);
 
-    getFinanceDashboard(monthStr).then((result) => {
+    getFinanceDashboardData(monthStr).then((result) => {
       if (!result.ok) {
         setError("Error al cargar el dashboard");
       } else {
-        setPayload(result.value as unknown as FinanceSummary);
+        setPayload(result.value);
       }
       setLoading(false);
     });
@@ -78,7 +91,7 @@ export default function FinanzasPage() {
 
   if (loading) {
     return (
-      <FinanceShell trainerName="Coach Demo" currentMonth={monthStr}>
+      <FinanceShell trainerName={trainerName} currentMonth={monthStr}>
         <DashboardSkeleton />
       </FinanceShell>
     );
@@ -86,39 +99,31 @@ export default function FinanzasPage() {
 
   if (error || !payload) {
     return (
-      <FinanceShell trainerName="Coach Demo" currentMonth={monthStr}>
-        <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-[#EF4444]/30 bg-[#EF4444]/5 p-8 text-center">
-          <div className="space-y-1">
-            <p className="text-sm font-semibold text-[#EF4444]">Error al cargar el dashboard</p>
-            <p className="text-xs text-[#71717A]">Intentá recargar la página.</p>
+      <FinanceShell trainerName={trainerName} currentMonth={monthStr}>
+        <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-[#3F3F46] bg-[#18181B]/70 p-8 text-center">
+          <div className="max-w-xs space-y-1">
+            <p className="text-sm font-semibold text-[#FAFAFA]">No hay datos todavia</p>
+            <p className="text-xs text-[#71717A]">
+              Cuando registres ingresos, gastos o visitas, el resumen aparecera aqui.
+            </p>
           </div>
         </div>
       </FinanceShell>
     );
   }
 
-  // Cast to access optional dashboard fields — these may be undefined until a
-  // dedicated aggregation action is implemented.
-  const dash = payload as unknown as {
-    kpis?: Parameters<typeof FinanceKPIRow>[0]["kpis"];
-    incomeBreakdown?: Parameters<typeof IncomeBreakdownCard>[0]["breakdown"];
-    expenseBreakdown?: Parameters<typeof ExpenseBreakdownChart>[0]["data"];
-    locationCosts?: Parameters<typeof LocationCostTable>[0]["rows"];
-    recentTransactions?: Parameters<typeof RecentTransactionsList>[0]["transactions"];
-  };
-
   return (
-    <FinanceShell trainerName="Coach Demo" currentMonth={monthStr}>
-      {dash.kpis && <FinanceKPIRow kpis={dash.kpis} />}
+    <FinanceShell trainerName={trainerName} currentMonth={monthStr}>
+      <FinanceKPIRow kpis={payload.kpis} />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {dash.incomeBreakdown && <IncomeBreakdownCard breakdown={dash.incomeBreakdown} />}
-        {dash.expenseBreakdown && <ExpenseBreakdownChart data={dash.expenseBreakdown} />}
+        <IncomeBreakdownCard breakdown={payload.incomeBreakdown} />
+        <ExpenseBreakdownChart data={payload.expenseBreakdown} />
       </div>
 
-      {dash.locationCosts && <LocationCostTable rows={dash.locationCosts} />}
+      <LocationCostTable rows={payload.locationCosts} />
 
-      {dash.recentTransactions && <RecentTransactionsList transactions={dash.recentTransactions} />}
+      <RecentTransactionsList transactions={payload.recentTransactions} />
     </FinanceShell>
   );
 }

@@ -45,7 +45,11 @@ export function Step3Workout({
   aiConsentAlreadyGranted,
   extractionUsed,
 }: Step3WorkoutProps) {
-  const { goNext, goBack, setStepData, payload } = useOnboardingStore();
+  // Bug 10: granular selectors
+  const goNext = useOnboardingStore((s) => s.goNext);
+  const goBack = useOnboardingStore((s) => s.goBack);
+  const setStepData = useOnboardingStore((s) => s.setStepData);
+  const payload = useOnboardingStore((s) => s.payload);
 
   const existing = payload.step3;
   const [photos, setPhotos] = useState<UploadedImage[]>(() =>
@@ -188,7 +192,7 @@ export function Step3Workout({
                   aria-label={`Foto ${slot + 1}`}
                 >
                   {uploading === slot ? (
-                    <Loader2 className="h-5 w-5 animate-spin text-[#3B82F6]" />
+                    <Loader2 className="h-5 w-5 animate-spin text-brand-primary" />
                   ) : photo ? (
                     <CheckCircle2 className="h-5 w-5 text-[#22C55E]" />
                   ) : (
@@ -251,9 +255,9 @@ export function Step3Workout({
 
         {/* Summary */}
         {summary && (
-          <div className="rounded-xl border border-[#3B82F6]/30 bg-[rgba(255,106,26,0.05)] p-4 space-y-3">
+          <div className="rounded-xl border border-brand-primary/30 bg-[rgba(255,106,26,0.05)] p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#3B82F6]">
+              <p className="text-xs font-semibold uppercase tracking-wide text-brand-primary">
                 Resultado IA
               </p>
               <button
@@ -290,7 +294,7 @@ export function Step3Workout({
                     max={7}
                     value={manualDays}
                     onChange={(e) => setManualDays(Number(e.target.value))}
-                    className="w-full accent-[#3B82F6]"
+                    className="w-full accent-brand-primary"
                   />
                 </div>
               </div>

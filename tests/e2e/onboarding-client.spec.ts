@@ -23,7 +23,7 @@ test.describe('Client Onboarding Flow', () => {
   })
 
   test('sign-up con email válido progresa', async ({ page }) => {
-    const testEmail = `test-${Date.now()}@forja.app`
+    const testEmail = `test-${Date.now()}@blacklinefitness.app`
     
     // Ir a signup
     await page.goto('/auth/signup')

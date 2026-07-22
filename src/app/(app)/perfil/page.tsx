@@ -2,10 +2,23 @@
 
 import { useRef, useState, useEffect, lazy, Suspense } from "react";
 import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
-import { LogOut, ArrowLeftRight, Camera, Trash2, Sparkles, Eye, EyeOff, ExternalLink } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import {
+  LogOut,
+  ArrowLeftRight,
+  Trash2,
+  Sparkles,
+  Eye,
+  EyeOff,
+  ExternalLink,
+  Loader2,
+  X,
+} from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { deleteAvatar, uploadAvatar } from "@/app/actions/auth";
 import {
   getGeminiKey,
   setGeminiKey,
@@ -13,6 +26,10 @@ import {
 } from "@/lib/demo/settings-store";
 
 const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+const AVATAR_SOURCE_MAX_BYTES = 10 * 1024 * 1024;
+const AVATAR_UPLOAD_MAX_BYTES = 1024 * 1024;
+const AVATAR_TARGET_PX = 512;
+const AVATAR_JPEG_QUALITY = 0.86;
 
 const ReferralSection = lazy(
   () => import("@/app/(app)/perfil/_components/referral-section"),
@@ -31,10 +48,61 @@ function getInitials(name: string): string {
   return ((parts[0]?.[0] ?? "") + (parts[parts.length - 1]?.[0] ?? "")).toUpperCase();
 }
 
+async function resizeAvatar(file: File): Promise<File> {
+  if (file.type === "image/gif" && file.size <= AVATAR_UPLOAD_MAX_BYTES) {
+    return file;
+  }
+
+  try {
+    const bitmap = await createImageBitmap(file);
+    const side = Math.min(bitmap.width, bitmap.height);
+    const sourceX = Math.round((bitmap.width - side) / 2);
+    const sourceY = Math.round((bitmap.height - side) / 2);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = AVATAR_TARGET_PX;
+    canvas.height = AVATAR_TARGET_PX;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      bitmap.close();
+      return file;
+    }
+
+    ctx.fillStyle = "#18181B";
+    ctx.fillRect(0, 0, AVATAR_TARGET_PX, AVATAR_TARGET_PX);
+    ctx.drawImage(
+      bitmap,
+      sourceX,
+      sourceY,
+      side,
+      side,
+      0,
+      0,
+      AVATAR_TARGET_PX,
+      AVATAR_TARGET_PX,
+    );
+    bitmap.close();
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", AVATAR_JPEG_QUALITY),
+    );
+
+    if (!blob) return file;
+    return new File([blob], "avatar.jpg", { type: "image/jpeg" });
+  } catch {
+    return file;
+  }
+}
+
 export default function PerfilPage() {
   const { user, avatarUrl } = useAuth();
+  const { update: updateSession } = useSession();
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // ── Avatar upload state ──────────────────────────────────────────────────
+  const [uploading, setUploading] = useState(false);
+  const [zoomOpen, setZoomOpen] = useState(false);
 
   // ── Gemini key state (demo only — prod uses server-side env) ─────────────
   const [apiKey, setApiKeyState] = useState("");
@@ -66,6 +134,75 @@ export default function PerfilPage() {
     }
   }
 
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    // Reset the input so picking the same file twice still triggers onChange.
+    e.target.value = "";
+    if (!file) return;
+
+    // Client-side guards mirror server-side validation in uploadAvatar.
+    if (!file.type.startsWith("image/")) {
+      toast.error("Solo se admiten archivos de imagen.");
+      return;
+    }
+    if (file.size > AVATAR_SOURCE_MAX_BYTES) {
+      toast.error("La imagen pesa más de 10 MB. Reducila e intentá de nuevo.");
+      return;
+    }
+    if (IS_DEMO) {
+      // No backend in demo mode — surface a clear message instead of failing.
+      toast.message("Modo demo: la subida de foto no está activa.");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const resizedFile = await resizeAvatar(file);
+      if (resizedFile.size > AVATAR_UPLOAD_MAX_BYTES) {
+        toast.error("No pudimos reducir la imagen lo suficiente. Probá con otra foto.");
+        return;
+      }
+
+      const fd = new FormData();
+      fd.append("file", resizedFile);
+      const result = await uploadAvatar(fd);
+      if (!result.ok) {
+        toast.error(result.error.message ?? "No se pudo subir la foto.");
+        return;
+      }
+      // Refresh the NextAuth session so session.user.avatarUrl picks up the
+      // new value from DB. Then refresh the route so any server components
+      // re-render with the new avatar.
+      await updateSession();
+      router.refresh();
+      toast.success("Foto actualizada.");
+    } catch {
+      toast.error("Error inesperado al subir la foto.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleDeleteAvatar() {
+    if (!avatarUrl || uploading || IS_DEMO) return;
+
+    setUploading(true);
+    try {
+      const result = await deleteAvatar();
+      if (!result.ok) {
+        toast.error(result.error.message ?? "No se pudo eliminar la foto.");
+        return;
+      }
+      await updateSession();
+      router.refresh();
+      toast.success("Foto eliminada.");
+    } catch {
+      toast.error("Error inesperado al eliminar la foto.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   if (!user) return null;
 
   return (
@@ -74,53 +211,93 @@ export default function PerfilPage() {
 
       {/* Avatar section */}
       <div className="flex items-center gap-5">
-        <div className="relative group">
-          <div className="h-20 w-20 rounded-full bg-gradient-to-br from-brand-primary to-[#1D4ED8] p-[2px]">
-            <Avatar className="h-full w-full">
-              {avatarUrl && (
-                <AvatarImage src={avatarUrl} alt={user.name} />
-              )}
-              <AvatarFallback className="bg-neutral-900 text-brand-primary text-xl font-bold">
-                {getInitials(user.name)}
-              </AvatarFallback>
-            </Avatar>
-          </div>
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
-            aria-label="Cambiar foto"
-          >
-            <Camera className="h-5 w-5 text-white" />
-          </button>
-        </div>
+        {/* Avatar — click to zoom (only when there's a photo). No upload trigger here. */}
+        <button
+          type="button"
+          onClick={() => avatarUrl && setZoomOpen(true)}
+          disabled={!avatarUrl || uploading}
+          aria-label={avatarUrl ? "Ver foto en grande" : "Sin foto de perfil"}
+          className="relative h-20 w-20 rounded-full bg-gradient-to-br from-brand-primary to-brand-primary-hover p-[2px] disabled:cursor-default focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950"
+        >
+          <Avatar className="h-full w-full">
+            {avatarUrl && <AvatarImage src={avatarUrl} alt={user.name} />}
+            <AvatarFallback className="bg-neutral-900 text-brand-primary text-xl font-bold">
+              {getInitials(user.name)}
+            </AvatarFallback>
+          </Avatar>
+          {uploading && (
+            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/60">
+              <Loader2 className="h-5 w-5 text-white animate-spin" aria-hidden="true" />
+            </div>
+          )}
+        </button>
 
-        <div className="space-y-2">
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            className="text-sm font-medium text-brand-primary hover:underline"
-          >
-            {avatarUrl ? "Cambiar foto" : "Subir foto"}
-          </button>
-          {avatarUrl && (
+        {!IS_DEMO && (
+          <div className="space-y-2">
             <button
               type="button"
-              className="flex items-center gap-1 text-xs text-neutral-500 hover:text-danger transition-colors"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-primary hover:underline disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
             >
-              <Trash2 className="h-3 w-3" />
-              Eliminar
+              {uploading && (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              )}
+              {uploading
+                ? "Subiendo..."
+                : avatarUrl
+                  ? "Cambiar foto"
+                  : "Subir foto"}
             </button>
-          )}
-        </div>
+            {avatarUrl && !uploading && (
+              <button
+                type="button"
+                onClick={handleDeleteAvatar}
+                className="flex items-center gap-1 text-xs text-neutral-500 hover:text-danger transition-colors"
+              >
+                <Trash2 className="h-3 w-3" />
+                Eliminar
+              </button>
+            )}
+          </div>
+        )}
 
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-        />
+        {!IS_DEMO && (
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+            onChange={handleAvatarChange}
+          />
+        )}
       </div>
+
+      {/* Zoom modal — opens on avatar click when a photo exists */}
+      <DialogPrimitive.Root open={zoomOpen} onOpenChange={setZoomOpen}>
+        <DialogPrimitive.Portal>
+          <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+          <DialogPrimitive.Content
+            aria-describedby={undefined}
+            className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+          >
+            <DialogPrimitive.Title className="sr-only">Foto de perfil</DialogPrimitive.Title>
+            {avatarUrl && (
+              <img
+                src={avatarUrl}
+                alt={`Foto de ${user.name}`}
+                className="max-h-[85vh] max-w-[90vw] rounded-2xl border-2 border-brand-primary/40 object-contain shadow-2xl"
+              />
+            )}
+            <DialogPrimitive.Close
+              aria-label="Cerrar"
+              className="absolute right-2 top-2 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+            >
+              <X className="h-5 w-5" />
+            </DialogPrimitive.Close>
+          </DialogPrimitive.Content>
+        </DialogPrimitive.Portal>
+      </DialogPrimitive.Root>
 
       {/* Info card */}
       <div className="rounded-xl border border-neutral-700 bg-neutral-900 divide-y divide-neutral-700">
@@ -144,8 +321,8 @@ export default function PerfilPage() {
       {IS_DEMO && (
         <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-4 space-y-3">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#3B82F6]/15">
-              <Sparkles className="h-4 w-4 text-[#3B82F6]" aria-hidden="true" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-brand-primary/15">
+              <Sparkles className="h-4 w-4 text-brand-primary" aria-hidden="true" />
             </div>
             <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-400">
               API Key de Gemini
@@ -160,7 +337,7 @@ export default function PerfilPage() {
               value={apiKey}
               onChange={(e) => setApiKeyState(e.target.value)}
               placeholder="AIzaSy..."
-              className="w-full min-h-[44px] rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 pr-10 font-mono text-sm text-neutral-50 placeholder:text-neutral-600 focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6]"
+              className="w-full min-h-[44px] rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 pr-10 font-mono text-sm text-neutral-50 placeholder:text-neutral-600 focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
               aria-label="API Key de Gemini"
             />
             <button
@@ -180,7 +357,7 @@ export default function PerfilPage() {
             href="https://aistudio.google.com/app/apikey"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-[#3B82F6] hover:underline"
+            className="inline-flex items-center gap-1 text-xs text-brand-primary hover:underline"
           >
             Obtene tu clave gratuita en Google AI Studio
             <ExternalLink className="h-3 w-3" aria-hidden="true" />

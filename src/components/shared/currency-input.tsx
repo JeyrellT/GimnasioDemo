@@ -101,7 +101,7 @@ export function CurrencyInput({
           className="block text-xs font-medium uppercase tracking-wide text-[#A1A1AA]"
         >
           {label}
-          {required && <span className="ml-0.5 text-[#3B82F6]">*</span>}
+          {required && <span className="ml-0.5 text-brand-primary">*</span>}
         </label>
       )}
       <div
@@ -109,7 +109,7 @@ export function CurrencyInput({
           "flex h-11 w-full items-center rounded-md border bg-[#27272A] transition-colors",
           error
             ? "border-[#EF4444] focus-within:ring-[#EF4444]"
-            : "border-[#3F3F46] focus-within:border-[#3B82F6]",
+            : "border-[#3F3F46] focus-within:border-brand-primary",
           "focus-within:ring-2 focus-within:ring-offset-1 focus-within:ring-offset-[#09090B]",
           disabled && "opacity-50 cursor-not-allowed",
         )}

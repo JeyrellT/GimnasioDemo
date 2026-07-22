@@ -8,6 +8,10 @@ import { SkipForward, ArrowRight } from "lucide-react";
 import { saveTrainerBillingData } from "@/app/actions/billing";
 import { toast } from "sonner";
 
+// Bug 3: stricter regex — física: 1-9999-9999, jurídica: 3-999-999999
+const CEDULA_FISICA_RE = /^\d{1,2}-\d{4}-\d{4}$/;
+const CEDULA_JURIDICA_RE = /^\d{1}-\d{3}-\d{6}$/;
+
 const schema = z.object({
   cedulaType: z.enum(["FISICA", "JURIDICA"], {
     required_error: "Seleccioná el tipo de cédula",
@@ -15,9 +19,11 @@ const schema = z.object({
   cedulaNumber: z
     .string()
     .trim()
-    .min(9, "Mínimo 9 dígitos")
-    .max(12, "Máximo 12 dígitos")
-    .regex(/^\d[-\d]*$/, "Solo números y guiones"),
+    .min(1, "Requerido")
+    .refine(
+      (val) => CEDULA_FISICA_RE.test(val) || CEDULA_JURIDICA_RE.test(val),
+      "Formato inválido. Física: 1-1234-5678 · Jurídica: 3-123-123456",
+    ),
   haciendaId: z
     .string()
     .trim()
@@ -68,11 +74,11 @@ export default function EntrenadorFacturacionPage() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-        {/* Cedula type */}
-        <div className="space-y-1.5">
-          <p className="block text-sm font-medium text-[#FAFAFA]">
+        {/* Cedula type — Bug 2: fieldset + legend for accessible radio group */}
+        <fieldset className="space-y-1.5 border-0 m-0 p-0">
+          <legend className="block text-sm font-medium text-[#FAFAFA] mb-1.5">
             Tipo de cédula
-          </p>
+          </legend>
           <div className="flex gap-3">
             {[
               { value: "FISICA", label: "Física" },
@@ -80,7 +86,7 @@ export default function EntrenadorFacturacionPage() {
             ].map(({ value, label }) => (
               <label
                 key={value}
-                className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#3F3F46] px-4 py-2.5 has-[:checked]:border-[#3B82F6] has-[:checked]:bg-[#3B82F6]/5 transition-colors"
+                className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#3F3F46] px-4 py-2.5 has-[:checked]:border-brand-primary has-[:checked]:bg-brand-primary/5 transition-colors"
               >
                 <input
                   type="radio"
@@ -94,7 +100,7 @@ export default function EntrenadorFacturacionPage() {
               </label>
             ))}
           </div>
-        </div>
+        </fieldset>
 
         {/* Cedula number */}
         <div className="space-y-1.5">
@@ -109,7 +115,7 @@ export default function EntrenadorFacturacionPage() {
             type="text"
             placeholder="1-1234-5678"
             {...register("cedulaNumber")}
-            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6]"
+            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary"
           />
           {errors.cedulaNumber && (
             <p role="alert" className="text-xs text-[#EF4444]">
@@ -132,7 +138,7 @@ export default function EntrenadorFacturacionPage() {
             type="text"
             placeholder="Ej: 50604013000010012345678400001"
             {...register("haciendaId")}
-            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6]"
+            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary"
           />
         </div>
 
@@ -149,7 +155,7 @@ export default function EntrenadorFacturacionPage() {
             rows={2}
             placeholder="Provincia, cantón, distrito, detalles..."
             {...register("address")}
-            className="w-full resize-none rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6]"
+            className="w-full resize-none rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary"
           />
           {errors.address && (
             <p role="alert" className="text-xs text-[#EF4444]">
@@ -162,7 +168,7 @@ export default function EntrenadorFacturacionPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#3B82F6] py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-[#2563EB] disabled:opacity-60 transition-colors"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-primary py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-brand-primary-hover disabled:opacity-60 transition-colors"
           >
             {isSubmitting ? "Guardando..." : "Continuar"}
             {!isSubmitting && (

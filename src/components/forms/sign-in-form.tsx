@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -36,21 +37,24 @@ type MagicValues = z.infer<typeof magicLinkSchema>;
 interface SignInFormProps {
   callbackUrl?: string;
   onSuccess?: () => void;
+  /** Optional email to pre-fill (e.g. from the super-admin quick-access link).
+   *  Convenience only — the password is always required, never bypassed. */
+  defaultEmail?: string;
 }
 
-export function SignInForm({ callbackUrl = "/inicio", onSuccess }: SignInFormProps) {
+export function SignInForm({ callbackUrl = "/inicio", onSuccess, defaultEmail = "" }: SignInFormProps) {
   const router = useRouter();
   const [mode, setMode] = useState<"password" | "magic">("password");
   const [showPassword, setShowPassword] = useState(false);
 
   const passwordForm = useForm<PasswordValues>({
     resolver: zodResolver(passwordSchema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { email: defaultEmail, password: "" },
   });
 
   const magicForm = useForm<MagicValues>({
     resolver: zodResolver(magicLinkSchema),
-    defaultValues: { email: "" },
+    defaultValues: { email: defaultEmail },
   });
 
   const onPasswordSubmit = async (values: PasswordValues) => {
@@ -102,7 +106,7 @@ export function SignInForm({ callbackUrl = "/inicio", onSuccess }: SignInFormPro
                       placeholder="vos@ejemplo.com"
                       autoComplete="email"
                       inputMode="email"
-                      autoFocus
+                      autoFocus={!defaultEmail}
                       {...field}
                     />
                   </FormControl>
@@ -123,6 +127,7 @@ export function SignInForm({ callbackUrl = "/inicio", onSuccess }: SignInFormPro
                         placeholder="••••••••"
                         autoComplete="current-password"
                         className="pr-10"
+                        autoFocus={Boolean(defaultEmail)}
                         {...field}
                       />
                       <button
@@ -143,6 +148,14 @@ export function SignInForm({ callbackUrl = "/inicio", onSuccess }: SignInFormPro
                 </FormItem>
               )}
             />
+            <div className="flex justify-end -mt-1">
+              <Link
+                href="/recuperar"
+                className="text-xs text-[#A1A1AA] hover:text-[#FAFAFA] underline-offset-4 hover:underline transition-colors"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
             <Button
               type="submit"
               className="w-full"

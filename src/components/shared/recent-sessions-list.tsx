@@ -85,7 +85,7 @@ export function RecentSessionsList({
           key={session.id}
           href={`/trainer/clientes/${clientId}/sesiones/${session.id}`}
           role="listitem"
-          className="flex items-center gap-4 rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 transition-colors hover:bg-[#27272A] focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2"
+          className="flex items-center gap-4 rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 transition-colors hover:bg-[#27272A] focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-2"
           aria-label={`Sesión del ${formatSessionDate(session.date)}, ${formatDuration(session.durationSec)}, ${session.exerciseCount} ejercicio${session.exerciseCount !== 1 ? "s" : ""}${session.prDetected ? ", nuevo PR detectado" : ""}`}
         >
           {/* Fecha — "lun 5 may" */}
@@ -115,8 +115,8 @@ export function RecentSessionsList({
               className="flex shrink-0 items-center gap-1 rounded-full bg-[rgba(245,197,66,0.12)] px-2.5 py-1"
               aria-label="Nuevo PR detectado"
             >
-              <Trophy className="h-3 w-3 text-[#60A5FA]" aria-hidden="true" />
-              <span className="text-xs font-semibold text-[#60A5FA]">PR</span>
+              <Trophy className="h-3 w-3 text-brand-accent" aria-hidden="true" />
+              <span className="text-xs font-semibold text-brand-accent">PR</span>
             </div>
           )}
         </Link>
@@ -125,7 +125,7 @@ export function RecentSessionsList({
       {/* Ver todas */}
       <Link
         href={`/trainer/clientes/${clientId}/sesiones`}
-        className="flex items-center justify-center rounded-xl border border-[#3F3F46] py-3 text-sm font-medium text-[#71717A] transition-colors hover:bg-[#27272A] hover:text-[#FAFAFA] focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2"
+        className="flex items-center justify-center rounded-xl border border-[#3F3F46] py-3 text-sm font-medium text-[#71717A] transition-colors hover:bg-[#27272A] hover:text-[#FAFAFA] focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-2"
         aria-label="Ver todas las sesiones"
       >
         Ver todas las sesiones

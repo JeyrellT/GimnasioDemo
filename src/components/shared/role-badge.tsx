@@ -12,7 +12,7 @@ const roleConfig: Record<
 > = {
   TRAINER: {
     label: "Entrenador",
-    className: "bg-[#1E2A38] text-[#60A5FA] border border-[#60A5FA]/20",
+    className: "bg-[#1E2A38] text-brand-accent border border-brand-accent/20",
   },
   CLIENT: {
     label: "Cliente",
@@ -24,7 +24,7 @@ const roleConfig: Record<
   },
   SUPER_ADMIN: {
     label: "Super Admin",
-    className: "bg-[#3B82F6]/10 text-[#3B82F6] border border-[#3B82F6]/30",
+    className: "bg-brand-primary/10 text-brand-primary border border-brand-primary/30",
   },
 };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -14,6 +14,7 @@ import {
   Loader2,
   Trash2,
   Users,
+  ImagePlus,
 } from "lucide-react";
 import { listMyRoutines, deleteRoutine } from "@/app/actions/routines";
 import { PageHeader } from "@/components/shared/page-header";
@@ -46,11 +47,11 @@ const GOAL_CONFIG: Record<GoalKey, GoalConfig> = {
   HYPERTROPHY: {
     label: "Hipertrofia",
     icon: Flame,
-    borderColor: "border-l-[#3B82F6]",
-    iconBg: "bg-[#3B82F6]/10",
-    iconColor: "text-[#3B82F6]",
-    gradientFrom: "from-[#3B82F6]/8",
-    labelColor: "text-[#3B82F6]",
+    borderColor: "border-l-brand-primary",
+    iconBg: "bg-brand-primary/10",
+    iconColor: "text-brand-primary",
+    gradientFrom: "from-brand-primary/8",
+    labelColor: "text-brand-primary",
   },
   STRENGTH: {
     label: "Fuerza",
@@ -73,11 +74,11 @@ const GOAL_CONFIG: Record<GoalKey, GoalConfig> = {
   ENDURANCE: {
     label: "Resistencia",
     icon: Wind,
-    borderColor: "border-l-[#3B82F6]",
-    iconBg: "bg-[#3B82F6]/10",
-    iconColor: "text-[#3B82F6]",
-    gradientFrom: "from-[#3B82F6]/8",
-    labelColor: "text-[#3B82F6]",
+    borderColor: "border-l-brand-primary",
+    iconBg: "bg-brand-primary/10",
+    iconColor: "text-brand-primary",
+    gradientFrom: "from-brand-primary/8",
+    labelColor: "text-brand-primary",
   },
   GENERAL: {
     label: "General",
@@ -112,6 +113,28 @@ const FILTER_TABS: { value: FilterValue; label: string }[] = [
 // ---------------------------------------------------------------------------
 
 export default function RutinasPage() {
+  // useSearchParams() requiere un Suspense boundary en Next 15.
+  return (
+    <Suspense fallback={<RutinasSkeleton />}>
+      <RutinasPageInner />
+    </Suspense>
+  );
+}
+
+function RutinasSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      <div className="h-12 w-48 rounded-xl bg-[#18181B]" />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {["a", "b", "c", "d", "e", "f"].map((slot) => (
+          <div key={`rutinas-skel-${slot}`} className="h-32 rounded-xl bg-[#18181B]" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RutinasPageInner() {
   const searchParams = useSearchParams();
   const filterParam = searchParams.get("filter");
   const activeFilter: FilterValue =
@@ -162,13 +185,22 @@ export default function RutinasPage() {
         title="Mis rutinas"
         description="Plantillas de entrenamiento que podés asignar a tus clientes."
         actions={
-          <Link
-            href="/trainer/rutinas/nueva"
-            className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2 text-sm font-semibold text-white min-h-[44px] hover:bg-[#2563EB] transition-colors shadow-[0_0_16px_rgba(255,106,26,0.25)]"
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            Nueva rutina
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/trainer/rutinas/importar"
+              className="flex items-center gap-2 rounded-lg border border-[#3F3F46] bg-[#27272A] px-4 py-2 text-sm font-medium text-[#A1A1AA] min-h-[44px] hover:text-[#FAFAFA] hover:border-brand-primary/40 hover:bg-brand-primary/5 transition-colors"
+            >
+              <ImagePlus className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Importar</span>
+            </Link>
+            <Link
+              href="/trainer/rutinas/nueva"
+              className="flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white min-h-[44px] hover:bg-brand-primary-hover transition-colors shadow-[0_0_16px_rgba(255,106,26,0.25)]"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Nueva rutina
+            </Link>
+          </div>
         }
       />
 
@@ -200,7 +232,7 @@ export default function RutinasPage() {
               className={[
                 "rounded-lg px-4 py-1.5 text-sm font-medium transition-all",
                 isActive
-                  ? "bg-[#3B82F6] text-white shadow-sm"
+                  ? "bg-brand-primary text-white shadow-sm"
                   : "text-[#71717A] hover:text-[#FAFAFA] hover:bg-[#27272A]",
               ].join(" ")}
             >
@@ -213,7 +245,7 @@ export default function RutinasPage() {
       {/* Loading state */}
       {loading ? (
         <div className="flex justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-[#3B82F6]" aria-label="Cargando rutinas" />
+          <Loader2 className="h-6 w-6 animate-spin text-brand-primary" aria-label="Cargando rutinas" />
         </div>
       ) : filtered.length === 0 ? (
         /* Empty state */
@@ -223,7 +255,7 @@ export default function RutinasPage() {
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 flex items-center justify-center"
           >
-            <div className="h-48 w-48 rounded-full bg-[#3B82F6]/5 blur-3xl" />
+            <div className="h-48 w-48 rounded-full bg-brand-primary/5 blur-3xl" />
           </div>
 
           <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl border border-[#3F3F46] bg-[#27272A] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
@@ -246,13 +278,22 @@ export default function RutinasPage() {
           </div>
 
           {activeFilter === "todas" && (
-            <Link
-              href="/trainer/rutinas/nueva"
-              className="relative mt-2 inline-flex items-center gap-2 rounded-lg bg-[#3B82F6] px-5 py-2.5 text-sm font-semibold text-white min-h-[44px] hover:bg-[#2563EB] transition-colors"
-            >
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              Nueva rutina
-            </Link>
+            <div className="relative mt-2 flex flex-col sm:flex-row items-center gap-2">
+              <Link
+                href="/trainer/rutinas/nueva"
+                className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-5 py-2.5 text-sm font-semibold text-white min-h-[44px] hover:bg-brand-primary-hover transition-colors"
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                Nueva rutina
+              </Link>
+              <Link
+                href="/trainer/rutinas/importar"
+                className="inline-flex items-center gap-2 rounded-lg border border-[#3F3F46] bg-[#27272A] px-5 py-2.5 text-sm font-medium text-[#A1A1AA] min-h-[44px] hover:text-[#FAFAFA] hover:border-brand-primary/40 transition-colors"
+              >
+                <ImagePlus className="h-4 w-4" aria-hidden="true" />
+                Importar desde imagen
+              </Link>
+            </div>
           )}
         </div>
       ) : (
@@ -282,43 +323,25 @@ export default function RutinasPage() {
                     className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${cfg.gradientFrom} via-transparent to-transparent`}
                   />
 
-                  <div className="flex flex-col gap-3 p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-start gap-3 min-w-0">
-                        <div
-                          className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${cfg.iconBg}`}
-                        >
-                          <GoalIcon
-                            className={`h-4 w-4 ${cfg.iconColor}`}
-                            strokeWidth={1.75}
-                            aria-hidden="true"
-                          />
-                        </div>
-
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-[#FAFAFA] leading-snug">
-                            {r.name}
-                          </p>
-                          <p className={`mt-0.5 text-xs font-medium ${cfg.labelColor}`}>
-                            {cfg.label}
-                          </p>
-                        </div>
+                  <div className="flex flex-col gap-3 p-4 pr-[4.5rem]">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div
+                        className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${cfg.iconBg}`}
+                      >
+                        <GoalIcon
+                          className={`h-4 w-4 ${cfg.iconColor}`}
+                          strokeWidth={1.75}
+                          aria-hidden="true"
+                        />
                       </div>
 
-                      <div className="flex shrink-0 items-center gap-2">
-                        {r.isArchived ? (
-                          <span className="rounded-full border border-[#3F3F46] bg-[#27272A] px-2 py-0.5 text-xs text-[#71717A]">
-                            Archivada
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1.5 text-xs text-[#71717A]">
-                            <span
-                              className="inline-block h-1.5 w-1.5 rounded-full bg-[#22C55E]"
-                              aria-label="Activa"
-                            />
-                            Activa
-                          </span>
-                        )}
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-[#FAFAFA] leading-snug">
+                          {r.name}
+                        </p>
+                        <p className={`mt-0.5 text-xs font-medium ${cfg.labelColor}`}>
+                          {cfg.label}
+                        </p>
                       </div>
                     </div>
 
@@ -331,16 +354,29 @@ export default function RutinasPage() {
                       <p className="text-xs text-[#52525B]">
                         Actualizada {formatDateCR(r.updatedAt, "d MMM yyyy")}
                       </p>
+                      {r.isArchived ? (
+                        <span className="rounded-full border border-[#3F3F46] bg-[#27272A] px-2 py-0.5 text-xs text-[#71717A]">
+                          Archivada
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1.5 text-xs text-[#71717A]">
+                          <span
+                            className="inline-block h-1.5 w-1.5 rounded-full bg-[#22C55E]"
+                            aria-label="Activa"
+                          />
+                          Activa
+                        </span>
+                      )}
                     </div>
                   </div>
                 </Link>
 
                 {/* Action buttons — positioned absolute top-right, outside the Link */}
-                <div className="absolute top-2 right-2 z-10 flex gap-1.5">
+                <div className="absolute top-3 right-3 z-10 flex gap-2">
                   <Link
                     href={`/trainer/rutinas/${r.id}/asignar`}
                     onClick={(e) => e.stopPropagation()}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#27272A]/80 border border-[#3F3F46] text-[#71717A] hover:text-[#3B82F6] hover:border-[#3B82F6]/40 hover:bg-[#3B82F6]/10 transition-colors"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#27272A]/80 border border-[#3F3F46] text-[#71717A] hover:text-brand-primary hover:border-brand-primary/40 hover:bg-brand-primary/10 transition-colors"
                     aria-label={`Asignar ${r.name}`}
                   >
                     <Users className="h-3.5 w-3.5" strokeWidth={1.75} />

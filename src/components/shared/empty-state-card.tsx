@@ -74,9 +74,9 @@ export function EmptyStateCard({
               href={actionHref}
               className={cn(
                 "inline-flex min-h-[44px] items-center justify-center rounded-xl",
-                "bg-[#3B82F6] px-5 py-3 text-sm font-semibold text-[#09090B]",
-                "transition-colors hover:bg-[#2563EB]",
-                "focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2",
+                "bg-brand-primary px-5 py-3 text-sm font-semibold text-[#09090B]",
+                "transition-colors hover:bg-brand-primary-hover",
+                "focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-2",
               )}
             >
               {actionLabel}
@@ -87,9 +87,9 @@ export function EmptyStateCard({
               onClick={onAction}
               className={cn(
                 "inline-flex min-h-[44px] items-center justify-center rounded-xl",
-                "bg-[#3B82F6] px-5 py-3 text-sm font-semibold text-[#09090B]",
-                "transition-colors hover:bg-[#2563EB]",
-                "focus-visible:outline-2 focus-visible:outline-[#3B82F6] focus-visible:outline-offset-2",
+                "bg-brand-primary px-5 py-3 text-sm font-semibold text-[#09090B]",
+                "transition-colors hover:bg-brand-primary-hover",
+                "focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-2",
               )}
             >
               {actionLabel}

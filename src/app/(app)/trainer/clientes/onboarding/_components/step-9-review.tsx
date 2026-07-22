@@ -61,13 +61,13 @@ function ReviewCard({
     <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Icon className="h-4 w-4 text-[#3B82F6]" aria-hidden="true" />
+          <Icon className="h-4 w-4 text-brand-primary" aria-hidden="true" />
           <span className="text-sm font-semibold text-[#FAFAFA]">{title}</span>
         </div>
         <button
           type="button"
           onClick={() => onEdit(step)}
-          className="flex items-center gap-1 text-xs text-[#71717A] hover:text-[#3B82F6] transition-colors"
+          className="flex items-center gap-1 text-xs text-[#71717A] hover:text-brand-primary transition-colors"
           aria-label={`Editar ${title}`}
         >
           <Pencil className="h-3 w-3" />
@@ -91,7 +91,11 @@ function Row({ label, value }: { label: string; value?: string | null }) {
 
 export function Step9Review({ draftId, trainerId }: Step9ReviewProps) {
   const router = useRouter();
-  const { goBack, goToStep, payload, reset } = useOnboardingStore();
+  // Bug 10: granular selectors
+  const goBack = useOnboardingStore((s) => s.goBack);
+  const goToStep = useOnboardingStore((s) => s.goToStep);
+  const payload = useOnboardingStore((s) => s.payload);
+  const reset = useOnboardingStore((s) => s.reset);
   const [creating, setCreating] = useState(false);
 
   const s1 = payload.step1;

@@ -21,6 +21,11 @@ import { requireClient } from "@/server/guards";
 import { tryCatch } from "@/lib/result";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { logInfo } from "@/lib/logger";
+import {
+  deriveVideoThumbnail,
+  firstSupportedVideoUrl,
+  toClientMediaUrl,
+} from "@/lib/media/video-url";
 import type { ActionResult } from "@/types/api";
 
 // =============================================================================
@@ -51,6 +56,9 @@ export interface MyAssignedRoutine {
   endsOn: Date | null;
   status: string;
   trainerNotes: string | null;
+  completedDayIndexes: number[];
+  completedSessionCount: number;
+  lastCompletedAt: Date | null;
 }
 
 export interface MySessionSummary {
@@ -80,8 +88,11 @@ export interface PerformedSetDetail {
   exercise: {
     id: string;
     nameEs: string;
+    nameEn: string | null;
     primaryMuscle: string;
     equipment: string;
+    slug: string;
+    thumbnailUrl: string | null;
   };
 }
 
@@ -105,29 +116,84 @@ export interface MyBodyMetric {
   id: string;
   clientUserId: string;
   recordedAt: Date;
+
+  // Composición
   weightKg: number | null;
   bodyFatPct: number | null;
   muscleMassKg: number | null;
+  visceralFat: number | null;
+  basalMetabolicRate: number | null;
+
+  // Tronco
+  neckCm: number | null;
+  shoulderLeftCm: number | null;
+  shoulderRightCm: number | null;
+  chestCm: number | null;
+  abdomenCm: number | null;
   waistCm: number | null;
   hipCm: number | null;
-  neckCm: number | null;
-  chestCm: number | null;
+  gluteLeftCm: number | null;
+  gluteRightCm: number | null;
+
+  // Brazos
+  /** Legacy single-arm value. Espejado desde bicepLeft/bicepRight. */
   armCm: number | null;
+  bicepLeftCm: number | null;
+  bicepRightCm: number | null;
+  forearmLeftCm: number | null;
+  forearmRightCm: number | null;
+
+  // Piernas
+  /** Legacy single-thigh value. Espejado desde quadLeft/quadRight. */
   thighCm: number | null;
+  quadLeftCm: number | null;
+  quadRightCm: number | null;
+  hamstringLeftCm: number | null;
+  hamstringRightCm: number | null;
+  calfLeftCm: number | null;
+  calfRightCm: number | null;
+
   source: string;
   notes: string | null;
 }
 
 export interface RecordBodyMetricInput {
+  // Composición
   weightKg?: number;
   bodyFatPct?: number;
   muscleMassKg?: number;
+  visceralFat?: number;
+  basalMetabolicRate?: number;
+
+  // Tronco
+  neckCm?: number;
+  shoulderLeftCm?: number;
+  shoulderRightCm?: number;
+  chestCm?: number;
+  abdomenCm?: number;
   waistCm?: number;
   hipCm?: number;
-  neckCm?: number;
-  chestCm?: number;
+  gluteLeftCm?: number;
+  gluteRightCm?: number;
+
+  // Brazos
+  /** Legacy. Si no se envía pero llegan bicepLeft/Right, se espeja. */
   armCm?: number;
+  bicepLeftCm?: number;
+  bicepRightCm?: number;
+  forearmLeftCm?: number;
+  forearmRightCm?: number;
+
+  // Piernas
+  /** Legacy. Si no se envía pero llegan quadLeft/Right, se espeja. */
   thighCm?: number;
+  quadLeftCm?: number;
+  quadRightCm?: number;
+  hamstringLeftCm?: number;
+  hamstringRightCm?: number;
+  calfLeftCm?: number;
+  calfRightCm?: number;
+
   notes?: string;
 }
 
@@ -195,6 +261,111 @@ export async function getMyTrainerInfo(): Promise<ActionResult<MyTrainerInfo | n
 }
 
 // =============================================================================
+// Snapshot media enrichment
+//
+// Routine snapshots freeze the prescription (sets/reps/rest) but media URLs
+// live on the shared Exercise catalog and can be edited by the trainer after
+// the routine was assigned. We overlay the live `mediaUrl` / `gifUrl` /
+// `thumbnailUrl` on each snapshot exercise so the client immediately sees the
+// trainer's latest video without needing the routine to be re-assigned.
+// =============================================================================
+
+/**
+ * Walk every exercise in a snapshot JSON, collect their exerciseIds, fetch
+ * the live media columns from Exercise + the assigning trainer's per-exercise
+ * overrides (TrainerExerciseMedia), and overlay them onto the snapshot.
+ *
+ * Resolution order (highest precedence first):
+ *   1. Per-routine snapshot value (RoutineExercise.mediaUrl, frozen)
+ *   2. Per-trainer override (TrainerExerciseMedia, by `trainerUserId`)
+ *   3. Catalog default (Exercise.mediaUrl)
+ *
+ * `trainerUserId` is the coach who assigned the routine; when null we skip
+ * step 2 (older callers / edge cases).
+ */
+async function overlayExerciseMedia(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  snapshotJson: any,
+  trainerUserId: string | null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<any> {
+  if (!snapshotJson || typeof snapshotJson !== "object") return snapshotJson;
+  const days = Array.isArray(snapshotJson.days) ? snapshotJson.days : [];
+  const ids = new Set<string>();
+  for (const day of days) {
+    const exercises = Array.isArray(day?.exercises) ? day.exercises : [];
+    for (const ex of exercises) {
+      if (typeof ex?.exerciseId === "string") ids.add(ex.exerciseId);
+    }
+  }
+  if (ids.size === 0) return snapshotJson;
+
+  const idList = [...ids];
+  const [rows, overrideRows] = await Promise.all([
+    prisma.exercise.findMany({
+      where: { id: { in: idList }, deletedAt: null },
+      select: { id: true, mediaUrl: true, gifUrl: true, thumbnailUrl: true },
+    }),
+    trainerUserId
+      ? prisma.trainerExerciseMedia.findMany({
+          where: {
+            trainerUserId,
+            exerciseId: { in: idList },
+            deletedAt: null,
+          },
+          select: { exerciseId: true, mediaUrl: true },
+        })
+      : Promise.resolve([] as Array<{ exerciseId: string; mediaUrl: string }>),
+  ]);
+  const live = new Map(rows.map((r) => [r.id, r]));
+  const overrides = new Map(overrideRows.map((r) => [r.exerciseId, r.mediaUrl]));
+
+  return {
+    ...snapshotJson,
+    days: days.map((day: unknown) => {
+      const d = day as { exercises?: unknown[] };
+      const exercises = Array.isArray(d.exercises) ? d.exercises : [];
+      return {
+        ...(day as object),
+        exercises: exercises.map((ex) => {
+          const e = ex as { exerciseId?: string };
+          const liveRow = e.exerciseId ? live.get(e.exerciseId) : null;
+          if (!liveRow) return ex;
+          const snap = ex as {
+            mediaUrl?: string | null;
+            gifUrl?: string | null;
+            thumbnailUrl?: string | null;
+          };
+          const overrideMediaUrl = e.exerciseId ? overrides.get(e.exerciseId) ?? null : null;
+          // Snapshot (per-routine) > trainer override > catalog default, but
+          // only for playable video URLs. Older snapshots stored the exercise
+          // image path in mediaUrl; that image must not hide a newer Drive
+          // video from the live catalog.
+          const effectiveMediaUrl = firstSupportedVideoUrl(
+            snap.mediaUrl,
+            overrideMediaUrl,
+            liveRow.mediaUrl,
+          );
+          // Derive a thumb from the effective video URL so the player and
+          // "next exercise" preview show the Drive/YouTube poster instead of
+          // the frozen seed image.
+          const derivedThumb = deriveVideoThumbnail(effectiveMediaUrl);
+          return {
+            ...(ex as object),
+            // Drive URLs are rewritten to /api/exercise/{id}/video so the
+            // client player never sees a Drive ID; backend proxies on demand.
+            mediaUrl: toClientMediaUrl(effectiveMediaUrl, e.exerciseId ?? null),
+            gifUrl: snap.gifUrl ?? liveRow.gifUrl ?? null,
+            thumbnailUrl:
+              derivedThumb ?? snap.thumbnailUrl ?? liveRow.thumbnailUrl ?? null,
+          };
+        }),
+      };
+    }),
+  };
+}
+
+// =============================================================================
 // 2. getMyAssignedRoutines
 // =============================================================================
 
@@ -220,6 +391,18 @@ export async function getMyAssignedRoutines(): Promise<ActionResult<MyAssignedRo
         endsOn: true,
         status: true,
         trainerNotes: true,
+        routineTemplate: { select: { trainerId: true } },
+        workoutSessions: {
+          where: {
+            status: "COMPLETED",
+            deletedAt: null,
+          },
+          select: {
+            dayIndex: true,
+            completedAt: true,
+          },
+          orderBy: { completedAt: "desc" },
+        },
       },
       orderBy: [
         { status: "asc" },
@@ -227,16 +410,31 @@ export async function getMyAssignedRoutines(): Promise<ActionResult<MyAssignedRo
       ],
     });
 
-    return rows.map((r) => ({
-      id: r.id,
-      routineTemplateId: r.routineTemplateId,
-      snapshotJson: r.snapshotJson,
-      assignedAt: r.assignedAt,
-      startsOn: r.startsOn,
-      endsOn: r.endsOn,
-      status: r.status,
-      trainerNotes: r.trainerNotes,
-    }));
+    const enriched = await Promise.all(
+      rows.map(async (r) => ({
+        id: r.id,
+        routineTemplateId: r.routineTemplateId,
+        snapshotJson: await overlayExerciseMedia(
+          r.snapshotJson,
+          r.routineTemplate?.trainerId ?? null,
+        ),
+        assignedAt: r.assignedAt,
+        startsOn: r.startsOn,
+        endsOn: r.endsOn,
+        status: r.status,
+        trainerNotes: r.trainerNotes,
+        completedDayIndexes: Array.from(
+          new Set(
+            r.workoutSessions
+              .map((session) => session.dayIndex)
+              .filter((dayIndex): dayIndex is number => dayIndex !== null),
+          ),
+        ),
+        completedSessionCount: r.workoutSessions.length,
+        lastCompletedAt: r.workoutSessions[0]?.completedAt ?? null,
+      })),
+    );
+    return enriched;
   });
 }
 
@@ -268,6 +466,18 @@ export async function getMyActiveRoutine(): Promise<ActionResult<MyAssignedRouti
         endsOn: true,
         status: true,
         trainerNotes: true,
+        routineTemplate: { select: { trainerId: true } },
+        workoutSessions: {
+          where: {
+            status: "COMPLETED",
+            deletedAt: null,
+          },
+          select: {
+            dayIndex: true,
+            completedAt: true,
+          },
+          orderBy: { completedAt: "desc" },
+        },
       },
       orderBy: { assignedAt: "desc" },
     });
@@ -277,12 +487,24 @@ export async function getMyActiveRoutine(): Promise<ActionResult<MyAssignedRouti
     return {
       id: row.id,
       routineTemplateId: row.routineTemplateId,
-      snapshotJson: row.snapshotJson,
+      snapshotJson: await overlayExerciseMedia(
+        row.snapshotJson,
+        row.routineTemplate?.trainerId ?? null,
+      ),
       assignedAt: row.assignedAt,
       startsOn: row.startsOn,
       endsOn: row.endsOn,
       status: row.status,
       trainerNotes: row.trainerNotes,
+      completedDayIndexes: Array.from(
+        new Set(
+          row.workoutSessions
+            .map((session) => session.dayIndex)
+            .filter((dayIndex): dayIndex is number => dayIndex !== null),
+        ),
+      ),
+      completedSessionCount: row.workoutSessions.length,
+      lastCompletedAt: row.workoutSessions[0]?.completedAt ?? null,
     };
   });
 }
@@ -363,8 +585,11 @@ export async function getSessionDetail(
               select: {
                 id: true,
                 nameEs: true,
+                nameEn: true,
                 primaryMuscle: true,
                 equipment: true,
+                slug: true,
+                thumbnailUrl: true,
               },
             },
           },
@@ -396,8 +621,11 @@ export async function getSessionDetail(
       exercise: {
         id: s.exercise.id,
         nameEs: s.exercise.nameEs,
+        nameEn: s.exercise.nameEn || null,
         primaryMuscle: s.exercise.primaryMuscle,
         equipment: s.exercise.equipment,
+        slug: s.exercise.slug,
+        thumbnailUrl: s.exercise.thumbnailUrl,
       },
     }));
 
@@ -420,8 +648,136 @@ export async function getSessionDetail(
 }
 
 // =============================================================================
-// 6. getMyMetrics
+// 6. getMyMetrics — shared select + mapper
 // =============================================================================
+
+/**
+ * Columnas seleccionadas para los reads de BodyMetric expuestos al cliente.
+ * Centralizado para que `getMyMetrics` y `recordBodyMetric` devuelvan
+ * exactamente el mismo shape.
+ */
+const BODY_METRIC_SELECT = {
+  id: true,
+  clientUserId: true,
+  recordedAt: true,
+
+  // Composición
+  weightKg: true,
+  bodyFatPct: true,
+  muscleMassKg: true,
+  visceralFat: true,
+  basalMetabolicRate: true,
+
+  // Tronco
+  neckCm: true,
+  shoulderLeftCm: true,
+  shoulderRightCm: true,
+  chestCm: true,
+  abdomenCm: true,
+  waistCm: true,
+  hipCm: true,
+  gluteLeftCm: true,
+  gluteRightCm: true,
+
+  // Brazos
+  armCm: true,
+  bicepLeftCm: true,
+  bicepRightCm: true,
+  forearmLeftCm: true,
+  forearmRightCm: true,
+
+  // Piernas
+  thighCm: true,
+  quadLeftCm: true,
+  quadRightCm: true,
+  hamstringLeftCm: true,
+  hamstringRightCm: true,
+  calfLeftCm: true,
+  calfRightCm: true,
+
+  source: true,
+  notes: true,
+} as const;
+
+type BodyMetricRow = {
+  id: string;
+  clientUserId: string;
+  recordedAt: Date;
+  weightKg: import("@prisma/client/runtime/library").Decimal | null;
+  bodyFatPct: import("@prisma/client/runtime/library").Decimal | null;
+  muscleMassKg: import("@prisma/client/runtime/library").Decimal | null;
+  visceralFat: number | null;
+  basalMetabolicRate: number | null;
+  neckCm: import("@prisma/client/runtime/library").Decimal | null;
+  shoulderLeftCm: import("@prisma/client/runtime/library").Decimal | null;
+  shoulderRightCm: import("@prisma/client/runtime/library").Decimal | null;
+  chestCm: import("@prisma/client/runtime/library").Decimal | null;
+  abdomenCm: import("@prisma/client/runtime/library").Decimal | null;
+  waistCm: import("@prisma/client/runtime/library").Decimal | null;
+  hipCm: import("@prisma/client/runtime/library").Decimal | null;
+  gluteLeftCm: import("@prisma/client/runtime/library").Decimal | null;
+  gluteRightCm: import("@prisma/client/runtime/library").Decimal | null;
+  armCm: import("@prisma/client/runtime/library").Decimal | null;
+  bicepLeftCm: import("@prisma/client/runtime/library").Decimal | null;
+  bicepRightCm: import("@prisma/client/runtime/library").Decimal | null;
+  forearmLeftCm: import("@prisma/client/runtime/library").Decimal | null;
+  forearmRightCm: import("@prisma/client/runtime/library").Decimal | null;
+  thighCm: import("@prisma/client/runtime/library").Decimal | null;
+  quadLeftCm: import("@prisma/client/runtime/library").Decimal | null;
+  quadRightCm: import("@prisma/client/runtime/library").Decimal | null;
+  hamstringLeftCm: import("@prisma/client/runtime/library").Decimal | null;
+  hamstringRightCm: import("@prisma/client/runtime/library").Decimal | null;
+  calfLeftCm: import("@prisma/client/runtime/library").Decimal | null;
+  calfRightCm: import("@prisma/client/runtime/library").Decimal | null;
+  source: string;
+  notes: string | null;
+};
+
+function mapBodyMetricRow(r: BodyMetricRow): MyBodyMetric {
+  const dec = (v: BodyMetricRow["weightKg"]) => (v !== null ? Number(v) : null);
+  return {
+    id: r.id,
+    clientUserId: r.clientUserId,
+    recordedAt: r.recordedAt,
+
+    // Composición
+    weightKg: dec(r.weightKg),
+    bodyFatPct: dec(r.bodyFatPct),
+    muscleMassKg: dec(r.muscleMassKg),
+    visceralFat: r.visceralFat,
+    basalMetabolicRate: r.basalMetabolicRate,
+
+    // Tronco
+    neckCm: dec(r.neckCm),
+    shoulderLeftCm: dec(r.shoulderLeftCm),
+    shoulderRightCm: dec(r.shoulderRightCm),
+    chestCm: dec(r.chestCm),
+    abdomenCm: dec(r.abdomenCm),
+    waistCm: dec(r.waistCm),
+    hipCm: dec(r.hipCm),
+    gluteLeftCm: dec(r.gluteLeftCm),
+    gluteRightCm: dec(r.gluteRightCm),
+
+    // Brazos
+    armCm: dec(r.armCm),
+    bicepLeftCm: dec(r.bicepLeftCm),
+    bicepRightCm: dec(r.bicepRightCm),
+    forearmLeftCm: dec(r.forearmLeftCm),
+    forearmRightCm: dec(r.forearmRightCm),
+
+    // Piernas
+    thighCm: dec(r.thighCm),
+    quadLeftCm: dec(r.quadLeftCm),
+    quadRightCm: dec(r.quadRightCm),
+    hamstringLeftCm: dec(r.hamstringLeftCm),
+    hamstringRightCm: dec(r.hamstringRightCm),
+    calfLeftCm: dec(r.calfLeftCm),
+    calfRightCm: dec(r.calfRightCm),
+
+    source: r.source,
+    notes: r.notes,
+  };
+}
 
 /**
  * Return the last 100 body metric records for the calling client,
@@ -436,42 +792,12 @@ export async function getMyMetrics(): Promise<ActionResult<MyBodyMetric[]>> {
         clientUserId: user.id,
         deletedAt: null,
       },
-      select: {
-        id: true,
-        clientUserId: true,
-        recordedAt: true,
-        weightKg: true,
-        bodyFatPct: true,
-        muscleMassKg: true,
-        waistCm: true,
-        hipCm: true,
-        neckCm: true,
-        chestCm: true,
-        armCm: true,
-        thighCm: true,
-        source: true,
-        notes: true,
-      },
+      select: BODY_METRIC_SELECT,
       orderBy: { recordedAt: "desc" },
       take: 100,
     });
 
-    return rows.map((r) => ({
-      id: r.id,
-      clientUserId: r.clientUserId,
-      recordedAt: r.recordedAt,
-      weightKg: r.weightKg !== null ? Number(r.weightKg) : null,
-      bodyFatPct: r.bodyFatPct !== null ? Number(r.bodyFatPct) : null,
-      muscleMassKg: r.muscleMassKg !== null ? Number(r.muscleMassKg) : null,
-      waistCm: r.waistCm !== null ? Number(r.waistCm) : null,
-      hipCm: r.hipCm !== null ? Number(r.hipCm) : null,
-      neckCm: r.neckCm !== null ? Number(r.neckCm) : null,
-      chestCm: r.chestCm !== null ? Number(r.chestCm) : null,
-      armCm: r.armCm !== null ? Number(r.armCm) : null,
-      thighCm: r.thighCm !== null ? Number(r.thighCm) : null,
-      source: r.source,
-      notes: r.notes,
-    }));
+    return rows.map(mapBodyMetricRow);
   });
 }
 
@@ -490,17 +816,80 @@ export async function recordBodyMetric(
   return tryCatch(async () => {
     const user = await requireClient();
 
+    // ── Rate limits: max 4/month, max 1/week ──────────────────────────
+    const MONTHLY_LIMIT = 4;
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    const countThisMonth = await prisma.bodyMetric.count({
+      where: {
+        clientUserId: user.id,
+        recordedAt: { gte: monthStart, lt: monthEnd },
+      },
+    });
+
+    if (countThisMonth >= MONTHLY_LIMIT) {
+      throw new ValidationError(
+        "MONTHLY_LIMIT_REACHED",
+        `Ya registraste ${MONTHLY_LIMIT} mediciones este mes. Podrás agregar más el próximo mes.`,
+      );
+    }
+
+    // Weekly limit: 1 per calendar week (Mon–Sun)
+    const day = now.getDay(); // 0=Sun … 6=Sat
+    const diffToMonday = day === 0 ? 6 : day - 1;
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMonday);
+    weekStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+
+    const countThisWeek = await prisma.bodyMetric.count({
+      where: {
+        clientUserId: user.id,
+        recordedAt: { gte: weekStart, lt: weekEnd },
+      },
+    });
+
+    if (countThisWeek >= 1) {
+      throw new ValidationError(
+        "WEEKLY_LIMIT_REACHED",
+        "Ya registraste una medición esta semana. Podrás agregar otra la próxima semana.",
+      );
+    }
+
     // Validate: at least one numeric measurement must be present and finite.
     const measurementKeys: (keyof RecordBodyMetricInput)[] = [
+      // Composición
       "weightKg",
       "bodyFatPct",
       "muscleMassKg",
+      "visceralFat",
+      "basalMetabolicRate",
+      // Tronco
+      "neckCm",
+      "shoulderLeftCm",
+      "shoulderRightCm",
+      "chestCm",
+      "abdomenCm",
       "waistCm",
       "hipCm",
-      "neckCm",
-      "chestCm",
+      "gluteLeftCm",
+      "gluteRightCm",
+      // Brazos
       "armCm",
+      "bicepLeftCm",
+      "bicepRightCm",
+      "forearmLeftCm",
+      "forearmRightCm",
+      // Piernas
       "thighCm",
+      "quadLeftCm",
+      "quadRightCm",
+      "hamstringLeftCm",
+      "hamstringRightCm",
+      "calfLeftCm",
+      "calfRightCm",
     ];
 
     const hasMeasurement = measurementKeys.some(
@@ -514,37 +903,74 @@ export async function recordBodyMetric(
       );
     }
 
+    // Mirror rule: si vienen los pares lateralizados, también escribimos la
+    // columna legacy (armCm / thighCm) para que readers viejos sigan
+    // funcionando. Preferencia explícita > L > R.
+    const armMirror = input.armCm ?? input.bicepLeftCm ?? input.bicepRightCm;
+    const thighMirror = input.thighCm ?? input.quadLeftCm ?? input.quadRightCm;
+
     const created = await prisma.bodyMetric.create({
       data: {
         clientUserId: user.id,
         source: "MANUAL",
+
+        // Composición
         ...(input.weightKg !== undefined && { weightKg: input.weightKg }),
         ...(input.bodyFatPct !== undefined && { bodyFatPct: input.bodyFatPct }),
         ...(input.muscleMassKg !== undefined && { muscleMassKg: input.muscleMassKg }),
+        ...(input.visceralFat !== undefined && { visceralFat: input.visceralFat }),
+        ...(input.basalMetabolicRate !== undefined && {
+          basalMetabolicRate: input.basalMetabolicRate,
+        }),
+
+        // Tronco
+        ...(input.neckCm !== undefined && { neckCm: input.neckCm }),
+        ...(input.shoulderLeftCm !== undefined && {
+          shoulderLeftCm: input.shoulderLeftCm,
+        }),
+        ...(input.shoulderRightCm !== undefined && {
+          shoulderRightCm: input.shoulderRightCm,
+        }),
+        ...(input.chestCm !== undefined && { chestCm: input.chestCm }),
+        ...(input.abdomenCm !== undefined && { abdomenCm: input.abdomenCm }),
         ...(input.waistCm !== undefined && { waistCm: input.waistCm }),
         ...(input.hipCm !== undefined && { hipCm: input.hipCm }),
-        ...(input.neckCm !== undefined && { neckCm: input.neckCm }),
-        ...(input.chestCm !== undefined && { chestCm: input.chestCm }),
-        ...(input.armCm !== undefined && { armCm: input.armCm }),
-        ...(input.thighCm !== undefined && { thighCm: input.thighCm }),
+        ...(input.gluteLeftCm !== undefined && { gluteLeftCm: input.gluteLeftCm }),
+        ...(input.gluteRightCm !== undefined && {
+          gluteRightCm: input.gluteRightCm,
+        }),
+
+        // Brazos — bicep L/R + espejo a armCm legacy
+        ...(input.bicepLeftCm !== undefined && { bicepLeftCm: input.bicepLeftCm }),
+        ...(input.bicepRightCm !== undefined && {
+          bicepRightCm: input.bicepRightCm,
+        }),
+        ...(armMirror !== undefined && { armCm: armMirror }),
+        ...(input.forearmLeftCm !== undefined && {
+          forearmLeftCm: input.forearmLeftCm,
+        }),
+        ...(input.forearmRightCm !== undefined && {
+          forearmRightCm: input.forearmRightCm,
+        }),
+
+        // Piernas — quad L/R + espejo a thighCm legacy
+        ...(input.quadLeftCm !== undefined && { quadLeftCm: input.quadLeftCm }),
+        ...(input.quadRightCm !== undefined && {
+          quadRightCm: input.quadRightCm,
+        }),
+        ...(thighMirror !== undefined && { thighCm: thighMirror }),
+        ...(input.hamstringLeftCm !== undefined && {
+          hamstringLeftCm: input.hamstringLeftCm,
+        }),
+        ...(input.hamstringRightCm !== undefined && {
+          hamstringRightCm: input.hamstringRightCm,
+        }),
+        ...(input.calfLeftCm !== undefined && { calfLeftCm: input.calfLeftCm }),
+        ...(input.calfRightCm !== undefined && { calfRightCm: input.calfRightCm }),
+
         ...(input.notes !== undefined && { notes: input.notes }),
       },
-      select: {
-        id: true,
-        clientUserId: true,
-        recordedAt: true,
-        weightKg: true,
-        bodyFatPct: true,
-        muscleMassKg: true,
-        waistCm: true,
-        hipCm: true,
-        neckCm: true,
-        chestCm: true,
-        armCm: true,
-        thighCm: true,
-        source: true,
-        notes: true,
-      },
+      select: BODY_METRIC_SELECT,
     });
 
     logInfo("client-portal.recordBodyMetric", {
@@ -552,21 +978,80 @@ export async function recordBodyMetric(
       metricId: created.id,
     });
 
+    return mapBodyMetricRow(created);
+  });
+}
+
+// =============================================================================
+// 8. getMonthlyMeasurementQuota
+// =============================================================================
+
+export interface MeasurementQuota {
+  used: number;
+  limit: number;
+  remaining: number;
+  canRecord: boolean;
+  /** true when the client already recorded one this week */
+  weeklyUsed: boolean;
+  /** Human-readable reason when canRecord is false */
+  reason: string | null;
+}
+
+/**
+ * Returns how many measurements the client has used this month vs the limit,
+ * plus whether they already used this week's slot.
+ */
+export async function getMonthlyMeasurementQuota(): Promise<
+  ActionResult<MeasurementQuota>
+> {
+  return tryCatch(async () => {
+    const user = await requireClient();
+
+    const MONTHLY_LIMIT = 4;
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    const used = await prisma.bodyMetric.count({
+      where: {
+        clientUserId: user.id,
+        recordedAt: { gte: monthStart, lt: monthEnd },
+      },
+    });
+
+    // Weekly check (Mon–Sun)
+    const day = now.getDay();
+    const diffToMonday = day === 0 ? 6 : day - 1;
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMonday);
+    weekStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+
+    const countThisWeek = await prisma.bodyMetric.count({
+      where: {
+        clientUserId: user.id,
+        recordedAt: { gte: weekStart, lt: weekEnd },
+      },
+    });
+
+    const remaining = Math.max(0, MONTHLY_LIMIT - used);
+    const weeklyUsed = countThisWeek >= 1;
+    const canRecord = remaining > 0 && !weeklyUsed;
+
+    let reason: string | null = null;
+    if (remaining <= 0) {
+      reason = `Alcanzaste el límite de ${MONTHLY_LIMIT} mediciones este mes.`;
+    } else if (weeklyUsed) {
+      reason = "Ya registraste tu medición de esta semana. Volvé la próxima.";
+    }
+
     return {
-      id: created.id,
-      clientUserId: created.clientUserId,
-      recordedAt: created.recordedAt,
-      weightKg: created.weightKg !== null ? Number(created.weightKg) : null,
-      bodyFatPct: created.bodyFatPct !== null ? Number(created.bodyFatPct) : null,
-      muscleMassKg: created.muscleMassKg !== null ? Number(created.muscleMassKg) : null,
-      waistCm: created.waistCm !== null ? Number(created.waistCm) : null,
-      hipCm: created.hipCm !== null ? Number(created.hipCm) : null,
-      neckCm: created.neckCm !== null ? Number(created.neckCm) : null,
-      chestCm: created.chestCm !== null ? Number(created.chestCm) : null,
-      armCm: created.armCm !== null ? Number(created.armCm) : null,
-      thighCm: created.thighCm !== null ? Number(created.thighCm) : null,
-      source: created.source,
-      notes: created.notes,
+      used,
+      limit: MONTHLY_LIMIT,
+      remaining,
+      canRecord,
+      weeklyUsed,
+      reason,
     };
   });
 }

@@ -15,8 +15,10 @@
 //   domain query from accidentally reading soft-deleted records without requiring
 //   callers to remember the filter.
 //
-//   Models WITHOUT deletedAt (NextAuth tables): Account, Session, VerificationToken.
-//   These are skipped by the extension automatically.
+//   Models WITHOUT a deletedAt column are skipped via NO_SOFT_DELETE (see
+//   below). The set must stay in sync with the schema — adding a model that
+//   lacks deletedAt without listing it here will throw "Unknown argument
+//   deletedAt" on any findMany/findFirst/findUnique against that model.
 //
 //   Caveat: `upsert`, `update`, `create`, `delete` are NOT intercepted — callers
 //   remain responsible for correctly setting/clearing deletedAt.
@@ -88,8 +90,25 @@ function createClient(label: string): PrismaClient {
 // Soft-delete extension (Prisma 6 Client Extensions API)
 // -----------------------------------------------------------------------------
 
-// Models WITHOUT deletedAt — skip soft-delete injection for these.
-const NO_SOFT_DELETE = new Set(["Account", "Session", "VerificationToken", "Referral"]);
+// Models WITHOUT a `deletedAt` column — skip soft-delete injection for these.
+// Injecting `deletedAt: null` against a model that lacks the column makes
+// Prisma reject the call with "Unknown argument deletedAt", so this list must
+// stay in sync with the schema.
+const NO_SOFT_DELETE = new Set([
+  // NextAuth tables (managed by @auth/prisma-adapter)
+  "Account",
+  "Session",
+  "VerificationToken",
+  // Domain tables that don't soft-delete
+  "AuditLog",
+  "ClientRestPreference",
+  "CustomGoal",
+  "KnowledgeChunk",
+  "OnboardingDraft",
+  "PaymentEvent",
+  "Referral",
+  "UserAvatar",
+]);
 
 /**
  * Helper: injects `deletedAt: null` into the where clause if applicable.

@@ -111,7 +111,7 @@ function LocationCard({
 
       {/* Cost + stats row */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex items-center gap-1.5 text-[#3B82F6]">
+        <div className="flex items-center gap-1.5 text-brand-primary">
           <Car className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span className="text-xs font-semibold">{costSummary(location)}</span>
         </div>
@@ -188,7 +188,7 @@ export function LocationsList({ locations: initial }: LocationsListProps) {
         <Button
           type="button"
           onClick={openCreate}
-          className="gap-2 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-sm h-9"
+          className="gap-2 bg-brand-primary hover:bg-brand-primary-hover text-white text-sm h-9"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
           Nueva ubicación
@@ -203,7 +203,7 @@ export function LocationsList({ locations: initial }: LocationsListProps) {
           <button
             type="button"
             onClick={openCreate}
-            className="mt-4 text-sm font-semibold text-[#3B82F6] hover:underline underline-offset-2"
+            className="mt-4 text-sm font-semibold text-brand-primary hover:underline underline-offset-2"
           >
             Crear ubicación
           </button>
@@ -258,7 +258,7 @@ export function LocationsList({ locations: initial }: LocationsListProps) {
               variant="outline"
               onClick={() => setDeleteTarget(null)}
               disabled={deleting}
-              className="border-[#3F3F46] text-[#A1A1AA] hover:border-[#3B82F6]"
+              className="border-[#3F3F46] text-[#A1A1AA] hover:border-brand-primary"
             >
               Cancelar
             </Button>

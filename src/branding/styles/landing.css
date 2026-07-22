@@ -1,0 +1,1546 @@
+/* =============================================================================
+ * Blackline Fitness — Landing page styles
+ * Scoped to .branding-landing root. Migrado 1:1 desde Claude Design HTML.
+ * No mezclar con Tailwind globals para no chocar con el gym/app.
+ * ============================================================================= */
+
+.branding-landing {
+  /* ====================  TOKENS  ==================== */
+  --bg: #050505;
+  --bg-2: #0a0a0c;
+  --ink: #f4f4f5;
+  --ink-dim: #8a8a90;
+  --ink-faint: #3a3a40;
+  /* Conectados al sistema de branding global. Si el trainer cambia el preset
+     en ajustes, las CSS vars --brand-* se inyectan en :root y este landing
+     responde automáticamente. Los hex actúan como fallback si el provider
+     no monta (visitante anónimo). */
+  --blue: var(--brand-primary, #3a8bff);
+  --blue-hot: var(--brand-accent, #6aa9ff);
+  --blue-deep: var(--brand-deep, #0a1a3a);
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.18);
+  --grid: 1.25rem;
+  --maxw: 1760px;
+  --display: "Anton", "Bebas Neue", Impact, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+  --body: "Inter", system-ui, sans-serif;
+
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--body);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  /* cursor custom desactivado por pedido del usuario — usar cursor nativo */
+  cursor: auto;
+  position: relative;
+  min-height: 100vh;
+}
+.branding-landing *,
+.branding-landing *::before,
+.branding-landing *::after {
+  box-sizing: border-box;
+}
+.branding-landing a {
+  color: inherit;
+  text-decoration: none;
+}
+.branding-landing button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+.branding-landing img {
+  display: block;
+  max-width: 100%;
+}
+
+/* film grain */
+.branding-landing::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9990;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.6' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* ====================  CURSOR  ==================== */
+.branding-landing .cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--blue);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 9999;
+  mix-blend-mode: screen;
+  transition:
+    transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1),
+    width 0.25s,
+    height 0.25s,
+    background 0.2s;
+  box-shadow:
+    0 0 24px var(--blue),
+    0 0 60px rgba(58, 139, 255, 0.4);
+}
+.branding-landing .cursor-ring {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(244, 244, 245, 0.35);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 9998;
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1),
+    width 0.25s,
+    height 0.25s,
+    border-color 0.25s,
+    background 0.25s;
+}
+.branding-landing .cursor.hover {
+  width: 0;
+  height: 0;
+}
+.branding-landing .cursor-ring.hover {
+  /* Reducido de 72px a 48px y fondo transparente para que el cursor-ring
+     no oscurezca el texto de los titulos de cards (e.g. RUTINAS) cuando
+     hovers sobre ellas. Solo queda el borde azul como acento sutil. */
+  width: 48px;
+  height: 48px;
+  border-color: var(--blue);
+  background: transparent;
+}
+@media (max-width: 780px) {
+  .branding-landing .cursor,
+  .branding-landing .cursor-ring {
+    display: none;
+  }
+}
+
+/* ====================  NAV  ==================== */
+.branding-landing .nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 1.1rem 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 2rem;
+  pointer-events: none;
+}
+.branding-landing .nav > * {
+  pointer-events: auto;
+}
+.branding-landing .nav-meta {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-self: start;
+  padding-top: 0.15rem;
+}
+.branding-landing .nav-meta .row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+.branding-landing .nav-meta .sub {
+  color: var(--ink-dim);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+}
+.branding-landing .nav-meta .sub.blue {
+  color: var(--blue);
+}
+.branding-landing .nav-meta .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--blue);
+  align-self: center;
+  box-shadow: 0 0 10px var(--blue);
+  animation: blkPulse 2.4s ease-in-out infinite;
+}
+@keyframes blkPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.4);
+  }
+}
+.branding-landing .nav-logo {
+  font-family: var(--display);
+  letter-spacing: 0.18em;
+  font-size: 0.95rem;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  justify-self: center;
+}
+.branding-landing .nav-logo img {
+  height: 140px;
+  width: auto;
+  margin: -2.5rem 0;
+  filter: drop-shadow(0 0 26px rgba(58, 139, 255, 0.55));
+}
+@media (max-width: 980px) {
+  .branding-landing .nav-logo img {
+    height: 88px;
+    margin: -1.5rem 0;
+  }
+}
+.branding-landing .nav-actions {
+  justify-self: end;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.branding-landing .nav-link {
+  padding: 0.55rem 0.9rem;
+  color: var(--ink-dim);
+  transition: color 0.25s;
+}
+.branding-landing .nav-link:hover {
+  color: var(--ink);
+}
+.branding-landing .nav-cta {
+  padding: 0.6rem 1.1rem;
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.branding-landing .nav-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--blue);
+  transform: translateY(101%);
+  transition: transform 0.35s cubic-bezier(0.6, 0.05, 0.2, 1);
+  z-index: -1;
+}
+.branding-landing .nav-cta:hover {
+  border-color: var(--blue);
+  color: #fff;
+}
+.branding-landing .nav-cta:hover::before {
+  transform: translateY(0);
+}
+
+/* ====================  LAYOUT  ==================== */
+.branding-landing .wrap {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  position: relative;
+}
+
+/* ====================  ELECTRIC LINE  ==================== */
+.branding-landing .electric {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 1px;
+  pointer-events: none;
+  z-index: 50;
+  overflow: hidden;
+  opacity: 0.9;
+}
+.branding-landing .electric::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -30%;
+  width: 30%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--blue) 30%,
+    #cfe0ff 50%,
+    var(--blue) 70%,
+    transparent
+  );
+  box-shadow:
+    0 0 18px var(--blue),
+    0 0 36px rgba(58, 139, 255, 0.6);
+  animation: blkDash 5.5s cubic-bezier(0.7, 0, 0.3, 1) infinite;
+}
+@keyframes blkDash {
+  0% {
+    left: -30%;
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+.branding-landing .electric-1 {
+  top: 18%;
+}
+.branding-landing .electric-2 {
+  top: 62%;
+}
+.branding-landing .electric-2::before {
+  animation-delay: -2.7s;
+  animation-duration: 7s;
+}
+
+/* ====================  HERO  ==================== */
+.branding-landing .hero {
+  position: relative;
+  min-height: 100vh;
+  padding: 10rem 1.5rem 5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+.branding-landing .hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 80px 80px;
+  mask-image: radial-gradient(
+    ellipse 80% 70% at 50% 60%,
+    #000 30%,
+    transparent 80%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse 80% 70% at 50% 60%,
+    #000 30%,
+    transparent 80%
+  );
+  opacity: 0.55;
+}
+.branding-landing .hero-glow {
+  position: absolute;
+  left: 50%;
+  top: 55%;
+  width: 80vmax;
+  height: 60vmax;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(58, 139, 255, 0.22),
+    rgba(58, 139, 255, 0.07) 25%,
+    transparent 60%
+  );
+  filter: blur(20px);
+  pointer-events: none;
+  will-change: transform;
+}
+.branding-landing .hero-content {
+  position: relative;
+  z-index: 6;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  width: 100%;
+}
+.branding-landing .hero-title {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(4.5rem, 16vw, 17rem);
+  line-height: 0.86;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  margin: 0;
+  will-change: transform;
+}
+.branding-landing .hero-title .line {
+  display: block;
+  overflow: hidden;
+}
+.branding-landing .hero-title .line span {
+  display: inline-block;
+  transform: translateY(110%);
+  animation: blkRise 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+.branding-landing .hero-title .line:nth-child(1) span {
+  animation-delay: 0.15s;
+}
+.branding-landing .hero-title .line:nth-child(2) span {
+  animation-delay: 0.32s;
+}
+.branding-landing .hero-title .line:nth-child(3) span {
+  animation-delay: 0.49s;
+}
+@keyframes blkRise {
+  to {
+    transform: translateY(0);
+  }
+}
+.branding-landing .hero-title .outline {
+  -webkit-text-stroke: 1.5px var(--ink);
+  color: transparent;
+}
+.branding-landing .hero-title .blue {
+  color: var(--blue);
+  position: relative;
+}
+.branding-landing .hero-title .slash {
+  color: var(--blue);
+  display: inline-block;
+  transform: skewX(-12deg) translateY(-0.05em);
+  margin: 0 0.15em;
+  font-size: 0.85em;
+}
+
+.branding-landing .hero-bottom {
+  margin-top: 3rem;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 2rem;
+  align-items: end;
+}
+.branding-landing .hero-lede {
+  max-width: 38ch;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--ink-dim);
+  opacity: 0;
+  animation: blkFadeUp 1s 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+.branding-landing .hero-lede strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+@keyframes blkFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.branding-landing .cta-row {
+  display: flex;
+  gap: 0.75rem;
+  align-self: end;
+  justify-self: end;
+  opacity: 0;
+  animation: blkFadeUp 1s 1.05s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+.branding-landing .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.6rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--ink);
+  position: relative;
+  overflow: hidden;
+  transition: color 0.35s;
+}
+.branding-landing .btn .arrow {
+  display: inline-block;
+  transition: transform 0.35s cubic-bezier(0.6, 0, 0.2, 1);
+}
+.branding-landing .btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--blue);
+  transform: translateX(-101%);
+  transition: transform 0.45s cubic-bezier(0.65, 0.05, 0.2, 1);
+  z-index: -1;
+}
+.branding-landing .btn:hover {
+  color: #fff;
+  border-color: var(--blue);
+}
+.branding-landing .btn:hover::before {
+  transform: translateX(0);
+}
+.branding-landing .btn:hover .arrow {
+  transform: translateX(6px);
+}
+.branding-landing .btn.primary {
+  background: var(--ink);
+  color: #000;
+  border-color: var(--ink);
+}
+.branding-landing .btn.primary:hover {
+  color: #fff;
+  border-color: var(--blue);
+}
+
+/* ====================  MARQUEE  ==================== */
+.branding-landing .marquee {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 1.5rem 0;
+  overflow: hidden;
+  display: flex;
+  white-space: nowrap;
+  background: var(--bg-2);
+}
+.branding-landing .marquee-track {
+  display: flex;
+  gap: 3rem;
+  animation: blkScroll 32s linear infinite;
+  flex-shrink: 0;
+  padding-left: 3rem;
+}
+.branding-landing .marquee-item {
+  font-family: var(--display);
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 3rem;
+}
+.branding-landing .marquee-item .outline {
+  -webkit-text-stroke: 1.5px var(--ink);
+  color: transparent;
+}
+.branding-landing .marquee-item .dot {
+  width: 14px;
+  height: 14px;
+  background: var(--blue);
+  transform: rotate(45deg);
+  box-shadow: 0 0 18px var(--blue);
+}
+@keyframes blkScroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ====================  MANIFESTO  ==================== */
+.branding-landing .manifesto {
+  padding: 1rem 1.5rem 6rem;
+  position: relative;
+}
+.branding-landing .manifesto-inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 14ch 1fr;
+  gap: 5rem;
+}
+.branding-landing .section-label {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--line-strong);
+}
+.branding-landing .section-label .num {
+  color: var(--blue);
+  display: block;
+  font-size: 0.6rem;
+  margin-bottom: 0.3rem;
+}
+.branding-landing .manifesto-body {
+  font-family: var(--display);
+  font-size: clamp(2rem, 5.6vw, 6rem);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  max-width: 22ch;
+}
+.branding-landing .manifesto-body .reveal {
+  display: block;
+  overflow: hidden;
+}
+.branding-landing .manifesto-body .reveal > span {
+  display: inline-block;
+  transform: translateY(110%);
+  transition: transform 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.branding-landing .reveal.in > span {
+  transform: translateY(0);
+}
+.branding-landing .manifesto-body .reveal:nth-child(2) > span {
+  transition-delay: 0.1s;
+}
+.branding-landing .manifesto-body .reveal:nth-child(3) > span {
+  transition-delay: 0.2s;
+}
+.branding-landing .manifesto-body .reveal:nth-child(4) > span {
+  transition-delay: 0.3s;
+}
+.branding-landing .manifesto-body .reveal:nth-child(5) > span {
+  transition-delay: 0.4s;
+}
+.branding-landing .manifesto-body .blue {
+  color: var(--blue);
+}
+.branding-landing .manifesto-body .outline {
+  -webkit-text-stroke: 1.5px var(--ink);
+  color: transparent;
+}
+
+/* manifesto — párrafo filosófico de apoyo */
+.branding-landing .manifesto-aside {
+  margin-top: 2rem;
+  max-width: 56ch;
+  font-family: var(--body);
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: var(--ink-dim);
+  letter-spacing: 0.005em;
+  text-transform: none;
+}
+.branding-landing .manifesto-aside strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+.branding-landing .manifesto-aside .blue {
+  color: var(--blue);
+  font-weight: 500;
+}
+@media (max-width: 980px) {
+  .branding-landing .manifesto-aside {
+    font-size: 0.98rem;
+    margin-top: 1.5rem;
+    line-height: 1.65;
+  }
+}
+
+/* ====================  SERVICES  ==================== */
+.branding-landing .services {
+  position: relative;
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+  padding: 4.5rem 0;
+}
+/* Outer frame: provides the positioning context for the edge overlays */
+.branding-landing .services-carousel-frame {
+  position: relative;
+  margin-top: 2.5rem;
+}
+/* Scrollable wrapper — isolated from page scroll */
+.branding-landing .services-carousel {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  /* pan-x: deja que el browser maneje swipe horizontal en touch (carrusel).
+     Touches verticales hacen bubble al scroll de pagina. pan-y aqui rompia
+     el swipe horizontal en mobile (el browser cancelaba el gesto). */
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  /* Hide native scrollbar */
+  scrollbar-width: none;
+}
+.branding-landing .services-carousel::-webkit-scrollbar {
+  display: none;
+}
+.branding-landing .services-carousel.is-dragging {
+  cursor: grabbing;
+  scroll-behavior: auto; /* disable smooth scroll during drag for 1:1 feel */
+}
+.branding-landing .services-track {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0 6rem;
+  width: max-content;
+}
+.branding-landing .service-card {
+  flex-shrink: 0;
+  width: 30vw;
+  max-width: 520px;
+  min-width: 340px;
+  height: 52vh;
+  max-height: 540px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition:
+    border-color 0.4s,
+    background 0.4s;
+}
+.branding-landing .service-card:hover {
+  border-color: var(--blue);
+  background: #080c14;
+}
+.branding-landing .service-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--blue), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.9s;
+  z-index: 3;
+}
+.branding-landing .service-card:hover::after {
+  transform: translateX(100%);
+}
+
+/* Cards con imagen de fondo (data-with-bg): la imagen se aplica via inline
+   style desde el componente. Aca anyadimos overlay oscuro + tint azul para
+   mantener legible el texto encima. */
+.branding-landing .service-card[data-with-bg] {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.branding-landing .service-card[data-with-bg]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(5, 8, 14, 0.55) 0%,
+      rgba(5, 8, 14, 0.78) 60%,
+      rgba(5, 8, 14, 0.92) 100%
+    ),
+    radial-gradient(
+      ellipse at top right,
+      rgba(58, 139, 255, 0.18),
+      transparent 60%
+    );
+  z-index: 1;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+.branding-landing .service-card[data-with-bg]:hover::before {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(5, 8, 14, 0.45) 0%,
+      rgba(5, 8, 14, 0.72) 60%,
+      rgba(5, 8, 14, 0.9) 100%
+    ),
+    radial-gradient(
+      ellipse at top right,
+      rgba(58, 139, 255, 0.28),
+      transparent 60%
+    );
+}
+.branding-landing .service-card[data-with-bg]:hover {
+  background-color: transparent;
+}
+/* Wrapper interno para que el contenido quede por encima del overlay */
+.branding-landing .service-card-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.branding-landing .service-num {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: var(--blue);
+}
+.branding-landing .service-title {
+  font-family: var(--display);
+  font-size: clamp(2.4rem, 3.6vw, 3.8rem);
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  margin: auto 0 1.5rem;
+}
+.branding-landing .service-desc {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--ink-dim);
+  max-width: 36ch;
+}
+.branding-landing .service-meta {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  display: flex;
+  justify-content: space-between;
+}
+.branding-landing .service-meta .blue {
+  color: var(--blue);
+}
+.branding-landing .services-head {
+  position: relative;
+  padding: 0 6rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  z-index: 3;
+  gap: 2rem;
+}
+.branding-landing .services-head h2 {
+  font-family: var(--display);
+  font-size: clamp(2rem, 4.5vw, 4.5rem);
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  line-height: 0.9;
+  color: var(--ink);
+  margin: 0;
+}
+.branding-landing .services-head h2 .num {
+  color: var(--blue);
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
+  display: block;
+  margin-bottom: 0.6rem;
+}
+.branding-landing .services-progress {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  text-align: right;
+}
+.branding-landing .services-progress .bar {
+  width: 120px;
+  height: 1px;
+  background: var(--line-strong);
+  margin-top: 0.6rem;
+  overflow: hidden;
+}
+
+/* Edge overlays are inside .services-carousel-frame (not the scrollable wrapper),
+   so they stay fixed while cards scroll behind them. */
+.branding-landing .services-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 12%;
+  max-width: 180px;
+  z-index: 4;
+  pointer-events: auto;
+}
+.branding-landing .services-edge-left {
+  left: 0;
+}
+.branding-landing .services-edge-right {
+  right: 0;
+}
+@media (max-width: 780px) {
+  .branding-landing .services-edge {
+    display: none;
+  }
+  .branding-landing .services-head {
+    padding: 0 1.5rem;
+  }
+  .branding-landing .services-track {
+    padding: 0 1.5rem;
+  }
+}
+
+/* ====================  PHONE PREVIEW  ==================== */
+.branding-landing .preview {
+  padding: 4rem 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.branding-landing .preview-glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 80vmax;
+  height: 50vmax;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(58, 139, 255, 0.16),
+    transparent 60%
+  );
+  filter: blur(40px);
+  pointer-events: none;
+}
+.branding-landing .preview-inner {
+  position: relative;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 6rem;
+  align-items: center;
+}
+.branding-landing .preview-head .section-label {
+  margin-bottom: 2rem;
+}
+.branding-landing .preview-title {
+  font-family: var(--display);
+  font-size: clamp(3rem, 8vw, 8rem);
+  line-height: 0.88;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  margin: 0 0 2rem;
+}
+.branding-landing .preview-title .blue {
+  color: var(--blue);
+}
+.branding-landing .preview-title .outline {
+  -webkit-text-stroke: 1.5px var(--ink);
+  color: transparent;
+}
+.branding-landing .preview-title .outline.blue {
+  -webkit-text-stroke: 1.8px var(--blue);
+  color: transparent;
+}
+.branding-landing .preview-title span {
+  display: block;
+}
+.branding-landing .preview-desc {
+  max-width: 46ch;
+  color: var(--ink-dim);
+  line-height: 1.7;
+  font-size: 1.02rem;
+  margin: 0 0 2.5rem;
+}
+.branding-landing .preview-desc strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+.branding-landing .preview-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.branding-landing .preview-meta span {
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--line-strong);
+  color: var(--ink-dim);
+}
+.branding-landing .preview-meta span.on {
+  color: var(--blue);
+  border-color: var(--blue);
+}
+
+/* ---- Phone shell ---- */
+.branding-landing .phone-stage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  perspective: 1200px;
+}
+.branding-landing .phone-stage::before {
+  content: "";
+  position: absolute;
+  width: 120%;
+  height: 50%;
+  left: -10%;
+  bottom: -10%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(58, 139, 255, 0.25),
+    transparent 70%
+  );
+  filter: blur(40px);
+  pointer-events: none;
+}
+.branding-landing .phone {
+  width: 340px;
+  height: 712px;
+  border-radius: 54px;
+  padding: 9px;
+  background: linear-gradient(
+    135deg,
+    #2a2c30 0%,
+    #0c0d10 30%,
+    #1a1c20 60%,
+    #0a0b0e 100%
+  );
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 30px 80px rgba(0, 0, 0, 0.7),
+    0 0 60px rgba(58, 139, 255, 0.15),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.04);
+  position: relative;
+  transform: rotateY(-6deg) rotateX(2deg);
+  transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  animation: blkFloat 6s ease-in-out infinite;
+}
+.branding-landing .phone:hover {
+  transform: rotateY(0deg) rotateX(0deg);
+  animation-play-state: paused;
+}
+.branding-landing .phone-screen {
+  width: 100%;
+  height: 100%;
+  border-radius: 46px;
+  background: #070708;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6);
+}
+.branding-landing .phone-island {
+  position: absolute;
+  top: 9px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 28px;
+  background: #000;
+  border-radius: 14px;
+  z-index: 5;
+}
+.branding-landing .phone-island::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #0a0a0c;
+  box-shadow: inset 0 0 0 1px rgba(58, 139, 255, 0.4);
+}
+@keyframes blkFloat {
+  0%,
+  100% {
+    transform: rotateY(-6deg) rotateX(2deg) translateY(0);
+  }
+  50% {
+    transform: rotateY(-6deg) rotateX(2deg) translateY(-14px);
+  }
+}
+
+/* ---- App UI ---- */
+.branding-landing .app-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1.5rem 0.25rem;
+  font-family: var(--body);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink);
+  height: 44px;
+  position: relative;
+  z-index: 6;
+}
+.branding-landing .app-status .status-icons {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  font-size: 0.7rem;
+}
+.branding-landing .app-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 1rem 0.6rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.branding-landing .app-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.branding-landing .app-brand img {
+  height: 38px;
+  width: auto;
+  filter: drop-shadow(0 0 6px rgba(58, 139, 255, 0.5));
+}
+.branding-landing .app-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), #1f4eb8);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.05em;
+  box-shadow: 0 0 0 1.5px rgba(58, 139, 255, 0.3);
+}
+.branding-landing .app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1rem 0.5rem;
+}
+.branding-landing .app-header h3 {
+  font-family: var(--display);
+  font-size: 1.3rem;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  margin: 0;
+  text-transform: uppercase;
+}
+.branding-landing .app-add {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 14px rgba(58, 139, 255, 0.6);
+}
+.branding-landing .app-filters {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.25rem 1rem 0.85rem;
+  overflow: hidden;
+}
+.branding-landing .app-filters .chip {
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--ink-dim);
+  white-space: nowrap;
+}
+.branding-landing .app-filters .chip.on {
+  background: var(--blue);
+  color: #fff;
+  border-color: var(--blue);
+}
+.branding-landing .app-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+  padding: 0 1rem 1rem;
+  height: calc(100% - 270px);
+  overflow: hidden;
+}
+.branding-landing .ex-card {
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.branding-landing .ex-thumb {
+  aspect-ratio: 1/1;
+  position: relative;
+  overflow: hidden;
+  background: #0a0c10;
+}
+.branding-landing .ex-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.branding-landing .ex-thumb::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, 0.55));
+  z-index: 2;
+}
+.branding-landing .ex-thumb.placeholder {
+  background: linear-gradient(135deg, #0f1115 0%, #181b22 50%, #0a0c10 100%);
+}
+.branding-landing .ex-info {
+  padding: 0.55rem 0.55rem 0.65rem;
+}
+.branding-landing .ex-info h4 {
+  font-family: var(--body);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 0.35rem;
+  line-height: 1.25;
+}
+.branding-landing .ex-tags {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.4rem;
+  flex-wrap: wrap;
+}
+.branding-landing .tag {
+  font-family: var(--mono);
+  font-size: 0.46rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.18rem 0.35rem;
+  border-radius: 3px;
+  font-weight: 500;
+}
+.branding-landing .tag-pink {
+  background: rgba(236, 72, 153, 0.18);
+  color: #f0a3cc;
+}
+.branding-landing .tag-purple {
+  background: rgba(124, 58, 237, 0.22);
+  color: #c4b0f5;
+}
+.branding-landing .tag-green {
+  background: rgba(34, 197, 94, 0.18);
+  color: #86efac;
+}
+.branding-landing .tag-neutral {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink-dim);
+}
+.branding-landing .ex-level {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.branding-landing .ex-level .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+.branding-landing .ex-level .dot.on {
+  background: var(--blue);
+}
+
+.branding-landing .app-nav {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 64px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  background: rgba(8, 8, 10, 0.95);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 14px;
+}
+.branding-landing .app-nav button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--ink-faint);
+  font-family: var(--mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0;
+}
+.branding-landing .app-nav button svg {
+  width: 18px;
+  height: 18px;
+}
+.branding-landing .app-nav button.on {
+  color: var(--blue);
+}
+.branding-landing .phone-home {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+  z-index: 7;
+}
+
+@media (max-width: 980px) {
+  .branding-landing .preview-inner {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+  .branding-landing .phone-stage {
+    order: -1;
+  }
+  .branding-landing .phone {
+    transform: none;
+    animation: none;
+  }
+}
+
+/* ====================  FOOTER  ==================== */
+.branding-landing .footer {
+  border-top: 1px solid var(--line);
+  padding: 3rem 1.5rem 2rem;
+  background: var(--bg-2);
+}
+.branding-landing .footer-inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 2rem;
+  align-items: end;
+}
+.branding-landing .footer-brand {
+  display: flex;
+  align-items: center;
+}
+.branding-landing .footer-brand img {
+  height: 64px;
+  width: auto;
+  filter: drop-shadow(0 0 14px rgba(58, 139, 255, 0.45));
+}
+.branding-landing .footer-meta {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  text-align: center;
+}
+.branding-landing .footer-links {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: flex-end;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.branding-landing .footer-links a:hover {
+  color: var(--blue);
+}
+
+/* ====================  REVEAL UTILS  ==================== */
+.branding-landing .fade-up {
+  opacity: 0;
+  transform: translateY(40px);
+  transition:
+    opacity 1s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.branding-landing .fade-up.in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ====================  VIDEO DEMO  ==================== */
+.branding-landing .video-demo {
+  padding: 4rem 1.5rem;
+  position: relative;
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+}
+.branding-landing .video-demo-inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 14ch 1fr;
+  gap: 5rem;
+  align-items: start;
+}
+.branding-landing .video-demo-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 960px;
+}
+.branding-landing .video-demo-title {
+  font-family: var(--display);
+  font-size: clamp(2rem, 4.5vw, 4rem);
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  margin: 0;
+}
+.branding-landing .video-demo-title .outline {
+  -webkit-text-stroke: 1.5px var(--ink);
+  color: transparent;
+}
+.branding-landing .video-demo-title .blue {
+  color: var(--blue);
+}
+.branding-landing .video-demo-frame {
+  position: relative;
+  width: 100%;
+  /* Aspect ratio del video original (1584x720 ≈ 2.2:1). Asi el frame
+     coincide exacto con el video y NO se recortan los bordes ni aparecen
+     barras negras. Si en el futuro cambias el video a otro aspect, ajustá
+     este valor. */
+  aspect-ratio: 1584 / 720;
+  background: var(--bg-2);
+  border: 1px solid var(--line-strong);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.branding-landing .video-demo-video {
+  width: 100%;
+  height: 100%;
+  /* contain en lugar de cover: muestra el video completo sin recortar.
+     Como el frame tiene el mismo aspect ratio, no aparecen barras negras. */
+  object-fit: contain;
+  display: block;
+  background: #000;
+  /* No interaccion del usuario: el video solo lo controla el
+     IntersectionObserver. Bloquea click/tap/doble-click que en algunos
+     browsers togglean play/pause por default sobre el elemento <video>. */
+  pointer-events: none;
+}
+/* Safari shadow-DOM: oculta cualquier control nativo residual */
+.branding-landing .video-demo-video::-webkit-media-controls,
+.branding-landing .video-demo-video::-webkit-media-controls-enclosure,
+.branding-landing .video-demo-video::-webkit-media-controls-panel,
+.branding-landing .video-demo-video::-webkit-media-controls-play-button {
+  display: none !important;
+  -webkit-appearance: none;
+}
+
+/* ====================  RESPONSIVE  ==================== */
+
+/* Tag "Hecho en Costa Rica" — hidden por default; solo aparece en mobile */
+.branding-landing .nav-cr-tag {
+  display: none;
+}
+
+@media (max-width: 980px) {
+  .branding-landing .nav-meta {
+    display: none;
+  }
+  .branding-landing .nav-actions .nav-link.hide-sm {
+    display: none;
+  }
+  /* Stack vertical para que el tag CR quede arriba del CTA ¡Iniciar! */
+  .branding-landing .nav-actions {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.45rem;
+  }
+  .branding-landing .nav-cr-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--blue);
+    white-space: nowrap;
+    line-height: 1.2;
+    text-shadow: 0 0 12px rgba(58, 139, 255, 0.45);
+  }
+  /* Hero title mas grande en mobile para que abarque mas viewport */
+  .branding-landing .hero-title {
+    font-size: clamp(5.5rem, 24vw, 8.5rem);
+    letter-spacing: -0.025em;
+  }
+  .branding-landing .hero-bottom {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .branding-landing .cta-row {
+    justify-self: start;
+  }
+  .branding-landing .manifesto-inner {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .branding-landing .video-demo-inner {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .branding-landing .footer-inner {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 1.5rem;
+  }
+  .branding-landing .footer-links {
+    justify-content: center;
+  }
+  .branding-landing .footer-meta {
+    text-align: center;
+  }
+  /* Logo centrado y mas grande en mobile */
+  .branding-landing .footer-brand {
+    justify-content: center;
+  }
+  .branding-landing .footer-brand img {
+    height: 110px;
+  }
+  .branding-landing .services-head {
+    padding: 0 1.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .branding-landing .services-head h2 {
+    font-size: 2rem;
+  }
+  /* Reduce padding del track en mobile para que el primer card no quede
+     escondido tras 6rem de padding (mobile viewport es muy estrecho) */
+  .branding-landing .services-track {
+    padding: 0 1.5rem;
+    gap: 1rem;
+  }
+}

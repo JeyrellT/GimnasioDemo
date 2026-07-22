@@ -33,7 +33,7 @@ export default async function InvitacionPage({ params }: InvitacionPageProps) {
         </p>
         <Link
           href="/"
-          className="text-sm text-[#3B82F6] hover:text-[#2563EB] transition-colors"
+          className="text-sm text-brand-primary hover:text-brand-primary-hover transition-colors"
         >
           Ir al inicio
         </Link>
@@ -45,8 +45,8 @@ export default async function InvitacionPage({ params }: InvitacionPageProps) {
 
   return (
     <div className="flex flex-col items-center gap-4 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#3B82F6]/10">
-        <UserPlus className="h-7 w-7 text-[#3B82F6]" aria-hidden="true" />
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-primary/10">
+        <UserPlus className="h-7 w-7 text-brand-primary" aria-hidden="true" />
       </div>
 
       <div>
@@ -61,7 +61,7 @@ export default async function InvitacionPage({ params }: InvitacionPageProps) {
 
       <Link
         href={`/registrarse?token=${token}`}
-        className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#3B82F6] py-3 text-sm font-semibold text-white min-h-[44px] hover:bg-[#2563EB] transition-colors"
+        className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-primary py-3 text-sm font-semibold text-white min-h-[44px] hover:bg-brand-primary-hover transition-colors"
       >
         Aceptar invitación
       </Link>
@@ -70,7 +70,7 @@ export default async function InvitacionPage({ params }: InvitacionPageProps) {
         Ya tenés cuenta?{" "}
         <Link
           href={`/ingresar?token=${token}`}
-          className="text-[#3B82F6] hover:text-[#2563EB]"
+          className="text-brand-primary hover:text-brand-primary-hover"
         >
           Ingresá y aceptá.
         </Link>

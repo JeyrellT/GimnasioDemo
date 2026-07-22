@@ -8,6 +8,15 @@ import { createRoutineTemplate, createCustomGoal, listCustomGoals } from "@/app/
 import { createRoutineSchema, type CreateRoutineInput } from "@/lib/validation/routine.schema";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/shared/page-header";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ArrowRight, Loader2, Plus, X } from "lucide-react";
 
 const BUILT_IN_GOALS = [
@@ -21,7 +30,7 @@ const BUILT_IN_GOALS = [
 const inputCls =
   "w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] " +
   "transition-[border-color,box-shadow] duration-150 " +
-  "focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6]/30";
+  "focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/30";
 
 const groupCardCls =
   "rounded-xl border border-[#3F3F46] bg-[#18181B]/80 backdrop-blur-sm " +
@@ -113,7 +122,7 @@ function CreateGoalDialog({
             type="button"
             onClick={handleSave}
             disabled={!name.trim() || saving}
-            className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
             {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
             Guardar
@@ -133,6 +142,7 @@ export default function NuevaRutinaPage() {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<CreateRoutineInput>({
     resolver: zodResolver(createRoutineSchema),
@@ -199,27 +209,39 @@ export default function NuevaRutinaPage() {
               Objetivo
             </label>
             <div className="flex gap-2">
-              <select id="goal" {...register("goal")} className={`${inputCls} flex-1`}>
-                {BUILT_IN_GOALS.map(({ value, label }) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-                {customGoals.length > 0 && (
-                  <optgroup label="Mis objetivos">
-                    {customGoals.map((g) => (
-                      <option key={g.id} value={g.name}>
-                        {g.name}
-                      </option>
+              <Select
+                value={watch("goal")}
+                onValueChange={(val) => setValue("goal", val, { shouldValidate: true })}
+              >
+                <SelectTrigger id="goal" className="flex-1 bg-[#27272A] border-[#3F3F46] h-[42px] text-sm text-[#FAFAFA]">
+                  <SelectValue placeholder="Elegí un objetivo" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#18181B] border-[#3F3F46] max-h-[300px]">
+                  <SelectGroup>
+                    <SelectLabel>Objetivos</SelectLabel>
+                    {BUILT_IN_GOALS.map(({ value, label }) => (
+                      <SelectItem key={value} value={value} className="text-sm">
+                        {label}
+                      </SelectItem>
                     ))}
-                  </optgroup>
-                )}
-              </select>
+                  </SelectGroup>
+                  {customGoals.length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel>Mis objetivos</SelectLabel>
+                      {customGoals.map((g) => (
+                        <SelectItem key={g.id} value={g.name} className="text-sm">
+                          {g.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  )}
+                </SelectContent>
+              </Select>
               <button
                 type="button"
                 onClick={() => setDialogOpen(true)}
                 title="Crear objetivo"
-                className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-lg border border-[#3F3F46] bg-[#27272A] text-[#A1A1AA] transition-colors hover:border-[#3B82F6] hover:text-[#3B82F6]"
+                className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-lg border border-[#3F3F46] bg-[#27272A] text-[#A1A1AA] transition-colors hover:border-brand-primary hover:text-brand-primary"
               >
                 <Plus className="h-4 w-4" />
               </button>
@@ -281,7 +303,7 @@ export default function NuevaRutinaPage() {
           className={[
             "flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white",
             "min-h-[48px] transition-all duration-200",
-            "bg-gradient-to-r from-[#3B82F6] to-[#2563EB]",
+            "bg-gradient-to-r from-brand-primary to-brand-primary-hover",
             "shadow-[0_0_20px_rgba(255,106,26,0.30)]",
             "hover:shadow-[0_0_28px_rgba(255,106,26,0.45)] hover:brightness-110",
             "active:scale-[0.98]",

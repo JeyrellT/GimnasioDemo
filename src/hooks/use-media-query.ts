@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 // BLACKLINE FITNESS — useMediaQuery
 // Owner: frontend-react.

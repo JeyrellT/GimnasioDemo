@@ -26,7 +26,7 @@ interface ReferralItem {
 const STATUS_META: Record<ReferralStatus, { label: string; className: string }> = {
   PENDING: { label: "Pendiente", className: "bg-[#F59E0B]/15 text-[#F59E0B]" },
   APPROVED: { label: "Aprobada", className: "bg-[#22C55E]/15 text-[#22C55E]" },
-  REGISTERED: { label: "Registrado", className: "bg-[#3B82F6]/15 text-[#3B82F6]" },
+  REGISTERED: { label: "Registrado", className: "bg-brand-primary/15 text-brand-primary" },
   REJECTED: { label: "Rechazada", className: "bg-[#EF4444]/15 text-[#EF4444]" },
 };
 
@@ -108,8 +108,8 @@ export default function ReferralSection() {
   return (
     <section className="rounded-xl border border-[#3F3F46]/60 bg-[#18181B] p-5 space-y-5">
       <div className="flex items-center gap-2">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#3B82F6]/15">
-          <UserPlus className="h-4 w-4 text-[#3B82F6]" aria-hidden="true" />
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-brand-primary/15">
+          <UserPlus className="h-4 w-4 text-brand-primary" aria-hidden="true" />
         </div>
         <h2 className="text-xs font-bold uppercase tracking-widest text-[#71717A]">
           Referir un nuevo coach
@@ -133,7 +133,7 @@ export default function ReferralSection() {
             value={form.name}
             onChange={setField("name")}
             placeholder="Nombre del entrenador referido"
-            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] min-h-[44px]"
+            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary min-h-[44px]"
           />
         </div>
 
@@ -149,7 +149,7 @@ export default function ReferralSection() {
             value={form.email}
             onChange={setField("email")}
             placeholder="correo@ejemplo.com"
-            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] min-h-[44px]"
+            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary min-h-[44px]"
           />
         </div>
 
@@ -164,7 +164,7 @@ export default function ReferralSection() {
             value={form.phone}
             onChange={setField("phone")}
             placeholder="8888-0000"
-            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] min-h-[44px]"
+            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary min-h-[44px]"
           />
         </div>
 
@@ -178,14 +178,14 @@ export default function ReferralSection() {
             value={form.note}
             onChange={setField("note")}
             placeholder="¿Por qué recomendás a esta persona?"
-            className="w-full resize-none rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6]"
+            className="w-full resize-none rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
           />
         </div>
 
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />

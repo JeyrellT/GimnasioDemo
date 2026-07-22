@@ -9,14 +9,14 @@ export const metadata: Metadata = {
     default: "Blackline Fitness",
     template: "%s — Blackline Fitness",
   },
-  description: "Tu visión, tu evolución. Plataforma de entrenamiento personal para Costa Rica.",
+  description: "Tu línea, tu fuerza. Plataforma de entrenamiento personal para Costa Rica.",
   metadataBase: new URL(process.env.APP_URL ?? "https://blacklinefitness.app"),
   openGraph: {
     type: "website",
     locale: "es_CR",
     url: "https://blacklinefitness.app",
     siteName: "Blackline Fitness",
-    title: "Blackline Fitness — Tu visión, tu evolución",
+    title: "Blackline Fitness — Tu línea, tu fuerza",
     description: "Plataforma de entrenamiento personal para entrenadores y clientes en Costa Rica.",
     images: [
       {
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Blackline Fitness — Tu visión, tu evolución",
+    title: "Blackline Fitness — Tu línea, tu fuerza",
     description: "Plataforma de entrenamiento personal para Costa Rica.",
     images: ["/og-image.png"],
   },
@@ -40,7 +40,11 @@ export const metadata: Metadata = {
     title: "Blackline Fitness",
   },
   icons: {
-    icon: "/icons/icon-192.svg",
+    icon: [
+      { url: "/icons/favicon.svg", sizes: "32x32", type: "image/svg+xml" },
+      { url: "/icons/icon-192.svg", sizes: "192x192", type: "image/svg+xml" },
+      { url: "/icons/icon-512.svg", sizes: "512x512", type: "image/svg+xml" },
+    ],
     apple: "/icons/apple-touch-icon.svg",
   },
 };

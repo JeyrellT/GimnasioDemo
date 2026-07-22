@@ -17,12 +17,14 @@ import {
   Area,
   AreaChart,
 } from "recharts";
+import { useBranding } from "@/lib/branding/branding-context";
 
 // -----------------------------------------------------------------------------
 // Constants
 // -----------------------------------------------------------------------------
 
-const LINE_COLOR = "#3B82F6";
+// LINE_COLOR is resolved at runtime via useBranding() — SVG attributes cannot
+// resolve CSS custom properties, so we use palette.primary (literal hex).
 const GRADIENT_ID = "muscleMassGradient";
 
 // -----------------------------------------------------------------------------
@@ -68,15 +70,15 @@ interface CustomDotProps {
   dataLength?: number;
 }
 
-function LastPointDot({ cx, cy, index, dataLength }: CustomDotProps) {
+function LastPointDot({ cx, cy, index, dataLength, color }: CustomDotProps & { color: string }) {
   if (index !== (dataLength ?? 0) - 1 || cx === undefined || cy === undefined) {
     return null;
   }
   return (
     <g>
-      <circle cx={cx} cy={cy} r={9} fill={LINE_COLOR} fillOpacity={0.15} />
-      <circle cx={cx} cy={cy} r={6} fill={LINE_COLOR} fillOpacity={0.3} />
-      <circle cx={cx} cy={cy} r={4} fill={LINE_COLOR} strokeWidth={0} />
+      <circle cx={cx} cy={cy} r={9} fill={color} fillOpacity={0.15} />
+      <circle cx={cx} cy={cy} r={6} fill={color} fillOpacity={0.3} />
+      <circle cx={cx} cy={cy} r={4} fill={color} strokeWidth={0} />
     </g>
   );
 }
@@ -112,7 +114,7 @@ function CustomTooltip({ active, payload, label, startMass }: TooltipProps) {
       <p
         className="text-xs"
         style={{
-          color: delta >= 0 ? "#3B82F6" : "#F87171",
+          color: delta >= 0 ? "var(--brand-primary)" : "#F87171",
           fontFeatureSettings: "'tnum' 1",
         }}
       >
@@ -127,6 +129,7 @@ function CustomTooltip({ active, payload, label, startMass }: TooltipProps) {
 // -----------------------------------------------------------------------------
 
 export function MuscleMassTrendChart({ data }: MuscleMassTrendChartProps) {
+  const { palette } = useBranding();
   const chartData = buildChartData(data);
   const startMass = data[0] ?? 0;
   const values = data.filter((v) => Number.isFinite(v));
@@ -146,8 +149,8 @@ export function MuscleMassTrendChart({ data }: MuscleMassTrendChartProps) {
         >
           <defs>
             <linearGradient id={GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={LINE_COLOR} stopOpacity={0.3} />
-              <stop offset="100%" stopColor={LINE_COLOR} stopOpacity={0} />
+              <stop offset="0%" stopColor={palette.primary} stopOpacity={0.3} />
+              <stop offset="100%" stopColor={palette.primary} stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid
@@ -195,7 +198,7 @@ export function MuscleMassTrendChart({ data }: MuscleMassTrendChartProps) {
           <Area
             type="monotone"
             dataKey="musculo"
-            stroke={LINE_COLOR}
+            stroke={palette.primary}
             strokeWidth={2}
             fill={`url(#${GRADIENT_ID})`}
             dot={(props: CustomDotProps & { index: number }) => (
@@ -205,9 +208,10 @@ export function MuscleMassTrendChart({ data }: MuscleMassTrendChartProps) {
                 cy={props.cy}
                 index={props.index}
                 dataLength={chartData.length}
+                color={palette.primary}
               />
             )}
-            activeDot={{ r: 4, fill: LINE_COLOR, strokeWidth: 0 }}
+            activeDot={{ r: 4, fill: palette.primary, strokeWidth: 0 }}
             isAnimationActive={false}
           />
         </AreaChart>

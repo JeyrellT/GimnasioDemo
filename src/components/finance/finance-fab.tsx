@@ -13,6 +13,7 @@ import { Plus, X, TrendingDown, TrendingUp, MapPin } from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -54,7 +55,7 @@ function FABButton({ label, icon, onClick, delay = 0 }: FABButtonProps) {
       <button
         type="button"
         onClick={onClick}
-        className="flex h-11 w-11 items-center justify-center rounded-full bg-[#18181B] border border-[#3F3F46] text-[#FAFAFA] shadow-lg hover:border-[#3B82F6] hover:text-[#3B82F6] transition-colors"
+        className="flex h-11 w-11 items-center justify-center rounded-full bg-[#18181B] border border-[#3F3F46] text-[#FAFAFA] shadow-lg hover:border-brand-primary hover:text-brand-primary transition-colors"
         aria-label={label}
       >
         {icon}
@@ -69,6 +70,12 @@ const FORM_TITLES: Record<ActiveForm, string> = {
   expense: "Registrar gasto",
   sale:    "Registrar venta",
   visit:   "Registrar visita",
+};
+
+const FORM_DESCRIPTIONS: Record<ActiveForm, string> = {
+  expense: "Anotá un gasto puntual o recurrente del negocio.",
+  sale:    "Registrá una venta ad-hoc fuera de la suscripción mensual.",
+  visit:   "Marcá una visita a una ubicación para calcular costos de transporte.",
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -137,7 +144,7 @@ export function FinanceFAB({ locations, visitLocations, clients }: FinanceFABPro
         onClick={() => setMenuOpen((v) => !v)}
         animate={{ rotate: menuOpen ? 45 : 0 }}
         transition={{ duration: 0.18 }}
-        className="fixed bottom-20 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#3B82F6] text-white shadow-lg shadow-[#3B82F6]/40 hover:bg-[#2563EB] active:scale-95 transition-colors sm:hidden"
+        className="fixed bottom-20 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-brand-primary text-white shadow-lg shadow-brand-primary/40 hover:bg-brand-primary-hover active:scale-95 transition-colors sm:hidden"
         aria-label={menuOpen ? "Cerrar menú de acciones" : "Abrir menú de acciones"}
         aria-expanded={menuOpen}
       >
@@ -158,6 +165,9 @@ export function FinanceFAB({ locations, visitLocations, clients }: FinanceFABPro
             <DialogTitle>
               {activeForm ? FORM_TITLES[activeForm] : ""}
             </DialogTitle>
+            <DialogDescription>
+              {activeForm ? FORM_DESCRIPTIONS[activeForm] : ""}
+            </DialogDescription>
           </DialogHeader>
 
           {activeForm === "expense" && (

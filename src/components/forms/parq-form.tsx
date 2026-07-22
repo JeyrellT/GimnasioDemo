@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-// TODO(backend-api): implementar recordParq() en actions/metrics.ts o actions/onboarding.ts
-// que persista las respuestas del PAR-Q+ y actualice clientProfile.parqStatus.
+import { useAuth } from "@/components/providers/auth-provider";
+import { recordClientParq } from "@/app/actions/clients";
 
 // PAR-Q+ 2024 questions (10). follow-up required on Sí to these indices: 0,1,2,4,9
 const QUESTIONS = [
@@ -71,6 +71,7 @@ interface ParqFormProps {
 }
 
 export function ParqForm({ onComplete }: ParqFormProps) {
+  const { user } = useAuth();
   const [answers, setAnswers] = useState<Answer[]>(Array(QUESTIONS.length).fill(null));
   const [followUps, setFollowUps] = useState<string[]>(Array(QUESTIONS.length).fill(""));
   const [loading, setLoading] = useState(false);
@@ -99,20 +100,26 @@ export function ParqForm({ onComplete }: ParqFormProps) {
       toast.error("Respondé todas las preguntas antes de continuar.");
       return;
     }
+    if (!user?.id) {
+      toast.error("No se pudo identificar tu sesión. Recargá la página.");
+      return;
+    }
     setLoading(true);
     try {
-      // TODO(backend-api): llamar a recordParq() cuando esté implementado.
-      // Por ahora derivamos el status directamente en el cliente.
-      const yesCount = answers.filter((a) => a === true).length;
-      // Preguntas críticas (cardíacas, desmayo): índices 0, 1, 2, 3 → status RED
-      const criticalYes = [0, 1, 2, 3].some((i) => answers[i] === true);
-      const status: "GREEN" | "REVIEW" | "RED" = criticalYes
-        ? "RED"
-        : yesCount > 0
-          ? "REVIEW"
-          : "GREEN";
-
-      await new Promise((res) => setTimeout(res, 300)); // simula latencia
+      const payload: Record<string, "yes" | "no"> = {};
+      QUESTIONS.forEach((q, i) => {
+        payload[q.code] = answers[i] ? "yes" : "no";
+      });
+      const result = await recordClientParq(user.id, payload);
+      if (!result.ok) {
+        toast.error(result.error.message ?? "No se pudo guardar el PAR-Q.");
+        return;
+      }
+      const status = result.value.parqStatus;
+      if (status === "NOT_COMPLETED") {
+        toast.error("El PAR-Q no quedó marcado como completado.");
+        return;
+      }
       onComplete(status);
     } finally {
       setLoading(false);

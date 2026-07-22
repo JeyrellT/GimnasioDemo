@@ -2,11 +2,21 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Dumbbell, Loader2 } from "lucide-react";
-import { db } from "@/lib/offline/db";
+import { AlertCircle, ArrowLeft, Dumbbell, Loader2, Pencil } from "lucide-react";
+import { getClientAssignedRoutines } from "@/app/actions/routines";
 import { formatDateCR } from "@/lib/utils";
-import type { DemoAssignedRoutineRow } from "@/lib/offline/db";
 import type { RoutineSnapshot } from "@/types/domain";
+
+type AssignedRoutineRow = {
+  id: string;
+  routineTemplateId: string;
+  status: string;
+  startsOn: Date;
+  endsOn: Date | null;
+  assignedAt: Date;
+  trainerNotes: string | null;
+  snapshotJson: unknown;
+};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -50,11 +60,11 @@ function ProgressBar({ pct }: { pct: number }) {
     <div className="mt-3">
       <div className="mb-1 flex items-center justify-between">
         <span className="text-[10px] text-[#71717A]">Progreso estimado</span>
-        <span className="text-[10px] font-semibold text-[#3B82F6]">{pct}%</span>
+        <span className="text-[10px] font-semibold text-brand-primary">{pct}%</span>
       </div>
       <div className="h-1.5 w-full rounded-full bg-[#27272A] overflow-hidden">
         <div
-          className="h-full rounded-full bg-[#3B82F6] transition-all"
+          className="h-full rounded-full bg-brand-primary transition-all"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -84,24 +94,38 @@ function StatusBadge({ status }: { status: string }) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function RutinasPageContent({ clientId }: { clientId: string }) {
-  const [routines, setRoutines] = useState<DemoAssignedRoutineRow[] | null>(null);
+  const [routines, setRoutines] = useState<AssignedRoutineRow[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    db.demoAssignedRoutines
-      .where({ clientUserId: clientId })
-      .toArray()
-      .then((rows) => {
-        rows.sort((a, b) => b.startsOn.localeCompare(a.startsOn));
-        setRoutines(rows.slice(0, 30));
-        setLoading(false);
-      });
+    let cancelled = false;
+
+    setLoading(true);
+    setError(null);
+
+    getClientAssignedRoutines(clientId).then((result) => {
+      if (cancelled) return;
+
+      if (!result.ok) {
+        setRoutines([]);
+        setError(result.error.message);
+      } else {
+        setRoutines(result.value.slice(0, 30));
+      }
+
+      setLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [clientId]);
 
   if (loading) {
     return (
       <div className="flex min-h-[300px] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-[#3B82F6]" />
+        <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
       </div>
     );
   }
@@ -115,7 +139,7 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
       <div className="flex items-center gap-3">
         <Link
           href={"/trainer/clientes/" + clientId}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#3F3F46] bg-[#18181B] text-[#71717A] transition-colors hover:border-[#3B82F6]/40 hover:text-[#FAFAFA]"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#3F3F46] bg-[#18181B] text-[#71717A] transition-colors hover:border-brand-primary/40 hover:text-[#FAFAFA]"
           aria-label="Volver al cliente"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -129,6 +153,13 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
           )}
         </div>
       </div>
+
+      {error && (
+        <div className="flex items-center gap-2 rounded-xl border border-[#F59E0B]/30 bg-[#F59E0B]/10 px-4 py-3 text-sm text-[#FBBF24]">
+          <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>{error}</span>
+        </div>
+      )}
 
       {/* Empty state */}
       {list.length === 0 ? (
@@ -160,6 +191,7 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
 
             const dateFrom = formatDateCR(startsOnDate, "d MMM yyyy");
             const dateTo = endsOnDate ? formatDateCR(endsOnDate, "d MMM yyyy") : "En curso";
+            const editHref = `/trainer/rutinas/${r.routineTemplateId}?clientId=${encodeURIComponent(clientId)}&assignedRoutineId=${encodeURIComponent(r.id)}`;
 
             return (
               <li
@@ -188,7 +220,17 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
                       </p>
                     )}
                   </div>
-                  <StatusBadge status={r.status} />
+                  <div className="flex shrink-0 items-center gap-2">
+                    <Link
+                      href={editHref}
+                      title="Editar rutina"
+                      aria-label={`Editar ${templateName}`}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#3F3F46] bg-[#27272A]/80 text-[#71717A] transition-colors hover:border-brand-primary/40 hover:bg-brand-primary/10 hover:text-brand-primary"
+                    >
+                      <Pencil className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
+                    </Link>
+                    <StatusBadge status={r.status} />
+                  </div>
                 </div>
 
                 {/* Date range */}

@@ -30,6 +30,7 @@ import {
   ValidationError,
   NotFoundError,
   ConflictError,
+  ForbiddenError,
 } from "@/lib/errors";
 import { logInfo, logError } from "@/lib/logger";
 import {
@@ -39,6 +40,7 @@ import {
 import { generateOpaqueToken, generateSecureRandomString } from "@/lib/crypto/tokens";
 import { hashPassword } from "@/lib/crypto/passwords";
 import { sendEmail } from "@/lib/email/client";
+import { serverEnv } from "@/server/env";
 import InvitationEmail from "@/lib/email/templates/invitation";
 import ClientWelcomeEmail from "@/lib/email/templates/client-welcome";
 
@@ -55,9 +57,17 @@ import type {
   CreateInvitationResult,
   AcceptInvitationResult,
   ListClientsResult,
+  ClientProfileDetail,
 } from "@/types/api";
+import type { BodyComposition, BodyZone } from "@/types/api";
 import type { ClientListItem } from "@/types/domain";
-import type { ClientProfile, LpdpRequest } from "@prisma/client";
+import type { LpdpRequest, ParqStatus } from "@prisma/client";
+
+import {
+  PARQ_QUESTION_CODES,
+  evaluateParq,
+} from "@/lib/validation/parq.schema";
+import { buildParqAnswerRows } from "@/lib/onboarding/payload-builder";
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -79,6 +89,27 @@ async function getRequestMeta(): Promise<{
   } catch {
     return { ipAddress: null, userAgent: null };
   }
+}
+
+type TrainerEmailIdentity = {
+  trainerName: string;
+  fromName: string;
+  fromAddress: string;
+  replyTo: string;
+};
+
+function getTrainerEmailIdentity(trainer: {
+  email: string;
+  name: string;
+  trainerProfile?: { tradeName?: string | null } | null;
+}): TrainerEmailIdentity {
+  const trainerName = trainer.trainerProfile?.tradeName?.trim() || trainer.name;
+  return {
+    trainerName,
+    fromName: `${trainerName} | Blackline Fitness`,
+    fromAddress: serverEnv.CLIENT_INVITATION_FROM_EMAIL,
+    replyTo: trainer.email,
+  };
 }
 
 // =============================================================================
@@ -312,6 +343,28 @@ export async function createInvitation(
       );
     }
 
+    // -- Block duplicate pending invitations: dedupe at the invitation row
+    //    level so the trainer can't accidentally (or maliciously) flood the
+    //    same inbox with multiple live tokens.
+    const now = new Date();
+    const pendingInvitation = await prisma.invitation.findFirst({
+      where: {
+        trainerId: trainer.id,
+        email,
+        usedAt: null,
+        expiresAt: { gt: now },
+        deletedAt: null,
+      },
+      select: { id: true },
+    });
+
+    if (pendingInvitation) {
+      throw new ConflictError(
+        "INVITATION_ALREADY_PENDING",
+        "Ya enviaste una invitación a ese correo electrónico que sigue vigente.",
+      );
+    }
+
     // -- Generate token and create Invitation record --
     const token = generateOpaqueToken(32);
     const expiresAt = new Date(
@@ -351,17 +404,20 @@ export async function createInvitation(
 
     // Send email (outside transaction — side-effectful)
     try {
-      const trainerName =
-        (trainer as { trainerProfile?: { tradeName?: string }; name: string })
-          .trainerProfile?.tradeName ?? trainer.name;
+      const emailIdentity = getTrainerEmailIdentity(trainer);
 
       await sendEmail({
         to: email,
-        subject: `${trainerName} te invitó a Blackline Fitness`,
+        subject: `${emailIdentity.trainerName} te invitó a Blackline Fitness`,
+        fromName: emailIdentity.fromName,
+        fromAddress: emailIdentity.fromAddress,
+        replyTo: emailIdentity.replyTo,
+        requireFromAddress: true,
         react: React.createElement(InvitationEmail, {
-          trainerName,
+          trainerName: emailIdentity.trainerName,
           invitationUrl,
           expiresAt: expiresAt.toISOString(),
+          appUrl: serverEnv.APP_URL,
         }),
       });
     } catch (e) {
@@ -989,18 +1045,18 @@ export async function saveClientGoal(
 // =============================================================================
 
 /**
- * Return the ClientProfile record for a client.
+ * Return the full ClientProfileDetail for a client.
  *
  * Access rules (either condition allows the call):
  *   1. Authenticated trainer who owns an ACTIVE link to clientUserId.
  *   2. Authenticated user reading their own profile (clientUserId === session user id).
  *
- * Returns null when the profile has not been created yet (should not happen in
+ * Returns null when the User record does not exist (should not happen in
  * normal flow, but is a valid DB state before onboarding completes).
  */
 export async function getClientProfileDetail(
   clientUserId: string,
-): Promise<ActionResult<ClientProfile | null>> {
+): Promise<ActionResult<ClientProfileDetail | null>> {
   return tryCatch(async () => {
     const user = await requireUser();
 
@@ -1019,16 +1075,428 @@ export async function getClientProfileDetail(
       await assertOwnsClient(user.id, clientUserId);
     }
 
-    const profile = await prisma.clientProfile.findUnique({
-      where: { userId: clientUserId, deletedAt: null },
-    });
+    // ── Parallel data fetch ────────────────────────────────────────────────
+    const twelveWeeksAgo = new Date();
+    twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 84);
+    const twentyEightDaysAgo = new Date();
+    twentyEightDaysAgo.setDate(twentyEightDaysAgo.getDate() - 28);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    logInfo("client.profile_detail_accessed", {
-      actorId: user.id,
-      clientUserId,
-    });
+    const [
+      clientUser,
+      clientProfile,
+      trainerLink,
+      allMetrics,
+      activeRoutineRow,
+      completedSessions,
+    ] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: clientUserId, deletedAt: null },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          dateOfBirth: true,
+          gender: true,
+          avatarUrl: true,
+          createdAt: true,
+        },
+      }),
+      prisma.clientProfile.findUnique({
+        where: { userId: clientUserId, deletedAt: null },
+        select: {
+          parqStatus: true,
+          goal: true,
+          locationCity: true,
+          weightKg: true,
+          heightCm: true,
+        },
+      }),
+      prisma.trainerClient.findFirst({
+        where: { clientId: clientUserId, deletedAt: null },
+        select: { startedAt: true, notesPrivate: true },
+        orderBy: { startedAt: "desc" },
+      }),
+      prisma.bodyMetric.findMany({
+        where: { clientUserId, recordedAt: { gte: twelveWeeksAgo }, deletedAt: null },
+        select: {
+          id: true,
+          recordedAt: true,
+          weightKg: true,
+          bodyFatPct: true,
+          muscleMassKg: true,
+          waistCm: true,
+          hipCm: true,
+          neckCm: true,
+          chestCm: true,
+          armCm: true,
+          thighCm: true,
+          shoulderLeftCm: true,
+          shoulderRightCm: true,
+          abdomenCm: true,
+          gluteLeftCm: true,
+          gluteRightCm: true,
+          bicepLeftCm: true,
+          bicepRightCm: true,
+          forearmLeftCm: true,
+          forearmRightCm: true,
+          thighLeftCm: true,
+          thighRightCm: true,
+          hamstringLeftCm: true,
+          hamstringRightCm: true,
+          calfLeftCm: true,
+          calfRightCm: true,
+          visceralFat: true,
+          basalMetabolicRate: true,
+        },
+        orderBy: { recordedAt: "asc" },
+      }),
+      prisma.assignedRoutine.findFirst({
+        where: { clientUserId, status: "ACTIVE", deletedAt: null },
+        select: {
+          id: true,
+          startsOn: true,
+          endsOn: true,
+          routineTemplate: {
+            select: { id: true, name: true, splitDays: true, durationWeeks: true },
+          },
+        },
+      }),
+      prisma.workoutSession.findMany({
+        where: { clientUserId, status: "COMPLETED", deletedAt: null },
+        select: {
+          id: true,
+          completedAt: true,
+          totalDurationSec: true,
+          assignedRoutineId: true,
+          performedSets: {
+            where: { deletedAt: null },
+            select: { id: true, exerciseId: true, isPr: true },
+          },
+        },
+        orderBy: { completedAt: "desc" },
+        take: 200, // cap for perf — enough for streak + adherence
+      }),
+    ]);
 
-    return profile;
+    if (!clientUser) {
+      logInfo("client.profile_detail_accessed", { actorId: user.id, clientUserId, found: false });
+      return null;
+    }
+
+    // ── Latest metric + 28d anchor ────────────────────────────────────────
+    const latestMetric = allMetrics[allMetrics.length - 1] ?? null;
+    const anchor28 = allMetrics
+      .slice()
+      .reverse()
+      .find((m) => m.recordedAt <= twentyEightDaysAgo) ?? null;
+
+    const weightDelta28d =
+      latestMetric?.weightKg != null && anchor28?.weightKg != null
+        ? Number(latestMetric.weightKg) - Number(anchor28.weightKg)
+        : null;
+    const bodyFatDelta28d =
+      latestMetric?.bodyFatPct != null && anchor28?.bodyFatPct != null
+        ? Number(latestMetric.bodyFatPct) - Number(anchor28.bodyFatPct)
+        : null;
+
+    // ── BMI ───────────────────────────────────────────────────────────────
+    const heightCm = clientProfile?.heightCm ? Number(clientProfile.heightCm) : null;
+    const latestWeightKg = latestMetric?.weightKg ? Number(latestMetric.weightKg) : null;
+    const bmi =
+      latestWeightKg && heightCm && heightCm > 0
+        ? Math.round((latestWeightKg / Math.pow(heightCm / 100, 2)) * 10) / 10
+        : null;
+
+    // ── Per-zone freshness helper ─────────────────────────────────────────
+    function zoneFreshness(
+      field: keyof typeof allMetrics[number],
+    ): { lastMeasuredAt: string | null; daysSince: number | null } {
+      const found = [...allMetrics].reverse().find((m) => m[field] != null);
+      if (!found) return { lastMeasuredAt: null, daysSince: null };
+      const daysSince = Math.floor((Date.now() - found.recordedAt.getTime()) / 86_400_000);
+      return { lastMeasuredAt: found.recordedAt.toISOString(), daysSince };
+    }
+
+    const neckFresh = zoneFreshness("neckCm");
+    const chestFresh = zoneFreshness("chestCm");
+    const bicepFresh = zoneFreshness("armCm");
+    const waistFresh = zoneFreshness("waistCm");
+    const hipFresh = zoneFreshness("hipCm");
+    const thighFresh = zoneFreshness("thighCm");
+    const shoulderLeftFresh = zoneFreshness("shoulderLeftCm");
+    const shoulderRightFresh = zoneFreshness("shoulderRightCm");
+    const abdomenFresh = zoneFreshness("abdomenCm");
+    const gluteLeftFresh = zoneFreshness("gluteLeftCm");
+    const gluteRightFresh = zoneFreshness("gluteRightCm");
+    const bicepLeftFresh = zoneFreshness("bicepLeftCm");
+    const bicepRightFresh = zoneFreshness("bicepRightCm");
+    const forearmLeftFresh = zoneFreshness("forearmLeftCm");
+    const forearmRightFresh = zoneFreshness("forearmRightCm");
+    const thighLeftFresh = zoneFreshness("thighLeftCm");
+    const thighRightFresh = zoneFreshness("thighRightCm");
+    const hamstringLeftFresh = zoneFreshness("hamstringLeftCm");
+    const hamstringRightFresh = zoneFreshness("hamstringRightCm");
+    const calfLeftFresh = zoneFreshness("calfLeftCm");
+    const calfRightFresh = zoneFreshness("calfRightCm");
+    const noFresh: { lastMeasuredAt: null; daysSince: null } = { lastMeasuredAt: null, daysSince: null };
+
+    // Helper: prefer the new lateralized freshness, fall back to legacy
+    // armCm/thighCm freshness so historical data still pings the heatmap.
+    const pickFresh = (
+      primary: { lastMeasuredAt: string | null; daysSince: number | null },
+      fallback: { lastMeasuredAt: string | null; daysSince: number | null },
+    ) => (primary.lastMeasuredAt != null ? primary : fallback);
+
+    const freshness: BodyComposition["freshness"] = {
+      neck: neckFresh,
+      shoulderLeft: pickFresh(shoulderLeftFresh, noFresh),
+      shoulderRight: pickFresh(shoulderRightFresh, noFresh),
+      chest: chestFresh,
+      bicepLeft: pickFresh(bicepLeftFresh, bicepFresh),
+      bicepRight: pickFresh(bicepRightFresh, bicepFresh),
+      forearmLeft: pickFresh(forearmLeftFresh, noFresh),
+      forearmRight: pickFresh(forearmRightFresh, noFresh),
+      abdomen: pickFresh(abdomenFresh, noFresh),
+      waist: waistFresh,
+      hip: hipFresh,
+      glute: pickFresh(gluteLeftFresh, gluteRightFresh.lastMeasuredAt != null ? gluteRightFresh : noFresh),
+      quadLeft: pickFresh(thighLeftFresh, thighFresh),
+      quadRight: pickFresh(thighRightFresh, thighFresh),
+      hamstringLeft: pickFresh(hamstringLeftFresh, noFresh),
+      hamstringRight: pickFresh(hamstringRightFresh, noFresh),
+      calfLeft: pickFresh(calfLeftFresh, noFresh),
+      calfRight: pickFresh(calfRightFresh, noFresh),
+    };
+
+    const bodyComposition: BodyComposition = {
+      weightKg: latestWeightKg,
+      bodyFatPct: latestMetric?.bodyFatPct != null ? Number(latestMetric.bodyFatPct) : null,
+      muscleMassKg: latestMetric?.muscleMassKg != null ? Number(latestMetric.muscleMassKg) : null,
+      visceralFat: latestMetric?.visceralFat ?? null,
+      basalMetabolicRate: latestMetric?.basalMetabolicRate ?? null,
+      bmi,
+      circumferences: {
+        neckCm: latestMetric?.neckCm != null ? Number(latestMetric.neckCm) : null,
+        shoulderLeftCm: latestMetric?.shoulderLeftCm != null ? Number(latestMetric.shoulderLeftCm) : null,
+        shoulderRightCm: latestMetric?.shoulderRightCm != null ? Number(latestMetric.shoulderRightCm) : null,
+        chestCm: latestMetric?.chestCm != null ? Number(latestMetric.chestCm) : null,
+        leftBicepCm: latestMetric?.bicepLeftCm != null
+          ? Number(latestMetric.bicepLeftCm)
+          : latestMetric?.armCm != null ? Number(latestMetric.armCm) : null,
+        rightBicepCm: latestMetric?.bicepRightCm != null
+          ? Number(latestMetric.bicepRightCm)
+          : latestMetric?.armCm != null ? Number(latestMetric.armCm) : null,
+        leftForearmCm: latestMetric?.forearmLeftCm != null ? Number(latestMetric.forearmLeftCm) : null,
+        rightForearmCm: latestMetric?.forearmRightCm != null ? Number(latestMetric.forearmRightCm) : null,
+        abdomenCm: latestMetric?.abdomenCm != null ? Number(latestMetric.abdomenCm) : null,
+        waistCm: latestMetric?.waistCm != null ? Number(latestMetric.waistCm) : null,
+        hipCm: latestMetric?.hipCm != null ? Number(latestMetric.hipCm) : null,
+        leftGluteCm: latestMetric?.gluteLeftCm != null ? Number(latestMetric.gluteLeftCm) : null,
+        rightGluteCm: latestMetric?.gluteRightCm != null ? Number(latestMetric.gluteRightCm) : null,
+        leftThighCm: latestMetric?.thighLeftCm != null
+          ? Number(latestMetric.thighLeftCm)
+          : latestMetric?.thighCm != null ? Number(latestMetric.thighCm) : null,
+        rightThighCm: latestMetric?.thighRightCm != null
+          ? Number(latestMetric.thighRightCm)
+          : latestMetric?.thighCm != null ? Number(latestMetric.thighCm) : null,
+        leftHamstringCm: latestMetric?.hamstringLeftCm != null ? Number(latestMetric.hamstringLeftCm) : null,
+        rightHamstringCm: latestMetric?.hamstringRightCm != null ? Number(latestMetric.hamstringRightCm) : null,
+        leftCalfCm: latestMetric?.calfLeftCm != null ? Number(latestMetric.calfLeftCm) : null,
+        rightCalfCm: latestMetric?.calfRightCm != null ? Number(latestMetric.calfRightCm) : null,
+      },
+      freshness,
+    };
+
+    // ── Zones (body map) ───────────────────────────────────────────────────
+    function buildZone(
+      field: keyof typeof allMetrics[number],
+    ): import("@/types/api").ZoneMetric | null {
+      const withValue = allMetrics.filter((m) => m[field] != null);
+      if (withValue.length === 0) return null;
+      const latest = withValue[withValue.length - 1]!;
+      const prev = withValue.length > 1 ? withValue[withValue.length - 2]! : null;
+      const value = Number(latest[field]);
+      const delta = prev?.[field] != null ? value - Number(prev[field]) : 0;
+      const sparkline = withValue.slice(-12).map((m) => Number(m[field]));
+      return {
+        valueCm: value,
+        deltaCm: Math.round(delta * 10) / 10,
+        measuredAt: latest.recordedAt.toISOString(),
+        trendSparkline: sparkline,
+      };
+    }
+
+    const zones: Record<BodyZone, import("@/types/api").ZoneMetric | null> = {
+      neck: buildZone("neckCm"),
+      shoulderLeft: null,
+      shoulderRight: null,
+      chest: buildZone("chestCm"),
+      bicepLeft: buildZone("armCm"),
+      bicepRight: buildZone("armCm"),
+      forearmLeft: null,
+      forearmRight: null,
+      abdomen: null,
+      waist: buildZone("waistCm"),
+      hip: buildZone("hipCm"),
+      glute: null,
+      quadLeft: buildZone("thighCm"),
+      quadRight: buildZone("thighCm"),
+      hamstringLeft: null,
+      hamstringRight: null,
+      calfLeft: null,
+      calfRight: null,
+    };
+
+    // ── Metrics history (serialized for server→client boundary) ───────────
+    const metricsHistory = allMetrics.map((m) => ({
+      id: m.id,
+      recordedAt: m.recordedAt.toISOString(),
+      weightKg: m.weightKg != null ? Number(m.weightKg) : null,
+      bodyFatPct: m.bodyFatPct != null ? Number(m.bodyFatPct) : null,
+      muscleMassKg: m.muscleMassKg != null ? Number(m.muscleMassKg) : null,
+      neckCm: m.neckCm != null ? Number(m.neckCm) : null,
+      shoulderLeftCm: m.shoulderLeftCm != null ? Number(m.shoulderLeftCm) : null,
+      shoulderRightCm: m.shoulderRightCm != null ? Number(m.shoulderRightCm) : null,
+      chestCm: m.chestCm != null ? Number(m.chestCm) : null,
+      armCm: m.armCm != null ? Number(m.armCm) : null,
+      bicepLeftCm: m.bicepLeftCm != null ? Number(m.bicepLeftCm) : null,
+      bicepRightCm: m.bicepRightCm != null ? Number(m.bicepRightCm) : null,
+      forearmLeftCm: m.forearmLeftCm != null ? Number(m.forearmLeftCm) : null,
+      forearmRightCm: m.forearmRightCm != null ? Number(m.forearmRightCm) : null,
+      abdomenCm: m.abdomenCm != null ? Number(m.abdomenCm) : null,
+      waistCm: m.waistCm != null ? Number(m.waistCm) : null,
+      hipCm: m.hipCm != null ? Number(m.hipCm) : null,
+      gluteLeftCm: m.gluteLeftCm != null ? Number(m.gluteLeftCm) : null,
+      gluteRightCm: m.gluteRightCm != null ? Number(m.gluteRightCm) : null,
+      thighCm: m.thighCm != null ? Number(m.thighCm) : null,
+      thighLeftCm: m.thighLeftCm != null ? Number(m.thighLeftCm) : null,
+      thighRightCm: m.thighRightCm != null ? Number(m.thighRightCm) : null,
+      hamstringLeftCm: m.hamstringLeftCm != null ? Number(m.hamstringLeftCm) : null,
+      hamstringRightCm: m.hamstringRightCm != null ? Number(m.hamstringRightCm) : null,
+      calfLeftCm: m.calfLeftCm != null ? Number(m.calfLeftCm) : null,
+      calfRightCm: m.calfRightCm != null ? Number(m.calfRightCm) : null,
+    }));
+
+    // ── Active routine ─────────────────────────────────────────────────────
+    let activeRoutine: ClientProfileDetail["activeRoutine"] = null;
+    if (activeRoutineRow) {
+      const rt = activeRoutineRow.routineTemplate;
+      const totalDays = rt.splitDays * rt.durationWeeks;
+      const completedInRoutine = completedSessions.filter(
+        (s) => s.assignedRoutineId === activeRoutineRow.id,
+      ).length;
+      activeRoutine = {
+        id: activeRoutineRow.id,
+        name: rt.name,
+        totalDays,
+        currentDayIndex: completedInRoutine % rt.splitDays,
+        completionPct: Math.min(completedInRoutine / Math.max(totalDays, 1), 1),
+        startsOn: activeRoutineRow.startsOn.toISOString(),
+        endsOn: activeRoutineRow.endsOn ? activeRoutineRow.endsOn.toISOString() : null,
+      };
+    }
+
+    // ── Recent sessions (last 5) ───────────────────────────────────────────
+    const recentSessions: ClientProfileDetail["recentSessions"] = completedSessions
+      .slice(0, 5)
+      .map((s) => ({
+        id: s.id,
+        date: (s.completedAt ?? new Date()).toISOString(),
+        durationSec: s.totalDurationSec,
+        exercisesCount: new Set(s.performedSets.map((p) => p.exerciseId)).size,
+        prDetected: s.performedSets.some((p) => p.isPr),
+      }));
+
+    // ── Stats ──────────────────────────────────────────────────────────────
+    const startedAt = trainerLink?.startedAt ?? clientUser.createdAt;
+    const daysSinceStart = Math.floor((Date.now() - startedAt.getTime()) / 86_400_000);
+
+    // Streak: consecutive days with at least one completed session up to today
+    const completedDates = new Set(
+      completedSessions
+        .filter((s) => s.completedAt)
+        .map((s) => s.completedAt!.toISOString().slice(0, 10)),
+    );
+    let currentStreak = 0;
+    for (let i = 0; i <= 30; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      if (completedDates.has(key)) {
+        currentStreak++;
+      } else if (i > 0) {
+        break;
+      }
+    }
+
+    let alertsCount = 0;
+    if (clientProfile?.parqStatus === "RED" || clientProfile?.parqStatus === "REVIEW") alertsCount++;
+    if (weightDelta28d !== null && clientProfile?.goal != null) {
+      const goal = String(clientProfile.goal);
+      if (goal === "FAT_LOSS" && weightDelta28d > 1.5) alertsCount++;
+      if (goal === "MUSCLE_GAIN" && weightDelta28d < -1.5) alertsCount++;
+    }
+
+    // ── Adherence ──────────────────────────────────────────────────────────
+    let adherence7d: number | null = null;
+    let adherence30d: number | null = null;
+    if (activeRoutineRow) {
+      const splitDays = activeRoutineRow.routineTemplate.splitDays;
+      const s7 = completedSessions.filter(
+        (s) => s.completedAt && s.completedAt >= sevenDaysAgo,
+      ).length;
+      const s30 = completedSessions.filter(
+        (s) => s.completedAt && s.completedAt >= thirtyDaysAgo,
+      ).length;
+      adherence7d = Math.min(s7 / Math.max(splitDays, 1), 1);
+      adherence30d = Math.min(s30 / Math.max(splitDays * (30 / 7), 1), 1);
+    }
+
+    logInfo("client.profile_detail_accessed", { actorId: user.id, clientUserId });
+
+    const detail: ClientProfileDetail = {
+      user: {
+        id: clientUser.id,
+        name: clientUser.name,
+        email: clientUser.email,
+        dateOfBirth: clientUser.dateOfBirth ? clientUser.dateOfBirth.toISOString() : null,
+        gender: (clientUser.gender ?? null) as ClientProfileDetail["user"]["gender"],
+        avatarUrl: clientUser.avatarUrl,
+        createdAt: clientUser.createdAt.toISOString(),
+      },
+      profile: clientProfile
+        ? {
+            parqStatus: clientProfile.parqStatus as "GREEN" | "REVIEW" | "RED" | "NOT_COMPLETED",
+            goal: (clientProfile.goal ?? null) as "FAT_LOSS" | "MUSCLE_GAIN" | "MAINTENANCE" | "PERFORMANCE" | "GENERAL_HEALTH" | null,
+            locationCity: clientProfile.locationCity,
+            weightKg: clientProfile.weightKg != null ? Number(clientProfile.weightKg) : null,
+            heightCm: clientProfile.heightCm != null ? Number(clientProfile.heightCm) : null,
+          }
+        : null,
+      latestMetric: metricsHistory[metricsHistory.length - 1] ?? null,
+      metricsHistory,
+      bodyComposition,
+      zones,
+      activeRoutine,
+      recentSessions,
+      stats: {
+        daysSinceStart,
+        totalSessions: completedSessions.length,
+        currentStreak,
+        alertsCount: Math.min(alertsCount, 9),
+        weightDelta28d,
+        bodyFatDelta28d,
+      },
+      adherence7d,
+      adherence30d,
+      trainerNotes: trainerLink?.notesPrivate ?? null,
+    };
+
+    return detail;
   });
 }
 
@@ -1192,6 +1660,7 @@ export async function quickAddClient(input: {
     }
 
     const { email, name } = parsed.data;
+    const appUrl = process.env.APP_URL ?? "https://blacklinefitness.app";
 
     // -- Check email not already taken --
     const existing = await prisma.user.findUnique({
@@ -1200,6 +1669,40 @@ export async function quickAddClient(input: {
     });
 
     if (existing && existing.deletedAt === null) {
+      const now = new Date();
+      const [existingLink, reusableInvitation] = await Promise.all([
+        prisma.trainerClient.findFirst({
+          where: {
+            trainerId: trainer.id,
+            clientId: existing.id,
+            status: { in: ["ACTIVE", "PENDING"] },
+            deletedAt: null,
+          },
+          select: { id: true },
+        }),
+        prisma.invitation.findFirst({
+          where: {
+            trainerId: trainer.id,
+            clientId: existing.id,
+            email,
+            usedAt: null,
+            expiresAt: { gt: now },
+            deletedAt: null,
+          },
+          select: { id: true, token: true },
+          orderBy: { createdAt: "desc" },
+        }),
+      ]);
+
+      if (existingLink && reusableInvitation) {
+        return {
+          clientId: existing.id,
+          invitationId: reusableInvitation.id,
+          emailSent: false,
+          welcomeUrl: `${appUrl}/api/cliente/aceptar-invitacion?token=${reusableInvitation.token}`,
+        };
+      }
+
       throw new ConflictError(
         "EMAIL_ALREADY_USED",
         "Ya existe una cuenta con ese correo electrónico.",
@@ -1219,7 +1722,6 @@ export async function quickAddClient(input: {
       Date.now() + INVITATION_EXPIRY_DAYS * 24 * 60 * 60 * 1000,
     );
 
-    const appUrl = process.env.APP_URL ?? "https://blacklinefitness.app";
     // Link goes through the auto-login API which validates the token, sets the
     // session cookie, and redirects to /client/bienvenida.
     const welcomeUrl = `${appUrl}/api/cliente/aceptar-invitacion?token=${token}`;
@@ -1291,16 +1793,19 @@ export async function quickAddClient(input: {
     // wrap with a defensive 20s race so a stuck send never holds the request.
     let emailSent = false;
     try {
-      const trainerName =
-        (trainer as { trainerProfile?: { tradeName?: string }; name: string })
-          .trainerProfile?.tradeName ?? trainer.name;
+      const emailIdentity = getTrainerEmailIdentity(trainer);
 
       const sendPromise = sendEmail({
         to: email,
-        subject: `${trainerName} creó tu cuenta en Blackline Fitness`,
+        subject: `${emailIdentity.trainerName} creó tu cuenta en Blackline Fitness`,
+        fromName: emailIdentity.fromName,
+        fromAddress: emailIdentity.fromAddress,
+        replyTo: emailIdentity.replyTo,
+        requireFromAddress: true,
         react: React.createElement(ClientWelcomeEmail, {
-          trainerName,
+          trainerName: emailIdentity.trainerName,
           welcomeUrl,
+          appUrl: serverEnv.APP_URL,
         }),
       });
 
@@ -1401,6 +1906,200 @@ export async function completeFirstLogin(input: {
     logInfo("client.first_login_completed", { userId: user.id });
 
     return { success: true };
+  });
+}
+
+// =============================================================================
+// needsParqPrompt — read-only, called from /client/* layouts to decide whether
+// to surface the PAR-Q dialog. shouldShow = parqStatus is NOT_COMPLETED.
+// =============================================================================
+
+export async function needsParqPrompt(): Promise<
+  ActionResult<{ shouldShow: boolean; parqStatus: ParqStatus }>
+> {
+  return tryCatch(async () => {
+    const user = await requireUser();
+    if (user.role !== "CLIENT") {
+      // Trainer/admin viewing the route — never prompt them.
+      return { shouldShow: false, parqStatus: "NOT_COMPLETED" as ParqStatus };
+    }
+    const profile = await prisma.clientProfile.findUnique({
+      where: { userId: user.id },
+      select: { parqStatus: true },
+    });
+    const parqStatus: ParqStatus = profile?.parqStatus ?? "NOT_COMPLETED";
+    return { shouldShow: parqStatus === "NOT_COMPLETED", parqStatus };
+  });
+}
+
+// =============================================================================
+// recordClientParq
+// =============================================================================
+
+/**
+ * Persist a fully-answered PAR-Q+ 2024 questionnaire for a client.
+ *
+ * Updates `ClientProfile.parqStatus` (GREEN/REVIEW/RED) and, if an
+ * `InitialAssessment` exists, refreshes the `ParqAnswer` rows by soft-deleting
+ * the previous batch and inserting the new one.
+ *
+ * Access:
+ *   - Trainer with an active link to the client, OR
+ *   - The client themselves filling their own PAR-Q.
+ *
+ * Idempotent: re-running with the same answers produces the same status and
+ * a new batch of ParqAnswer rows (the previous batch is soft-deleted).
+ */
+export async function recordClientParq(
+  clientUserId: string,
+  answers: Record<string, "yes" | "no">,
+): Promise<ActionResult<{ parqStatus: ParqStatus }>> {
+  return tryCatch(async () => {
+    const user = await requireUser();
+
+    if (!clientUserId) {
+      throw new ValidationError("CLIENT_USER_ID_REQUIRED", "ID de cliente requerido");
+    }
+
+    if (user.id !== clientUserId) {
+      if (user.role !== "TRAINER") {
+        throw new ForbiddenError(
+          "PARQ_ACCESS_DENIED",
+          "Solo el cliente o su entrenador pueden completar este PAR-Q.",
+        );
+      }
+      await assertOwnsClient(user.id, clientUserId);
+    }
+
+    // ── Validate input: all 10 codes present with yes|no values. ──
+    const expected = new Set<string>(PARQ_QUESTION_CODES);
+    const provided = Object.keys(answers);
+    if (provided.length !== expected.size) {
+      throw new ValidationError(
+        "PARQ_INCOMPLETE",
+        "Debés responder las 10 preguntas del PAR-Q+.",
+      );
+    }
+    for (const code of provided) {
+      if (!expected.has(code)) {
+        throw new ValidationError(
+          "PARQ_UNKNOWN_CODE",
+          `Pregunta desconocida: ${code}.`,
+        );
+      }
+      const val = answers[code];
+      if (val !== "yes" && val !== "no") {
+        throw new ValidationError(
+          "PARQ_INVALID_ANSWER",
+          `Respuesta inválida en ${code}.`,
+        );
+      }
+    }
+
+    // ── Compute status via canonical evaluator. ──
+    const evalAnswers = [...expected].map((code) => ({
+      questionCode: code,
+      answer: answers[code] === "yes",
+    }));
+    const evalResult = evaluateParq(evalAnswers);
+    const newStatus: ParqStatus = evalResult.status;
+
+    const filledBySelf = user.id === clientUserId;
+
+    await prisma.$transaction(async (tx) => {
+      await tx.clientProfile.upsert({
+        where: { userId: clientUserId },
+        create: { userId: clientUserId, parqStatus: newStatus },
+        update: { parqStatus: newStatus },
+      });
+
+      const assessment = await tx.initialAssessment.findUnique({
+        where: { clientUserId },
+        select: { id: true },
+      });
+
+      if (assessment) {
+        // Soft-delete previous answers to keep audit trail.
+        await tx.parqAnswer.updateMany({
+          where: { assessmentId: assessment.id, deletedAt: null },
+          data: { deletedAt: new Date() },
+        });
+        const rows = buildParqAnswerRows(answers).map((r) => ({
+          ...r,
+          assessmentId: assessment.id,
+        }));
+        if (rows.length > 0) {
+          await tx.parqAnswer.createMany({ data: rows });
+        }
+      }
+
+      // Notify each active trainer linked to this client when the client
+      // themselves completes the PAR-Q. Skip when the trainer is the actor
+      // (they already know — they just clicked it themselves).
+      if (filledBySelf) {
+        const links = await tx.trainerClient.findMany({
+          where: {
+            clientId: clientUserId,
+            deletedAt: null,
+            status: { in: ["ACTIVE", "PENDING", "PAUSED"] },
+          },
+          select: { trainerId: true },
+        });
+        const clientUser = await tx.user.findUnique({
+          where: { id: clientUserId },
+          select: { name: true },
+        });
+        const clientName = clientUser?.name ?? "Tu cliente";
+        const statusLabel =
+          newStatus === "GREEN"
+            ? "sin restricciones"
+            : newStatus === "REVIEW"
+              ? "requiere tu revisión"
+              : "requiere autorización médica";
+
+        for (const link of links) {
+          await tx.notification.create({
+            data: {
+              userUserId: link.trainerId,
+              type: "CLIENT_PARQ_COMPLETED",
+              title: `${clientName} completó su PAR-Q`,
+              body: `Estado: ${statusLabel}.`,
+              data: {
+                clientUserId,
+                parqStatus: newStatus,
+              },
+              sentVia: [],
+            },
+          });
+        }
+      }
+    });
+
+    const { ipAddress, userAgent } = await getRequestMeta();
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: user.id,
+        action: "UPDATE",
+        entityType: "ClientProfile",
+        entityId: clientUserId,
+        ipAddress,
+        userAgent,
+        metadata: {
+          field: "parqStatus",
+          newStatus,
+          clientUserId,
+          source: filledBySelf ? "self" : "trainer",
+        },
+      },
+    });
+
+    logInfo("client.parq_recorded", {
+      actorId: user.id,
+      clientUserId,
+      status: newStatus,
+    });
+
+    return { parqStatus: newStatus };
   });
 }
 

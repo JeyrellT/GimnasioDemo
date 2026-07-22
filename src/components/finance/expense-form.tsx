@@ -136,7 +136,7 @@ export function ExpenseForm({ locations, onSuccess, onCancel }: ExpenseFormProps
                 <Input
                   type="date"
                   max={todayISO()}
-                  className="bg-[#09090B] border-[#3F3F46] focus:border-[#3B82F6] h-11 text-sm"
+                  className="bg-[#09090B] border-[#3F3F46] focus:border-brand-primary h-11 text-sm"
                   {...field}
                 />
               </FormControl>
@@ -152,7 +152,7 @@ export function ExpenseForm({ locations, onSuccess, onCancel }: ExpenseFormProps
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs uppercase tracking-wide text-[#A1A1AA]">
-                Monto <span className="text-[#3B82F6]">*</span>
+                Monto <span className="text-brand-primary">*</span>
               </FormLabel>
               <FormControl>
                 <CurrencyInput
@@ -174,7 +174,7 @@ export function ExpenseForm({ locations, onSuccess, onCancel }: ExpenseFormProps
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs uppercase tracking-wide text-[#A1A1AA]">
-                Categoría <span className="text-[#3B82F6]">*</span>
+                Categoría <span className="text-brand-primary">*</span>
               </FormLabel>
               <Select onValueChange={field.onChange} value={field.value ?? ""}>
                 <FormControl>
@@ -242,7 +242,7 @@ export function ExpenseForm({ locations, onSuccess, onCancel }: ExpenseFormProps
                 <Textarea
                   placeholder="Ej: Uniforme nuevo, cuota mensual gym..."
                   maxLength={500}
-                  className="bg-[#09090B] border-[#3F3F46] focus-visible:ring-[#3B82F6] text-sm resize-none min-h-[72px]"
+                  className="bg-[#09090B] border-[#3F3F46] focus-visible:ring-brand-primary text-sm resize-none min-h-[72px]"
                   {...field}
                 />
               </FormControl>
@@ -266,7 +266,7 @@ export function ExpenseForm({ locations, onSuccess, onCancel }: ExpenseFormProps
               variant="outline"
               onClick={onCancel}
               disabled={pending}
-              className="flex-1 border-[#3F3F46] text-[#A1A1AA] hover:border-[#3B82F6] hover:text-[#FAFAFA] h-11"
+              className="flex-1 border-[#3F3F46] text-[#A1A1AA] hover:border-brand-primary hover:text-[#FAFAFA] h-11"
             >
               Cancelar
             </Button>
@@ -274,7 +274,7 @@ export function ExpenseForm({ locations, onSuccess, onCancel }: ExpenseFormProps
           <Button
             type="submit"
             disabled={pending}
-            className="flex-1 bg-[#3B82F6] hover:bg-[#2563EB] text-white h-11 font-semibold disabled:opacity-50"
+            className="flex-1 bg-brand-primary hover:bg-brand-primary-hover text-white h-11 font-semibold disabled:opacity-50"
           >
             {pending ? (
               <>

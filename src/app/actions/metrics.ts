@@ -3,4 +3,5 @@ export {
   listMetrics,
   getLatestMetric,
   recordBodyMetric,
+  deleteClientBodyMetrics,
 } from "@/server/actions/metrics.actions";

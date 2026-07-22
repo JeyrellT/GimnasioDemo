@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { useCallback, useTransition } from "react";
+import { useCallback, useRef, useTransition } from "react";
 import { Search, Loader2 } from "lucide-react";
 
 interface UserSearchBarProps {
@@ -32,6 +32,7 @@ export function UserSearchBar({
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const updateParam = useCallback(
     (key: string, value: string) => {
@@ -51,14 +52,17 @@ export function UserSearchBar({
   const handleSearch = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const v = e.target.value;
-      const params = new URLSearchParams();
-      if (v) params.set("search", v);
-      if (currentRole) params.set("role", currentRole);
-      if (currentSuspended) params.set("suspended", currentSuspended);
-      params.set("page", "1");
-      startTransition(() => {
-        router.push(`${pathname}?${params.toString()}`);
-      });
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+      searchTimeoutRef.current = setTimeout(() => {
+        const params = new URLSearchParams();
+        if (v) params.set("search", v);
+        if (currentRole) params.set("role", currentRole);
+        if (currentSuspended) params.set("suspended", currentSuspended);
+        params.set("page", "1");
+        startTransition(() => {
+          router.push(`${pathname}?${params.toString()}`);
+        });
+      }, 300);
     },
     [router, pathname, currentRole, currentSuspended],
   );
@@ -77,7 +81,7 @@ export function UserSearchBar({
           placeholder="Buscar por email o nombre..."
           defaultValue={currentSearch}
           onChange={handleSearch}
-          className="h-10 w-full rounded-lg border border-[#3F3F46] bg-[#18181B] pl-9 pr-3 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6]"
+          className="h-10 w-full rounded-lg border border-[#3F3F46] bg-[#18181B] pl-9 pr-3 text-sm text-[#FAFAFA] placeholder-[#52525B] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
         />
       </div>
 
@@ -85,7 +89,7 @@ export function UserSearchBar({
       <select
         value={currentRole}
         onChange={(e) => updateParam("role", e.target.value)}
-        className="h-10 rounded-lg border border-[#3F3F46] bg-[#18181B] px-3 text-sm text-[#FAFAFA] focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6]"
+        className="h-10 rounded-lg border border-[#3F3F46] bg-[#18181B] px-3 text-sm text-[#FAFAFA] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
         aria-label="Filtrar por rol"
       >
         {ROLES.map((r) => (
@@ -99,7 +103,7 @@ export function UserSearchBar({
       <select
         value={currentSuspended}
         onChange={(e) => updateParam("suspended", e.target.value)}
-        className="h-10 rounded-lg border border-[#3F3F46] bg-[#18181B] px-3 text-sm text-[#FAFAFA] focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6]"
+        className="h-10 rounded-lg border border-[#3F3F46] bg-[#18181B] px-3 text-sm text-[#FAFAFA] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
         aria-label="Filtrar por estado"
       >
         {SUSPENDED_OPTIONS.map((o) => (

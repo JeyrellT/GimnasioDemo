@@ -1,0 +1,421 @@
+// =============================================================================
+// BLACKLINE FITNESS — Assistant conversation store
+// Owner: frontend-react.
+//
+// Fase 4 — persistencia + sticky client + compresión:
+//   - Zustand `persist` middleware con adapter IndexedDB → conversación
+//     sobrevive a refresh, navegación y cierre del tab.
+//   - stickyClientId/Name — el coach declara con qué cliente está trabajando
+//     y todas las llamadas a tools que aceptan clientId lo usan como default
+//     (vía system-instruction inyectado en agent-runtime).
+//   - compressImage() resizea fotos a max 1500px antes de adjuntarlas — baja
+//     el costo de tokens y el footprint en IDB.
+//
+// Estado NO persistido (partialize):
+//   - pendingAttachments (transient: lo que está por enviarse).
+//   - isThinking, pendingConfirmation, lastError (lifecycle de una vuelta).
+//
+// Fase 5 — resiliencia:
+//   - try/finally en sendMessage / confirmPending / rejectPending garantiza que
+//     isThinking nunca queda colgado aunque el runtime reviente sin llamar onError.
+//   - lastUserInput persiste el último par (text, attachments) para el botón
+//     "Reintentar" de la UI — no requiere bump de versión (campo nullable).
+//   - forceHydrated: setter público mínimo para que page.tsx libere el skeleton
+//     cuando IDB está vacío y onRehydrateStorage no dispara.
+// =============================================================================
+
+"use client";
+
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+
+import { runAgent, resumeAgent } from "@/lib/ai/agent/agent-runtime";
+import type {
+  AssistantAttachment,
+  AssistantMessage,
+  PendingConfirmation,
+  ToolCallRecord,
+} from "@/lib/ai/agent/types";
+import { compressImage } from "@/lib/storage/compress-image";
+import { idbStorage } from "@/lib/storage/idb-storage";
+
+// Mirror the constants used by the existing OCR pipelines so the chat accepts
+// exactly what those tools accept (jpeg/png/webp/heic, ≤10MB).
+const ALLOWED_IMAGE_MIME = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+]);
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+const MAX_ATTACHMENTS_PER_TURN = 4;
+
+interface StickyClient {
+  clientId: string;
+  name: string;
+}
+
+interface AssistantState {
+  messages: AssistantMessage[];
+  /** Files queued for the next user turn. Cleared after sendMessage. */
+  pendingAttachments: AssistantAttachment[];
+  isThinking: boolean;
+  pendingConfirmation: PendingConfirmation | null;
+  lastError: string | null;
+  /** Cliente con el que el coach está trabajando — usado como default en tools. */
+  stickyClient: StickyClient | null;
+  /** Marcado true cuando IDB terminó de rehydratear. Útil para mostrar skeleton. */
+  hasHydrated: boolean;
+  /**
+   * Último input del coach (texto + adjuntos ya comprimidos). Persiste en IDB
+   * para que el botón "Reintentar" funcione incluso después de un refresh.
+   * Es null cuando no hay nada que reintentar (inicio, o luego de reset).
+   */
+  lastUserInput: { text: string; attachments: AssistantAttachment[] } | null;
+
+  sendMessage: (text: string) => Promise<void>;
+  /** Validate, compress, base64-encode, and queue a file for the next turn. */
+  addAttachment: (file: File) => Promise<void>;
+  removeAttachment: (id: string) => void;
+  clearAttachments: () => void;
+  setStickyClient: (client: StickyClient | null) => void;
+  confirmPending: () => Promise<void>;
+  rejectPending: () => Promise<void>;
+  reset: () => void;
+  dismissError: () => void;
+  /**
+   * Re-envía el último mensaje del coach. No-op si lastUserInput es null.
+   * Restaura pendingAttachments con los adjuntos guardados y llama sendMessage.
+   */
+  retryLastMessage: () => Promise<void>;
+  /**
+   * Setter mínimo para que page.tsx libere el skeleton cuando IDB está vacío
+   * y onRehydrateStorage no dispara (ej.: primera visita, IDB limpia).
+   */
+  forceHydrated: () => void;
+}
+
+function newId(prefix: string): string {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/**
+ * Cierra cualquier toolCall que quedó en estado "running" en mensajes
+ * rehydrateados desde IndexedDB.
+ *
+ * Por qué importa: si el coach cierra el tab (o refresca) mientras una tool
+ * estaba ejecutando, su `ToolCallRecord.status` queda en "running" en IDB. Al
+ * volver, `messagesToHistory` serializaba ese call como functionCall +
+ * functionResponse{ error: "" }, y Gemini rechazaba la siguiente llamada con
+ * "Invalid Content" porque el functionResponse no tiene contenido útil.
+ *
+ * Acá los convertimos a "error" con un mensaje legible. El history queda
+ * coherente (cada functionCall del modelo tiene su functionResponse), y el
+ * modelo entiende en el siguiente turno que la acción se cortó.
+ */
+function sanitizeMessages(messages: AssistantMessage[]): AssistantMessage[] {
+  let changed = false;
+  const out = messages.map((m) => {
+    if (m.role !== "tool" || !m.toolCall) return m;
+    if (m.toolCall.status !== "running") return m;
+    changed = true;
+    const finishedAt = m.toolCall.finishedAt ?? Date.now();
+    return {
+      ...m,
+      toolCall: {
+        ...m.toolCall,
+        status: "error" as const,
+        resultText:
+          "Acción interrumpida — el coach cerró la conversación antes de que terminara.",
+        finishedAt,
+      },
+    };
+  });
+  return changed ? out : messages;
+}
+
+// Build the callbacks object once — they only read store-set actions so we
+// don't need to recreate them each call.
+function makeCallbacks(
+  set: (
+    partial:
+      | Partial<AssistantState>
+      | ((s: AssistantState) => Partial<AssistantState>),
+  ) => void,
+) {
+  return {
+    onToolStart: (record: ToolCallRecord) => {
+      set((s) => ({
+        messages: [
+          ...s.messages,
+          {
+            id: record.id,
+            role: "tool" as const,
+            content: record.summary,
+            toolCall: record,
+            createdAt: record.startedAt,
+          },
+        ],
+      }));
+    },
+    onToolFinish: (record: ToolCallRecord) => {
+      set((s) => ({
+        messages: s.messages.map((m) =>
+          m.id === record.id
+            ? { ...m, toolCall: record, content: record.summary }
+            : m,
+        ),
+      }));
+    },
+    onAssistantText: (text: string) => {
+      const assistantMessage: AssistantMessage = {
+        id: newId("asst"),
+        role: "assistant",
+        content: text,
+        createdAt: Date.now(),
+      };
+      set((s) => ({
+        messages: [...s.messages, assistantMessage],
+        isThinking: false,
+        pendingConfirmation: null,
+      }));
+    },
+    onPendingConfirmation: (pending: PendingConfirmation) => {
+      set({
+        pendingConfirmation: pending,
+        isThinking: false,
+      });
+    },
+    onError: (message: string) => {
+      set({
+        isThinking: false,
+        pendingConfirmation: null,
+        lastError: message,
+      });
+    },
+  };
+}
+
+export const useAssistantStore = create<AssistantState>()(
+  persist(
+    (set, get) => ({
+      messages: [],
+      pendingAttachments: [],
+      isThinking: false,
+      pendingConfirmation: null,
+      lastError: null,
+      stickyClient: null,
+      hasHydrated: false,
+      lastUserInput: null,
+
+      reset: () => {
+        set({
+          messages: [],
+          pendingAttachments: [],
+          isThinking: false,
+          pendingConfirmation: null,
+          lastError: null,
+          lastUserInput: null,
+          // stickyClient se mantiene — el coach probablemente sigue trabajando
+          // con la misma persona aunque empiece una conversación nueva.
+        });
+      },
+      dismissError: () => set({ lastError: null }),
+      forceHydrated: () => set({ hasHydrated: true }),
+
+      setStickyClient: (client) => set({ stickyClient: client }),
+
+      addAttachment: async (file) => {
+        if (!ALLOWED_IMAGE_MIME.has(file.type)) {
+          set({
+            lastError: `Formato no soportado (${file.type || "desconocido"}). Subí JPG, PNG, WebP o HEIC.`,
+          });
+          return;
+        }
+        if (file.size > MAX_IMAGE_BYTES) {
+          set({
+            lastError: `La imagen pesa ${(file.size / 1024 / 1024).toFixed(1)}MB. Máximo 10MB.`,
+          });
+          return;
+        }
+        if (get().pendingAttachments.length >= MAX_ATTACHMENTS_PER_TURN) {
+          set({
+            lastError: `Máximo ${MAX_ATTACHMENTS_PER_TURN} imágenes por mensaje.`,
+          });
+          return;
+        }
+        try {
+          const compressed = await compressImage(file);
+          const attachment: AssistantAttachment = {
+            id: newId("att"),
+            fileName: file.name || "imagen",
+            mimeType: compressed.mimeType,
+            sizeBytes: compressed.sizeBytes,
+            data: compressed.data,
+          };
+          set((s) => ({
+            pendingAttachments: [...s.pendingAttachments, attachment],
+            lastError: null,
+          }));
+        } catch (e) {
+          set({
+            lastError: `No se pudo procesar la imagen: ${e instanceof Error ? e.message : String(e)}`,
+          });
+        }
+      },
+
+      removeAttachment: (id) => {
+        set((s) => ({
+          pendingAttachments: s.pendingAttachments.filter((a) => a.id !== id),
+        }));
+      },
+
+      clearAttachments: () => {
+        set({ pendingAttachments: [] });
+      },
+
+      sendMessage: async (rawText) => {
+        const text = rawText.trim();
+        const queued = get().pendingAttachments;
+        if (!text && queued.length === 0) return;
+        if (get().isThinking || get().pendingConfirmation) return;
+
+        const userMessage: AssistantMessage = {
+          id: newId("user"),
+          role: "user",
+          content: text,
+          attachments: queued.length > 0 ? queued : undefined,
+          createdAt: Date.now(),
+        };
+
+        // Defensa: sanear cualquier running zombie que haya sobrevivido al
+        // rehydrate (race condition rara: si onRehydrateStorage no corrió
+        // antes del primer click). Idempotente.
+        const sanitized = sanitizeMessages(get().messages);
+
+        // Guardamos el input ANTES del set para que sea atómico con la
+        // mutación de messages. Si el usuario refresca justo después del set
+        // tenemos el par (text, attachments) disponible para "Reintentar".
+        set({
+          messages: [...sanitized, userMessage],
+          pendingAttachments: [],
+          isThinking: true,
+          lastError: null,
+          lastUserInput: { text, attachments: queued },
+        });
+
+        try {
+          await runAgent({
+            messages: get().messages,
+            stickyClient: get().stickyClient,
+            requestId: newId("req"),
+            callbacks: makeCallbacks(set),
+          });
+        } catch (e) {
+          // Doble cinturón: si el runtime no llamó onError (ej.: lanzó antes
+          // de llegar al bloque try interno del runtime), seteamos el error acá
+          // para que la UI no quede muda.
+          const message = e instanceof Error ? e.message : String(e);
+          set({ lastError: `Fallo inesperado del asistente: ${message}` });
+        } finally {
+          // Garantía absoluta: isThinking no puede quedar colgado aunque el
+          // runtime o el bloque catch exploten.
+          if (get().isThinking) set({ isThinking: false });
+        }
+      },
+
+      confirmPending: async () => {
+        const saved = get().pendingConfirmation;
+        if (!saved) return;
+
+        // Sanitizamos antes de resumir por si el coach refrescó la página
+        // entre que el modelo pidió confirmación y él respondió.
+        const sanitized = sanitizeMessages(get().messages);
+        set({
+          messages: sanitized,
+          pendingConfirmation: null,
+          isThinking: true,
+        });
+
+        try {
+          await resumeAgent({
+            decision: "approve",
+            saved,
+            stickyClient: get().stickyClient,
+            requestId: newId("req"),
+            callbacks: makeCallbacks(set),
+          });
+        } catch (e) {
+          const message = e instanceof Error ? e.message : String(e);
+          set({ lastError: `Fallo inesperado al confirmar: ${message}` });
+        } finally {
+          if (get().isThinking) set({ isThinking: false });
+        }
+      },
+
+      rejectPending: async () => {
+        const saved = get().pendingConfirmation;
+        if (!saved) return;
+
+        // Misma defensa que confirmPending.
+        const sanitized = sanitizeMessages(get().messages);
+        set({
+          messages: sanitized,
+          pendingConfirmation: null,
+          isThinking: true,
+        });
+
+        try {
+          await resumeAgent({
+            decision: "reject",
+            saved,
+            stickyClient: get().stickyClient,
+            requestId: newId("req"),
+            callbacks: makeCallbacks(set),
+          });
+        } catch (e) {
+          const message = e instanceof Error ? e.message : String(e);
+          set({ lastError: `Fallo inesperado al rechazar: ${message}` });
+        } finally {
+          if (get().isThinking) set({ isThinking: false });
+        }
+      },
+
+      retryLastMessage: async () => {
+        const last = get().lastUserInput;
+        if (!last) return;
+        // Restauramos los adjuntos al queue y re-disparamos sendMessage con
+        // el mismo texto. sendMessage sobreescribirá lastUserInput con el
+        // mismo valor → idempotente.
+        set({ pendingAttachments: last.attachments });
+        await get().sendMessage(last.text);
+      },
+    }),
+    {
+      name: "blackline-assistant-conv-v1",
+      storage: createJSONStorage(() => idbStorage),
+      // Solo persistir cosas estables — el estado transitorio (isThinking,
+      // pendingConfirmation, lastError, pendingAttachments) no debe rehydratearse.
+      // lastUserInput sí se persiste: el botón "Reintentar" debe funcionar
+      // aunque el coach refresque la página después de un error.
+      // pendingConfirmation NO se persiste: si el coach reabre el tab con una
+      // confirmación pendiente, el runtime no tiene el contexto para resumir —
+      // es más seguro pedirle al modelo que replantee la acción.
+      partialize: (state) => ({
+        messages: state.messages,
+        stickyClient: state.stickyClient,
+        lastUserInput: state.lastUserInput,
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        // Cerrar tool calls "running" que quedaron zombies en IDB de un turno
+        // previo que se cortó (refresh, cierre de tab). Sin esto, Gemini
+        // rechaza la siguiente llamada con history malformed.
+        state.messages = sanitizeMessages(state.messages);
+        state.hasHydrated = true;
+      },
+      version: 1,
+    },
+  ),
+);

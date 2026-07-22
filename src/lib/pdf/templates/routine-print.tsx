@@ -270,7 +270,7 @@ export function RoutinePrint({
         Puppeteer does NOT support — Puppeteer relies on the headerTemplate API.
       */}
       <footer className="doc-footer" role="contentinfo">
-        <p className="footer-tagline">Tu visión, tu evolución.</p>
+        <p className="footer-tagline">Tu línea, tu fuerza.</p>
         <p className="footer-url">{appUrl}</p>
         {totalPages !== undefined && totalPages > 0 && (
           <p className="footer-pages">

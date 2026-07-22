@@ -4,5 +4,7 @@ export {
   getExerciseDetail,
   createPrivateExercise,
   updateExerciseFromForm as updateExercise,
+  updateExerciseInstructions,
   deleteExercise,
+  setExerciseTrainerMedia,
 } from "@/server/actions/exercises.actions";

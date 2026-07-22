@@ -1,5 +1,5 @@
 // =============================================================================
-// FORJA — Seed entry point
+// BLACKLINE FITNESS — Seed entry point
 // Owner: database-architect.
 //
 // Idempotente. Se invoca con `pnpm db:seed`. Pasos:
@@ -19,10 +19,11 @@ import { hashPassword } from "../../src/lib/crypto/passwords";
 // NOTE: implementación a cargo de python-data-engineer.
 // Firma actual: `(prisma: PrismaClient) => Promise<{ created: number; skipped: number }>`.
 import { seedExercises } from "./exercises";
+import { seedKnowledge } from "./knowledge";
 
 // Demo password used by all 4 demo accounts (trainer, 2 clients, admin).
 // Override with DEMO_PASSWORD env var if needed.
-const DEMO_PASSWORD = process.env.DEMO_PASSWORD ?? "forja2026";
+const DEMO_PASSWORD = process.env.DEMO_PASSWORD ?? "blackline2026";
 
 const prisma = new PrismaClient({ log: ["warn", "error"] });
 
@@ -45,7 +46,7 @@ interface PlanSeed {
 const SUBSCRIPTION_PLANS: PlanSeed[] = [
   {
     tier: SubscriptionTier.SOLO,
-    name: "Forja Solo",
+    name: "Blackline Solo",
     priceCRC: "8900.00",
     maxClients: 5,
     features: [
@@ -58,7 +59,7 @@ const SUBSCRIPTION_PLANS: PlanSeed[] = [
   },
   {
     tier: SubscriptionTier.PRO,
-    name: "Forja Pro",
+    name: "Blackline Pro",
     priceCRC: "22900.00",
     maxClients: 25,
     features: [
@@ -74,7 +75,7 @@ const SUBSCRIPTION_PLANS: PlanSeed[] = [
   },
   {
     tier: SubscriptionTier.STUDIO,
-    name: "Forja Studio",
+    name: "Blackline Studio",
     priceCRC: "44900.00",
     maxClients: 60,
     features: [
@@ -127,11 +128,11 @@ async function seedSubscriptionPlans(): Promise<void> {
 // recorrer todo el onboarding.
 // -----------------------------------------------------------------------------
 
-const DEMO_TRAINER_EMAIL = "demo.trainer@forja.app";
-const DEMO_CLIENT_EMAILS = ["demo.cliente1@forja.app", "demo.cliente2@forja.app"];
-const DEMO_ADMIN_EMAIL = "demo.admin@forja.app";
-const DEMO_CLIENT_EMAIL_3 = "demo.cliente3@forja.app";
-const DEMO_CLIENT_EMAIL_4 = "demo.cliente4@forja.app";
+const DEMO_TRAINER_EMAIL = "demo.trainer@blacklinefitness.app";
+const DEMO_CLIENT_EMAILS = ["demo.cliente1@blacklinefitness.app", "demo.cliente2@blacklinefitness.app"];
+const DEMO_ADMIN_EMAIL = "demo.admin@blacklinefitness.app";
+const DEMO_CLIENT_EMAIL_3 = "demo.cliente3@blacklinefitness.app";
+const DEMO_CLIENT_EMAIL_4 = "demo.cliente4@blacklinefitness.app";
 
 async function seedDemoData(): Promise<void> {
   console.log("[seed] Demo data (SEED_DEMO=true)...");
@@ -167,7 +168,7 @@ async function seedDemoData(): Promise<void> {
       passwordHash,
       trainerProfile: {
         create: {
-          tradeName: "Coach Demo Forja",
+          tradeName: "Coach Demo Blackline",
           specialty: "Hipertrofia y fuerza",
           bio: "Cuenta demo para desarrollo local. No es un entrenador real.",
           defaultMonthlyPriceCRC: new Prisma.Decimal("20000.00"),
@@ -194,7 +195,7 @@ async function seedDemoData(): Promise<void> {
 
   const DEMO_CLIENTS: DemoClientSeed[] = [
     {
-      email: "demo.cliente1@forja.app",
+      email: "demo.cliente1@blacklinefitness.app",
       name: "Ana Demo",
       gender: "FEMALE",
       dateOfBirth: new Date("1997-08-22"),
@@ -203,7 +204,7 @@ async function seedDemoData(): Promise<void> {
       goal: "MUSCLE_GAIN",
     },
     {
-      email: "demo.cliente2@forja.app",
+      email: "demo.cliente2@blacklinefitness.app",
       name: "Bruno Demo",
       gender: "MALE",
       dateOfBirth: new Date("1992-03-15"),
@@ -1543,7 +1544,7 @@ async function seedDemoData(): Promise<void> {
 // -----------------------------------------------------------------------------
 async function main(): Promise<void> {
   const start = Date.now();
-  console.log("=== FORJA seed ===");
+  console.log("=== BLACKLINE FITNESS seed ===");
   console.log(`node_env: ${process.env.NODE_ENV ?? "development"}`);
   console.log(`seed_demo: ${process.env.SEED_DEMO ?? "false"}`);
 
@@ -1554,6 +1555,13 @@ async function main(): Promise<void> {
   const exResult = await seedExercises(prisma);
   console.log(
     `  ok  exercises  ${exResult.created} created, ${exResult.skipped} skipped`,
+  );
+
+  // Knowledge base for the AI assistant — RAG corpus.
+  console.log("[seed] Knowledge chunks (RAG corpus)...");
+  const kbResult = await seedKnowledge(prisma);
+  console.log(
+    `  ok  knowledge  ${kbResult.created} created, ${kbResult.updated} updated, ${kbResult.skipped} skipped`,
   );
 
   if (process.env.SEED_DEMO === "true") {

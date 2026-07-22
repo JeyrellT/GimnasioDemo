@@ -1,7 +1,7 @@
 export const dynamic = "force-static";
 import type { MetadataRoute } from "next";
 
-const base = process.env.GITHUB_PAGES === "true" ? "/BlacklineFitness" : "";
+const base = "";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {

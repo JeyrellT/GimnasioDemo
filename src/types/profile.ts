@@ -64,6 +64,17 @@ export interface BodyComposition {
     leftCalfCm: number | null;
     rightCalfCm: number | null;
   };
+  circumferenceDeltas: Partial<
+    Record<
+      BodyZone,
+      {
+        valueCm: number;
+        deltaCm: number;
+        measuredAt: Date;
+        trendSparkline: number[];
+      }
+    >
+  >;
   freshness: Record<BodyZone, { lastMeasuredAt: Date | null; daysSince: number | null }>;
 }
 
@@ -118,6 +129,14 @@ export interface ClientProfileDetail {
   weightHistory12w: number[];
   bodyFatHistory12w: number[];
   muscleMassHistory12w: number[];
+  measurementHighlights: Array<{
+    zone: BodyZone;
+    label: string;
+    valueCm: number;
+    deltaCm: number;
+    measuredAt: Date;
+    trendSparkline: number[];
+  }>;
 }
 
 export interface ScaleData {

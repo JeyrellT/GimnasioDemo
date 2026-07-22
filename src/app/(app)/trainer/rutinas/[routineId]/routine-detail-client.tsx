@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Loader2, UserCheck, CalendarDays, Dumbbell, Clock, Target } from "lucide-react";
+import { ArrowLeft, Loader2, UserCheck, CalendarDays, Dumbbell, Clock, Target } from "lucide-react";
 import { getRoutine } from "@/app/actions/routines";
 import { searchExercises } from "@/app/actions/exercises";
 import { RoutineBuilderClient } from "./routine-builder-client";
@@ -12,8 +12,9 @@ import type { RoutineWithDays } from "@/types/domain";
 // ── Goal config ───────────────────────────────────────────────────────────────
 
 const GOAL_META: Record<string, { label: string; color: string; bg: string }> = {
-  HYPERTROPHY: { label: "Hipertrofia",              color: "#3B82F6", bg: "rgba(255,106,26,0.12)" },
-  STRENGTH:    { label: "Fuerza",                   color: "#3B82F6", bg: "rgba(59,130,246,0.12)"  },
+  // Bug #6: STRENGTH gets a distinct red — was identical to HYPERTROPHY (both brand-primary)
+  HYPERTROPHY: { label: "Hipertrofia",              color: "var(--brand-primary)", bg: "var(--brand-tint)" },
+  STRENGTH:    { label: "Fuerza",                   color: "#EF4444",              bg: "rgba(239,68,68,0.12)"  },
   ENDURANCE:   { label: "Resistencia",              color: "#22C55E", bg: "rgba(34,197,94,0.12)"   },
   FAT_LOSS:    { label: "Pérdida de grasa",         color: "#F59E0B", bg: "rgba(245,158,11,0.12)"  },
   GENERAL:     { label: "General / Mantenimiento",  color: "#A855F7", bg: "rgba(168,85,247,0.12)"  },
@@ -27,14 +28,21 @@ function getGoalMeta(goal: string) {
 
 interface Props {
   routineId: string;
+  assignedRoutineId?: string;
+  returnToClientId?: string;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function RoutineDetailClient({ routineId }: Props) {
+export default function RoutineDetailClient({
+  routineId,
+  assignedRoutineId,
+  returnToClientId,
+}: Props) {
   const [routine, setRoutine] = useState<RoutineDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [missing, setMissing] = useState(false);
+  const storeDays = useRoutineBuilderStore((s) => s.days);
 
   useEffect(() => {
     async function load() {
@@ -59,7 +67,7 @@ export default function RoutineDetailClient({ routineId }: Props) {
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-[#3B82F6]" aria-label="Cargando rutina" />
+        <Loader2 className="h-6 w-6 animate-spin text-brand-primary" aria-label="Cargando rutina" />
       </div>
     );
   }
@@ -69,7 +77,6 @@ export default function RoutineDetailClient({ routineId }: Props) {
   }
 
   const goal = getGoalMeta(routine.goal);
-  const storeDays = useRoutineBuilderStore((s) => s.days);
   const totalExercises = storeDays.length > 0
     ? storeDays.reduce((sum, d) => sum + d.exercises.length, 0)
     : routine.days.reduce((sum, d) => sum + d.exercises.length, 0);
@@ -95,6 +102,15 @@ export default function RoutineDetailClient({ routineId }: Props) {
 
   return (
     <div className="space-y-6">
+      {returnToClientId && (
+        <Link
+          href={`/trainer/clientes/${returnToClientId}/rutinas`}
+          className="inline-flex min-h-[40px] items-center gap-2 rounded-lg border border-[#3F3F46] bg-[#18181B] px-3 py-2 text-xs font-semibold text-[#A1A1AA] transition-colors hover:border-brand-primary/40 hover:text-[#FAFAFA]"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Rutinas del cliente
+        </Link>
+      )}
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <div className="rounded-2xl border border-[#3F3F46] bg-[#18181B] overflow-hidden">
         {/* Gradient accent line */}
@@ -132,7 +148,7 @@ export default function RoutineDetailClient({ routineId }: Props) {
             {/* Assign CTA */}
             <Link
               href={`/trainer/rutinas/${routineId}/asignar`}
-              className="shrink-0 flex items-center gap-2 rounded-xl border border-[#3F3F46] bg-[#09090B] px-4 py-2.5 text-xs font-semibold text-[#FAFAFA] min-h-[44px] hover:border-[#3B82F6] hover:text-[#3B82F6] transition-colors"
+              className="shrink-0 flex items-center gap-2 rounded-xl border border-[#3F3F46] bg-[#09090B] px-4 py-2.5 text-xs font-semibold text-[#FAFAFA] min-h-[44px] hover:border-brand-primary hover:text-brand-primary transition-colors"
             >
               <UserCheck className="h-4 w-4" aria-hidden="true" />
               Asignar
@@ -159,7 +175,10 @@ export default function RoutineDetailClient({ routineId }: Props) {
       </div>
 
       {/* ── Builder ───────────────────────────────────────────────────────── */}
-      <RoutineBuilderClient routine={routine as unknown as RoutineWithDays} />
+      <RoutineBuilderClient
+        routine={routine as unknown as RoutineWithDays}
+        assignedRoutineId={assignedRoutineId}
+      />
     </div>
   );
 }
@@ -178,7 +197,7 @@ function NotFoundView() {
       </div>
       <Link
         href="/trainer/rutinas"
-        className="text-xs text-[#3B82F6] hover:text-[#2563EB] transition-colors"
+        className="text-xs text-brand-primary hover:text-brand-primary-hover transition-colors"
       >
         Volver a mis rutinas
       </Link>

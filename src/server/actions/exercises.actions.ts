@@ -24,8 +24,13 @@ import {
   ValidationError,
 } from "@/lib/errors";
 import { logInfo } from "@/lib/logger";
+import {
+  deriveVideoThumbnail,
+  toClientMediaUrl,
+  isSupportedVideoUrl,
+} from "@/lib/media/video-url";
 import type { ActionResult, ExerciseSearchResult } from "@/types/api";
-import type { Exercise, MuscleGroup, ExerciseEquipment, ExerciseDifficulty } from "@prisma/client";
+import type { Exercise, MuscleGroup, ExerciseEquipment, ExerciseDifficulty, ExerciseCategory } from "@prisma/client";
 import { Prisma } from "@prisma/client";
 
 // -----------------------------------------------------------------------------
@@ -49,9 +54,11 @@ function toSearchResult(ex: Exercise): ExerciseSearchResult {
     id: ex.id,
     slug: ex.slug,
     nameEs: ex.nameEs,
+    nameEn: ex.nameEn ?? null,
     primaryMuscle: ex.primaryMuscle,
     equipment: ex.equipment,
     difficulty: ex.difficulty,
+    category: ex.category ?? "STRENGTH",
     gifUrl: ex.gifUrl,
     thumbnailUrl: ex.thumbnailUrl,
   };
@@ -88,6 +95,20 @@ function parseDifficulty(value: string | undefined): ExerciseDifficulty | undefi
     : undefined;
 }
 
+/** Ensure a category filter value is a valid ExerciseCategory enum member. */
+function parseCategory(value: string | undefined): ExerciseCategory | undefined {
+  const valid: ExerciseCategory[] = ["STRENGTH", "WARMUP"];
+  return valid.includes(value as ExerciseCategory)
+    ? (value as ExerciseCategory)
+    : undefined;
+}
+
+/** Validate the owner filter value. */
+function parseOwner(value: string | undefined): "mine" | "public" | undefined {
+  if (value === "mine" || value === "public") return value;
+  return undefined;
+}
+
 // -----------------------------------------------------------------------------
 // searchExercises
 // -----------------------------------------------------------------------------
@@ -97,7 +118,9 @@ export interface SearchExercisesInput {
   primaryMuscle?: string;
   equipment?: string;
   difficulty?: string;
+  category?: string;
   muscle?: string;
+  owner?: "mine" | "public";
   page?: number;
   limit?: number;
 }
@@ -119,6 +142,8 @@ export async function searchExercises(
     muscle?: string;
     equipment?: string;
     difficulty?: string;
+    category?: string;
+    owner?: "mine" | "public";
   },
   page = 1,
   limit = 20,
@@ -128,7 +153,7 @@ export async function searchExercises(
     const inp = queryOrInput;
     return searchExercises(
       inp.query ?? "",
-      { muscle: inp.primaryMuscle ?? inp.muscle, equipment: inp.equipment, difficulty: inp.difficulty },
+      { muscle: inp.primaryMuscle ?? inp.muscle, equipment: inp.equipment, difficulty: inp.difficulty, category: inp.category, owner: inp.owner },
       inp.page ?? 1,
       inp.limit ?? 20,
     );
@@ -141,35 +166,36 @@ export async function searchExercises(
     const muscle = parseMuscle(filters?.muscle);
     const equipment = parseEquipment(filters?.equipment);
     const difficulty = parseDifficulty(filters?.difficulty);
+    const category = parseCategory(filters?.category);
+    const owner = parseOwner(filters?.owner);
 
     if (query.trim().length > 0) {
-      // Sanitize query: replace non-alphanumeric/space with space, join tokens
-      // with & for AND semantics in tsquery.
-      const sanitized = query
+      // ILIKE search on nameEs/nameEn with accent + case insensitivity.
+      // TRANSLATE() maps Spanish accented chars to their unaccented form on
+      // both sides of the comparison, so "sentadilla" matches "Sentadilla"
+      // and "biceps" matches "Bíceps". No PG extension required.
+      const escapedQuery = query
         .trim()
-        .replace(/[^a-záéíóúüñ\s]/gi, " ")
-        .split(/\s+/)
-        .filter(Boolean)
-        .join(" & ");
+        .replace(/\\/g, "\\\\")
+        .replace(/%/g, "\\%")
+        .replace(/_/g, "\\_");
+      const likePattern = `%${escapedQuery}%`;
 
-      // Raw query: tsvector FTS with optional enum filters.
-      // We build a parameterized query to avoid SQL injection.
-      // Visibility: public OR owned by current user.
       type RawRow = {
         id: string;
         slug: string;
         nameEs: string;
+        nameEn: string | null;
         primaryMuscle: MuscleGroup;
         equipment: ExerciseEquipment;
         difficulty: ExerciseDifficulty;
+        category: ExerciseCategory;
         gifUrl: string | null;
         thumbnailUrl: string | null;
+        mediaUrl: string | null;
         count: bigint;
       };
 
-      // Build dynamic WHERE clauses for optional enum filters.
-      // Prisma.$queryRaw uses tagged template literals for safe parameterization.
-      // We use a two-query approach: one for rows, one for total count.
       const muscleSql = muscle
         ? Prisma.sql`AND e."primaryMuscle" = ${muscle}::"MuscleGroup"`
         : Prisma.empty;
@@ -179,32 +205,57 @@ export async function searchExercises(
       const difficultySql = difficulty
         ? Prisma.sql`AND e."difficulty" = ${difficulty}::"ExerciseDifficulty"`
         : Prisma.empty;
+      const categorySql = category
+        ? Prisma.sql`AND e."category" = ${category}::"ExerciseCategory"`
+        : Prisma.empty;
+      const ownerSql = owner === "mine"
+        ? Prisma.sql`AND e."createdById" = ${user.id}`
+        : owner === "public"
+          ? Prisma.sql`AND e."isPublic" = true`
+          : Prisma.sql`AND (e."isPublic" = true OR e."createdById" = ${user.id})`;
 
       const rows = await prisma.$queryRaw<RawRow[]>`
         SELECT
           e.id,
           e.slug,
           e."nameEs",
+          e."nameEn",
           e."primaryMuscle",
           e.equipment,
           e.difficulty,
+          e.category,
           e."gifUrl",
           e."thumbnailUrl",
+          e."mediaUrl",
           COUNT(*) OVER () AS count
         FROM "Exercise" e
         WHERE e."deletedAt" IS NULL
-          AND (e."isPublic" = true OR e."createdById" = ${user.id})
-          AND e."searchVector" @@ to_tsquery('spanish', ${sanitized})
+          ${ownerSql}
+          AND (
+            LOWER(TRANSLATE(e."nameEs", 'áéíóúüñÁÉÍÓÚÜÑ', 'aeiouunAEIOUUN'))
+              LIKE LOWER(TRANSLATE(${likePattern}, 'áéíóúüñÁÉÍÓÚÜÑ', 'aeiouunAEIOUUN'))
+            OR (
+              e."nameEn" IS NOT NULL
+              AND LOWER(TRANSLATE(e."nameEn", 'áéíóúüñÁÉÍÓÚÜÑ', 'aeiouunAEIOUUN'))
+                LIKE LOWER(TRANSLATE(${likePattern}, 'áéíóúüñÁÉÍÓÚÜÑ', 'aeiouunAEIOUUN'))
+            )
+          )
           ${muscleSql}
           ${equipmentSql}
           ${difficultySql}
-        ORDER BY ts_rank(e."searchVector", to_tsquery('spanish', ${sanitized})) DESC
+          ${categorySql}
+        ORDER BY e."nameEs" ASC
         LIMIT ${limit} OFFSET ${offset}
       `;
 
       const total = rows.length > 0 ? Number(rows[0]!.count) : 0;
 
-      logInfo("exercises.searchExercises.fts", {
+      const overrides = await fetchTrainerMediaOverrides(
+        user.id,
+        rows.map((r) => r.id),
+      );
+
+      logInfo("exercises.searchExercises.like", {
         userId: user.id,
         query,
         total,
@@ -212,27 +263,43 @@ export async function searchExercises(
       });
 
       return {
-        exercises: rows.map((r) => ({
-          id: r.id,
-          slug: r.slug,
-          nameEs: r.nameEs,
-          primaryMuscle: r.primaryMuscle,
-          equipment: r.equipment,
-          difficulty: r.difficulty,
-          gifUrl: r.gifUrl,
-          thumbnailUrl: r.thumbnailUrl,
-        })),
+        exercises: rows.map((r) => {
+          const o = overrides.get(r.id);
+          // Precedence: trainer override → catalog mediaUrl (if it's a video
+          // URL we can derive a thumb from) → original catalog thumbnail.
+          const catalogDerivedThumb = deriveVideoThumbnail(r.mediaUrl);
+          return {
+            id: r.id,
+            slug: r.slug,
+            nameEs: r.nameEs,
+            nameEn: r.nameEn ?? null,
+            primaryMuscle: r.primaryMuscle,
+            equipment: r.equipment,
+            difficulty: r.difficulty,
+            category: r.category ?? "STRENGTH",
+            gifUrl: r.gifUrl,
+            thumbnailUrl: o?.thumbnailUrl ?? catalogDerivedThumb ?? r.thumbnailUrl,
+          };
+        }),
         total,
       };
     }
 
     // No query: use Prisma findMany with filters
+    const visibilityFilter: Prisma.ExerciseWhereInput =
+      owner === "mine"
+        ? { createdById: user.id }
+        : owner === "public"
+          ? { isPublic: true }
+          : { OR: [{ isPublic: true }, { createdById: user.id }] };
+
     const where: Prisma.ExerciseWhereInput = {
       deletedAt: null,
-      OR: [{ isPublic: true }, { createdById: user.id }],
+      ...visibilityFilter,
       ...(muscle && { primaryMuscle: muscle }),
       ...(equipment && { equipment }),
       ...(difficulty && { difficulty }),
+      ...(category && { category }),
     };
 
     const [exercises, total] = await Promise.all([
@@ -242,11 +309,14 @@ export async function searchExercises(
           id: true,
           slug: true,
           nameEs: true,
+          nameEn: true,
           primaryMuscle: true,
           equipment: true,
           difficulty: true,
+          category: true,
           gifUrl: true,
           thumbnailUrl: true,
+          mediaUrl: true,
         },
         orderBy: [{ nameEs: "asc" }],
         skip: offset,
@@ -255,6 +325,21 @@ export async function searchExercises(
       prisma.exercise.count({ where }),
     ]);
 
+    const overrides = await fetchTrainerMediaOverrides(
+      user.id,
+      exercises.map((e) => e.id),
+    );
+    // Precedence: trainer override → catalog mediaUrl (if it's a video URL
+    // we can derive a thumb from) → original catalog thumbnail.
+    // mediaUrl is dropped from the returned object so the search result shape
+    // matches ExerciseSearchResult.
+    const overlaid = exercises.map(({ mediaUrl, ...rest }) => {
+      const o = overrides.get(rest.id);
+      const derived = o?.thumbnailUrl ?? deriveVideoThumbnail(mediaUrl);
+      if (!derived) return rest;
+      return { ...rest, thumbnailUrl: derived };
+    });
+
     logInfo("exercises.searchExercises.filter", {
       userId: user.id,
       filters,
@@ -262,8 +347,71 @@ export async function searchExercises(
       page,
     });
 
-    return { exercises, total };
+    return { exercises: overlaid, total };
   });
+}
+
+// -----------------------------------------------------------------------------
+// Trainer media override helpers
+//
+// `TrainerExerciseMedia` lets a coach attach a personal Drive/YouTube/Vimeo
+// link to ANY exercise (including public seed entries) without mutating the
+// shared catalog row. These helpers fetch the overrides for the current
+// trainer in batch so callers can overlay them on lists/details cheaply.
+// -----------------------------------------------------------------------------
+
+interface TrainerMediaOverlay {
+  mediaUrl: string | null;
+  thumbnailUrl: string | null;
+}
+
+/**
+ * Look up the trainer's overrides for a set of exercise IDs and return a map
+ * `exerciseId → { mediaUrl, thumbnailUrl(derived) }`. Skips work if the caller
+ * is not a trainer or the set is empty.
+ */
+async function fetchTrainerMediaOverrides(
+  trainerUserId: string,
+  exerciseIds: Iterable<string>,
+): Promise<Map<string, TrainerMediaOverlay>> {
+  const ids = [...new Set([...exerciseIds])];
+  if (ids.length === 0) return new Map();
+
+  const rows = await prisma.trainerExerciseMedia.findMany({
+    where: { trainerUserId, exerciseId: { in: ids }, deletedAt: null },
+    select: { exerciseId: true, mediaUrl: true },
+  });
+
+  return new Map(
+    rows.map((r) => [
+      r.exerciseId,
+      {
+        mediaUrl: r.mediaUrl,
+        thumbnailUrl: deriveVideoThumbnail(r.mediaUrl),
+      },
+    ]),
+  );
+}
+
+// -----------------------------------------------------------------------------
+// pickPlayableMediaUrl
+// -----------------------------------------------------------------------------
+
+/**
+ * Devuelve el primer URL reproducible (Drive / YouTube / Vimeo / proxy) entre
+ * los candidatos. Si el primero no es reproducible pero el segundo sí, gana
+ * el segundo — esto permite que un override roto del trainer caiga al
+ * catálogo automáticamente sin pedirle al usuario que corra ningún script.
+ *
+ * Si ninguno es reproducible, devuelve el primero existente (o null).
+ */
+function pickPlayableMediaUrl(
+  primary: string | null | undefined,
+  fallback: string | null | undefined,
+): string | null {
+  if (primary && isSupportedVideoUrl(primary)) return primary;
+  if (fallback && isSupportedVideoUrl(fallback)) return fallback;
+  return primary ?? fallback ?? null;
 }
 
 // -----------------------------------------------------------------------------
@@ -295,7 +443,135 @@ export async function getExercise(id: string | { id: string }): Promise<ActionRe
       );
     }
 
-    return exercise;
+    // Apply the calling trainer's media override (if any) on top of the
+    // catalog row. For clients/admins the override map is empty and the
+    // exercise is returned with just the catalog-derived thumbnail.
+    const overrides = await fetchTrainerMediaOverrides(user.id, [exercise.id]);
+    const override = overrides.get(exercise.id);
+    // Pick the first playable URL. Si el override existe pero NO es Drive /
+    // YouTube / Vimeo (link random pegado en una versión anterior, antes de
+    // que pusiéramos el allowlist en setExerciseTrainerMedia), caemos al
+    // catálogo que sí mandamos por el seed. Esto evita que un override viejo
+    // "roto" siga pisando un Drive válido del JSON.
+    const effectiveMediaUrl = pickPlayableMediaUrl(
+      override?.mediaUrl,
+      exercise.mediaUrl,
+    );
+    // If the effective mediaUrl is a recognized video URL, derive its
+    // thumbnail so the biblioteca card and other thumbnail consumers show the
+    // video poster instead of the original seed photo.
+    const derivedThumb =
+      override?.thumbnailUrl ?? deriveVideoThumbnail(exercise.mediaUrl);
+    return {
+      ...exercise,
+      // Drive URLs are rewritten to /api/exercise/{id}/video so the frontend
+      // never sees the Drive ID — backend resolves + proxies on demand.
+      mediaUrl: toClientMediaUrl(effectiveMediaUrl, exercise.id),
+      thumbnailUrl: derivedThumb ?? exercise.thumbnailUrl,
+    };
+  });
+}
+
+// -----------------------------------------------------------------------------
+// setExerciseTrainerMedia — write a video link for this trainer / exercise pair
+// -----------------------------------------------------------------------------
+
+export interface SetExerciseTrainerMediaInput {
+  exerciseId: string;
+  mediaUrl: string | null;
+}
+
+/**
+ * Set or clear the video URL for an exercise from the current trainer's
+ * perspective. Smart routing:
+ *
+ *  - If the trainer owns a PRIVATE exercise, we write to `Exercise.mediaUrl`
+ *    directly (their personal catalog row).
+ *  - Otherwise (public seed entry or someone else's exercise), we upsert a
+ *    row in `TrainerExerciseMedia` so the change stays scoped to this trainer.
+ *
+ * Passing `mediaUrl = null` (or empty string) clears the override / catalog
+ * value.
+ */
+export async function setExerciseTrainerMedia(
+  input: SetExerciseTrainerMediaInput,
+): Promise<ActionResult<{ ok: true; mediaUrl: string | null }>> {
+  return tryCatch(async () => {
+    const user = await requireTrainer();
+    const normalized =
+      !input.mediaUrl || input.mediaUrl.trim() === "" ? null : input.mediaUrl.trim();
+
+    if (normalized !== null) {
+      // Sanity de URL + allowlist de hosts. Solo aceptamos servicios que el
+      // player sabe embeber (Drive / YouTube / Vimeo). Esto previene que un
+      // link random como un .mp4 hosteado en otro lado, un Telegram, un
+      // file:// o un host interno termine como override "roto" en
+      // TrainerExerciseMedia (era el bug que dejaba el panel mostrando
+      // "Video externo / Ver video" en vez del GIF embebido).
+      try {
+        new URL(normalized);
+      } catch {
+        throw new ValidationError("INVALID_URL", "El link de video no es una URL válida.");
+      }
+      if (!isSupportedVideoUrl(normalized)) {
+        throw new ValidationError(
+          "UNSUPPORTED_VIDEO_HOST",
+          "Solo se aceptan links de Google Drive, YouTube o Vimeo.",
+        );
+      }
+    }
+
+    const exercise = await prisma.exercise.findUnique({
+      where: { id: input.exerciseId, deletedAt: null },
+      select: { id: true, isPublic: true, createdById: true },
+    });
+    if (!exercise) {
+      throw new NotFoundError("EXERCISE_NOT_FOUND", "Ejercicio no encontrado.");
+    }
+
+    const ownsPrivate =
+      !exercise.isPublic && exercise.createdById === user.id;
+
+    if (ownsPrivate) {
+      await prisma.exercise.update({
+        where: { id: exercise.id },
+        data: { mediaUrl: normalized },
+      });
+    } else if (normalized === null) {
+      await prisma.trainerExerciseMedia.deleteMany({
+        where: { trainerUserId: user.id, exerciseId: exercise.id },
+      });
+    } else {
+      await prisma.trainerExerciseMedia.upsert({
+        where: {
+          trainerUserId_exerciseId: {
+            trainerUserId: user.id,
+            exerciseId: exercise.id,
+          },
+        },
+        create: {
+          trainerUserId: user.id,
+          exerciseId: exercise.id,
+          mediaUrl: normalized,
+        },
+        update: { mediaUrl: normalized, deletedAt: null },
+      });
+    }
+
+    logInfo("exercises.setExerciseTrainerMedia", {
+      userId: user.id,
+      exerciseId: exercise.id,
+      cleared: normalized === null,
+      ownsPrivate,
+    });
+
+    // Rewrite Drive URLs to the proxy form so the caller (ExerciseMediaGallery
+    // onMediaChanged) gets the same URL shape that getExerciseDetail returns.
+    // YouTube/Vimeo and null pass through unchanged.
+    return {
+      ok: true as const,
+      mediaUrl: toClientMediaUrl(normalized, exercise.id),
+    };
   });
 }
 
@@ -312,6 +588,7 @@ export interface CreateExerciseInput {
   secondaryMuscles?: string | string[];
   equipment: string;
   difficulty: string;
+  category?: string;
   mediaUrl?: string;
   gifUrl?: string;
   thumbnailUrl?: string;
@@ -342,6 +619,7 @@ export async function createExercise(
       : formData!.get("secondaryMuscles")?.toString();
     const equipmentRaw = typed ? typed.equipment : formData!.get("equipment")?.toString();
     const difficultyRaw = typed ? typed.difficulty : formData!.get("difficulty")?.toString();
+    const categoryRaw = typed ? typed.category : formData!.get("category")?.toString();
     const mediaUrl = typed ? (typed.mediaUrl ?? undefined) : (formData!.get("mediaUrl")?.toString() ?? undefined);
     const gifUrl = typed ? (typed.gifUrl ?? undefined) : (formData!.get("gifUrl")?.toString() ?? undefined);
     const thumbnailUrl = typed ? (typed.thumbnailUrl ?? undefined) : (formData!.get("thumbnailUrl")?.toString() ?? undefined);
@@ -382,6 +660,8 @@ export async function createExercise(
       slug = `${slug}-${Date.now()}`;
     }
 
+    const exerciseCategory = parseCategory(categoryRaw) ?? "STRENGTH";
+
     const exercise = await prisma.exercise.create({
       data: {
         slug,
@@ -393,6 +673,7 @@ export async function createExercise(
         secondaryMuscles,
         equipment,
         difficulty,
+        category: exerciseCategory,
         mediaUrl,
         gifUrl,
         thumbnailUrl,
@@ -426,6 +707,7 @@ export interface UpdateExerciseInput {
   secondaryMuscles?: string | string[];
   equipment?: string;
   difficulty?: string;
+  category?: string;
   mediaUrl?: string | null;
   gifUrl?: string | null;
   thumbnailUrl?: string | null;
@@ -504,20 +786,60 @@ export async function updateExercise(
     const difficulty = parseDifficulty(difficultyRaw);
     if (difficulty) patch.difficulty = difficulty;
 
+    const categoryRaw = typed ? typed.category : fd?.get("category")?.toString();
+    const cat = parseCategory(categoryRaw);
+    if (cat) patch.category = cat;
+
     const mediaUrl = typed ? typed.mediaUrl : fd?.get("mediaUrl")?.toString();
-    if (mediaUrl !== undefined) patch.mediaUrl = mediaUrl || null;
+    // undefined  → omit (don't touch DB column)
+    // null / ""  → explicit clear, set to NULL
+    // non-empty  → set to that value
+    if (mediaUrl !== undefined) patch.mediaUrl = (mediaUrl === "" || mediaUrl === null) ? null : mediaUrl;
 
     const gifUrl = typed ? typed.gifUrl : fd?.get("gifUrl")?.toString();
-    if (gifUrl !== undefined) patch.gifUrl = gifUrl || null;
+    if (gifUrl !== undefined) patch.gifUrl = (gifUrl === "" || gifUrl === null) ? null : gifUrl;
 
     const thumbnailUrl = typed ? typed.thumbnailUrl : fd?.get("thumbnailUrl")?.toString();
-    if (thumbnailUrl !== undefined) patch.thumbnailUrl = thumbnailUrl || null;
+    if (thumbnailUrl !== undefined) patch.thumbnailUrl = (thumbnailUrl === "" || thumbnailUrl === null) ? null : thumbnailUrl;
 
     await prisma.exercise.update({ where: { id }, data: patch });
 
     logInfo("exercises.updateExercise", { userId: user.id, exerciseId: id });
 
     return { updated: true as const, exerciseId: id };
+  });
+}
+
+// -----------------------------------------------------------------------------
+// updateExerciseInstructions — any trainer can edit instructions on any exercise
+// -----------------------------------------------------------------------------
+
+export async function updateExerciseInstructions(
+  input: { id: string; instructionsEs: string },
+): Promise<ActionResult<{ updated: true }>> {
+  return tryCatch(async () => {
+    const user = await requireTrainer();
+
+    const exercise = await prisma.exercise.findUnique({
+      where: { id: input.id, deletedAt: null },
+      select: { id: true },
+    });
+
+    if (!exercise) {
+      throw new NotFoundError("EXERCISE_NOT_FOUND", "Ejercicio no encontrado.");
+    }
+
+    await prisma.exercise.update({
+      where: { id: input.id },
+      data: { instructionsEs: input.instructionsEs.trim() },
+    });
+
+    logInfo("exercises.updateExerciseInstructions", {
+      userId: user.id,
+      exerciseId: input.id,
+    });
+
+    return { updated: true as const };
   });
 }
 
@@ -598,6 +920,7 @@ export async function createPrivateExercise(
     secondaryMuscles?: string[];
     equipment: string;
     difficulty: string;
+    category?: string;
     thumbnailUrl?: string;
     gifUrl?: string;
     mediaUrl?: string;
@@ -613,6 +936,7 @@ export async function createPrivateExercise(
   }
   fd.set("equipment", input.equipment);
   fd.set("difficulty", input.difficulty);
+  if (input.category) fd.set("category", input.category);
   if (input.thumbnailUrl) fd.set("thumbnailUrl", input.thumbnailUrl);
   if (input.gifUrl) fd.set("gifUrl", input.gifUrl);
   if (input.mediaUrl) fd.set("mediaUrl", input.mediaUrl);
@@ -634,6 +958,7 @@ export async function updateExerciseFromForm(
     secondaryMuscles?: string[];
     equipment?: string;
     difficulty?: string;
+    category?: string;
     thumbnailUrl?: string;
     gifUrl?: string;
     mediaUrl?: string;
@@ -647,6 +972,7 @@ export async function updateExerciseFromForm(
   if (input.secondaryMuscles) fd.set("secondaryMuscles", input.secondaryMuscles.join(","));
   if (input.equipment) fd.set("equipment", input.equipment);
   if (input.difficulty) fd.set("difficulty", input.difficulty);
+  if (input.category) fd.set("category", input.category);
   if (input.thumbnailUrl !== undefined) fd.set("thumbnailUrl", input.thumbnailUrl);
   if (input.gifUrl !== undefined) fd.set("gifUrl", input.gifUrl);
   if (input.mediaUrl !== undefined) fd.set("mediaUrl", input.mediaUrl);

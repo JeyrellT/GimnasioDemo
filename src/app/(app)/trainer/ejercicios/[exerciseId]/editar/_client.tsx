@@ -7,13 +7,14 @@ import { getExerciseDetail } from "@/app/actions/exercises";
 import { ExerciseForm } from "@/components/forms/exercise-form";
 import { PageHeader } from "@/components/shared/page-header";
 import { useAuth } from "@/components/providers/auth-provider";
-import type { Exercise, MuscleGroup, ExerciseEquipment, ExerciseDifficulty } from "@prisma/client";
+import type { Exercise, MuscleGroup, ExerciseEquipment, ExerciseDifficulty, ExerciseCategory } from "@prisma/client";
 
 interface Props {
   exerciseId: string;
+  basePath?: string;
 }
 
-export default function EditarEjercicioClient({ exerciseId }: Props) {
+export default function EditarEjercicioClient({ exerciseId, basePath = "/trainer/ejercicios" }: Props) {
   const { user } = useAuth();
   const [exercise, setExercise] = useState<Exercise | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,7 +54,7 @@ export default function EditarEjercicioClient({ exerciseId }: Props) {
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-[#3B82F6]" aria-label="Cargando ejercicio" />
+        <Loader2 className="h-6 w-6 animate-spin text-brand-primary" aria-label="Cargando ejercicio" />
       </div>
     );
   }
@@ -71,8 +72,8 @@ export default function EditarEjercicioClient({ exerciseId }: Props) {
           </p>
         </div>
         <Link
-          href="/trainer/ejercicios"
-          className="text-xs text-[#3B82F6] hover:text-[#2563EB] transition-colors"
+          href={basePath}
+          className="text-xs text-brand-primary hover:text-brand-primary-hover transition-colors"
         >
           Volver a la biblioteca
         </Link>
@@ -94,8 +95,8 @@ export default function EditarEjercicioClient({ exerciseId }: Props) {
           </p>
         </div>
         <Link
-          href={`/trainer/ejercicios/${exerciseId}`}
-          className="text-xs text-[#3B82F6] hover:text-[#2563EB] transition-colors"
+          href={`${basePath}/${exerciseId}`}
+          className="text-xs text-brand-primary hover:text-brand-primary-hover transition-colors"
         >
           Ver ejercicio
         </Link>
@@ -116,8 +117,8 @@ export default function EditarEjercicioClient({ exerciseId }: Props) {
           </p>
         </div>
         <Link
-          href="/trainer/ejercicios"
-          className="text-xs text-[#3B82F6] hover:text-[#2563EB] transition-colors"
+          href={basePath}
+          className="text-xs text-brand-primary hover:text-brand-primary-hover transition-colors"
         >
           Volver a la biblioteca
         </Link>
@@ -134,9 +135,10 @@ export default function EditarEjercicioClient({ exerciseId }: Props) {
     nameEn: exercise.nameEn,
     instructionsEs: exercise.instructionsEs,
     primaryMuscle: exercise.primaryMuscle as MuscleGroup,
-    secondaryMuscles: exercise.secondaryMuscles as MuscleGroup[],
+    secondaryMuscles: (exercise.secondaryMuscles ?? []) as MuscleGroup[],
     equipment: exercise.equipment as ExerciseEquipment,
     difficulty: exercise.difficulty as ExerciseDifficulty,
+    category: (exercise.category ?? "STRENGTH") as ExerciseCategory,
     thumbnailUrl: exercise.thumbnailUrl,
     gifUrl: exercise.gifUrl,
     mediaUrl: null,
@@ -146,7 +148,7 @@ export default function EditarEjercicioClient({ exerciseId }: Props) {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Link
-          href={`/trainer/ejercicios/${exerciseId}`}
+          href={`${basePath}/${exerciseId}`}
           className="flex items-center gap-1.5 text-sm text-[#71717A] hover:text-[#A1A1AA] transition-colors"
           aria-label="Volver al detalle del ejercicio"
         >
@@ -161,7 +163,7 @@ export default function EditarEjercicioClient({ exerciseId }: Props) {
       />
 
       <div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-6 shadow-sm">
-        <ExerciseForm exercise={exerciseData} />
+        <ExerciseForm exercise={exerciseData} basePath={basePath} />
       </div>
     </div>
   );

@@ -1,9 +1,10 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { assignRoutineToClient } from "@/app/actions/routines";
+import { assignRoutineToClient, getActiveRoutineForClient } from "@/app/actions/routines";
 import { assignRoutineSchema, type AssignRoutineInput } from "@/lib/validation/routine.schema";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/shared/page-header";
@@ -18,6 +19,9 @@ interface Props {
 export default function AsignarClient({ routineId }: Props) {
   const router = useRouter();
 
+  // Bug #5: track active routine for the selected client
+  const [activeRoutineName, setActiveRoutineName] = useState<string | null>(null);
+
   // Load trainer's clients for the selector
   const { data: clientsData } = useQuery({
     queryKey: ["trainer-clients"],
@@ -30,6 +34,7 @@ export default function AsignarClient({ routineId }: Props) {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<AssignRoutineInput>({
     resolver: zodResolver(assignRoutineSchema),
@@ -38,6 +43,20 @@ export default function AsignarClient({ routineId }: Props) {
       startsOn: new Date().toISOString().split("T")[0],
     },
   });
+
+  // Bug #5: watch clientId and fetch active routine on change
+  const selectedClientId = useWatch({ control, name: "clientId" });
+
+  useEffect(() => {
+    setActiveRoutineName(null);
+    if (!selectedClientId) return;
+
+    getActiveRoutineForClient(selectedClientId).then((result) => {
+      if (result.ok && result.value) {
+        setActiveRoutineName(result.value.name);
+      }
+    });
+  }, [selectedClientId]);
 
   async function onSubmit(data: AssignRoutineInput) {
     // Normalize: empty strings → undefined (Zod .optional() rejects "")
@@ -50,7 +69,7 @@ export default function AsignarClient({ routineId }: Props) {
     const result = await assignRoutineToClient(payload);
     if (result.ok) {
       toast.success("Rutina asignada.");
-      router.push(`/trainer/clientes/${data.clientId}/rutinas`);
+      router.push("/trainer/rutinas");
     } else {
       toast.error(result.error.message ?? "No se pudo asignar la rutina.");
       console.error("[asignar]", result.error);
@@ -72,7 +91,7 @@ export default function AsignarClient({ routineId }: Props) {
           <select
             id="clientId"
             {...register("clientId")}
-            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6]"
+            className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary"
           >
             <option value="">Seleccioná un cliente...</option>
             {clientsData?.map((c) => (
@@ -88,6 +107,16 @@ export default function AsignarClient({ routineId }: Props) {
           )}
         </div>
 
+        {/* Bug #5: active routine conflict warning */}
+        {activeRoutineName && (
+          <p
+            role="alert"
+            className="rounded-lg border border-[#F59E0B]/40 bg-[#F59E0B]/10 px-3 py-2.5 text-xs text-[#F59E0B]"
+          >
+            ⚠️ Este cliente ya tiene &quot;{activeRoutineName}&quot; activa. Se cancelará al asignar la nueva.
+          </p>
+        )}
+
         {/* Start date */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
@@ -98,7 +127,7 @@ export default function AsignarClient({ routineId }: Props) {
               id="startsOn"
               type="date"
               {...register("startsOn")}
-              className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6]"
+              className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary"
             />
           </div>
           <div className="space-y-1.5">
@@ -110,7 +139,7 @@ export default function AsignarClient({ routineId }: Props) {
               id="endsOn"
               type="date"
               {...register("endsOn")}
-              className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6]"
+              className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary"
             />
           </div>
         </div>
@@ -118,7 +147,7 @@ export default function AsignarClient({ routineId }: Props) {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#3B82F6] py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-[#2563EB] disabled:opacity-60 transition-colors"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-primary py-3.5 text-sm font-semibold text-white min-h-[48px] hover:bg-brand-primary-hover disabled:opacity-60 transition-colors"
         >
           {isSubmitting ? "Asignando..." : "Asignar rutina"}
           {!isSubmitting && <ArrowRight className="h-4 w-4" aria-hidden="true" />}

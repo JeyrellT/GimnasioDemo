@@ -10,6 +10,9 @@ export interface DraftExercise {
   routineExerciseId?: string; // set after save
   exerciseId: string;
   nameEs: string;
+  nameEn?: string | null;
+  slug?: string | null;
+  thumbnailUrl?: string | null;
   targetSets: number;
   targetRepsMin: number;
   targetRepsMax: number;
@@ -18,6 +21,8 @@ export interface DraftExercise {
   tempo: string | null;
   supersetGroup: number | null;
   notes: string | null;
+  /** Per-routine video override (YouTube / Vimeo / Google Drive). */
+  mediaUrl: string | null;
 }
 
 export interface DraftDay {
@@ -49,12 +54,62 @@ interface RoutineBuilderState {
   removeExerciseFromDay: (dayId: string, exerciseLocalId: string) => void;
   updateExercise: (dayId: string, exerciseLocalId: string, patch: Partial<DraftExercise>) => void;
   reorderExercisesInDay: (dayId: string, orderedIds: string[]) => void;
+  /**
+   * Agrupa `sourceExId` con `targetExId` en una superserie/circuito.
+   *
+   * - Si target ya tiene supersetGroup → source se une al mismo grupo.
+   * - Si ninguno está agrupado → ambos toman el siguiente número libre (1–10).
+   * - Source se mueve al índice inmediatamente después de target.
+   * - Si el grupo previo de source queda con un único miembro, ese también se
+   *   desagrupa (no se permiten grupos huérfanos de 1).
+   *
+   * Devuelve la nueva lista de ejercicios del día y el grupo asignado, o
+   * `null` si no se pudo agrupar (mismo ejercicio, día inexistente, o tope
+   * de 10 grupos alcanzado).
+   */
+  groupExercises: (
+    dayId: string,
+    sourceExId: string,
+    targetExId: string,
+  ) => { exercises: DraftExercise[]; group: number } | null;
+  /**
+   * Quita `exerciseLocalId` de su superserie. Si el grupo queda con un único
+   * miembro, ese también se desagrupa. Devuelve la lista actualizada o `null`
+   * si el ejercicio ya estaba sin grupo.
+   */
+  ungroupExercise: (
+    dayId: string,
+    exerciseLocalId: string,
+  ) => { exercises: DraftExercise[] } | null;
+  /**
+   * Disuelve una superserie entera: pone `supersetGroup = null` a todos los
+   * miembros del grupo `group` en el día `dayId`. Devuelve la lista
+   * actualizada y los `routineExerciseId` de los ejercicios afectados para
+   * que el caller los persista, o `null` si no había miembros en ese grupo.
+   */
+  dissolveSuperset: (
+    dayId: string,
+    group: number,
+  ) => { exercises: DraftExercise[]; affectedExerciseIds: string[] } | null;
+  /**
+   * Después de un reorder, normaliza los grupos: cualquier ejercicio con
+   * `supersetGroup != null` cuyo vecino inmediato (anterior o siguiente) NO
+   * comparta el mismo grupo, queda automáticamente desagrupado.
+   *
+   * Mantiene la invariante "miembros de un grupo deben ser contiguos" y
+   * elimina huérfanos (grupos de 1 miembro) que aparecen cuando arrastrás
+   * un ejercicio fuera del cluster.
+   *
+   * Devuelve los IDs locales afectados (para persistir su supersetGroup=null
+   * en el servidor). Si no hubo cambios, array vacío.
+   */
+  normalizeOrphansInDay: (dayId: string) => { affectedIds: string[] };
   markSaved: () => void;
   reset: () => void;
 }
 
 function newLocalId(): string {
-  return `local-${Math.random().toString(36).slice(2)}`;
+  return `local-${crypto.randomUUID()}`;
 }
 
 export const useRoutineBuilderStore = create<RoutineBuilderState>()((set) => ({
@@ -83,6 +138,9 @@ export const useRoutineBuilderStore = create<RoutineBuilderState>()((set) => ({
           routineExerciseId: e.id,
           exerciseId: e.exerciseId,
           nameEs: e.exercise.nameEs,
+          nameEn: e.exercise.nameEn || null,
+          slug: e.exercise.slug ?? null,
+          thumbnailUrl: e.exercise.thumbnailUrl ?? null,
           targetSets: e.targetSets,
           targetRepsMin: e.targetRepsMin,
           targetRepsMax: e.targetRepsMax,
@@ -91,6 +149,7 @@ export const useRoutineBuilderStore = create<RoutineBuilderState>()((set) => ({
           tempo: e.tempo ?? null,
           supersetGroup: e.supersetGroup ?? null,
           notes: e.notes ?? null,
+          mediaUrl: (e as { mediaUrl?: string | null }).mediaUrl ?? null,
         })),
       })),
       isDirty: false,
@@ -215,6 +274,194 @@ export const useRoutineBuilderStore = create<RoutineBuilderState>()((set) => ({
       }),
       isDirty: true,
     }));
+  },
+
+  groupExercises: (dayId, sourceExId, targetExId) => {
+    if (sourceExId === targetExId) return null;
+
+    let result: { exercises: DraftExercise[]; group: number } | null = null;
+
+    set((state) => {
+      const day = state.days.find((d) => d.id === dayId);
+      if (!day) return state;
+
+      const source = day.exercises.find((e) => e.id === sourceExId);
+      const target = day.exercises.find((e) => e.id === targetExId);
+      if (!source || !target) return state;
+
+      // Resolver grupo destino: el del target si ya está agrupado, o el
+      // siguiente entero libre (1-10) en este día.
+      let group = target.supersetGroup;
+      let targetGetsGroup = false;
+      if (group === null) {
+        const used = new Set(
+          day.exercises
+            .map((e) => e.supersetGroup)
+            .filter((g): g is number => g !== null),
+        );
+        let next = 1;
+        while (used.has(next) && next <= 10) next += 1;
+        if (next > 10) return state; // schema cap (1..10)
+        group = next;
+        targetGetsGroup = true;
+      }
+
+      const sourceOldGroup = source.supersetGroup;
+
+      // Aplicar grupo a source (y a target si recién se creó).
+      const patched = day.exercises.map((e) => {
+        if (e.id === sourceExId) return { ...e, supersetGroup: group };
+        if (targetGetsGroup && e.id === targetExId) {
+          return { ...e, supersetGroup: group };
+        }
+        return e;
+      });
+
+      // Mover source para que quede inmediatamente después del target.
+      const withoutSource = patched.filter((e) => e.id !== sourceExId);
+      const movedSource = patched.find((e) => e.id === sourceExId);
+      const targetIdx = withoutSource.findIndex((e) => e.id === targetExId);
+      const reordered =
+        movedSource && targetIdx !== -1
+          ? [
+              ...withoutSource.slice(0, targetIdx + 1),
+              movedSource,
+              ...withoutSource.slice(targetIdx + 1),
+            ]
+          : patched;
+
+      // Limpieza: si el grupo viejo del source queda con un único miembro,
+      // ese también se desagrupa (no permitir grupos huérfanos de 1).
+      let finalList = reordered;
+      if (sourceOldGroup !== null && sourceOldGroup !== group) {
+        const remaining = reordered.filter(
+          (e) => e.supersetGroup === sourceOldGroup,
+        );
+        if (remaining.length === 1) {
+          finalList = reordered.map((e) =>
+            e.id === remaining[0]?.id ? { ...e, supersetGroup: null } : e,
+          );
+        }
+      }
+
+      result = { exercises: finalList, group };
+
+      return {
+        ...state,
+        days: state.days.map((d) =>
+          d.id === dayId ? { ...d, exercises: finalList } : d,
+        ),
+        isDirty: true,
+      };
+    });
+
+    return result;
+  },
+
+  dissolveSuperset: (dayId, group) => {
+    let result:
+      | { exercises: DraftExercise[]; affectedExerciseIds: string[] }
+      | null = null;
+
+    set((state) => {
+      const day = state.days.find((d) => d.id === dayId);
+      if (!day) return state;
+
+      const affected = day.exercises.filter((e) => e.supersetGroup === group);
+      if (affected.length === 0) return state;
+
+      const next = day.exercises.map((e) =>
+        e.supersetGroup === group ? { ...e, supersetGroup: null } : e,
+      );
+
+      result = {
+        exercises: next,
+        affectedExerciseIds: affected.map((e) => e.id),
+      };
+
+      return {
+        ...state,
+        days: state.days.map((d) =>
+          d.id === dayId ? { ...d, exercises: next } : d,
+        ),
+        isDirty: true,
+      };
+    });
+
+    return result;
+  },
+
+  normalizeOrphansInDay: (dayId) => {
+    const affectedIds: string[] = [];
+
+    set((state) => {
+      const day = state.days.find((d) => d.id === dayId);
+      if (!day) return state;
+
+      const exs = day.exercises;
+      const next = exs.map((ex, i) => {
+        if (ex.supersetGroup === null) return ex;
+        const prev = exs[i - 1];
+        const after = exs[i + 1];
+        const matchPrev = prev?.supersetGroup === ex.supersetGroup;
+        const matchNext = after?.supersetGroup === ex.supersetGroup;
+        if (matchPrev || matchNext) return ex;
+        // Huérfano: sin vecinos del mismo grupo → ungroup.
+        affectedIds.push(ex.id);
+        return { ...ex, supersetGroup: null };
+      });
+
+      if (affectedIds.length === 0) return state;
+
+      return {
+        ...state,
+        days: state.days.map((d) =>
+          d.id === dayId ? { ...d, exercises: next } : d,
+        ),
+        isDirty: true,
+      };
+    });
+
+    return { affectedIds };
+  },
+
+  ungroupExercise: (dayId, exerciseLocalId) => {
+    let result: { exercises: DraftExercise[] } | null = null;
+
+    set((state) => {
+      const day = state.days.find((d) => d.id === dayId);
+      if (!day) return state;
+
+      const ex = day.exercises.find((e) => e.id === exerciseLocalId);
+      if (!ex || ex.supersetGroup === null) return state;
+
+      const oldGroup = ex.supersetGroup;
+
+      const cleared = day.exercises.map((e) =>
+        e.id === exerciseLocalId ? { ...e, supersetGroup: null } : e,
+      );
+
+      // Si queda un único miembro en el grupo, también lo desagrupamos.
+      const remaining = cleared.filter((e) => e.supersetGroup === oldGroup);
+      let finalList = cleared;
+      if (remaining.length === 1) {
+        finalList = cleared.map((e) =>
+          e.id === remaining[0]?.id ? { ...e, supersetGroup: null } : e,
+        );
+      }
+
+      result = { exercises: finalList };
+
+      return {
+        ...state,
+        days: state.days.map((d) =>
+          d.id === dayId ? { ...d, exercises: finalList } : d,
+        ),
+        isDirty: true,
+      };
+    });
+
+    return result;
   },
 
   markSaved: () => {

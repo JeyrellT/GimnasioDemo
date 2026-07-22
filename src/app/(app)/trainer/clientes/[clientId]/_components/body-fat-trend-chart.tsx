@@ -23,6 +23,7 @@ import {
 // Constants
 // -----------------------------------------------------------------------------
 
+// Intentionally semantic green — body fat reduction trends are universally "good direction" in fitness UX.
 const LINE_COLOR = "#22C55E";
 const IDEAL_LOW = 15;
 const IDEAL_HIGH = 25;

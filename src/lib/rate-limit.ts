@@ -104,10 +104,16 @@ export function checkRateLimit(
 
 /**
  * Auth endpoint limit: requests per minute per IP.
- * Configurable via RATE_LIMIT_AUTH_PER_MIN (default: 5).
+ * Configurable via RATE_LIMIT_AUTH_PER_MIN (default: 20).
+ *
+ * Default raised from 5 → 20: users with typos or shared NAT/Wi-Fi (gym
+ * networks, families) hit the cap on legitimate login attempts otherwise.
+ * Brute-force is still meaningfully throttled at 20/min (against any
+ * single-IP attacker; targeted credential stuffing would need account-level
+ * lockout, which lives separately in the auth.actions layer).
  */
 export const AUTH_LIMIT_PER_MIN: number = (() => {
   const raw = process.env.RATE_LIMIT_AUTH_PER_MIN;
   const parsed = raw ? parseInt(raw, 10) : NaN;
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 5;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 20;
 })();

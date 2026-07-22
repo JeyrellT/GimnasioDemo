@@ -17,15 +17,43 @@ import {
 
 export const recordBodyMetricSchema = z
   .object({
+    // Composición
     weightKg: weightKgSchema.optional(),
     bodyFatPct: bodyFatPctSchema.optional(),
     muscleMassKg: z.coerce.number().min(1).max(200).optional(),
+    visceralFat: z.coerce.number().int().min(1).max(59).optional(),
+    basalMetabolicRate: z.coerce.number().int().min(500).max(5000).optional(),
+
+    // Tronco
+    neckCm: circumferenceCmSchema.optional(),
+    shoulderLeftCm: circumferenceCmSchema.optional(),
+    shoulderRightCm: circumferenceCmSchema.optional(),
+    chestCm: circumferenceCmSchema.optional(),
+    abdomenCm: circumferenceCmSchema.optional(),
     waistCm: circumferenceCmSchema.optional(),
     hipCm: circumferenceCmSchema.optional(),
-    neckCm: circumferenceCmSchema.optional(),
-    chestCm: circumferenceCmSchema.optional(),
+    gluteLeftCm: circumferenceCmSchema.optional(),
+    gluteRightCm: circumferenceCmSchema.optional(),
+
+    // Brazos
+    /** Legacy single-arm. El action lo espeja desde bicepLeftCm/bicepRightCm si vienen. */
     armCm: circumferenceCmSchema.optional(),
+    bicepLeftCm: circumferenceCmSchema.optional(),
+    bicepRightCm: circumferenceCmSchema.optional(),
+    forearmLeftCm: circumferenceCmSchema.optional(),
+    forearmRightCm: circumferenceCmSchema.optional(),
+
+    // Piernas
+    /** Legacy single-thigh. El action lo espeja desde quadLeftCm/quadRightCm si vienen. */
     thighCm: circumferenceCmSchema.optional(),
+    quadLeftCm: circumferenceCmSchema.optional(),
+    quadRightCm: circumferenceCmSchema.optional(),
+    hamstringLeftCm: circumferenceCmSchema.optional(),
+    hamstringRightCm: circumferenceCmSchema.optional(),
+    calfLeftCm: circumferenceCmSchema.optional(),
+    calfRightCm: circumferenceCmSchema.optional(),
+
+    // Meta
     recordedAt: z.coerce.date().optional(),
     source: z.enum(["MANUAL", "OCR_SCALE", "CONNECTED_DEVICE"]).default("MANUAL"),
     notes: longTextSchema(500),

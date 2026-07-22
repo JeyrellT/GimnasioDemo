@@ -16,6 +16,8 @@
 //   /                   — marketing landing
 //   /ingresar           — sign-in / magic link
 //   /registrarse        — sign-up (trainer onboarding entry point)
+//   /recuperar          — request a password-reset link
+//   /restablecer        — set a new password from the reset link
 //   /verificar          — email verification landing
 //   /invitacion/*       — client invitation flows
 //   /pricing            — public pricing page
@@ -45,6 +47,8 @@ const { auth } = NextAuth(authConfig);
 const PUBLIC_PREFIXES: string[] = [
   "/ingresar",
   "/registrarse",
+  "/recuperar",
+  "/restablecer",
   "/verificar",
   "/invitacion",
   "/pricing",
@@ -68,15 +72,24 @@ const MUST_CHANGE_PASSWORD_EXEMPT: string[] = [
 /**
  * Path prefixes that are rate-limited per IP.
  * These are sensitive auth/account endpoints where brute-force is a concern.
- * Limit: AUTH_LIMIT_PER_MIN requests per minute (default 5, env: RATE_LIMIT_AUTH_PER_MIN).
+ * Limit: AUTH_LIMIT_PER_MIN requests per minute (default 20, env: RATE_LIMIT_AUTH_PER_MIN).
+ *
+ * Intentionally NOT rate-limited:
+ *   - /ingresar (the HTML page) — every refresh / direct hit counted toward
+ *     the budget before, causing legitimate users to get 429 just navigating.
+ *   - /api/auth/session — NextAuth polls this from every authenticated page
+ *     to keep the session warm. Throttling it breaks normal usage.
+ * Only the actual POST endpoints (signin / callback) plus /registrarse stay
+ * gated, which is where brute-force / abuse actually happens.
  */
 const RATE_LIMITED_PREFIXES: string[] = [
   "/api/auth/signin",
   "/api/auth/callback",
-  "/api/auth/session",
-  "/ingresar",
   "/registrarse",
   "/api/lpdp",
+  // Magic-link auto-login: mints a 30-day session cookie on first GET with a
+  // valid token. Public + cookie-minting + no captcha = brute-force target.
+  "/api/cliente/aceptar-invitacion",
 ];
 
 /**
@@ -212,7 +225,10 @@ export const config = {
      *   - manifest.webmanifest (PWA manifest — must stay public)
      *   - robots.txt / sitemap.xml (SEO assets)
      *   - Files with extensions: .svg .png .jpg .jpeg .gif .webp .ico .woff .woff2 .ttf .otf .json .xml .txt .webmanifest
+     *   - Video/audio assets: .mp4 .webm .ogv .mov .m4v .mp3 .wav .ogg .m4a
+     *     (necesario para que /branding/demo.mp4 y futuros assets multimedia
+     *      del landing se sirvan estaticos sin pasar por el auth gate)
      */
-    "/((?!_next/static|_next/image|favicon\\.ico|manifest\\.webmanifest|robots\\.txt|sitemap\\.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|ttf|otf|json|xml|txt|webmanifest)$).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico|manifest\\.webmanifest|robots\\.txt|sitemap\\.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|ttf|otf|json|xml|txt|webmanifest|mp4|webm|ogv|mov|m4v|mp3|wav|ogg|m4a)$).*)",
   ],
 };

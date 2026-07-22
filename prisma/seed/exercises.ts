@@ -1,5 +1,5 @@
 /**
- * Seed de ejercicios — Forja
+ * Seed de ejercicios — Blackline Fitness
  *
  * Carga el stub de Free Exercise DB (prisma/seed/data/free-exercise-db.json)
  * junto con sus traducciones ES-CR (prisma/seed/data/exercises-es-cr.json)
@@ -10,8 +10,13 @@
  * desde la migración inicial — este archivo es el módulo reutilizable.
  */
 
-import { PrismaClient, ExerciseEquipment, ExerciseDifficulty, MuscleGroup } from "@prisma/client";
-import { readFileSync, existsSync } from "node:fs";
+import type {
+  PrismaClient,
+  ExerciseEquipment,
+  ExerciseDifficulty,
+  MuscleGroup,
+} from "@prisma/client";
+import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -219,14 +224,6 @@ export async function seedExercises(
     const equipment = mapEquipment(raw.equipment);
     const difficulty = mapDifficulty(raw.level);
 
-    // URLs de media: si hay una imagen la usamos para gif y thumbnail
-    // Prioridad: imagen local en public/exercises/${raw.id}.png, luego la del JSON
-    const localImagePath = `/exercises/${raw.id}.png`;
-    const fullLocalPath = join(__dirname, "../../public", localImagePath);
-    const hasLocalImage = existsSync(fullLocalPath);
-    
-    const firstImage = hasLocalImage ? localImagePath : (raw.images[0] ?? null);
-
     // instructionsEs: las instrucciones traducidas unidas por doble salto
     // para almacenar en el campo Text de Prisma. El frontend las parte por \n\n.
     const instructionsEsText = translation.instructionsEs.join("\n\n");
@@ -237,6 +234,10 @@ export async function seedExercises(
     try {
       await prisma.exercise.upsert({
         where: { slug: raw.id },
+        // URLs de media: el seed ya NO reintroduce paths locales (/exercises/*).
+        // Los media URLs (Google Drive, YouTube, etc.) se agregan manualmente
+        // desde la UI del trainer; en `create` nacen vacíos y en `update`
+        // se omiten para no pisar lo que el trainer haya guardado.
         create: {
           slug: raw.id,
           nameEs: translation.nameEs,
@@ -247,14 +248,17 @@ export async function seedExercises(
           secondaryMuscles,
           equipment,
           difficulty,
-          mediaUrl: firstImage,
-          gifUrl: firstImage,
-          thumbnailUrl: firstImage,
+          mediaUrl: null,
+          gifUrl: null,
+          thumbnailUrl: null,
           isPublic: true,
           createdById: null,
         },
         update: {
-          // En re-runs actualizamos traducciones y metadatos, no el slug
+          // En re-runs actualizamos traducciones y metadatos, no el slug.
+          // OJO: mediaUrl/gifUrl/thumbnailUrl se omiten a propósito para no
+          // pisar las URLs de Google Drive que el trainer agrega manualmente
+          // desde la UI (única fuente de verdad para media de ejercicios).
           nameEs: translation.nameEs,
           nameEn: raw.name,
           instructionsEs: instructionsEsText,
@@ -263,9 +267,6 @@ export async function seedExercises(
           secondaryMuscles,
           equipment,
           difficulty,
-          mediaUrl: firstImage,
-          gifUrl: firstImage,
-          thumbnailUrl: firstImage,
         },
       });
 

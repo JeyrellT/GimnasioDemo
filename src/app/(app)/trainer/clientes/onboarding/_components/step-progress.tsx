@@ -72,7 +72,7 @@ export function StepProgress({ currentStep, total }: StepProgressProps) {
               className={cn(
                 "flex h-7 min-w-[28px] items-center justify-center rounded-full text-[11px] font-bold transition-colors shrink-0",
                 isActive
-                  ? "bg-[#3B82F6] text-white"
+                  ? "bg-brand-primary text-white"
                   : done
                     ? "bg-[#27272A] text-[#22C55E] ring-1 ring-[#22C55E]/40"
                     : "bg-[#27272A] text-[#52525B] hover:text-[#A1A1AA]",

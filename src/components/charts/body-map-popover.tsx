@@ -141,7 +141,7 @@ export function BodyMapPopover({
           <KpiSparkline
             data={sparkData}
             height={48}
-            color="#3B82F6"
+            color="var(--brand-primary)"
             width={208}
           />
         </div>
@@ -157,7 +157,7 @@ export function BodyMapPopover({
             <button
               type="button"
               onClick={onEdit}
-              className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-[#FAFAFA] border border-[#3F3F46] bg-transparent transition-colors hover:bg-[#27272A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#18181B]"
+              className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-[#FAFAFA] border border-[#3F3F46] bg-transparent transition-colors hover:bg-[#27272A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-[#18181B]"
             >
               Editar
               <ChevronRight className="h-3 w-3 text-[#71717A]" aria-hidden="true" />

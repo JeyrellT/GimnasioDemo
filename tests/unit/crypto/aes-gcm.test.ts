@@ -5,7 +5,7 @@ import { randomBytes } from 'node:crypto'
 describe('aes-gcm — AES-256-GCM Encryption', () => {
   describe('encrypt/decrypt round-trip', () => {
     it('encripta y desencripta texto UTF-8 simple', () => {
-      const plaintext = 'Hola, Forja'
+      const plaintext = 'Hola, Blackline Fitness'
       const encrypted = encrypt(plaintext)
       const decrypted = decrypt(encrypted)
       expect(decrypted).toBe(plaintext)

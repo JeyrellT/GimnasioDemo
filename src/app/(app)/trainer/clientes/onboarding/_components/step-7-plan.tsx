@@ -33,7 +33,11 @@ interface Step7PlanProps {
 }
 
 export function Step7Plan({ draftId }: Step7PlanProps) {
-  const { goNext, goBack, setStepData, payload } = useOnboardingStore();
+  // Bug 10: granular selectors
+  const goNext = useOnboardingStore((s) => s.goNext);
+  const goBack = useOnboardingStore((s) => s.goBack);
+  const setStepData = useOnboardingStore((s) => s.setStepData);
+  const payload = useOnboardingStore((s) => s.payload);
   const existing = payload.step7;
 
   const [routines, setRoutines] = useState<RoutineOption[]>([]);
@@ -132,7 +136,7 @@ export function Step7Plan({ draftId }: Step7PlanProps) {
                     </div>
                   ) : (
                     <select
-                      className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6]"
+                      className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary"
                       {...field}
                       value={field.value ?? ""}
                     >

@@ -41,14 +41,14 @@ export function NotasClient({ clientId, initialNotes }: NotasClientProps) {
         rows={12}
         placeholder="Observaciones de entrenamiento, preferencias, detalles de salud que no encajan en el PAR-Q..."
         aria-label="Notas privadas del cliente"
-        className="w-full resize-y rounded-xl border border-[#3F3F46] bg-[#18181B] px-4 py-3 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-[#3B82F6] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6] transition-colors"
+        className="w-full resize-y rounded-xl border border-[#3F3F46] bg-[#18181B] px-4 py-3 text-sm text-[#FAFAFA] placeholder-[#71717A] focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary transition-colors"
       />
 
       <button
         type="button"
         onClick={handleSave}
         disabled={saving}
-        className="rounded-lg bg-[#3B82F6] px-6 py-2.5 text-sm font-semibold text-white min-h-[44px] hover:bg-[#2563EB] disabled:opacity-60 transition-colors"
+        className="rounded-lg bg-brand-primary px-6 py-2.5 text-sm font-semibold text-white min-h-[44px] hover:bg-brand-primary-hover disabled:opacity-60 transition-colors"
       >
         {saving ? "Guardando..." : "Guardar notas"}
       </button>

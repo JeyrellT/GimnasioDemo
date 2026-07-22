@@ -1,4 +1,4 @@
-name: Deploy Forja Demo to GitHub Pages
+name: Deploy Blackline Fitness to GitHub Pages
 
 on:
   push:
@@ -58,6 +58,19 @@ jobs:
         env:
           NEXT_TELEMETRY_DISABLED: 1
           GITHUB_PAGES: "true"
+          # Static-export build runs entirely in CI and never reaches a real DB
+          # or auth provider. These values are dummies that only satisfy the
+          # Zod validation in src/server/env.ts at build time. They are never
+          # used at runtime in the demo because /api/auth is stubbed above and
+          # all server actions are pre-rendered. Do NOT reuse these in any
+          # production environment — Railway's env vars are the source of truth.
+          APP_URL: "https://example.com"
+          NEXTAUTH_URL: "https://example.com"
+          NEXTAUTH_SECRET: "github-pages-static-export-dummy-secret-32chars-min"
+          DATABASE_URL: "postgresql://user:pass@localhost:5432/build?pgbouncer=true&connection_limit=10"
+          DIRECT_URL: "postgresql://user:pass@localhost:5432/build"
+          ENCRYPTION_KEY_PRIMARY: "github-pages-static-export-dummy-key-32chars-min-aaa"
+          IMPERSONATION_SECRET: "github-pages-static-export-dummy-impersonation-secret-32chars"
 
       - name: Add .nojekyll
         run: touch out/.nojekyll

@@ -3,18 +3,38 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, Dumbbell, Loader2, MoreHorizontal } from "lucide-react";
+import { ChevronLeft, Dumbbell, Loader2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { getClientProfileDetail } from "@/app/actions/clients";
+import { deleteClientBodyMetrics } from "@/app/actions/metrics";
 
 import { ClientHeroCard } from "@/components/shared/client-hero-card";
 import { KpiHeroCard } from "@/components/shared/kpi-hero-card";
 import { CircumferencesTable } from "@/components/shared/circumferences-table";
 import { MeasurementSheetController } from "./_components/measurement-sheet-controller";
 import { ClientProfileTabsClient } from "./_components/client-profile-tabs";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-import { BodyMap } from "@/components/charts/body-map";
-import type { BodyZone, ZoneData } from "@/components/charts/body-map";
+// Body map: usamos la versión anatómica (paths musculares detallados) que
+// reemplaza visualmente al body-map iconográfico previo manteniendo la misma
+// API (BodyZone / ZoneData / BodyMapProps son re-exportados desde el módulo
+// nuevo, así el resto del archivo no necesita cambiar).
+import { BodyMapAnatomical as BodyMap } from "@/components/charts/body-map-anatomical";
+import type { BodyZone, ZoneData } from "@/components/charts/body-map-anatomical";
+
+import {
+  useMeasurementSheetStore,
+  type SheetFocus,
+} from "@/stores/measurement-sheet-store";
 
 import type {
   ClientProfileDetail as FrontendDetail,
@@ -22,6 +42,7 @@ import type {
   ActiveRoutine as FrontendRoutine,
   RecentSession as FrontendSession,
   DeltaAlignment,
+  BodyZone as FrontendBodyZone,
 } from "@/types/profile";
 import type {
   ClientProfileDetail as BackendDetail,
@@ -93,6 +114,78 @@ function alignDelta(
 // Adapter: backend → frontend
 // -----------------------------------------------------------------------------
 
+type ProfileMetricPoint = BackendDetail["metricsHistory"][number];
+type NumericMetricKey = {
+  [K in keyof ProfileMetricPoint]: ProfileMetricPoint[K] extends number | null ? K : never;
+}[keyof ProfileMetricPoint];
+
+const CIRCUMFERENCE_FIELDS: Array<{
+  zone: FrontendBodyZone;
+  label: string;
+  field: NumericMetricKey;
+  fallbackField?: NumericMetricKey;
+}> = [
+  { zone: "neck", label: "Cuello", field: "neckCm" },
+  { zone: "shoulderL", label: "Hombro izq.", field: "shoulderLeftCm" },
+  { zone: "shoulderR", label: "Hombro der.", field: "shoulderRightCm" },
+  { zone: "chest", label: "Pecho", field: "chestCm" },
+  { zone: "bicepL", label: "Biceps izq.", field: "bicepLeftCm", fallbackField: "armCm" },
+  { zone: "bicepR", label: "Biceps der.", field: "bicepRightCm", fallbackField: "armCm" },
+  { zone: "forearmL", label: "Antebrazo izq.", field: "forearmLeftCm" },
+  { zone: "forearmR", label: "Antebrazo der.", field: "forearmRightCm" },
+  { zone: "abdomen", label: "Abdomen", field: "abdomenCm" },
+  { zone: "waist", label: "Cintura", field: "waistCm" },
+  { zone: "hip", label: "Cadera", field: "hipCm" },
+  { zone: "gluteL", label: "Gluteo izq.", field: "gluteLeftCm" },
+  { zone: "gluteR", label: "Gluteo der.", field: "gluteRightCm" },
+  { zone: "quadL", label: "Cuadriceps izq.", field: "thighLeftCm", fallbackField: "thighCm" },
+  { zone: "quadR", label: "Cuadriceps der.", field: "thighRightCm", fallbackField: "thighCm" },
+  { zone: "hamstringL", label: "Isquios izq.", field: "hamstringLeftCm" },
+  { zone: "hamstringR", label: "Isquios der.", field: "hamstringRightCm" },
+  { zone: "calfL", label: "Gemelo izq.", field: "calfLeftCm" },
+  { zone: "calfR", label: "Gemelo der.", field: "calfRightCm" },
+];
+
+function metricValue(
+  point: ProfileMetricPoint,
+  field: NumericMetricKey,
+  fallbackField?: NumericMetricKey,
+) {
+  return point[field] ?? (fallbackField ? point[fallbackField] : null);
+}
+
+function buildMetricDeltaSeries(
+  history: ProfileMetricPoint[],
+  field: NumericMetricKey,
+  fallbackField?: NumericMetricKey,
+) {
+  const values = history
+    .map((point) => {
+      const value = metricValue(point, field, fallbackField);
+      return value === null
+        ? null
+        : { value, recordedAt: new Date(point.recordedAt) };
+    })
+    .filter((point): point is { value: number; recordedAt: Date } => point !== null);
+
+  if (values.length === 0) return null;
+
+  const latest = values.at(-1);
+  if (!latest) return null;
+  const previous = values.at(-2) ?? null;
+  const delta = previous ? latest.value - previous.value : 0;
+
+  return {
+    value: latest.value,
+    delta: Math.round(delta * 10) / 10,
+    measuredAt: latest.recordedAt,
+    trendSparkline: values.slice(-12).map((point) => point.value),
+  };
+}
+
+// Note: the backend BodyZone "glute" is a single-column that covers both sides
+// in the current MVP schema. We map it to "gluteL" for freshness; "gluteR" is
+// handled as a copy of the same freshness value in adaptToFrontend below.
 const BACKEND_TO_FRONTEND_ZONE: Record<BackendBodyZone, keyof FrontendComposition["freshness"]> = {
   neck: "neck",
   shoulderLeft: "shoulderL",
@@ -142,10 +235,15 @@ function adaptToFrontend(b: BackendDetail): FrontendDetail {
   for (const [bk, fr] of Object.entries(bc.freshness ?? {})) {
     const fk = BACKEND_TO_FRONTEND_ZONE[bk as BackendBodyZone];
     if (fk && fr) {
-      freshness[fk] = {
+      const converted = {
         lastMeasuredAt: fr.lastMeasuredAt ? new Date(fr.lastMeasuredAt) : null,
         daysSince: fr.daysSince,
       };
+      freshness[fk] = converted;
+      // The backend "glute" zone covers both sides — mirror freshness to gluteR.
+      if (bk === "glute") {
+        freshness.gluteR = converted;
+      }
     }
   }
 
@@ -159,6 +257,37 @@ function adaptToFrontend(b: BackendDetail): FrontendDetail {
     .map((m) => (m.muscleMassKg !== null ? Number(m.muscleMassKg) : null))
     .filter((n): n is number => n !== null);
 
+  const circumferenceDeltas: FrontendComposition["circumferenceDeltas"] = {};
+  for (const config of CIRCUMFERENCE_FIELDS) {
+    const series = buildMetricDeltaSeries(
+      b.metricsHistory ?? [],
+      config.field,
+      config.fallbackField,
+    );
+    if (!series) continue;
+    circumferenceDeltas[config.zone] = {
+      valueCm: series.value,
+      deltaCm: series.delta,
+      measuredAt: series.measuredAt,
+      trendSparkline: series.trendSparkline,
+    };
+  }
+
+  const measurementHighlights = CIRCUMFERENCE_FIELDS
+    .map((config) => {
+      const series = circumferenceDeltas[config.zone];
+      return series
+        ? {
+            zone: config.zone,
+            label: config.label,
+            ...series,
+          }
+        : null;
+    })
+    .filter((item): item is FrontendDetail["measurementHighlights"][number] => item !== null)
+    .sort((a, b) => Math.abs(b.deltaCm) - Math.abs(a.deltaCm))
+    .slice(0, 4);
+
   const composition: FrontendComposition = {
     weightKg: bc.weightKg,
     bodyFatPct: bc.bodyFatPct,
@@ -168,6 +297,7 @@ function adaptToFrontend(b: BackendDetail): FrontendDetail {
     bmi: bc.bmi
       ?? computeBmi(bc.weightKg, b.profile?.heightCm ?? null),
     circumferences: { ...(bc.circumferences ?? {}) } as FrontendComposition["circumferences"],
+    circumferenceDeltas,
     freshness,
   };
 
@@ -183,7 +313,7 @@ function adaptToFrontend(b: BackendDetail): FrontendDetail {
       }
     : null;
 
-  const recentSessions: FrontendSession[] = b.recentSessions.map((s) => ({
+  const recentSessions: FrontendSession[] = (b.recentSessions ?? []).map((s) => ({
     id: s.id,
     date: new Date(s.date),
     durationSec: s.durationSec ?? 0,
@@ -223,6 +353,7 @@ function adaptToFrontend(b: BackendDetail): FrontendDetail {
     weightHistory12w,
     bodyFatHistory12w,
     muscleMassHistory12w,
+    measurementHighlights,
   };
 }
 
@@ -305,14 +436,17 @@ function viewForBodyZone(bodyZone: BodyZone): "front" | "back" | null {
 function buildBodyMapZones(bc: FrontendComposition): Record<BodyZone, ZoneData | null> {
   const c = bc.circumferences;
   const f = bc.freshness;
+  const d = bc.circumferenceDeltas;
 
   function zone(value: number | null, freshKey: keyof typeof f): ZoneData | null {
     if (value === null) return null;
     const fr = f[freshKey];
+    const delta = d[freshKey];
     return {
       valueCm: value,
-      deltaCm: 0,
-      measuredAt: fr?.lastMeasuredAt ?? new Date(0),
+      deltaCm: delta?.deltaCm ?? 0,
+      measuredAt: delta?.measuredAt ?? fr?.lastMeasuredAt ?? new Date(0),
+      trendSparkline: delta?.trendSparkline,
     };
   }
 
@@ -342,21 +476,90 @@ function buildBodyMapZones(bc: FrontendComposition): Record<BodyZone, ZoneData |
 // Component
 // -----------------------------------------------------------------------------
 
+// Mapping de zona de tabla → foco del MeasurementSheet. El coach clickea el
+// lápiz en una fila de Circunferencias y el sheet se abre directamente en la
+// sub-pestaña correcta con el input ya enfocado.
+const ZONE_TO_SHEET_FOCUS: Record<string, SheetFocus> = {
+  neck:       { anthroTab: "tronco",  field: "neckCm" },
+  shoulderL:  { anthroTab: "tronco",  field: "shoulderLeftCm" },
+  shoulderR:  { anthroTab: "tronco",  field: "shoulderRightCm" },
+  chest:      { anthroTab: "tronco",  field: "chestCm" },
+  abdomen:    { anthroTab: "tronco",  field: "abdomenCm" },
+  waist:      { anthroTab: "tronco",  field: "waistCm" },
+  hip:        { anthroTab: "tronco",  field: "hipCm" },
+  gluteL:     { anthroTab: "tronco",  field: "gluteLeftCm" },
+  gluteR:     { anthroTab: "tronco",  field: "gluteRightCm" },
+  bicepL:     { anthroTab: "brazos",  field: "bicepLeftCm" },
+  bicepR:     { anthroTab: "brazos",  field: "bicepRightCm" },
+  forearmL:   { anthroTab: "brazos",  field: "forearmLeftCm" },
+  forearmR:   { anthroTab: "brazos",  field: "forearmRightCm" },
+  quadL:      { anthroTab: "piernas", field: "thighLeftCm" },
+  quadR:      { anthroTab: "piernas", field: "thighRightCm" },
+  hamstringL: { anthroTab: "piernas", field: "hamstringLeftCm" },
+  hamstringR: { anthroTab: "piernas", field: "hamstringRightCm" },
+  calfL:      { anthroTab: "piernas", field: "calfLeftCm" },
+  calfR:      { anthroTab: "piernas", field: "calfRightCm" },
+};
+
 export default function ClientProfilePageContent({ clientId }: { clientId: string }) {
   const [loading, setLoading] = useState(true);
   const [backendDetail, setBackendDetail] = useState<BackendDetail | null>(null);
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [bodyView, setBodyView] = useState<"front" | "back">("front");
+  const [deleteMetricsOpen, setDeleteMetricsOpen] = useState(false);
+  const [deletingMetrics, setDeletingMetrics] = useState(false);
+  const openSheetWithFocus = useMeasurementSheetStore((s) => s.openWithFocus);
+  const closeSheet = useMeasurementSheetStore((s) => s.close);
+  // Subscribe to measurement saves so we can re-fetch profile data after recording.
+  const lastSavedAt = useMeasurementSheetStore((s) => s.lastSavedAt);
 
+  // Track the latest clientId requested. We use this as a guard inside async
+  // resolution: if the user navigated to another client before the promise
+  // resolved, drop the stale response instead of overwriting the new client's
+  // state with the previous client's data.
+  const latestClientIdRef = React.useRef(clientId);
+  latestClientIdRef.current = clientId;
+
+  // Initial load: reset state immediately when clientId changes so the user
+  // never sees the previous client's body composition while the new fetch is
+  // in flight. The cancellation guard prevents late responses from clobbering
+  // the new client's data.
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setBackendDetail(null);
+    setSelectedZone(null);
+    // If the sheet was open for a previous client, force it closed — its
+    // store.clientId is captured at open() time and would otherwise persist
+    // the next measurement to the wrong client.
+    closeSheet();
+
     getClientProfileDetail(clientId).then((result) => {
-      // Cast needed: getClientProfileDetail declares ClientProfile | null but at
-      // runtime returns the full BackendDetail shape. Remove cast once the action
-      // return type is updated to ClientProfileDetail.
-      if (result.ok) setBackendDetail(result.value as unknown as BackendDetail);
+      if (cancelled) return;
+      if (latestClientIdRef.current !== clientId) return;
+      if (result.ok) setBackendDetail(result.value);
       setLoading(false);
     });
-  }, [clientId]);
+    return () => {
+      cancelled = true;
+    };
+  }, [clientId, closeSheet]);
+
+  // Silent re-fetch after a measurement is saved from the sheet. Same guard:
+  // ignore the response if the user navigated away mid-flight.
+  useEffect(() => {
+    if (lastSavedAt === null) return;
+    let cancelled = false;
+    const fetchingFor = clientId;
+    getClientProfileDetail(clientId).then((result) => {
+      if (cancelled) return;
+      if (latestClientIdRef.current !== fetchingFor) return;
+      if (result.ok) setBackendDetail(result.value);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [lastSavedAt, clientId]);
 
   function handleTableZoneClick(zone: string) {
     setSelectedZone((prev) => (prev === zone ? null : zone));
@@ -372,10 +575,46 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
     setSelectedZone((prev) => (prev === tableZone ? null : tableZone));
   }
 
+  /**
+   * Lápiz de edición de una circunferencia en la tabla → abre el sheet con
+   * foco en el campo correcto (sub-pestaña + scrollIntoView + autofocus).
+   * El mapping vive en ZONE_TO_SHEET_FOCUS arriba.
+   */
+  function handleEditZone(zone: string) {
+    const focus = ZONE_TO_SHEET_FOCUS[zone];
+    if (!focus) return;
+    openSheetWithFocus(clientId, focus);
+  }
+
+  async function handleDeleteBodyMetrics() {
+    setDeletingMetrics(true);
+    const result = await deleteClientBodyMetrics(clientId);
+
+    if (!result.ok) {
+      setDeletingMetrics(false);
+      toast.error(result.error.message ?? "No se pudieron eliminar las mediciones.");
+      return;
+    }
+
+    const refreshed = await getClientProfileDetail(clientId);
+    if (latestClientIdRef.current === clientId && refreshed.ok) {
+      setBackendDetail(refreshed.value);
+      setSelectedZone(null);
+    }
+
+    setDeletingMetrics(false);
+    setDeleteMetricsOpen(false);
+    toast.success(
+      result.value.deletedCount === 1
+        ? "Medición eliminada. Ya podés registrar una nueva."
+        : `${result.value.deletedCount} mediciones eliminadas. Ya podés registrar una nueva.`,
+    );
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#3B82F6]" aria-label="Cargando perfil" />
+        <Loader2 className="h-8 w-8 animate-spin text-brand-primary" aria-label="Cargando perfil" />
       </div>
     );
   }
@@ -394,10 +633,10 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
   const gl = genderLabel(profile.user.gender);
   const bc = profile.bodyComposition;
   const bodyMapZones = buildBodyMapZones(bc);
-  const hasNoMetrics = bc.weightKg === null && bc.bodyFatPct === null;
 
   const weightDelta = backendDetail.stats.weightDelta28d;
   const bodyFatDelta = backendDetail.stats.bodyFatDelta28d;
+  const metricsCount = backendDetail.metricsHistory.length;
 
   const kpiCards: Array<{
     label: string;
@@ -462,20 +701,19 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
       >
         <Link
           href="/trainer/clientes"
-          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-[#A1A1AA] transition-colors hover:text-[#FAFAFA] focus-visible:outline-2 focus-visible:outline-[#3B82F6]"
+          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-[#A1A1AA] transition-colors hover:text-[#FAFAFA] focus-visible:outline-2 focus-visible:outline-brand-primary"
           aria-label="Volver al listado de clientes"
         >
           <ChevronLeft className="h-4 w-4" aria-hidden="true" />
           Clientes
         </Link>
 
-        <Link
-          href={`/trainer/clientes/${clientId}/ajustes`}
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-[#71717A] transition-colors hover:bg-[#27272A] hover:text-[#FAFAFA] focus-visible:outline-2 focus-visible:outline-[#3B82F6]"
-          aria-label="Más acciones para este cliente"
-        >
-          <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
-        </Link>
+        {/*
+         * "Más acciones" link removed: it used to point to
+         * /trainer/clientes/[clientId]/ajustes which was never implemented.
+         * The route returned 404 on every RSC prefetch when the breadcrumb
+         * mounted. Re-add when there is an actual ajustes-by-client page.
+         */}
       </nav>
 
       {/* 1. Hero */}
@@ -494,24 +732,6 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
       />
 
       <MeasurementSheetController clientId={clientId} />
-
-      {/* Banner: sin mediciones */}
-      {hasNoMetrics && (
-        <div
-          role="alert"
-          className="flex items-center justify-between gap-4 rounded-xl border border-[rgba(245,158,11,0.4)] bg-[rgba(245,158,11,0.08)] px-5 py-4"
-        >
-          <p className="text-sm text-[#F59E0B]">
-            Aún no tenés mediciones de {profile.user.name}. Tomá la primera ahora.
-          </p>
-          <Link
-            href={`/trainer/clientes/${clientId}/metricas`}
-            className="shrink-0 rounded-lg bg-[#F59E0B] px-3 py-1.5 text-xs font-semibold text-[#09090B] transition-colors hover:bg-[#D97706] focus-visible:outline-2 focus-visible:outline-[#3B82F6]"
-          >
-            + Nueva medición
-          </Link>
-        </div>
-      )}
 
       {/* 2. KPI strip */}
       <section aria-label="Indicadores de estado actual">
@@ -546,7 +766,7 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
       <section aria-label="Composición corporal">
         <div className="mb-5 flex items-center gap-2.5">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[rgba(255,106,26,0.12)] border border-[rgba(255,106,26,0.2)]">
-            <Dumbbell className="h-3.5 w-3.5 text-[#3B82F6]" aria-hidden="true" />
+            <Dumbbell className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
           </div>
           <h2 className="text-sm font-bold uppercase tracking-[0.1em] text-[#A1A1AA]">
             Composición corporal
@@ -564,13 +784,34 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
             />
           </div>
           <div className="rounded-2xl border border-[rgba(63,63,70,0.7)] bg-gradient-to-b from-[#1A1A1D] to-[#18181B] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-            <h3 className="mb-5 text-xs font-bold uppercase tracking-[0.1em] text-[#71717A]">
-              Circunferencias
-            </h3>
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <h3 className="text-xs font-bold uppercase tracking-[0.1em] text-[#71717A]">
+                Circunferencias
+              </h3>
+              <button
+                type="button"
+                aria-label="Eliminar todos los pesos y medidas del cliente"
+                title={
+                  metricsCount > 0
+                    ? "Eliminar pesos y medidas"
+                    : "Sin mediciones para eliminar"
+                }
+                disabled={metricsCount === 0 || deletingMetrics}
+                onClick={() => setDeleteMetricsOpen(true)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#3F3F46] text-[#71717A] transition-colors hover:border-[#EF4444]/60 hover:bg-[#EF4444]/10 hover:text-[#EF4444] focus-visible:outline-2 focus-visible:outline-[#EF4444] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {deletingMetrics ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                )}
+              </button>
+            </div>
             <CircumferencesTable
               data={bc}
               selectedZone={selectedZone}
               onZoneClick={handleTableZoneClick}
+              onEditZone={handleEditZone}
             />
           </div>
         </div>
@@ -595,9 +836,49 @@ export default function ClientProfilePageContent({ clientId }: { clientId: strin
           weightHistory={profile.weightHistory12w}
           bodyFatHistory={profile.bodyFatHistory12w}
           muscleMassHistory={profile.muscleMassHistory12w}
+          measurementHighlights={profile.measurementHighlights}
           initialNotes={backendDetail.trainerNotes ?? ""}
         />
       </section>
+
+      <Dialog open={deleteMetricsOpen} onOpenChange={setDeleteMetricsOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Eliminar pesos y medidas</DialogTitle>
+            <DialogDescription className="text-sm text-[#A1A1AA]">
+              Esto borrará del perfil de {profile.user.name} todo el historial de peso,
+              grasa, masa muscular y circunferencias. Después podés registrar una
+              nueva medición y será tomada como el nuevo punto de partida.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeleteMetricsOpen(false)}
+              disabled={deletingMetrics}
+              className="border-[#3F3F46] text-[#A1A1AA] hover:border-brand-primary"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={handleDeleteBodyMetrics}
+              disabled={deletingMetrics}
+              className="bg-[#EF4444] text-white hover:bg-[#DC2626] disabled:opacity-50"
+            >
+              {deletingMetrics ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                  Eliminando...
+                </>
+              ) : (
+                "Eliminar todo"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

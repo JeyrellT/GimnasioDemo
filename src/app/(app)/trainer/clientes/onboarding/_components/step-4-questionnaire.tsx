@@ -40,7 +40,11 @@ interface Step4QuestionnaireProps {
 }
 
 export function Step4Questionnaire({ draftId }: Step4QuestionnaireProps) {
-  const { goNext, goBack, setStepData, payload } = useOnboardingStore();
+  // Bug 10: granular selectors
+  const goNext = useOnboardingStore((s) => s.goNext);
+  const goBack = useOnboardingStore((s) => s.goBack);
+  const setStepData = useOnboardingStore((s) => s.setStepData);
+  const payload = useOnboardingStore((s) => s.payload);
   const existing = payload.step4;
 
   const [goal, setGoal] = useState<string>(existing?.goal ?? "");
@@ -134,7 +138,7 @@ export function Step4Questionnaire({ draftId }: Step4QuestionnaireProps) {
                 onClick={() => setGoal(value)}
                 className={`rounded-lg border py-2.5 text-xs font-semibold transition-colors min-h-[44px] ${
                   goal === value
-                    ? "border-[#3B82F6] bg-[rgba(255,106,26,0.15)] text-[#3B82F6]"
+                    ? "border-brand-primary bg-[rgba(255,106,26,0.15)] text-brand-primary"
                     : "border-[#3F3F46] bg-[#27272A] text-[#A1A1AA] hover:border-[#52525B]"
                 }`}
                 aria-pressed={goal === value}
@@ -184,7 +188,7 @@ export function Step4Questionnaire({ draftId }: Step4QuestionnaireProps) {
                   onClick={() => setTakesMedication(val)}
                   className={`flex-1 rounded-lg border py-2.5 text-sm font-semibold transition-colors min-h-[44px] ${
                     takesMedication === val
-                      ? "border-[#3B82F6] bg-[rgba(255,106,26,0.15)] text-[#3B82F6]"
+                      ? "border-brand-primary bg-[rgba(255,106,26,0.15)] text-brand-primary"
                       : "border-[#3F3F46] bg-[#27272A] text-[#A1A1AA] hover:border-[#52525B]"
                   }`}
                 >
@@ -216,7 +220,7 @@ export function Step4Questionnaire({ draftId }: Step4QuestionnaireProps) {
                   onClick={() => setHasInjuries(val)}
                   className={`flex-1 rounded-lg border py-2.5 text-sm font-semibold transition-colors min-h-[44px] ${
                     hasInjuries === val
-                      ? "border-[#3B82F6] bg-[rgba(255,106,26,0.15)] text-[#3B82F6]"
+                      ? "border-brand-primary bg-[rgba(255,106,26,0.15)] text-brand-primary"
                       : "border-[#3F3F46] bg-[#27272A] text-[#A1A1AA] hover:border-[#52525B]"
                   }`}
                 >

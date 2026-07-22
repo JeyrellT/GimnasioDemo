@@ -13,4 +13,5 @@ export {
   createLocationVisit,
   deleteLocationVisit,
   getFinanceDashboard,
+  getFinanceDashboardData,
 } from "@/server/actions/finance.actions";

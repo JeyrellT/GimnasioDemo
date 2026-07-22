@@ -15,6 +15,10 @@ import {
 } from "./shared.schema";
 
 // ── Create / update template ──────────────────────────────────────────────────
+// `goal` se deja como string libre para permitir objetivos personalizados que
+// el trainer puede crear desde la UI (ver /trainer/rutinas/nueva). Los goals
+// "built-in" (HYPERTROPHY/STRENGTH/ENDURANCE/FAT_LOSS/GENERAL) viven en
+// src/lib/ai/ocr-routine.ts:VALID_GOALS para el flujo de OCR estructurado.
 
 export const createRoutineSchema = z.object({
   name: z.string().trim().min(2, "Mínimo 2 caracteres").max(100, "Máximo 100 caracteres"),
@@ -76,6 +80,12 @@ const addExerciseToDayBaseSchema = z.object({
     .optional(),
   supersetGroup: z.coerce.number().int().min(1).max(10).optional(),
   notes: longTextSchema(500),
+  // Per-routine video override (YouTube / Vimeo / Google Drive).
+  // `""` and `null` both clear the column; non-empty must be a valid URL.
+  mediaUrl: z.preprocess(
+    (v) => (v === "" ? null : v),
+    z.union([z.string().url("URL inválida").max(2000), z.null()]).optional(),
+  ),
 });
 
 export const addExerciseToDaySchema = addExerciseToDayBaseSchema.refine(
@@ -143,6 +153,12 @@ const snapshotExerciseSchema = z.object({
   tempo: z.string().nullable(),
   supersetGroup: z.number().int().nullable(),
   notes: z.string().nullable(),
+  // Bug #3: fields built by buildSnapshot() and stored in RoutineSnapshotExercise
+  slug: z.string().nullable().optional(),
+  thumbnailUrl: z.string().nullable().optional(),
+  gifUrl: z.string().nullable().optional(),
+  mediaUrl: z.string().nullable().optional(),
+  nameEn: z.string().nullable().optional(),
 });
 
 const snapshotDaySchema = z.object({
