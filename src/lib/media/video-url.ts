@@ -72,6 +72,16 @@ export function isSupportedVideoUrl(url: string | null | undefined): boolean {
 }
 
 /**
+ * Picks the first playable video URL without letting stale image paths or
+ * unsupported links shadow a valid fallback later in the precedence chain.
+ */
+export function firstSupportedVideoUrl(
+  ...candidates: Array<string | null | undefined>
+): string | null {
+  return candidates.find((candidate) => isSupportedVideoUrl(candidate)) ?? null;
+}
+
+/**
  * Appends autoplay to YouTube / Vimeo embeds. Drive's /preview URL does not
  * honor autoplay, so it is returned unchanged.
  */

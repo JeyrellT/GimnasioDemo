@@ -1,0 +1,270 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-22T00:51:29.782Z",
+  "files": [
+    {
+      "slug": "barbell-back-squat",
+      "nameEs": "Sentadilla con barra",
+      "file": "/exercise-videos/barbell-back-squat.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/118ZQmmz9hg_qCsJXKDVsaLxdGLoms162/view?usp=drive_link",
+      "bytes": 2517573,
+      "sha256": "052a522a532ad91e2b0447ea2027ce1b1bac59eda31f8a3120352e07fb831b7c"
+    },
+    {
+      "slug": "front-squat",
+      "nameEs": "Sentadilla frontal",
+      "file": "/exercise-videos/front-squat.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/15S3VIri6mpcN2BQr0lod5bz4GMdb2BXB/view?usp=drive_link",
+      "bytes": 2742983,
+      "sha256": "516fa5ee89395df9d38acdb5ad174dbabd8da79e6732f5a3fd8252077c80e072"
+    },
+    {
+      "slug": "conventional-deadlift",
+      "nameEs": "Peso muerto convencional",
+      "file": "/exercise-videos/conventional-deadlift.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1sfVMTBakVSOpivThbdPdp2-fJRprmi1M/view?usp=drive_link",
+      "bytes": 1255143,
+      "sha256": "098c418098eff7402f8efff3d1b927433f4b0aa56cf088f90c033c0a7ff99f4a"
+    },
+    {
+      "slug": "romanian-deadlift",
+      "nameEs": "Peso muerto rumano",
+      "file": "/exercise-videos/romanian-deadlift.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1WCns_FfIuln1Nl9rRqLvRYvuy9GC5joq/view?usp=drive_link",
+      "bytes": 2344358,
+      "sha256": "f3afe95a20a3188b3ccac5e2f4cafc53228430fad0db184072d8aebb21065074"
+    },
+    {
+      "slug": "barbell-lunge",
+      "nameEs": "Estocada con barra",
+      "file": "/exercise-videos/barbell-lunge.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1gpgA3XqM7Kn040uN_G0FhVv4wbED6uiG/view?usp=drive_link",
+      "bytes": 2981073,
+      "sha256": "0effe75564d7f275207d58338bb3f825ffc81eedcd65400d127de41934842e3f"
+    },
+    {
+      "slug": "leg-press",
+      "nameEs": "Prensa de piernas",
+      "file": "/exercise-videos/leg-press.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1eslLE5ZAcNyI5LdcYKklEULw7ycBCTgC/view?usp=drive_link",
+      "bytes": 2723472,
+      "sha256": "5fa7b308ddd4de21036ecf74fe121e631f4d700471de904fb7edafe3d7b29222"
+    },
+    {
+      "slug": "lying-leg-curl",
+      "nameEs": "Curl de piernas acostado",
+      "file": "/exercise-videos/lying-leg-curl.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1K1Y0CHl7avY1jj8B972r3ahC9V_8qNMw/view?usp=drive_link",
+      "bytes": 3045885,
+      "sha256": "c98fbfc0779957f11bdc6b72af96fa657d04881bc11527e53fdf33811f0d8128"
+    },
+    {
+      "slug": "leg-extension",
+      "nameEs": "Extensión de piernas",
+      "file": "/exercise-videos/leg-extension.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1rk-UVdz8V6iP7Dryysgk2kztvFqnON4l/view?usp=drive_link",
+      "bytes": 1885116,
+      "sha256": "936f77e647c3c39d60d59ff075776d2c9cdbcd224d7b3df02cbb5f4f8aeb9bd8"
+    },
+    {
+      "slug": "barbell-bench-press",
+      "nameEs": "Press de banca con barra",
+      "file": "/exercise-videos/barbell-bench-press.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1k2wN1LWFy-fda0UrGclBHGeJC92kmYv0/view?usp=drive_link",
+      "bytes": 2705410,
+      "sha256": "6123724231ccb563395d96a9fe3c20505fbf6ac71739402d4bd3a64b5c2a61fe"
+    },
+    {
+      "slug": "incline-barbell-bench-press",
+      "nameEs": "Press de banca inclinado con barra",
+      "file": "/exercise-videos/incline-barbell-bench-press.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1OQZ1b7naiDnsCyxaKey47xR6bm6VjOo4/view?usp=drive_link",
+      "bytes": 2486820,
+      "sha256": "3f43c809f15ccf2885399f07880a68e1eebbfb006557a6406d039c6257e14cd9"
+    },
+    {
+      "slug": "overhead-press",
+      "nameEs": "Press militar con barra",
+      "file": "/exercise-videos/overhead-press.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1F3cHb_o3EX5wlb9pqttxLy0ZeI3PWXxY/view?usp=drive_link",
+      "bytes": 2424112,
+      "sha256": "ff59d01b5658dda4da9c76e822dea74654bbb503520c854d39c2c3c9d328c5c7"
+    },
+    {
+      "slug": "push-up",
+      "nameEs": "Flexión de pecho (lagartija)",
+      "file": "/exercise-videos/push-up.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1QXl9m4hKOExL4M6TmQ9OPsQjC1y25Uyk/view?usp=drive_link",
+      "bytes": 3445485,
+      "sha256": "fb9c52e30f32c6967bac61aef6c1644410395cabb4dea227e709380b83b9d0de"
+    },
+    {
+      "slug": "dips",
+      "nameEs": "Fondos en paralelas",
+      "file": "/exercise-videos/dips.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1VpGRDPFQCW19d0wu_S8kwPRlATRoVmr9/view?usp=drive_link",
+      "bytes": 2108704,
+      "sha256": "5de91cb6fc89d2abf82f2df994b5f47f493d27853984b1b49f86bb523b3b83b0"
+    },
+    {
+      "slug": "dumbbell-bench-press",
+      "nameEs": "Press de banca con mancuernas",
+      "file": "/exercise-videos/dumbbell-bench-press.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1HM9yyacjT0JOlNDwDVk9b6oCT1Hv-6My/view?usp=drive_link",
+      "bytes": 2252319,
+      "sha256": "a87e4a13235a064f8987ae814c52234a1f16e7278054d67df94962f6daceb55d"
+    },
+    {
+      "slug": "pull-up",
+      "nameEs": "Dominada (agarre prono)",
+      "file": "/exercise-videos/pull-up.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1rFz0RU9BfUbQT1JC0Z4_n5ql1O0b8di1/view?usp=drive_link",
+      "bytes": 2211655,
+      "sha256": "e45f033533dd2c5decce1f36b0fb30946ea6d0ce79d8256d960da8550b080ca5"
+    },
+    {
+      "slug": "close-grip-pull-up",
+      "nameEs": "Dominada con agarre supino cerrado",
+      "file": "/exercise-videos/close-grip-pull-up.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1DJ7QWB6D-Upj_ofmUGR9329HysVJvqHk/view?usp=drive_link",
+      "bytes": 1637602,
+      "sha256": "ec4534a0e9c7a20ee18a1fdb040de468a1dbf0343dc9475e2e4100e864c1419c"
+    },
+    {
+      "slug": "barbell-bent-over-row",
+      "nameEs": "Remo con barra inclinado",
+      "file": "/exercise-videos/barbell-bent-over-row.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1vKSB3zLH4qD7RFwXUJuraUiDz-5PVrmi/view?usp=drive_link",
+      "bytes": 2091542,
+      "sha256": "7978c2b51b5ec452187527b40a626c74760d5cf4128d5ffb6765bc1f388f30f4"
+    },
+    {
+      "slug": "dumbbell-single-arm-row",
+      "nameEs": "Remo con mancuerna a un brazo",
+      "file": "/exercise-videos/dumbbell-single-arm-row.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1YGX4sRGJXuMj3yN6TE0WVdEWz_ISO73s/view?usp=drive_link",
+      "bytes": 2474831,
+      "sha256": "409ba4f23700aec01a8d8db30c24829befec2930dc173a54d11ccd31aa792ea1"
+    },
+    {
+      "slug": "cable-lat-pulldown",
+      "nameEs": "Jalón al pecho en polea",
+      "file": "/exercise-videos/cable-lat-pulldown.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1JnifxfueCCZmzFwft60eODABGKU_jMuO/view?usp=drive_link",
+      "bytes": 2347037,
+      "sha256": "b62acc7793f7b0d3dc5a133ec00dad7b0b1bcd664a6c9d7864d2e9ac824ea067"
+    },
+    {
+      "slug": "seated-cable-row",
+      "nameEs": "Remo en polea sentado",
+      "file": "/exercise-videos/seated-cable-row.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1DqJ7UhGjl0vKcEC5Ei4IDpwqkg_qz-a8/view?usp=drive_link",
+      "bytes": 2803105,
+      "sha256": "750c3edd7030f6fbd1aafc461b7a710ab6c2e8a2931353b12a7eedb73d3ae07a"
+    },
+    {
+      "slug": "barbell-curl",
+      "nameEs": "Curl de bíceps con barra",
+      "file": "/exercise-videos/barbell-curl.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1q_fVgFMP8HPVy-qix0ARHb6PuIjXDdrq/view?usp=drive_link",
+      "bytes": 1191934,
+      "sha256": "57888530fdb0f325111110e10e644ed55d79204b3c7561a37c4497ff46e51e78"
+    },
+    {
+      "slug": "hammer-curl",
+      "nameEs": "Curl martillo",
+      "file": "/exercise-videos/hammer-curl.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1kdnSkBDiTsTPtMSHiXhGOGxNXRUqbATp/view?usp=drive_link",
+      "bytes": 1403664,
+      "sha256": "e3273f502ebb511f34cd16444283c8b7cd638aa0a7b03b7b2fb3bea2c4ce7484"
+    },
+    {
+      "slug": "cable-tricep-pushdown",
+      "nameEs": "Extensión de tríceps en polea alta",
+      "file": "/exercise-videos/cable-tricep-pushdown.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/13BMZxcnUHAHvLhj4GzrZPBvI1d4dcGKa/view?usp=drive_link",
+      "bytes": 1342373,
+      "sha256": "d40dc6264879d3ef4cc7ca4bf12d749f45c565a37e7e2dfa015d463f5a39898d"
+    },
+    {
+      "slug": "ez-bar-skull-crusher",
+      "nameEs": "Press francés con barra EZ",
+      "file": "/exercise-videos/ez-bar-skull-crusher.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1Nw3vePZsNxsIhKdI7aGtitn8iRfL1Q7h/view?usp=drive_link",
+      "bytes": 1209503,
+      "sha256": "cee50a7211b14a5586db06d46bede855c5e26fb915a0242aca91edff922a8a51"
+    },
+    {
+      "slug": "dumbbell-lateral-raise",
+      "nameEs": "Elevación lateral con mancuernas",
+      "file": "/exercise-videos/dumbbell-lateral-raise.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1WOH31IzlK5xPDyCABa4c9ZMTjRFapwQ4/view?usp=drive_link",
+      "bytes": 1296727,
+      "sha256": "8aef632fda4ad1e549519696f7680037e2ec2dbb8bd00d7bcb56c692d267428b"
+    },
+    {
+      "slug": "dumbbell-front-raise",
+      "nameEs": "Elevación frontal con mancuernas",
+      "file": "/exercise-videos/dumbbell-front-raise.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1O8UBBVNZa3_jVm0A0rByNvntmv6ImQLz/view?usp=drive_link",
+      "bytes": 1257430,
+      "sha256": "1b57aae9d2935d510bd68479c46fa6d9a3a19cb2e904587d8d57204e27a23e1c"
+    },
+    {
+      "slug": "cable-rear-delt-fly",
+      "nameEs": "Apertura para deltoides posterior en polea",
+      "file": "/exercise-videos/cable-rear-delt-fly.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1ri_Zz0GFsd2mef7RlXbdzTHIFou2BR7v/view?usp=drive_link",
+      "bytes": 1232332,
+      "sha256": "d6bbb62eac078dac82f9176557cb4f82e9c0e98d8aceb38365b015d2f05da6db"
+    },
+    {
+      "slug": "plank",
+      "nameEs": "Plancha abdominal",
+      "file": "/exercise-videos/plank.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/14_YFavc2mUdoh1jk_TA-11GYhSA8ksqI/view?usp=drive_link",
+      "bytes": 4493910,
+      "sha256": "6703ff4d5c72d317474ce1b5a3f81f23b779da654a5461e876d32320e20a3c94"
+    },
+    {
+      "slug": "ab-wheel-rollout",
+      "nameEs": "Extensión abdominal con rueda",
+      "file": "/exercise-videos/ab-wheel-rollout.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1QCgJjc2QwfLzVflYxsioc3DY6fB8tPf7/view?usp=drive_link",
+      "bytes": 3292055,
+      "sha256": "036f18d1c458ae83a8fb148194a8745a143ab598bbce769c06e301ead6143c35"
+    },
+    {
+      "slug": "hanging-leg-raise",
+      "nameEs": "Elevación de piernas colgado",
+      "file": "/exercise-videos/hanging-leg-raise.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1Ym7NDY6xMX_pwagp05r2a3XW_YbBNcef/view?usp=drive_link",
+      "bytes": 1369770,
+      "sha256": "5fbccc3da3d933cd6bd2a49a76b1860cdf3b28fe1b0f5e0b6271ead2975d2140"
+    },
+    {
+      "slug": "cardio-en-maquina",
+      "nameEs": "Cardio en máquina",
+      "file": "/exercise-videos/cardio-en-maquina.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1lq44HpZYFVapCWxsd64a8wmMCe2WS5cq/view?usp=drive_link",
+      "bytes": 2633674,
+      "sha256": "7b9f1ffc45475640a24c5a5b9b041d6905017a1a7f5b4b1931ddda90e99f98dd"
+    },
+    {
+      "slug": "zancadas-caminando",
+      "nameEs": "Zancadas caminando",
+      "file": "/exercise-videos/zancadas-caminando.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1E9f68BK0r2RBnhoYQ1m610o3usgkk0Ge/view?usp=drive_link",
+      "bytes": 2011773,
+      "sha256": "06fa2f9b961c78cde4fb6b3b552895b24da6db4a8128d4ead080f5b028fb5e9c"
+    },
+    {
+      "slug": "plancha-isometrica",
+      "nameEs": "Plancha",
+      "file": "/exercise-videos/plancha-isometrica.mp4",
+      "sourceUrl": "https://drive.google.com/file/d/1nuhyJ4dR4VrISoe3_pbTgOR393oLzC66/view?usp=drive_link",
+      "bytes": 51390,
+      "sha256": "7fa4c8796c69c90295110465ef6698fa134da9d16fef6edea095e10fd9b2951a"
+    }
+  ]
+}

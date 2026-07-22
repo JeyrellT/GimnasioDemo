@@ -22,9 +22,10 @@
 //      biblioteca + reproductor.
 // =============================================================================
 
-import { PrismaClient } from "@prisma/client";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { PrismaClient } from "@prisma/client";
 
 interface VideoEntry {
   nameEs: string;
@@ -43,10 +44,14 @@ interface Plan {
 }
 
 function loadConfig(): VideosConfig {
-  const path = resolve(__dirname, "data", "exercise-videos.json");
+  const seedDir = fileURLToPath(new URL(".", import.meta.url));
+  const path = resolve(seedDir, "data", "exercise-videos.json");
   const raw = readFileSync(path, "utf8");
   const parsed = JSON.parse(raw) as VideosConfig;
-  if (typeof parsed.strength !== "object" || typeof parsed.warmup !== "object") {
+  if (
+    typeof parsed.strength !== "object" ||
+    typeof parsed.warmup !== "object"
+  ) {
     throw new Error(
       "exercise-videos.json must have `strength` and `warmup` sections",
     );
@@ -86,7 +91,9 @@ async function seedVideos(prisma: PrismaClient): Promise<{
   );
 
   if (plan.length === 0) {
-    console.log("No hay videos para aplicar todavía. Edit el JSON y reintentá.");
+    console.log(
+      "No hay videos para aplicar todavía. Edit el JSON y reintentá.",
+    );
     return { applied: 0, unchanged: 0, missing: 0, totalConfigured: 0 };
   }
 
@@ -130,7 +137,7 @@ async function seedVideos(prisma: PrismaClient): Promise<{
 }
 
 function truncate(s: string, max: number): string {
-  return s.length <= max ? s : s.slice(0, max - 1) + "…";
+  return s.length <= max ? s : `${s.slice(0, max - 1)}…`;
 }
 
 async function main(): Promise<void> {

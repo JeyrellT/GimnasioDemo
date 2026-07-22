@@ -26,6 +26,7 @@ import {
   proxyDriveFile,
 } from "@/server/lib/drive-video-proxy";
 import { isSupportedVideoUrl } from "@/lib/media/video-url";
+import { serveBundledExerciseVideo } from "@/server/lib/bundled-exercise-video";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,7 +38,11 @@ const EXERCISE_ID_PATTERN = /^[A-Za-z0-9]{1,32}$/;
 async function resolveEffectiveMediaUrl(
   exerciseId: string,
   trainerUserId: string | null,
-): Promise<string | null> {
+): Promise<{
+  mediaUrl: string | null;
+  catalogSlug: string | null;
+  usesCatalog: boolean;
+}> {
   // Estrategia: junto TODOS los candidates (override del trainer + catálogo +
   // override de cualquier trainer si el caller es client). Luego elijo el
   // primero que sea REPRODUCIBLE (Drive / YouTube / Vimeo). Si ninguno es
@@ -66,7 +71,7 @@ async function resolveEffectiveMediaUrl(
   // when they own a private exercise.
   const ex = await prisma.exercise.findUnique({
     where: { id: exerciseId, deletedAt: null },
-    select: { mediaUrl: true, isPublic: true },
+    select: { mediaUrl: true, isPublic: true, slug: true },
   });
 
   // For clients (no trainerUserId), also look at any override that exists
@@ -86,9 +91,19 @@ async function resolveEffectiveMediaUrl(
   // Primer URL reproducible gana — el override de "verdad" si es Drive/YT/Vimeo,
   // sino caemos al catálogo del JSON.
   for (const c of candidates) {
-    if (isSupportedVideoUrl(c)) return c;
+    if (isSupportedVideoUrl(c)) {
+      return {
+        mediaUrl: c,
+        catalogSlug: ex?.slug ?? null,
+        usesCatalog: c === ex?.mediaUrl,
+      };
+    }
   }
-  return candidates[0] ?? null;
+  return {
+    mediaUrl: candidates[0] ?? null,
+    catalogSlug: ex?.slug ?? null,
+    usesCatalog: candidates[0] === ex?.mediaUrl,
+  };
 }
 
 export async function GET(
@@ -108,10 +123,22 @@ export async function GET(
   // Trainers get their own override resolved; clients fall through to the
   // catalog (or to any override set for this exercise by their trainer).
   const trainerUserId = user.role === "TRAINER" ? user.id : null;
-  const mediaUrl = await resolveEffectiveMediaUrl(exerciseId, trainerUserId);
+  const resolved = await resolveEffectiveMediaUrl(exerciseId, trainerUserId);
+  const mediaUrl = resolved.mediaUrl;
 
   if (!mediaUrl) {
     return new NextResponse("No video", { status: 404 });
+  }
+
+  // Catalog videos are mirrored inside the deployment so client playback does
+  // not depend on Drive availability. If the bundled copy is unexpectedly
+  // absent, continue below and use Drive as the independent fallback.
+  if (resolved.usesCatalog) {
+    const bundled = await serveBundledExerciseVideo(
+      resolved.catalogSlug,
+      req.headers.get("range"),
+    );
+    if (bundled) return bundled;
   }
 
   // Only Drive can be proxied as a video stream. YouTube/Vimeo require

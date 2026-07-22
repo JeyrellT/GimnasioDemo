@@ -21,7 +21,11 @@ import { requireClient } from "@/server/guards";
 import { tryCatch } from "@/lib/result";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { logInfo } from "@/lib/logger";
-import { deriveVideoThumbnail, toClientMediaUrl } from "@/lib/media/video-url";
+import {
+  deriveVideoThumbnail,
+  firstSupportedVideoUrl,
+  toClientMediaUrl,
+} from "@/lib/media/video-url";
 import type { ActionResult } from "@/types/api";
 
 // =============================================================================
@@ -333,9 +337,15 @@ async function overlayExerciseMedia(
             thumbnailUrl?: string | null;
           };
           const overrideMediaUrl = e.exerciseId ? overrides.get(e.exerciseId) ?? null : null;
-          // Snapshot (per-routine) > trainer override > catalog default.
-          const effectiveMediaUrl =
-            snap.mediaUrl ?? overrideMediaUrl ?? liveRow.mediaUrl ?? null;
+          // Snapshot (per-routine) > trainer override > catalog default, but
+          // only for playable video URLs. Older snapshots stored the exercise
+          // image path in mediaUrl; that image must not hide a newer Drive
+          // video from the live catalog.
+          const effectiveMediaUrl = firstSupportedVideoUrl(
+            snap.mediaUrl,
+            overrideMediaUrl,
+            liveRow.mediaUrl,
+          );
           // Derive a thumb from the effective video URL so the player and
           // "next exercise" preview show the Drive/YouTube poster instead of
           // the frozen seed image.
