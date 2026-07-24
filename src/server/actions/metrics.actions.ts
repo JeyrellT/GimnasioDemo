@@ -255,14 +255,16 @@ export async function listMetrics(
 
     const skip = (page - 1) * limit;
 
+    // deletedAt: null es obligatorio — deleteClientBodyMetrics hace soft delete,
+    // así que sin el filtro las mediciones "reseteadas" reaparecían acá.
     const [metrics, total] = await prisma.$transaction([
       prisma.bodyMetric.findMany({
-        where: { clientUserId },
+        where: { clientUserId, deletedAt: null },
         orderBy: { recordedAt: "desc" },
         skip,
         take: limit,
       }),
-      prisma.bodyMetric.count({ where: { clientUserId } }),
+      prisma.bodyMetric.count({ where: { clientUserId, deletedAt: null } }),
     ]);
 
     return { metrics, total };
@@ -537,7 +539,7 @@ export async function getLatestMetric(
     }
 
     const latest = await prisma.bodyMetric.findFirst({
-      where: { clientUserId },
+      where: { clientUserId, deletedAt: null },
       orderBy: { recordedAt: "desc" },
     });
 
