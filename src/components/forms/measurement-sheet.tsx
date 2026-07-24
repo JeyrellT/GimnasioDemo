@@ -46,8 +46,7 @@ const extractMeasurementsBrowserModule = () =>
     (m) => m.extractMeasurementsBrowser,
   );
 
-// TODO(backend-api): recordBodyMetric ya existe en actions/metrics.ts
-import { recordBodyMetric } from "@/app/actions/metrics";
+import { getLatestMetric, recordBodyMetric } from "@/app/actions/metrics";
 
 // -----------------------------------------------------------------------------
 // Types
@@ -156,6 +155,50 @@ function MeasurementContent({
   const [saveState, setSaveState] = React.useState<SaveState>("idle");
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
   const [ocrUsed, setOcrUsed] = React.useState(false);
+  const [previous, setPrevious] = React.useState<
+    Partial<Record<keyof MeasurementFormData, number | null>>
+  >({});
+
+  // Última medición del cliente: la usamos solo como referencia visual para
+  // ver el cambio mientras se escribe. Si falla, el formulario sigue usable.
+  React.useEffect(() => {
+    let cancelled = false;
+    getLatestMetric(clientId).then((result) => {
+      if (cancelled || !result.ok || !result.value) return;
+      const m = result.value;
+      const num = (v: unknown): number | null =>
+        v == null ? null : Number(v);
+      setPrevious({
+        weightKg: num(m.weightKg),
+        bodyFatPct: num(m.bodyFatPct),
+        muscleMassKg: num(m.muscleMassKg),
+        visceralFat: m.visceralFat ?? null,
+        basalMetabolicRate: m.basalMetabolicRate ?? null,
+        neckCm: num(m.neckCm),
+        shoulderLeftCm: num(m.shoulderLeftCm),
+        shoulderRightCm: num(m.shoulderRightCm),
+        chestCm: num(m.chestCm),
+        abdomenCm: num(m.abdomenCm),
+        waistCm: num(m.waistCm),
+        hipCm: num(m.hipCm),
+        gluteLeftCm: num(m.gluteLeftCm),
+        gluteRightCm: num(m.gluteRightCm),
+        bicepLeftCm: num(m.bicepLeftCm ?? m.armCm),
+        bicepRightCm: num(m.bicepRightCm ?? m.armCm),
+        forearmLeftCm: num(m.forearmLeftCm),
+        forearmRightCm: num(m.forearmRightCm),
+        thighLeftCm: num(m.thighLeftCm ?? m.thighCm),
+        thighRightCm: num(m.thighRightCm ?? m.thighCm),
+        hamstringLeftCm: num(m.hamstringLeftCm),
+        hamstringRightCm: num(m.hamstringRightCm),
+        calfLeftCm: num(m.calfLeftCm),
+        calfRightCm: num(m.calfRightCm),
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [clientId]);
 
   const focus = useMeasurementSheetStore((s) => s.focus);
   const clearFocus = useMeasurementSheetStore((s) => s.clearFocus);
@@ -191,6 +234,17 @@ function MeasurementContent({
   function setField(key: keyof MeasurementFormData, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
+
+  /** Campos con un número válido cargado — alimenta el guard y el resumen. */
+  const filledCount = React.useMemo(
+    () =>
+      Object.values(form).filter(
+        (v) => v.trim() !== "" && !Number.isNaN(Number.parseFloat(v)),
+      ).length,
+    [form],
+  );
+
+  const hasWeight = form.weightKg.trim() !== "";
 
   function handleOcrExtracted(data: ScaleData) {
     setOcrUsed(true);
@@ -270,6 +324,16 @@ function MeasurementContent({
   }
 
   async function handleSave() {
+    // El cupo es 1 medición por semana: guardar un formulario vacío quemaría
+    // el turno del cliente creando una fila sin ningún dato.
+    if (filledCount === 0) {
+      setSaveState("error");
+      setErrorMsg(
+        "Ingresá al menos una medición antes de guardar. Este registro consume tu medición de la semana.",
+      );
+      return;
+    }
+
     setSaveState("saving");
     setErrorMsg(null);
 
@@ -443,6 +507,7 @@ function MeasurementContent({
               ]}
               form={form}
               setField={setField}
+              previous={previous}
             />
           </div>
 
@@ -462,6 +527,7 @@ function MeasurementContent({
               ]}
               form={form}
               setField={setField}
+              previous={previous}
             />
           </div>
 
@@ -483,6 +549,7 @@ function MeasurementContent({
               ]}
               form={form}
               setField={setField}
+              previous={previous}
             />
           </div>
         </div>
@@ -506,6 +573,7 @@ function MeasurementContent({
             ]}
             form={form}
             setField={setField}
+            previous={previous}
           />
         </div>
       </div>
@@ -517,10 +585,28 @@ function MeasurementContent({
             {errorMsg}
           </p>
         )}
+
+        {/* Resumen: la medición se reparte en 3 tabs, así que sin esto es fácil
+            guardar creyendo que se cargó algo que quedó en otra pestaña. */}
+        {saveState !== "success" && (
+          <div className="mb-3 flex items-center justify-between gap-2 text-xs">
+            <span className={filledCount === 0 ? "text-[#F59E0B]" : "text-[#A1A1AA]"}>
+              {filledCount === 0
+                ? "Todavía no cargaste ninguna medida"
+                : `${filledCount} ${filledCount === 1 ? "medida cargada" : "medidas cargadas"}`}
+            </span>
+            {filledCount > 0 && !hasWeight && (
+              <span className="text-[#71717A]">Sin peso</span>
+            )}
+          </div>
+        )}
+
         <button
           type="button"
           onClick={handleSave}
-          disabled={saveState === "saving" || saveState === "success"}
+          disabled={
+            saveState === "saving" || saveState === "success" || filledCount === 0
+          }
           className={cn(
             "inline-flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-colors",
             "focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-2",
@@ -561,9 +647,57 @@ interface AnthroFieldGridProps {
   fields: AnthroField[];
   form: MeasurementFormData;
   setField: (key: keyof MeasurementFormData, value: string) => void;
+  /** Valores de la medición anterior, para mostrar la referencia y el cambio. */
+  previous?: Partial<Record<keyof MeasurementFormData, number | null>>;
 }
 
-function AnthroFieldGrid({ fields, form, setField }: AnthroFieldGridProps) {
+/**
+ * Diferencia contra la medición anterior, calculada mientras se escribe.
+ * Sin esto el coach tiene que abrir el historial en otra pantalla para saber
+ * si el número que acaba de tomar subió o bajó.
+ */
+function LiveDelta({
+  current,
+  previous,
+  unit,
+}: {
+  current: string;
+  previous: number | null | undefined;
+  unit: string;
+}) {
+  if (previous == null) return null;
+
+  const parsed = Number.parseFloat(current);
+  if (current.trim() === "" || Number.isNaN(parsed)) {
+    return (
+      <span className="text-[10px] text-[#52525B]">
+        Anterior: {previous}
+        {unit ? ` ${unit}` : ""}
+      </span>
+    );
+  }
+
+  const delta = Math.round((parsed - previous) * 10) / 10;
+  const flat = Math.abs(delta) < 0.05;
+
+  return (
+    <span className="text-[10px] text-[#52525B]">
+      Anterior: {previous}
+      {unit ? ` ${unit}` : ""}{" "}
+      <span
+        className={cn(
+          "font-semibold tabular-nums",
+          flat ? "text-[#71717A]" : delta > 0 ? "text-[#22C55E]" : "text-[#F59E0B]",
+        )}
+      >
+        ({delta > 0 ? "+" : ""}
+        {delta.toFixed(1)})
+      </span>
+    </span>
+  );
+}
+
+function AnthroFieldGrid({ fields, form, setField, previous }: AnthroFieldGridProps) {
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {fields.map(({ key, label, unit = "cm" }) => {
@@ -599,6 +733,11 @@ function AnthroFieldGrid({ fields, form, setField }: AnthroFieldGridProps) {
                 </span>
               )}
             </div>
+            <LiveDelta
+              current={form[key]}
+              previous={previous?.[key]}
+              unit={unit}
+            />
           </div>
         );
       })}

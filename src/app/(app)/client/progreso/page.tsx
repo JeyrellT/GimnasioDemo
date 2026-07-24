@@ -14,6 +14,9 @@ import {
 import { useAuth } from "@/components/providers/auth-provider";
 import { getMySessionHistory } from "@/app/actions/client-portal";
 import type { MySessionSummary } from "@/server/actions/client-portal.actions";
+import { MeasurementsProgress } from "./_components/measurements-progress";
+
+type ProgressTab = "entrenamientos" | "medidas";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -224,6 +227,7 @@ function DayGroupRow({ group }: DayGroupRowProps) {
 export default function ClientProgresoPage() {
   const { user } = useAuth();
   const userId = user?.id ?? "";
+  const [tab, setTab] = useState<ProgressTab>("entrenamientos");
 
   const sessionsQuery = useQuery<MySessionSummary[]>({
     queryKey: ["client-sessions-history", userId],
@@ -236,14 +240,6 @@ export default function ClientProgresoPage() {
     staleTime: 0,
     enabled: Boolean(userId),
   });
-
-  if (sessionsQuery.isLoading) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-neutral-500" />
-      </div>
-    );
-  }
 
   const sessions = sessionsQuery.data ?? [];
   const groups = groupSessionsByDay(sessions);
@@ -265,11 +261,50 @@ export default function ClientProgresoPage() {
         <div>
           <h1 className="text-2xl font-bold text-neutral-50">Progreso</h1>
           <p className="text-sm text-neutral-500 mt-0.5">
-            Tu historial de entrenamiento
+            {tab === "medidas"
+              ? "Tu avance de medidas corporales"
+              : "Tu historial de entrenamiento"}
           </p>
         </div>
       </div>
 
+      {/* Tabs */}
+      <div
+        role="tablist"
+        aria-label="Tipo de progreso"
+        className="flex border-b border-neutral-800"
+      >
+        {(
+          [
+            { id: "entrenamientos", label: "Entrenamientos" },
+            { id: "medidas", label: "Medidas" },
+          ] as const
+        ).map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === t.id}
+            onClick={() => setTab(t.id)}
+            className={`flex-1 px-3 py-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-[-2px] ${
+              tab === t.id
+                ? "border-b-2 border-brand-primary text-neutral-50"
+                : "text-neutral-500 hover:text-neutral-300"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "medidas" ? (
+        <MeasurementsProgress userId={userId} />
+      ) : sessionsQuery.isLoading ? (
+        <div className="flex min-h-[300px] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-neutral-500" />
+        </div>
+      ) : (
+        <div className="space-y-6">
       {/* KPIs */}
       <div className="grid grid-cols-3 gap-3">
         <KpiCard
@@ -320,6 +355,8 @@ export default function ClientProgresoPage() {
             ))}
           </div>
         </section>
+      )}
+        </div>
       )}
     </div>
   );
