@@ -51,3 +51,11 @@ logs
 
 .claude/
 tsconfig.tsbuildinfo
+
+# Archivos subidos por usuarios (pueden contener datos personales — nunca al repo)
+uploads/
+
+# Scratch local de pruebas manuales (OCR de básculas, rutinas de prueba)
+gen-test-*.py
+test-*.png
+test-scale-image.html
