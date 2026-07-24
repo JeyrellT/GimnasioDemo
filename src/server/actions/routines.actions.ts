@@ -1557,6 +1557,49 @@ export async function getClientAssignedRoutines(
 }
 
 // =============================================================================
+// getClientOrphanedSessionCount — entrenamientos de rutinas ya quitadas
+// =============================================================================
+
+export interface OrphanedSessionSummary {
+  count: number;
+  lastCompletedAt: Date | null;
+}
+
+/**
+ * Sesiones COMPLETED que quedaron colgando de asignaciones borradas o
+ * archivadas. Al quitar una rutina del cliente el historial no se borra, pero
+ * dejaba de ser visible en cualquier pantalla del coach: parecía que el
+ * cliente nunca había entrenado.
+ */
+export async function getClientOrphanedSessionCount(
+  clientUserId: string,
+): Promise<ActionResult<OrphanedSessionSummary>> {
+  return tryCatch(async () => {
+    const user = await requireTrainer();
+    await assertOwnsClient(user.id, clientUserId);
+
+    const sessions = await prisma.workoutSession.findMany({
+      where: {
+        clientUserId,
+        status: "COMPLETED",
+        deletedAt: null,
+        OR: [
+          { assignedRoutineId: null, isFreeWorkout: false },
+          { assignedRoutine: { deletedAt: { not: null } } },
+        ],
+      },
+      select: { completedAt: true },
+      orderBy: { completedAt: "desc" },
+    });
+
+    return {
+      count: sessions.length,
+      lastCompletedAt: sessions[0]?.completedAt ?? null,
+    };
+  });
+}
+
+// =============================================================================
 // syncAssignedRoutineFromTemplate — refresh client's assigned snapshot after edit
 // =============================================================================
 

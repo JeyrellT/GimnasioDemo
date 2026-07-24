@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   deleteAssignedRoutine,
   getClientAssignedRoutines,
+  getClientOrphanedSessionCount,
 } from "@/app/actions/routines";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { formatDateCR } from "@/lib/utils";
@@ -131,6 +132,10 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
     name: string;
   } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [orphaned, setOrphaned] = useState<{
+    count: number;
+    lastCompletedAt: Date | null;
+  } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -138,7 +143,10 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
     setLoading(true);
     setError(null);
 
-    getClientAssignedRoutines(clientId).then((result) => {
+    Promise.all([
+      getClientAssignedRoutines(clientId),
+      getClientOrphanedSessionCount(clientId),
+    ]).then(([result, orphanResult]) => {
       if (cancelled) return;
 
       if (!result.ok) {
@@ -146,6 +154,10 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
         setError(result.error.message);
       } else {
         setRoutines(result.value.slice(0, 30));
+      }
+
+      if (orphanResult.ok && orphanResult.value.count > 0) {
+        setOrphaned(orphanResult.value);
       }
 
       setLoading(false);
@@ -212,6 +224,27 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
         <div className="flex items-center gap-2 rounded-xl border border-[#F59E0B]/30 bg-[#F59E0B]/10 px-4 py-3 text-sm text-[#FBBF24]">
           <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span>{error}</span>
+        </div>
+      )}
+
+      {/* Entrenamientos que quedaron fuera de las rutinas vigentes */}
+      {orphaned && (
+        <div className="flex items-start gap-2 rounded-xl border border-[#3F3F46] bg-[#18181B] px-4 py-3">
+          <Dumbbell
+            className="h-4 w-4 shrink-0 mt-0.5 text-[#71717A]"
+            aria-hidden="true"
+          />
+          <p className="text-xs text-[#A1A1AA]">
+            Este cliente tiene{" "}
+            <span className="font-semibold text-[#FAFAFA]">
+              {orphaned.count} entrenamiento{orphaned.count !== 1 ? "s" : ""}
+            </span>{" "}
+            de rutinas que ya le quitaste
+            {orphaned.lastCompletedAt
+              ? ` (el último el ${formatDateCR(orphaned.lastCompletedAt, "d MMM yyyy")})`
+              : ""}
+            . No cuentan para el progreso de las rutinas de abajo.
+          </p>
         </div>
       )}
 

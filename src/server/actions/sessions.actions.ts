@@ -257,6 +257,9 @@ export async function startSession(
         assignedRoutineId: true,
         dayIndex: true,
         isFreeWorkout: true,
+        assignedRoutine: {
+          select: { deletedAt: true, status: true },
+        },
       },
     });
 
@@ -275,10 +278,32 @@ export async function startSession(
         };
       }
 
-      throw new ConflictError(
-        "SESSION_IN_PROGRESS",
-        "Ya tenés una sesión en curso. Completála o abortala antes de empezar una nueva.",
-      );
+      // Una sesión abierta sobre una asignación que el coach ya quitó o
+      // archivó queda huérfana: el cliente no puede completarla ni abortarla
+      // desde la UI (la rutina ya no aparece), y bloqueaba TODA sesión nueva.
+      // La abortamos sola en vez de dejar al cliente sin poder entrenar.
+      const staleAssignment =
+        existing.assignedRoutineId !== null &&
+        (existing.assignedRoutine === null ||
+          existing.assignedRoutine.deletedAt !== null ||
+          existing.assignedRoutine.status !== "ACTIVE");
+
+      if (staleAssignment) {
+        await prisma.workoutSession.update({
+          where: { id: existing.id },
+          data: { status: "ABORTED" },
+        });
+        logInfo("sessions.startSession.autoAbortedStale", {
+          userId: user.id,
+          sessionId: existing.id,
+          assignedRoutineId: existing.assignedRoutineId,
+        });
+      } else {
+        throw new ConflictError(
+          "SESSION_IN_PROGRESS",
+          "Ya tenés una sesión en curso. Completála o abortala antes de empezar una nueva.",
+        );
+      }
     }
 
     let daySnapshot: RoutineSnapshot["days"][number] | null = null;

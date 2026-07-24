@@ -19,6 +19,7 @@ export {
   getRoutine,
   getClientRoutines,
   getClientAssignedRoutines,
+  getClientOrphanedSessionCount,
   deleteAssignedRoutine,
   syncAssignedRoutineFromTemplate,
   createCustomGoal,

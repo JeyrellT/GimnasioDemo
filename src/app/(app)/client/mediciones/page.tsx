@@ -192,21 +192,13 @@ export default function ClientMedicionesPage() {
                       diff={weightDiff}
                     />
                   )}
-                  {m.bodyFatPct !== null && (
+                  {collectMeasuredCells(m).map((cell) => (
                     <MetricCell
-                      label="Grasa corporal"
-                      value={`${m.bodyFatPct}%`}
+                      key={cell.label}
+                      label={cell.label}
+                      value={cell.value}
                     />
-                  )}
-                  {m.muscleMassKg !== null && (
-                    <MetricCell
-                      label="Masa muscular"
-                      value={`${m.muscleMassKg} kg`}
-                    />
-                  )}
-                  {m.waistCm !== null && (
-                    <MetricCell label="Cintura" value={`${m.waistCm} cm`} />
-                  )}
+                  ))}
                 </div>
 
                 {m.notes && (
@@ -221,6 +213,65 @@ export default function ClientMedicionesPage() {
       )}
     </div>
   );
+}
+
+/**
+ * Toda medición que el cliente haya guardado, no solo peso/grasa/cintura.
+ * Si alguien registra únicamente cuello o bíceps, la tarjeta tiene que
+ * mostrarlo — antes quedaba visualmente vacía y parecía un error.
+ */
+function collectMeasuredCells(m: MyBodyMetric): { label: string; value: string }[] {
+  const pct: [string, number | null][] = [["Grasa corporal", m.bodyFatPct]];
+  const kg: [string, number | null][] = [["Masa muscular", m.muscleMassKg]];
+  const plain: [string, number | null][] = [
+    ["Grasa visceral", m.visceralFat],
+    ["Metabolismo basal", m.basalMetabolicRate],
+  ];
+  const cm: [string, number | null][] = [
+    ["Cuello", m.neckCm],
+    ["Hombro izq.", m.shoulderLeftCm],
+    ["Hombro der.", m.shoulderRightCm],
+    ["Pecho", m.chestCm],
+    ["Abdomen", m.abdomenCm],
+    ["Cintura", m.waistCm],
+    ["Cadera", m.hipCm],
+    ["Glúteo izq.", m.gluteLeftCm],
+    ["Glúteo der.", m.gluteRightCm],
+    ["Bíceps izq.", m.bicepLeftCm],
+    ["Bíceps der.", m.bicepRightCm],
+    ["Antebrazo izq.", m.forearmLeftCm],
+    ["Antebrazo der.", m.forearmRightCm],
+    ["Muslo izq.", m.thighLeftCm],
+    ["Muslo der.", m.thighRightCm],
+    ["Femoral izq.", m.hamstringLeftCm],
+    ["Femoral der.", m.hamstringRightCm],
+    ["Pantorrilla izq.", m.calfLeftCm],
+    ["Pantorrilla der.", m.calfRightCm],
+  ];
+
+  // Registros viejos (pre-bilateral) solo tienen las columnas legacy.
+  const legacy: [string, number | null][] = [];
+  if (m.bicepLeftCm === null && m.bicepRightCm === null) {
+    legacy.push(["Brazo", m.armCm]);
+  }
+  if (m.thighLeftCm === null && m.thighRightCm === null) {
+    legacy.push(["Muslo", m.thighCm]);
+  }
+
+  const cells: { label: string; value: string }[] = [];
+  const push = (entries: [string, number | null][], unit: string) => {
+    for (const [label, value] of entries) {
+      if (value !== null && value !== undefined) {
+        cells.push({ label, value: unit ? `${value} ${unit}` : String(value) });
+      }
+    }
+  };
+  push(pct, "%");
+  push(kg, "kg");
+  push(cm, "cm");
+  push(legacy, "cm");
+  push(plain, "");
+  return cells;
 }
 
 function MetricCell({
