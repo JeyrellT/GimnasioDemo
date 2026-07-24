@@ -144,10 +144,10 @@ export interface MyBodyMetric {
   forearmRightCm: number | null;
 
   // Piernas
-  /** Legacy single-thigh value. Espejado desde quadLeft/quadRight. */
+  /** Legacy single-thigh value. Espejado desde thighLeft/thighRight. */
   thighCm: number | null;
-  quadLeftCm: number | null;
-  quadRightCm: number | null;
+  thighLeftCm: number | null;
+  thighRightCm: number | null;
   hamstringLeftCm: number | null;
   hamstringRightCm: number | null;
   calfLeftCm: number | null;
@@ -185,10 +185,10 @@ export interface RecordBodyMetricInput {
   forearmRightCm?: number;
 
   // Piernas
-  /** Legacy. Si no se envía pero llegan quadLeft/Right, se espeja. */
+  /** Legacy. Si no se envía pero llegan thighLeft/Right, se espeja. */
   thighCm?: number;
-  quadLeftCm?: number;
-  quadRightCm?: number;
+  thighLeftCm?: number;
+  thighRightCm?: number;
   hamstringLeftCm?: number;
   hamstringRightCm?: number;
   calfLeftCm?: number;
@@ -688,8 +688,8 @@ const BODY_METRIC_SELECT = {
 
   // Piernas
   thighCm: true,
-  quadLeftCm: true,
-  quadRightCm: true,
+  thighLeftCm: true,
+  thighRightCm: true,
   hamstringLeftCm: true,
   hamstringRightCm: true,
   calfLeftCm: true,
@@ -723,8 +723,8 @@ type BodyMetricRow = {
   forearmLeftCm: import("@prisma/client/runtime/library").Decimal | null;
   forearmRightCm: import("@prisma/client/runtime/library").Decimal | null;
   thighCm: import("@prisma/client/runtime/library").Decimal | null;
-  quadLeftCm: import("@prisma/client/runtime/library").Decimal | null;
-  quadRightCm: import("@prisma/client/runtime/library").Decimal | null;
+  thighLeftCm: import("@prisma/client/runtime/library").Decimal | null;
+  thighRightCm: import("@prisma/client/runtime/library").Decimal | null;
   hamstringLeftCm: import("@prisma/client/runtime/library").Decimal | null;
   hamstringRightCm: import("@prisma/client/runtime/library").Decimal | null;
   calfLeftCm: import("@prisma/client/runtime/library").Decimal | null;
@@ -767,8 +767,8 @@ function mapBodyMetricRow(r: BodyMetricRow): MyBodyMetric {
 
     // Piernas
     thighCm: dec(r.thighCm),
-    quadLeftCm: dec(r.quadLeftCm),
-    quadRightCm: dec(r.quadRightCm),
+    thighLeftCm: dec(r.thighLeftCm),
+    thighRightCm: dec(r.thighRightCm),
     hamstringLeftCm: dec(r.hamstringLeftCm),
     hamstringRightCm: dec(r.hamstringRightCm),
     calfLeftCm: dec(r.calfLeftCm),
@@ -884,8 +884,8 @@ export async function recordBodyMetric(
       "forearmRightCm",
       // Piernas
       "thighCm",
-      "quadLeftCm",
-      "quadRightCm",
+      "thighLeftCm",
+      "thighRightCm",
       "hamstringLeftCm",
       "hamstringRightCm",
       "calfLeftCm",
@@ -907,7 +907,7 @@ export async function recordBodyMetric(
     // columna legacy (armCm / thighCm) para que readers viejos sigan
     // funcionando. Preferencia explícita > L > R.
     const armMirror = input.armCm ?? input.bicepLeftCm ?? input.bicepRightCm;
-    const thighMirror = input.thighCm ?? input.quadLeftCm ?? input.quadRightCm;
+    const thighMirror = input.thighCm ?? input.thighLeftCm ?? input.thighRightCm;
 
     const created = await prisma.bodyMetric.create({
       data: {
@@ -953,10 +953,10 @@ export async function recordBodyMetric(
           forearmRightCm: input.forearmRightCm,
         }),
 
-        // Piernas — quad L/R + espejo a thighCm legacy
-        ...(input.quadLeftCm !== undefined && { quadLeftCm: input.quadLeftCm }),
-        ...(input.quadRightCm !== undefined && {
-          quadRightCm: input.quadRightCm,
+        // Piernas — muslo L/R + espejo a thighCm legacy
+        ...(input.thighLeftCm !== undefined && { thighLeftCm: input.thighLeftCm }),
+        ...(input.thighRightCm !== undefined && {
+          thighRightCm: input.thighRightCm,
         }),
         ...(thighMirror !== undefined && { thighCm: thighMirror }),
         ...(input.hamstringLeftCm !== undefined && {

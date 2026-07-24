@@ -4,13 +4,18 @@ import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { assignRoutineToClient, getActiveRoutineForClient } from "@/app/actions/routines";
+import {
+  assignRoutineToClient,
+  getActiveRoutineForClient,
+  getRoutine,
+} from "@/app/actions/routines";
 import { assignRoutineSchema, type AssignRoutineInput } from "@/lib/validation/routine.schema";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/shared/page-header";
 import { useQuery } from "@tanstack/react-query";
 import { listMyClients } from "@/app/actions/clients";
-import { ArrowRight } from "lucide-react";
+import { AlertTriangle, ArrowRight, UsersRound } from "lucide-react";
+import { getRoutineAudienceLabel } from "@/lib/routines/metadata";
 
 interface Props {
   routineId: string;
@@ -31,6 +36,14 @@ export default function AsignarClient({ routineId }: Props) {
     },
   });
 
+  const { data: routineData } = useQuery({
+    queryKey: ["routine-assignment-context", routineId],
+    queryFn: async () => {
+      const result = await getRoutine(routineId);
+      return result.ok ? result.value : null;
+    },
+  });
+
   const {
     register,
     handleSubmit,
@@ -46,6 +59,13 @@ export default function AsignarClient({ routineId }: Props) {
 
   // Bug #5: watch clientId and fetch active routine on change
   const selectedClientId = useWatch({ control, name: "clientId" });
+  const selectedClient = clientsData?.find((client) => client.id === selectedClientId);
+  const hasAudienceMismatch = Boolean(
+    selectedClient &&
+      routineData &&
+      ((routineData.audience === "MALE" && selectedClient.gender === "FEMALE") ||
+        (routineData.audience === "FEMALE" && selectedClient.gender === "MALE")),
+  );
 
   useEffect(() => {
     setActiveRoutineName(null);
@@ -80,6 +100,20 @@ export default function AsignarClient({ routineId }: Props) {
     <div className="max-w-lg space-y-6">
       <PageHeader title="Asignar rutina" />
 
+      {routineData && (
+        <div className="flex items-center gap-3 rounded-xl border border-[#3F3F46] bg-[#18181B] px-4 py-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-primary/10">
+            <UsersRound className="h-4 w-4 text-brand-primary" aria-hidden="true" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-[#FAFAFA]">{routineData.name}</p>
+            <p className="text-xs text-[#71717A]">
+              Diseñada para {getRoutineAudienceLabel(routineData.audience).toLocaleLowerCase("es")}
+            </p>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
         <input type="hidden" {...register("routineTemplateId")} />
 
@@ -113,8 +147,24 @@ export default function AsignarClient({ routineId }: Props) {
             role="alert"
             className="rounded-lg border border-[#F59E0B]/40 bg-[#F59E0B]/10 px-3 py-2.5 text-xs text-[#F59E0B]"
           >
-            ⚠️ Este cliente ya tiene &quot;{activeRoutineName}&quot; activa. Se cancelará al asignar la nueva.
+            ⚠️ Este cliente ya tiene &quot;{activeRoutineName}&quot; activa. Se cancelará al asignar
+            la nueva.
           </p>
+        )}
+
+        {hasAudienceMismatch && selectedClient && routineData && (
+          <div
+            role="alert"
+            className="flex gap-2.5 rounded-lg border border-[#F59E0B]/40 bg-[#F59E0B]/10 px-3 py-2.5 text-xs text-[#F59E0B]"
+          >
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <p>
+              Esta rutina está clasificada para{" "}
+              <strong>{getRoutineAudienceLabel(routineData.audience).toLowerCase()}</strong>, pero
+              el perfil de {selectedClient.name} indica otro género. Podés asignarla si es una
+              decisión intencional del coach.
+            </p>
+          </div>
         )}
 
         {/* Start date */}
@@ -132,8 +182,7 @@ export default function AsignarClient({ routineId }: Props) {
           </div>
           <div className="space-y-1.5">
             <label htmlFor="endsOn" className="block text-sm font-medium text-[#FAFAFA]">
-              Fecha de fin{" "}
-              <span className="text-[#71717A]">(opcional)</span>
+              Fecha de fin <span className="text-[#71717A]">(opcional)</span>
             </label>
             <input
               id="endsOn"

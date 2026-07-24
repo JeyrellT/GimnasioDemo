@@ -171,6 +171,7 @@ export async function listMyClients(
               name: true,
               email: true,
               avatarUrl: true,
+              gender: true,
               clientProfile: {
                 select: {
                   parqStatus: true,
@@ -209,6 +210,7 @@ export async function listMyClients(
         name: link.client.name,
         email: link.client.email,
         avatarUrl: link.client.avatarUrl,
+        gender: link.client.gender,
         parqStatus: link.client.clientProfile?.parqStatus ?? "NOT_COMPLETED",
         goal: link.client.clientProfile?.goal ?? null,
         monthlyPriceCRC: link.monthlyPriceCRC

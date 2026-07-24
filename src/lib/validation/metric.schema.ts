@@ -44,10 +44,10 @@ export const recordBodyMetricSchema = z
     forearmRightCm: circumferenceCmSchema.optional(),
 
     // Piernas
-    /** Legacy single-thigh. El action lo espeja desde quadLeftCm/quadRightCm si vienen. */
+    /** Legacy single-thigh. El action lo espeja desde thighLeftCm/thighRightCm si vienen. */
     thighCm: circumferenceCmSchema.optional(),
-    quadLeftCm: circumferenceCmSchema.optional(),
-    quadRightCm: circumferenceCmSchema.optional(),
+    thighLeftCm: circumferenceCmSchema.optional(),
+    thighRightCm: circumferenceCmSchema.optional(),
     hamstringLeftCm: circumferenceCmSchema.optional(),
     hamstringRightCm: circumferenceCmSchema.optional(),
     calfLeftCm: circumferenceCmSchema.optional(),

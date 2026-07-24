@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import type { RoutineWithDays } from "@/types/domain";
+import type { RoutineAudienceValue } from "@/lib/routines/metadata";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -37,6 +38,7 @@ interface RoutineBuilderState {
   routineId: string | null;
   name: string;
   goal: string;
+  audience: RoutineAudienceValue;
   splitDays: number;
   durationWeeks: number;
   days: DraftDay[];
@@ -45,14 +47,25 @@ interface RoutineBuilderState {
   // Actions
   initFromExisting: (routine: RoutineWithDays) => void;
   initEmpty: () => void;
-  setMeta: (meta: Partial<Pick<RoutineBuilderState, "name" | "goal" | "splitDays" | "durationWeeks">>) => void;
+  setMeta: (
+    meta: Partial<
+      Pick<
+        RoutineBuilderState,
+        "name" | "goal" | "audience" | "splitDays" | "durationWeeks"
+      >
+    >,
+  ) => void;
   addDay: (name: string, routineDayId?: string) => void;
   removeDay: (dayId: string) => void;
   updateDayName: (dayId: string, name: string) => void;
   reorderDays: (orderedDayIds: string[]) => void;
   addExerciseToDay: (dayId: string, exercise: DraftExercise) => void;
   removeExerciseFromDay: (dayId: string, exerciseLocalId: string) => void;
-  updateExercise: (dayId: string, exerciseLocalId: string, patch: Partial<DraftExercise>) => void;
+  updateExercise: (
+    dayId: string,
+    exerciseLocalId: string,
+    patch: Partial<DraftExercise>,
+  ) => void;
   reorderExercisesInDay: (dayId: string, orderedIds: string[]) => void;
   /**
    * Agrupa `sourceExId` con `targetExId` en una superserie/circuito.
@@ -116,6 +129,7 @@ export const useRoutineBuilderStore = create<RoutineBuilderState>()((set) => ({
   routineId: null,
   name: "",
   goal: "HYPERTROPHY",
+  audience: "UNISEX",
   splitDays: 4,
   durationWeeks: 8,
   days: [],
@@ -126,6 +140,7 @@ export const useRoutineBuilderStore = create<RoutineBuilderState>()((set) => ({
       routineId: routine.id,
       name: routine.name,
       goal: routine.goal,
+      audience: routine.audience,
       splitDays: routine.splitDays,
       durationWeeks: routine.durationWeeks,
       days: routine.days.map((d) => ({
@@ -161,6 +176,7 @@ export const useRoutineBuilderStore = create<RoutineBuilderState>()((set) => ({
       routineId: null,
       name: "",
       goal: "HYPERTROPHY",
+      audience: "UNISEX",
       splitDays: 4,
       durationWeeks: 8,
       days: [],
@@ -222,9 +238,7 @@ export const useRoutineBuilderStore = create<RoutineBuilderState>()((set) => ({
   addExerciseToDay: (dayId, exercise) => {
     set((state) => ({
       days: state.days.map((d) =>
-        d.id === dayId
-          ? { ...d, exercises: [...d.exercises, exercise] }
-          : d,
+        d.id === dayId ? { ...d, exercises: [...d.exercises, exercise] } : d,
       ),
       isDirty: true,
     }));
@@ -359,9 +373,10 @@ export const useRoutineBuilderStore = create<RoutineBuilderState>()((set) => ({
   },
 
   dissolveSuperset: (dayId, group) => {
-    let result:
-      | { exercises: DraftExercise[]; affectedExerciseIds: string[] }
-      | null = null;
+    let result: {
+      exercises: DraftExercise[];
+      affectedExerciseIds: string[];
+    } | null = null;
 
     set((state) => {
       const day = state.days.find((d) => d.id === dayId);
@@ -473,6 +488,7 @@ export const useRoutineBuilderStore = create<RoutineBuilderState>()((set) => ({
       routineId: null,
       name: "",
       goal: "HYPERTROPHY",
+      audience: "UNISEX",
       splitDays: 4,
       durationWeeks: 8,
       days: [],

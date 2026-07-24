@@ -91,6 +91,28 @@ describe('routine.schema — Rutina de Entrenamiento', () => {
         expect(result.data.durationWeeks).toBe(8)
       }
     })
+
+    it('clasifica la rutina por público objetivo y conserva UNISEX como default', () => {
+      const base = {
+        name: 'Rutina de definición',
+        goal: 'DEFINITION',
+        splitDays: 4,
+      }
+
+      const legacy = createRoutineSchema.safeParse(base)
+      expect(legacy.success).toBe(true)
+      if (legacy.success) expect(legacy.data.audience).toBe('UNISEX')
+
+      expect(
+        createRoutineSchema.safeParse({ ...base, audience: 'MALE' }).success,
+      ).toBe(true)
+      expect(
+        createRoutineSchema.safeParse({ ...base, audience: 'FEMALE' }).success,
+      ).toBe(true)
+      expect(
+        createRoutineSchema.safeParse({ ...base, audience: 'INVALID' }).success,
+      ).toBe(false)
+    })
   })
 
   describe('addRoutineDaySchema', () => {

@@ -12,6 +12,8 @@ import {
   Play,
   CheckCircle2,
   Link2,
+  Target,
+  UsersRound,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ExerciseThumbnail } from "@/components/shared/exercise-thumbnail";
@@ -34,6 +36,10 @@ import type {
   RoutineSnapshotDay,
   RoutineSnapshotExercise,
 } from "@/types/domain";
+import {
+  getRoutineAudienceLabel,
+  getRoutineGoalLabel,
+} from "@/lib/routines/metadata";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -339,9 +345,17 @@ export default function ClientRutinasPage() {
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-3 mt-0.5 text-xs text-[#71717A]">
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#71717A]">
                         {snapshot && (
                           <>
+                            <span className="inline-flex items-center gap-1 text-brand-primary">
+                              <Target className="h-3 w-3" aria-hidden="true" />
+                              {getRoutineGoalLabel(snapshot.goal)}
+                            </span>
+                            <span className="inline-flex items-center gap-1">
+                              <UsersRound className="h-3 w-3" aria-hidden="true" />
+                              {getRoutineAudienceLabel(snapshot.audience)}
+                            </span>
                             <span>{snapshot.splitDays} dias/sem</span>
                             <span>{snapshot.durationWeeks} semanas</span>
                           </>

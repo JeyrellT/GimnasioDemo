@@ -11,8 +11,8 @@
 //
 // Soft-delete: all queries filter `deletedAt: null`.
 // Snapshot: AssignedRoutine.snapshotJson is built from the live template at
-// assignment time. A trainer may explicitly refresh it when editing from a
-// client's assigned-routine context.
+// assignment time and automatically refreshed for every ACTIVE assignment
+// whenever the trainer changes that template.
 // =============================================================================
 
 import { revalidatePath } from "next/cache";
@@ -36,11 +36,15 @@ import {
   inferExerciseMetadata,
   type CatalogExercise,
 } from "@/server/lib/exercise-inference";
+import {
+  isRoutineAudience,
+  type RoutineAudienceValue,
+} from "@/lib/routines/metadata";
+import { getNextRoutineExerciseOrder } from "@/lib/routines/exercise-order";
+import { resolveRoutineExerciseThumbnail } from "@/lib/routines/exercise-media";
+import { buildRoutineSnapshot } from "@/lib/routines/snapshot";
 import type { ActionResult, CreateRoutineResult, AssignRoutineResult } from "@/types/api";
 import type {
-  RoutineSnapshot,
-  RoutineSnapshotDay,
-  RoutineSnapshotExercise,
   RoutineSummary,
 } from "@/types/domain";
 import { Prisma } from "@prisma/client";
@@ -55,6 +59,7 @@ export interface RoutineDetail {
   name: string;
   description: string | null;
   goal: string;
+  audience: RoutineAudienceValue;
   splitDays: number;
   durationWeeks: number;
   isArchived: boolean;
@@ -119,48 +124,12 @@ function parseGoal(raw: string | undefined | null): string {
   throw new ValidationError("INVALID_GOAL", "Objetivo de rutina inválido.");
 }
 
-/**
- * Build a RoutineSnapshot from a fully-loaded RoutineDetail.
- * Called at assignment time to freeze the prescription.
- */
-function buildSnapshot(routine: RoutineDetail): RoutineSnapshot {
-  const days: RoutineSnapshotDay[] = routine.days.map((day) => ({
-    dayIndex: day.dayIndex,
-    name: day.name,
-    exercises: day.exercises
-      .sort((a, b) => a.order - b.order)
-      .map(
-        (re): RoutineSnapshotExercise => ({
-          exerciseId: re.exerciseId,
-          nameEs: re.exercise.nameEs,
-          order: re.order,
-          targetSets: re.targetSets,
-          targetRepsMin: re.targetRepsMin,
-          targetRepsMax: re.targetRepsMax,
-          targetRpe: re.targetRpe !== null ? Number(re.targetRpe) : null,
-          restSeconds: re.restSeconds,
-          tempo: re.tempo,
-          supersetGroup: re.supersetGroup,
-          notes: re.notes,
-          slug: re.exercise.slug ?? null,
-          thumbnailUrl: re.exercise.thumbnailUrl ?? re.exercise.gifUrl ?? null,
-          gifUrl: re.exercise.gifUrl ?? null,
-          // Per-routine override wins over the shared catalog default.
-          mediaUrl: re.mediaUrl ?? re.exercise.mediaUrl ?? null,
-          nameEn: re.exercise.nameEn || null,
-        }),
-      ),
-  }));
-
-  return {
-    templateId: routine.id,
-    templateName: routine.name,
-    goal: routine.goal,
-    splitDays: routine.splitDays,
-    durationWeeks: routine.durationWeeks,
-    days,
-    snapshotAt: new Date().toISOString(),
-  };
+function parseAudience(raw: unknown): RoutineAudienceValue {
+  if (isRoutineAudience(raw)) return raw;
+  throw new ValidationError(
+    "INVALID_ROUTINE_AUDIENCE",
+    "Seleccioná si la rutina es unisex, para hombre o para mujer.",
+  );
 }
 
 /** Prisma include clause reused by getRoutine and assignRoutine. */
@@ -193,6 +162,80 @@ const ROUTINE_INCLUDE = {
   },
 } satisfies Prisma.RoutineTemplateInclude;
 
+/**
+ * Keep every ACTIVE client assignment in sync with its source template.
+ *
+ * Completed, cancelled and archived assignments remain historical snapshots.
+ * This runs from every template/day/exercise mutation so synchronization does
+ * not depend on the route the trainer used to open the routine editor.
+ */
+async function syncActiveAssignmentsFromTemplate(
+  routineTemplateId: string,
+  trainerId: string,
+): Promise<number> {
+  const assignments = await prisma.assignedRoutine.findMany({
+    where: {
+      routineTemplateId,
+      status: "ACTIVE",
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+      clientUserId: true,
+      startsOn: true,
+    },
+  });
+
+  if (assignments.length === 0) return 0;
+
+  const routine = await prisma.routineTemplate.findFirst({
+    where: {
+      id: routineTemplateId,
+      trainerId,
+      deletedAt: null,
+    },
+    include: ROUTINE_INCLUDE,
+  });
+
+  if (!routine) {
+    throw new NotFoundError("ROUTINE_NOT_FOUND", "Rutina no encontrada.");
+  }
+
+  const snapshot = buildRoutineSnapshot(routine as RoutineDetail);
+
+  await prisma.$transaction(
+    assignments.map((assignment) => {
+      const endsOn = new Date(assignment.startsOn);
+      endsOn.setDate(endsOn.getDate() + routine.durationWeeks * 7);
+
+      return prisma.assignedRoutine.update({
+        where: { id: assignment.id },
+        data: {
+          snapshotJson: snapshot as unknown as Prisma.InputJsonValue,
+          endsOn,
+        },
+      });
+    }),
+  );
+
+  for (const clientUserId of new Set(assignments.map((item) => item.clientUserId))) {
+    revalidatePath(`/trainer/clientes/${clientUserId}/rutinas`);
+    revalidatePath(`/trainer/clientes/${clientUserId}`);
+  }
+  revalidatePath(`/trainer/rutinas/${routineTemplateId}`);
+  revalidatePath("/client/rutinas");
+  revalidatePath("/client/sesion");
+  revalidatePath("/inicio");
+
+  logInfo("routines.syncActiveAssignmentsFromTemplate", {
+    trainerId,
+    routineTemplateId,
+    assignmentsUpdated: assignments.length,
+  });
+
+  return assignments.length;
+}
+
 // =============================================================================
 // Template CRUD
 // =============================================================================
@@ -202,7 +245,11 @@ const ROUTINE_INCLUDE = {
  * Supports filtering by goal and archived status.
  */
 export async function listMyRoutines(
-  filters?: { goal?: string; archived?: boolean },
+  filters?: {
+    goal?: string;
+    audience?: RoutineAudienceValue;
+    archived?: boolean;
+  },
 ): Promise<ActionResult<RoutineSummary[]>> {
   return tryCatch(async () => {
     const user = await requireTrainer();
@@ -211,6 +258,7 @@ export async function listMyRoutines(
       trainerId: user.id,
       deletedAt: null,
       ...(filters?.goal && { goal: parseGoal(filters.goal) }),
+      ...(filters?.audience && { audience: parseAudience(filters.audience) }),
       ...(filters?.archived !== undefined && { isArchived: filters.archived }),
     };
 
@@ -220,6 +268,7 @@ export async function listMyRoutines(
         id: true,
         name: true,
         goal: true,
+        audience: true,
         splitDays: true,
         durationWeeks: true,
         isArchived: true,
@@ -255,7 +304,42 @@ export async function getRoutine(
       throw new NotFoundError("ROUTINE_NOT_FOUND", "Rutina no encontrada.");
     }
 
-    return routine as RoutineDetail;
+    const exerciseIds = routine.days.flatMap((day) =>
+      day.exercises.map((routineExercise) => routineExercise.exerciseId),
+    );
+    const trainerMedia = await prisma.trainerExerciseMedia.findMany({
+      where: {
+        trainerUserId: user.id,
+        exerciseId: { in: exerciseIds },
+        deletedAt: null,
+      },
+      select: { exerciseId: true, mediaUrl: true },
+    });
+    const trainerMediaByExerciseId = new Map(
+      trainerMedia.map((row) => [row.exerciseId, row.mediaUrl]),
+    );
+
+    return {
+      ...routine,
+      days: routine.days.map((day) => ({
+        ...day,
+        exercises: day.exercises.map((routineExercise) => ({
+          ...routineExercise,
+          exercise: {
+            ...routineExercise.exercise,
+            thumbnailUrl: resolveRoutineExerciseThumbnail({
+              routineMediaUrl: routineExercise.mediaUrl,
+              trainerMediaUrl: trainerMediaByExerciseId.get(
+                routineExercise.exerciseId,
+              ),
+              catalogMediaUrl: routineExercise.exercise.mediaUrl,
+              catalogThumbnailUrl: routineExercise.exercise.thumbnailUrl,
+              catalogGifUrl: routineExercise.exercise.gifUrl,
+            }),
+          },
+        })),
+      })),
+    } as RoutineDetail;
   });
 }
 
@@ -272,6 +356,9 @@ export async function createRoutine(
     const name = formData.get("name")?.toString().trim();
     const description = formData.get("description")?.toString().trim() || null;
     const goalRaw = formData.get("goal")?.toString();
+    const audience = parseAudience(
+      formData.get("audience")?.toString() || "UNISEX",
+    );
     const splitDaysRaw = Number(formData.get("splitDays"));
     const durationWeeksRaw = Number(formData.get("durationWeeks")) || 8;
 
@@ -299,6 +386,7 @@ export async function createRoutine(
           name,
           description,
           goal,
+          audience,
           splitDays: splitDaysRaw,
           durationWeeks: durationWeeksRaw,
           isArchived: false,
@@ -339,6 +427,7 @@ export interface UpdateRoutineInput {
   name?: string;
   description?: string;
   goal?: string;
+  audience?: RoutineAudienceValue;
   durationWeeks?: number;
   splitDays?: number;
 }
@@ -377,10 +466,16 @@ export async function updateRoutine(
     const goalRaw = typed ? typed.goal : fd?.get("goal")?.toString();
     if (goalRaw) patch.goal = parseGoal(goalRaw);
 
+    const audienceRaw = typed
+      ? typed.audience
+      : fd?.get("audience")?.toString();
+    if (audienceRaw) patch.audience = parseAudience(audienceRaw);
+
     const durationWeeks = typed ? (typed.durationWeeks ?? 0) : Number(fd?.get("durationWeeks"));
     if (durationWeeks > 0) patch.durationWeeks = durationWeeks;
 
     await prisma.routineTemplate.update({ where: { id }, data: patch });
+    await syncActiveAssignmentsFromTemplate(id, user.id);
 
     logInfo("routines.updateRoutine", { userId: user.id, routineId: id });
 
@@ -513,6 +608,8 @@ export async function addDayToRoutine(
       select: { id: true },
     });
 
+    await syncActiveAssignmentsFromTemplate(routineId, user.id);
+
     return { dayId: day.id };
   });
 }
@@ -545,6 +642,8 @@ export async function updateDay(
         ...(description !== undefined && { description: description.trim() || null }),
       },
     });
+
+    await syncActiveAssignmentsFromTemplate(day.routineId, user.id);
 
     return { updated: true as const };
   });
@@ -582,6 +681,8 @@ export async function removeDay(
         data: { deletedAt: now },
       }),
     ]);
+
+    await syncActiveAssignmentsFromTemplate(day.routineId, user.id);
 
     return { deleted: true as const };
   });
@@ -673,8 +774,8 @@ export async function addExerciseToDay(
       include: {
         routine: { select: { trainerId: true } },
         exercises: {
-          where: { deletedAt: null },
-          select: { id: true, order: true, exerciseId: true },
+          // Soft-deleted rows still reserve their order in the DB constraint.
+          select: { id: true, order: true, exerciseId: true, deletedAt: true },
           orderBy: { order: "desc" },
         },
       },
@@ -687,7 +788,11 @@ export async function addExerciseToDay(
       throw new ForbiddenError("ROUTINE_NOT_OWNED", "Esta rutina no te pertenece.");
     }
 
-    if (day.exercises.length >= ROUTINE_MAX_EXERCISES_PER_DAY) {
+    const activeExercises = day.exercises.filter(
+      (exercise) => exercise.deletedAt === null,
+    );
+
+    if (activeExercises.length >= ROUTINE_MAX_EXERCISES_PER_DAY) {
       throw new ValidationError(
         "MAX_EXERCISES_REACHED",
         `Un día puede tener máximo ${ROUTINE_MAX_EXERCISES_PER_DAY} ejercicios.`,
@@ -699,7 +804,7 @@ export async function addExerciseToDay(
     // duplicados en la UI. El usuario debe usar superseries para repeticiones
     // de patrones (ver groupExercises) o sets adicionales (targetSets) en
     // lugar de duplicar la fila.
-    const dup = day.exercises.find((e) => e.exerciseId === exerciseId);
+    const dup = activeExercises.find((e) => e.exerciseId === exerciseId);
     if (dup) {
       throw new ValidationError(
         "DUPLICATE_EXERCISE",
@@ -707,8 +812,7 @@ export async function addExerciseToDay(
       );
     }
 
-    const nextOrder =
-      day.exercises.length > 0 ? (day.exercises[0]!.order + 1) : 0;
+    const nextOrder = getNextRoutineExerciseOrder(day.exercises);
 
     const re = await prisma.routineExercise.create({
       data: {
@@ -738,6 +842,8 @@ export async function addExerciseToDay(
       exerciseId,
       routineExerciseId: re.id,
     });
+
+    await syncActiveAssignmentsFromTemplate(day.routineId, user.id);
 
     return { routineExerciseId: re.id };
   });
@@ -817,6 +923,10 @@ export async function updateExerciseInDay(
     }
 
     await prisma.routineExercise.update({ where: { id }, data: patch });
+    await syncActiveAssignmentsFromTemplate(
+      re.routineDay.routineId,
+      user.id,
+    );
 
     return { updated: true as const };
   });
@@ -852,6 +962,11 @@ export async function removeExerciseFromDay(
       where: { id },
       data: { deletedAt: new Date() },
     });
+
+    await syncActiveAssignmentsFromTemplate(
+      re.routineDay.routineId,
+      user.id,
+    );
 
     return { deleted: true as const };
   });
@@ -929,6 +1044,8 @@ export async function reorderExercisesInDay(
         }),
       ),
     ]);
+
+    await syncActiveAssignmentsFromTemplate(day.routineId, user.id);
 
     return { updated: true as const };
   });
@@ -1020,6 +1137,8 @@ export async function reorderAndUpdateExercises(input: {
       ),
     ]);
 
+    await syncActiveAssignmentsFromTemplate(day.routineId, user.id);
+
     return { updated: true as const };
   });
 }
@@ -1083,7 +1202,7 @@ export async function assignRoutine(
       );
     }
 
-    const snapshot = buildSnapshot(routine as RoutineDetail);
+    const snapshot = buildRoutineSnapshot(routine as RoutineDetail);
 
     // Calculate endsOn from durationWeeks
     const endsOn = new Date(startsOn);
@@ -1225,6 +1344,7 @@ export async function duplicateRoutine(
         trainerId: user.id,
         name: copyName,
         goal: source.goal,
+        audience: source.audience,
         splitDays: source.splitDays,
         durationWeeks: source.durationWeeks,
         isArchived: false,
@@ -1334,6 +1454,7 @@ export async function getClientRoutines(
             id: true,
             name: true,
             goal: true,
+            audience: true,
             splitDays: true,
             durationWeeks: true,
             isArchived: true,
@@ -1348,6 +1469,7 @@ export async function getClientRoutines(
       id: ar.routineTemplate.id,
       name: ar.routineTemplate.name,
       goal: ar.routineTemplate.goal,
+      audience: ar.routineTemplate.audience,
       splitDays: ar.routineTemplate.splitDays,
       durationWeeks: ar.routineTemplate.durationWeeks,
       isArchived: ar.routineTemplate.isArchived,
@@ -1372,6 +1494,12 @@ export interface ClientAssignedRoutine {
   assignedAt: Date;
   trainerNotes: string | null;
   snapshotJson: Prisma.JsonValue;
+  /** dayIndex (0-based) de cada día que el cliente ya completó al menos una vez. */
+  completedDayIndexes: number[];
+  /** Total de sesiones COMPLETED registradas contra esta asignación. */
+  completedSessionCount: number;
+  /** Fecha de la última sesión completada, para saber si el cliente sigue activo. */
+  lastCompletedAt: Date | null;
 }
 
 export async function getClientAssignedRoutines(
@@ -1396,10 +1524,35 @@ export async function getClientAssignedRoutines(
         assignedAt: true,
         trainerNotes: true,
         snapshotJson: true,
+        // Mismo criterio que getMyAssignedRoutines en el portal del cliente:
+        // el coach tiene que ver exactamente lo que el cliente ve como hecho.
+        workoutSessions: {
+          where: { status: "COMPLETED", deletedAt: null },
+          select: { dayIndex: true, completedAt: true },
+          orderBy: { completedAt: "desc" },
+        },
       },
     });
 
-    return assigned;
+    return assigned.map((r) => ({
+      id: r.id,
+      routineTemplateId: r.routineTemplateId,
+      status: r.status,
+      startsOn: r.startsOn,
+      endsOn: r.endsOn,
+      assignedAt: r.assignedAt,
+      trainerNotes: r.trainerNotes,
+      snapshotJson: r.snapshotJson,
+      completedDayIndexes: Array.from(
+        new Set(
+          r.workoutSessions
+            .map((session) => session.dayIndex)
+            .filter((dayIndex): dayIndex is number => dayIndex !== null),
+        ),
+      ),
+      completedSessionCount: r.workoutSessions.length,
+      lastCompletedAt: r.workoutSessions[0]?.completedAt ?? null,
+    }));
   });
 }
 
@@ -1420,9 +1573,8 @@ export async function syncAssignedRoutineFromTemplate(
         id: true,
         clientUserId: true,
         routineTemplateId: true,
-        startsOn: true,
         routineTemplate: {
-          include: ROUTINE_INCLUDE,
+          select: { trainerId: true },
         },
       },
     });
@@ -1447,29 +1599,17 @@ export async function syncAssignedRoutineFromTemplate(
       throw new ForbiddenError("ROUTINE_NOT_OWNED", "Esta rutina no te pertenece.");
     }
 
-    const snapshot = buildSnapshot(assigned.routineTemplate as RoutineDetail);
-    const endsOn = new Date(assigned.startsOn);
-    endsOn.setDate(endsOn.getDate() + assigned.routineTemplate.durationWeeks * 7);
-
-    await prisma.assignedRoutine.update({
-      where: { id: assigned.id },
-      data: {
-        snapshotJson: snapshot as unknown as Prisma.InputJsonValue,
-        endsOn,
-      },
-    });
-
-    revalidatePath(`/trainer/clientes/${assigned.clientUserId}/rutinas`);
-    revalidatePath(`/trainer/rutinas/${assigned.routineTemplateId}`);
-    revalidatePath("/client/rutinas");
-    revalidatePath("/client/sesion");
-    revalidatePath("/inicio");
+    const assignmentsUpdated = await syncActiveAssignmentsFromTemplate(
+      assigned.routineTemplateId,
+      user.id,
+    );
 
     logInfo("routines.syncAssignedRoutineFromTemplate", {
       userId: user.id,
       clientUserId: assigned.clientUserId,
       routineTemplateId: assigned.routineTemplateId,
       assignedRoutineId: assigned.id,
+      assignmentsUpdated,
     });
 
     return { updated: true as const };
@@ -1504,6 +1644,12 @@ export async function deleteAssignedRoutine(
       where: { id: assignedRoutineId },
       data: { deletedAt: new Date() },
     });
+
+    revalidatePath(`/trainer/clientes/${assigned.clientUserId}/rutinas`);
+    revalidatePath(`/trainer/clientes/${assigned.clientUserId}`);
+    revalidatePath("/client/rutinas");
+    revalidatePath("/client/sesion");
+    revalidatePath("/inicio");
 
     logInfo("routines.deleteAssignedRoutine", {
       trainerId: user.id,
@@ -1585,6 +1731,7 @@ export interface OcrDayInput {
 export interface CreateRoutineFromOcrInput {
   name: string;
   goal: string;
+  audience?: RoutineAudienceValue;
   splitDays: number;
   durationWeeks: number;
   days: OcrDayInput[];
@@ -1624,6 +1771,7 @@ export async function createRoutineFromOcr(
     }
 
     const goal = parseGoal(input.goal);
+    const audience = parseAudience(input.audience ?? "UNISEX");
 
     // Snapshot of the catalog used to infer metadata for any exercise that
     // doesn't match. Loaded once, reused across the whole import. We pull only
@@ -1647,6 +1795,7 @@ export async function createRoutineFromOcr(
           trainerId: user.id,
           name,
           goal,
+          audience,
           splitDays: input.splitDays,
           durationWeeks: input.durationWeeks,
           isArchived: false,
@@ -1802,12 +1951,20 @@ export async function createRoutineFromOcr(
 // -----------------------------------------------------------------------------
 
 export async function createRoutineTemplate(
-  input: { name: string; description?: string; goal: string; splitDays: number; durationWeeks: number },
+  input: {
+    name: string;
+    description?: string;
+    goal: string;
+    audience?: RoutineAudienceValue;
+    splitDays: number;
+    durationWeeks: number;
+  },
 ): Promise<ActionResult<CreateRoutineResult>> {
   const fd = new FormData();
   fd.set("name", input.name);
   if (input.description) fd.set("description", input.description);
   fd.set("goal", input.goal);
+  fd.set("audience", input.audience ?? "UNISEX");
   fd.set("splitDays", String(input.splitDays));
   fd.set("durationWeeks", String(input.durationWeeks));
   return createRoutine(fd);

@@ -26,6 +26,7 @@ import {
 import { logInfo } from "@/lib/logger";
 import {
   deriveVideoThumbnail,
+  firstSupportedVideoUrl,
   toClientMediaUrl,
   isSupportedVideoUrl,
 } from "@/lib/media/video-url";
@@ -403,15 +404,14 @@ async function fetchTrainerMediaOverrides(
  * el segundo — esto permite que un override roto del trainer caiga al
  * catálogo automáticamente sin pedirle al usuario que corra ningún script.
  *
- * Si ninguno es reproducible, devuelve el primero existente (o null).
+ * Si ninguno es reproducible, devuelve null para que rutas antiguas de
+ * imágenes no se intenten renderizar como videos.
  */
 function pickPlayableMediaUrl(
   primary: string | null | undefined,
   fallback: string | null | undefined,
 ): string | null {
-  if (primary && isSupportedVideoUrl(primary)) return primary;
-  if (fallback && isSupportedVideoUrl(fallback)) return fallback;
-  return primary ?? fallback ?? null;
+  return firstSupportedVideoUrl(primary, fallback);
 }
 
 // -----------------------------------------------------------------------------

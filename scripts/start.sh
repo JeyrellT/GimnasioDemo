@@ -5,6 +5,7 @@
 # resets with db push --force-reset and marks all migrations as applied.
 # =============================================================================
 
+# Keep this file LF-only; Linux containers cannot execute CRLF shell scripts.
 set -e
 
 MAX_RETRIES=3
@@ -92,6 +93,16 @@ if pnpm db:seed:videos; then
   echo ">>> Default videos seed completed"
 else
   echo ">>> WARN: default-videos seed failed (continuing boot anyway)"
+fi
+
+# Reconcile legacy ACTIVE assignments with their live templates. Normal edits
+# already sync immediately in the server actions; this idempotent boot pass
+# repairs assignments created before automatic synchronization existed.
+echo ">>> Syncing active assigned-routine snapshots..."
+if pnpm exec tsx scripts/sync-active-routine-snapshots.ts --apply; then
+  echo ">>> Active routine snapshots synchronized"
+else
+  echo ">>> WARN: active routine snapshot sync failed (continuing boot anyway)"
 fi
 
 echo ">>> Starting Next.js..."

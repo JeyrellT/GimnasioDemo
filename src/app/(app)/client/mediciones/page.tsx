@@ -1,7 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Scale, TrendingDown, TrendingUp, Minus, Plus, Lock } from "lucide-react";
+import {
+  AlertCircle,
+  Loader2,
+  Scale,
+  TrendingDown,
+  TrendingUp,
+  Minus,
+  Plus,
+  Lock,
+} from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { getMyMetrics, getMonthlyMeasurementQuota } from "@/app/actions/client-portal";
 import type { MyBodyMetric, MeasurementQuota } from "@/server/actions/client-portal.actions";
@@ -13,14 +22,26 @@ export default function ClientMedicionesPage() {
   const [metrics, setMetrics] = useState<MyBodyMetric[]>([]);
   const [quota, setQuota] = useState<MeasurementQuota | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   function loadData() {
     if (!user) { setLoading(false); return; }
+    setError(null);
     Promise.all([
       getMyMetrics(),
       getMonthlyMeasurementQuota(),
     ]).then(([metricsResult, quotaResult]) => {
-      if (metricsResult.ok) setMetrics(metricsResult.value);
+      if (metricsResult.ok) {
+        setMetrics(metricsResult.value);
+      } else {
+        // No silenciar: si el historial falla, el usuario ve un vacío que no
+        // corresponde a la realidad (sus mediciones sí existen).
+        setMetrics([]);
+        setError(
+          metricsResult.error.message ??
+            "No pudimos cargar tu historial de mediciones.",
+        );
+      }
       if (quotaResult.ok) setQuota(quotaResult.value);
       setLoading(false);
     });
@@ -111,13 +132,31 @@ export default function ClientMedicionesPage() {
         }}
       />
 
-      {metrics.length === 0 ? (
-        <div className="py-12 text-center">
-          <Scale className="h-10 w-10 text-neutral-700 mx-auto mb-3" />
-          <p className="text-sm text-neutral-500">
-            Aún no tenés mediciones registradas.
-          </p>
+      {error && (
+        <div className="flex items-start gap-2 rounded-xl border border-[#F59E0B]/30 bg-[#F59E0B]/10 px-4 py-3 text-sm text-[#FBBF24]">
+          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
+          <div className="space-y-1">
+            <p>{error}</p>
+            <button
+              type="button"
+              onClick={loadData}
+              className="text-xs font-semibold underline underline-offset-2 hover:text-[#FDE68A]"
+            >
+              Reintentar
+            </button>
+          </div>
         </div>
+      )}
+
+      {metrics.length === 0 ? (
+        !error && (
+          <div className="py-12 text-center">
+            <Scale className="h-10 w-10 text-neutral-700 mx-auto mb-3" />
+            <p className="text-sm text-neutral-500">
+              Aún no tenés mediciones registradas.
+            </p>
+          </div>
+        )
       ) : (
         <div className="space-y-3">
           {metrics.map((m, idx) => {

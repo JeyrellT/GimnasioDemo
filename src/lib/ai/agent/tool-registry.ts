@@ -170,6 +170,7 @@ const listMyClientsTool: AssistantTool<ListMyClientsArgs> = {
 
 interface ListMyRoutinesArgs {
   goal?: string;
+  audience?: "UNISEX" | "MALE" | "FEMALE";
   archived?: boolean;
 }
 
@@ -185,7 +186,12 @@ const listMyRoutinesTool: AssistantTool<ListMyRoutinesArgs> = {
         goal: {
           type: SchemaType.STRING,
           description:
-            "Objetivo. Valores comunes: HYPERTROPHY, STRENGTH, ENDURANCE, FAT_LOSS, GENERAL — o un objetivo custom del coach.",
+            "Objetivo. Valores comunes: HYPERTROPHY, MUSCLE_GAIN, DEFINITION, STRENGTH, ENDURANCE, FAT_LOSS, GENERAL — o un objetivo custom del coach.",
+        },
+        audience: {
+          type: SchemaType.STRING,
+          enum: ["UNISEX", "MALE", "FEMALE"],
+          description: "Público de la rutina: unisex, hombre o mujer.",
         },
         archived: {
           type: SchemaType.BOOLEAN,
@@ -200,7 +206,11 @@ const listMyRoutinesTool: AssistantTool<ListMyRoutinesArgs> = {
     return "Listando rutinas activas";
   },
   handler: async (args) => {
-    const res = await listMyRoutines({ goal: args.goal, archived: args.archived });
+    const res = await listMyRoutines({
+      goal: args.goal,
+      audience: args.audience,
+      archived: args.archived,
+    });
     if (!res.ok) throw new Error(res.error.message);
     return res.value;
   },
@@ -440,6 +450,7 @@ const searchKnowledgeTool: AssistantTool<SearchKnowledgeArgs> = {
 interface CreateRoutineArgs {
   name: string;
   goal: string;
+  audience: "UNISEX" | "MALE" | "FEMALE";
   splitDays: number;
   durationWeeks?: number;
   description?: string;
@@ -461,7 +472,12 @@ const createRoutineTool: AssistantTool<CreateRoutineArgs> = {
         goal: {
           type: SchemaType.STRING,
           description:
-            "Objetivo principal. Valores: HYPERTROPHY, STRENGTH, ENDURANCE, FAT_LOSS, GENERAL — o un objetivo custom previamente creado por el coach.",
+            "Objetivo principal. Valores: HYPERTROPHY, MUSCLE_GAIN, DEFINITION, STRENGTH, ENDURANCE, FAT_LOSS, GENERAL — o un objetivo custom previamente creado por el coach.",
+        },
+        audience: {
+          type: SchemaType.STRING,
+          enum: ["UNISEX", "MALE", "FEMALE"],
+          description: "Público objetivo: UNISEX, MALE o FEMALE.",
         },
         splitDays: {
           type: SchemaType.INTEGER,
@@ -476,7 +492,7 @@ const createRoutineTool: AssistantTool<CreateRoutineArgs> = {
           description: "Descripción opcional de la rutina.",
         },
       },
-      required: ["name", "goal", "splitDays"],
+      required: ["name", "goal", "audience", "splitDays"],
     },
   },
   summarize: (args) =>
@@ -486,6 +502,7 @@ const createRoutineTool: AssistantTool<CreateRoutineArgs> = {
       name: args.name,
       description: args.description,
       goal: args.goal,
+      audience: args.audience,
       splitDays: args.splitDays,
       durationWeeks: args.durationWeeks ?? 8,
     });
@@ -816,6 +833,7 @@ interface CreateRoutineFromOcrDay {
 interface CreateRoutineFromOcrArgs {
   name: string;
   goal: string;
+  audience: "UNISEX" | "MALE" | "FEMALE";
   splitDays: number;
   durationWeeks: number;
   days: CreateRoutineFromOcrDay[];
@@ -834,7 +852,12 @@ const createRoutineFromOcrTool: AssistantTool<CreateRoutineFromOcrArgs> = {
         goal: {
           type: SchemaType.STRING,
           description:
-            "Objetivo. Valores: HYPERTROPHY, STRENGTH, ENDURANCE, FAT_LOSS, GENERAL — o un objetivo custom del coach.",
+            "Objetivo. Valores: HYPERTROPHY, MUSCLE_GAIN, DEFINITION, STRENGTH, ENDURANCE, FAT_LOSS, GENERAL — o un objetivo custom del coach.",
+        },
+        audience: {
+          type: SchemaType.STRING,
+          enum: ["UNISEX", "MALE", "FEMALE"],
+          description: "Público objetivo: UNISEX, MALE o FEMALE.",
         },
         splitDays: {
           type: SchemaType.INTEGER,
@@ -880,7 +903,14 @@ const createRoutineFromOcrTool: AssistantTool<CreateRoutineFromOcrArgs> = {
           },
         },
       },
-      required: ["name", "goal", "splitDays", "durationWeeks", "days"],
+      required: [
+        "name",
+        "goal",
+        "audience",
+        "splitDays",
+        "durationWeeks",
+        "days",
+      ],
     },
   },
   summarize: (args) => {
@@ -894,6 +924,7 @@ const createRoutineFromOcrTool: AssistantTool<CreateRoutineFromOcrArgs> = {
     const res = await createRoutineFromOcr({
       name: args.name,
       goal: args.goal,
+      audience: args.audience,
       splitDays: args.splitDays,
       durationWeeks: args.durationWeeks,
       days: args.days,

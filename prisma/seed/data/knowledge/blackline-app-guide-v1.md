@@ -12,7 +12,7 @@ Blackline Fitness es una PWA en español-CR para entrenadores personales: portal
 
 Hechos que el asistente debe interiorizar (cada uno tiene su sección dedicada con detalles):
 
-1. **Snapshot frozen**: una `AssignedRoutine` congela el template al asignar — el cliente nunca ve ediciones posteriores hasta nueva asignación. Ver §14.4.
+1. **Snapshot sincronizado**: una `AssignedRoutine` ACTIVE guarda una copia del template que se actualiza automáticamente cuando el coach edita esa plantilla. Ver §14.4.
 2. **Quota de mediciones**: 4/mes + 1/semana ISO. Ver §11.2.
 3. **PAR-Q es prerequisito de programación**. `parqStatus = RED` bloquea carga; `REVIEW` requiere autorización médica documentada. Ver §12.4.
 4. **Una sesión `IN_PROGRESS` por cliente**, máximo. Modo libre disponible (`isFreeWorkout: true`). Ver §5.1.
@@ -227,11 +227,11 @@ Desde el perfil:
 
 Server action `assignRoutineToClient` hace en transacción:
 1. Cancela cualquier `AssignedRoutine` ACTIVE previa del cliente (si existe).
-2. Construye el **snapshot frozen** (`buildSnapshot()`) con todos los días y ejercicios resueltos a sus IDs + nombres.
+2. Construye el **snapshot inicial** (`buildSnapshot()`) con todos los días y ejercicios resueltos a sus IDs + nombres.
 3. Crea `AssignedRoutine` con `snapshotJson` y status ACTIVE.
 4. Crea `Notification` tipo `ROUTINE_ASSIGNED` para el cliente.
 
-Una vez creado, el snapshot es inmutable. Si el coach edita el `RoutineTemplate` después, el cliente sigue viendo la versión original hasta que se asigne uno nuevo.
+Mientras la asignación esté `ACTIVE`, cada edición del `RoutineTemplate` actualiza automáticamente su snapshot: metadatos, días, ejercicios, orden, prescripción y eliminaciones. Los snapshots `COMPLETED`, `ARCHIVED` o `CANCELLED` permanecen históricos.
 
 #### 3.6 Límites de rutina
 
@@ -435,7 +435,7 @@ Cada write tool muestra una **ConfirmationCard** al coach antes de ejecutar. El 
 | `create_private_exercise` | `createPrivateExercise` | Ejercicio no catalogado |
 | `add_exercise_to_day` | `addExerciseToDay` | Encadenar ejercicios a una rutina (necesita `routineDayId` + `exerciseId`) |
 | `record_body_metric` | `recordBodyMetric` | Registrar peso/grasa/circunferencias |
-| `assign_routine_to_client` | `assignRoutineToClient` | Asigna template con snapshot frozen |
+| `assign_routine_to_client` | `assignRoutineToClient` | Asigna template con snapshot sincronizado mientras esté ACTIVE |
 | `quick_add_client` | `quickAddClient` | Alta exprés con email + nombre |
 
 **Total: 13 tools (6 + 7).** Operaciones NO expuestas al asistente que el coach podría intentar pedir: ejecutar `WorkoutSession` y sus sets, leer/marcar `Notification`, crear/editar `MedicalCondition`, agregar `RoutineComment`, gestionar `TrainerExpense` / `Invoice` / `OneOffSale`, modificar branding o pricing, operaciones admin. Para todo eso → derivar a la UI dedicada.
@@ -665,15 +665,15 @@ Un trainer puede tener N clientes. Un usuario CLIENT solo puede tener 1 trainer 
 - `RoutineDay`: un día dentro del template — `dayIndex` 0-based, `name` ("Día 1", "Empuje", etc.), `description` opcional.
 - `RoutineExercise`: un ejercicio dentro del día — `order`, `targetSets`, `targetRepsMin/Max`, `targetRpe`, `restSeconds`, `tempo` (string libre tipo "2-1-2"), `supersetGroup` (number; ejercicios con el mismo número se ejecutan en superserie), `notes`.
 
-#### 14.4 AssignedRoutine + snapshot frozen
+#### 14.4 AssignedRoutine + snapshot sincronizado
 
-`AssignedRoutine` es el **vínculo entre un cliente y una versión específica de un RoutineTemplate**.
+`AssignedRoutine` es el **vínculo entre un cliente y un RoutineTemplate asignado**.
 - `clientUserId`, `routineTemplateId`, `startsOn`, `endsOn`, `status` (ACTIVE / COMPLETED / ARCHIVED / CANCELLED).
-- `snapshotJson`: copia JSON completa del template al momento de la asignación. **Inmutable**.
+- `snapshotJson`: copia JSON completa del template. Se sincroniza automáticamente mientras la asignación esté `ACTIVE`.
 - `trainerNotes`: nota personal del trainer al asignar.
 - `assignedAt`: timestamp.
 
-El cliente siempre ve el snapshot, no el template original. Cambios al template post-asignación NO afectan al cliente hasta que se asigne uno nuevo.
+El cliente siempre ve el snapshot, no el template original. Los cambios posteriores del coach actualizan automáticamente todos los snapshots `ACTIVE` de esa plantilla; los estados inactivos conservan su versión histórica.
 
 #### 14.5 WorkoutSession + PerformedSet
 
@@ -886,7 +886,7 @@ Reglas del modo agéntico (definidas en el system prompt):
 **Lo que el asistente NO debería intentar hacer**:
 
 - Loguear sets de una sesión del cliente. Aunque `record_set` no es un tool expuesto, ni siquiera lo intentes — la sesión vive en `/client/sesion/[sessionId]` con sync offline propio.
-- Editar ejercicios dentro de una `AssignedRoutine.snapshotJson`. Es inmutable por diseño. Si el coach quiere ajustar, sugerí asignar una rutina nueva.
+- Editar `AssignedRoutine.snapshotJson` directamente. Los ajustes deben hacerse en el `RoutineTemplate`; el sistema sincroniza automáticamente las asignaciones `ACTIVE`.
 - Operar sobre finanzas. Las server actions de gastos / facturas / invoices NO están expuestas como tools y deberían quedar en la UI dedicada.
 - Cambiar branding, API key o configuración del trainer. Solo desde `/trainer/ajustes`.
 

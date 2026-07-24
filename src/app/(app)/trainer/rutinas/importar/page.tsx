@@ -42,18 +42,17 @@ import type {
 import { createRoutineFromOcr } from "@/app/actions/routines";
 import { hasGeminiKey } from "@/lib/demo/settings-store";
 import { PageHeader } from "@/components/shared/page-header";
+import {
+  BUILT_IN_ROUTINE_GOALS,
+  ROUTINE_AUDIENCES,
+  type RoutineAudienceValue,
+} from "@/lib/routines/metadata";
 
 // ---------------------------------------------------------------------------
 // Goal display helpers
 // ---------------------------------------------------------------------------
 
-const GOAL_OPTIONS = [
-  { value: "HYPERTROPHY", label: "Hipertrofia" },
-  { value: "STRENGTH", label: "Fuerza" },
-  { value: "ENDURANCE", label: "Resistencia" },
-  { value: "FAT_LOSS", label: "Perdida de grasa" },
-  { value: "GENERAL", label: "General" },
-] as const;
+const GOAL_OPTIONS = BUILT_IN_ROUTINE_GOALS;
 
 const GOAL_LABELS: Record<string, string> = Object.fromEntries(
   GOAL_OPTIONS.map((g) => [g.value, g.label]),
@@ -61,6 +60,8 @@ const GOAL_LABELS: Record<string, string> = Object.fromEntries(
 
 const GOAL_COLORS: Record<string, string> = {
   HYPERTROPHY: "text-brand-primary",
+  MUSCLE_GAIN: "text-[#EC4899]",
+  DEFINITION: "text-[#06B6D4]",
   STRENGTH: "text-[#EF4444]",
   ENDURANCE: "text-brand-primary",
   FAT_LOSS: "text-[#22C55E]",
@@ -107,6 +108,7 @@ export default function ImportarRutinaPage() {
   const [preview, setPreview] = useState<string | null>(null);
   // Editable copy of OCR result — all mutations happen here.
   const [data, setData] = useState<OcrRoutineResult | null>(null);
+  const [audience, setAudience] = useState<RoutineAudienceValue>("UNISEX");
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set());
   const [dragOver, setDragOver] = useState(false);
   // Track which exercise is in inline-edit mode: "dayIdx-exIdx" or null
@@ -178,6 +180,7 @@ export default function ImportarRutinaPage() {
     if (preview) URL.revokeObjectURL(preview);
     setPreview(null);
     setData(null);
+    setAudience("UNISEX");
     setExpandedDays(new Set());
     setEditingExKey(null);
     setEditingDayIdx(null);
@@ -308,6 +311,7 @@ export default function ImportarRutinaPage() {
     const createResult = await createRoutineFromOcr({
       name: data.name.trim(),
       goal: data.goal,
+      audience,
       splitDays: data.days.length,
       durationWeeks: data.durationWeeks,
       days: data.days,
@@ -512,8 +516,31 @@ export default function ImportarRutinaPage() {
                   />
                 </div>
 
-                {/* Goal + Duration row */}
+                {/* Audience + goal + duration row */}
                 <div className="flex flex-wrap gap-3">
+                  <div className="min-w-[140px] flex-1">
+                    <label
+                      htmlFor="import-routine-audience"
+                      className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-[#52525B]"
+                    >
+                      Diseñada para
+                    </label>
+                    <select
+                      id="import-routine-audience"
+                      value={audience}
+                      onChange={(event) =>
+                        setAudience(event.target.value as RoutineAudienceValue)
+                      }
+                      className={`${textInputCls} cursor-pointer`}
+                    >
+                      {ROUTINE_AUDIENCES.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   {/* Goal selector */}
                   <div className="flex-1 min-w-[140px]">
                     <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-[#52525B]">

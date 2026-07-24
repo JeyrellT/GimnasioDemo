@@ -124,7 +124,9 @@ export type ClientWithCurrentRoutine = Prisma.UserGetPayload<{
       where: { status: "ACTIVE" };
       include: {
         routineTemplate: {
-          include: { days: { include: { exercises: { include: { exercise: true } } } } };
+          include: {
+            days: { include: { exercises: { include: { exercise: true } } } };
+          };
         };
       };
       take: 1;
@@ -138,6 +140,7 @@ export interface ClientListItem {
   name: string;
   email: string;
   avatarUrl: string | null;
+  gender: import("@prisma/client").Gender | null;
   parqStatus: import("@prisma/client").ParqStatus;
   goal: import("@prisma/client").Goal | null;
   /** Plain number (not Decimal) — serializable across the RSC boundary. */
@@ -172,6 +175,7 @@ export type RoutineSummary = Pick<
   | "id"
   | "name"
   | "goal"
+  | "audience"
   | "splitDays"
   | "durationWeeks"
   | "isArchived"
@@ -210,12 +214,14 @@ export interface RoutineSnapshotDay {
 /**
  * Schema for AssignedRoutine.snapshotJson.
  * Validated via assignedRoutineSnapshotSchema (Zod) before every insert.
- * Once persisted, never mutated — trainer edits to the template do NOT
- * affect the frozen copy the client is executing.
+ * ACTIVE assignments are refreshed whenever the trainer edits their source
+ * template. Completed, cancelled and archived assignments remain historical.
  */
 export interface RoutineSnapshot {
   templateId: string;
   templateName: string;
+  /** Missing only on assignments created before audience classification. */
+  audience?: "UNISEX" | "MALE" | "FEMALE";
   goal: string;
   splitDays: number;
   durationWeeks: number;

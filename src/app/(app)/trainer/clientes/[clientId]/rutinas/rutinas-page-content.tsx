@@ -2,10 +2,16 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, ArrowLeft, Dumbbell, Loader2, Pencil } from "lucide-react";
-import { getClientAssignedRoutines } from "@/app/actions/routines";
+import { AlertCircle, ArrowLeft, Check, Dumbbell, Loader2, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  deleteAssignedRoutine,
+  getClientAssignedRoutines,
+} from "@/app/actions/routines";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { formatDateCR } from "@/lib/utils";
 import type { RoutineSnapshot } from "@/types/domain";
+import { getRoutineAudienceLabel, getRoutineGoalLabel } from "@/lib/routines/metadata";
 
 type AssignedRoutineRow = {
   id: string;
@@ -16,20 +22,12 @@ type AssignedRoutineRow = {
   assignedAt: Date;
   trainerNotes: string | null;
   snapshotJson: unknown;
+  completedDayIndexes: number[];
+  completedSessionCount: number;
+  lastCompletedAt: Date | null;
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-const GOAL_LABELS: Record<string, string> = {
-  MUSCLE_GAIN: "Ganancia muscular",
-  FAT_LOSS: "Pérdida de grasa",
-  STRENGTH: "Fuerza",
-  ENDURANCE: "Resistencia",
-  FLEXIBILITY: "Flexibilidad",
-  GENERAL_FITNESS: "Fitness general",
-  SPORT_SPECIFIC: "Deporte específico",
-  REHABILITATION: "Rehabilitación",
-};
 
 function calcProgress(startsOn: Date, endsOn: Date | null, now: Date): number {
   const start = startsOn.getTime();
@@ -55,12 +53,37 @@ function narrowSnapshot(raw: unknown): RoutineSnapshot | null {
 
 // ── Progress bar ──────────────────────────────────────────────────────────────
 
-function ProgressBar({ pct }: { pct: number }) {
+/**
+ * Progreso real = sesiones que el cliente efectivamente completó sobre el total
+ * prescrito (splitDays × durationWeeks). El progreso por fechas se muestra
+ * aparte como "tiempo transcurrido": comparar ambos es lo que revela adherencia.
+ */
+function ProgressBar({
+  completedSessions,
+  totalSessions,
+  elapsedPct,
+  lastCompletedAt,
+}: {
+  completedSessions: number;
+  totalSessions: number | null;
+  elapsedPct: number;
+  lastCompletedAt: Date | null;
+}) {
+  const pct =
+    totalSessions && totalSessions > 0
+      ? Math.min(100, Math.round((completedSessions / totalSessions) * 100))
+      : completedSessions > 0
+        ? 100
+        : 0;
+
   return (
     <div className="mt-3">
       <div className="mb-1 flex items-center justify-between">
-        <span className="text-[10px] text-[#71717A]">Progreso estimado</span>
-        <span className="text-[10px] font-semibold text-brand-primary">{pct}%</span>
+        <span className="text-[10px] text-[#71717A]">Sesiones completadas</span>
+        <span className="text-[10px] font-semibold text-brand-primary">
+          {completedSessions}
+          {totalSessions && totalSessions > 0 ? ` de ${totalSessions}` : ""} · {pct}%
+        </span>
       </div>
       <div className="h-1.5 w-full rounded-full bg-[#27272A] overflow-hidden">
         <div
@@ -68,6 +91,12 @@ function ProgressBar({ pct }: { pct: number }) {
           style={{ width: `${pct}%` }}
         />
       </div>
+      <p className="mt-1 text-[10px] text-[#52525B]">
+        Tiempo transcurrido {elapsedPct}%
+        {lastCompletedAt
+          ? ` · Última sesión ${formatDateCR(lastCompletedAt, "d MMM yyyy")}`
+          : " · Sin sesiones aún"}
+      </p>
     </div>
   );
 }
@@ -97,6 +126,11 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
   const [routines, setRoutines] = useState<AssignedRoutineRow[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [routineToDelete, setRoutineToDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -132,6 +166,26 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
 
   const list = routines ?? [];
   const now = new Date();
+
+  async function handleDeleteAssignedRoutine() {
+    if (!routineToDelete || deletingId) return;
+
+    setDeletingId(routineToDelete.id);
+    const result = await deleteAssignedRoutine(routineToDelete.id);
+
+    if (!result.ok) {
+      toast.error(result.error.message ?? "No se pudo quitar la rutina.");
+      setDeletingId(null);
+      return;
+    }
+
+    setRoutines((current) =>
+      current?.filter((routine) => routine.id !== routineToDelete.id) ?? [],
+    );
+    toast.success("Rutina eliminada del perfil del cliente.");
+    setRoutineToDelete(null);
+    setDeletingId(null);
+  }
 
   return (
     <div className="space-y-6">
@@ -179,15 +233,18 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
           {list.map((r) => {
             const snapshot = narrowSnapshot(r.snapshotJson);
             const templateName = snapshot?.templateName ?? "Rutina";
-            const goal = snapshot?.goal ? GOAL_LABELS[snapshot.goal] ?? snapshot.goal : null;
+            const goal = snapshot?.goal ? getRoutineGoalLabel(snapshot.goal) : null;
+            const audience = snapshot ? getRoutineAudienceLabel(snapshot.audience) : null;
             const splitDays = snapshot?.splitDays ?? null;
             const durationWeeks = snapshot?.durationWeeks ?? null;
             const startsOnDate = new Date(r.startsOn);
             const endsOnDate = r.endsOn ? new Date(r.endsOn) : null;
-            const pct =
-              r.status === "ACTIVE"
-                ? calcProgress(startsOnDate, endsOnDate, now)
-                : 100;
+            const pct = r.status === "ACTIVE" ? calcProgress(startsOnDate, endsOnDate, now) : 100;
+            const completedDays = new Set(r.completedDayIndexes ?? []);
+            const totalSessions =
+              splitDays !== null && durationWeeks !== null
+                ? splitDays * durationWeeks
+                : null;
 
             const dateFrom = formatDateCR(startsOnDate, "d MMM yyyy");
             const dateTo = endsOnDate ? formatDateCR(endsOnDate, "d MMM yyyy") : "En curso";
@@ -208,12 +265,11 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
                       <p className="mt-0.5 text-xs text-[#71717A]">
                         {[
                           goal,
+                          audience,
                           splitDays !== null
                             ? `${splitDays} día${splitDays !== 1 ? "s" : ""} por semana`
                             : null,
-                          durationWeeks !== null
-                            ? `${durationWeeks} sem.`
-                            : null,
+                          durationWeeks !== null ? `${durationWeeks} sem.` : null,
                         ]
                           .filter(Boolean)
                           .join(" · ")}
@@ -229,6 +285,20 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
                     >
                       <Pencil className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
                     </Link>
+                    <button
+                      type="button"
+                      title="Quitar rutina del cliente"
+                      aria-label={`Quitar ${templateName} del cliente`}
+                      disabled={deletingId === r.id}
+                      onClick={() => setRoutineToDelete({ id: r.id, name: templateName })}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#3F3F46] bg-[#27272A]/80 text-[#71717A] transition-colors hover:border-[#EF4444]/40 hover:bg-[#EF4444]/10 hover:text-[#EF4444] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {deletingId === r.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                      ) : (
+                        <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
+                      )}
+                    </button>
                     <StatusBadge status={r.status} />
                   </div>
                 </div>
@@ -239,27 +309,63 @@ export default function RutinasPageContent({ clientId }: { clientId: string }) {
                   <span className="text-[#A1A1AA]">— {r.endsOn ? "Hasta" : ""}</span> {dateTo}
                 </p>
 
-                {/* Days tags from snapshot */}
+                {/* Days tags from snapshot — los completados quedan marcados */}
                 {snapshot?.days && snapshot.days.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    {snapshot.days.map((day) => (
-                      <span
-                        key={day.dayIndex}
-                        className="inline-flex items-center rounded-md bg-[#27272A] px-2 py-0.5 text-[10px] font-medium text-[#A1A1AA]"
-                      >
-                        Día {day.dayIndex + 1}
-                        {day.name ? ` — ${day.name}` : ""}
-                      </span>
-                    ))}
+                    {snapshot.days.map((day) => {
+                      const done = completedDays.has(day.dayIndex);
+                      return (
+                        <span
+                          key={day.dayIndex}
+                          title={done ? "Completado por el cliente" : "Sin completar"}
+                          className={
+                            done
+                              ? "inline-flex items-center gap-1 rounded-md bg-[#22C55E]/15 px-2 py-0.5 text-[10px] font-semibold text-[#22C55E]"
+                              : "inline-flex items-center rounded-md bg-[#27272A] px-2 py-0.5 text-[10px] font-medium text-[#A1A1AA]"
+                          }
+                        >
+                          {done && (
+                            <Check className="h-2.5 w-2.5" strokeWidth={3} aria-hidden="true" />
+                          )}
+                          Día {day.dayIndex + 1}
+                          {day.name ? ` — ${day.name}` : ""}
+                        </span>
+                      );
+                    })}
                   </div>
                 )}
 
-                {r.status === "ACTIVE" && <ProgressBar pct={pct} />}
+                {r.status === "ACTIVE" && (
+                  <ProgressBar
+                    completedSessions={r.completedSessionCount}
+                    totalSessions={totalSessions}
+                    elapsedPct={pct}
+                    lastCompletedAt={r.lastCompletedAt ? new Date(r.lastCompletedAt) : null}
+                  />
+                )}
               </li>
             );
           })}
         </ul>
       )}
+
+      <ConfirmDialog
+        open={routineToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open && !deletingId) setRoutineToDelete(null);
+        }}
+        title="Quitar rutina del cliente"
+        description={
+          routineToDelete
+            ? `Se quitará “${routineToDelete.name}” del perfil de este cliente. La plantilla original seguirá disponible en tus rutinas.`
+            : ""
+        }
+        confirmLabel="Quitar rutina"
+        cancelLabel="Cancelar"
+        variant="destructive"
+        loading={deletingId !== null}
+        onConfirm={handleDeleteAssignedRoutine}
+      />
     </div>
   );
 }

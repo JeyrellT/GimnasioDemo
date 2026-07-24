@@ -39,7 +39,14 @@ export interface OcrRoutineDay {
 
 export interface OcrRoutineResult {
   name: string;
-  goal: "HYPERTROPHY" | "STRENGTH" | "ENDURANCE" | "FAT_LOSS" | "GENERAL";
+  goal:
+    | "HYPERTROPHY"
+    | "MUSCLE_GAIN"
+    | "DEFINITION"
+    | "STRENGTH"
+    | "ENDURANCE"
+    | "FAT_LOSS"
+    | "GENERAL";
   splitDays: number;
   durationWeeks: number;
   days: OcrRoutineDay[];
@@ -60,6 +67,8 @@ Campos a extraer:
 
 2. goal (enum estricto, uno de los siguientes):
    - "HYPERTROPHY" — si predominan ejercicios de aislamiento, rangos 8-15 reps, descansos 60-90s, volumen alto, splits tipo bro-split o PPL.
+   - "MUSCLE_GAIN" — si la fuente indica explícitamente volumen, masa, bulk o ganancia muscular.
+   - "DEFINITION" — si la fuente indica explícitamente definición, tonificación o recomposición con conservación muscular.
    - "STRENGTH" — si predominan compuestos pesados (sentadilla, peso muerto, press banca, press militar), rangos 1-6 reps, descansos > 2 min, programación tipo 5x5 / 5/3/1 / Texas Method.
    - "ENDURANCE" — si predominan circuitos, rangos > 15 reps, descansos cortos < 45s, AMRAP, EMOM, WODs.
    - "FAT_LOSS" — si la rutina mezcla full-body + cardio/HIIT, supersets y/o nota explícita de cutting/déficit/quema.
@@ -159,7 +168,14 @@ const exerciseSchema: GeminiSchema = {
     restSeconds: { type: SchemaType.INTEGER },
     notes: { type: SchemaType.STRING, nullable: true },
   },
-  required: ["nameEs", "targetSets", "targetRepsMin", "targetRepsMax", "restSeconds", "notes"],
+  required: [
+    "nameEs",
+    "targetSets",
+    "targetRepsMin",
+    "targetRepsMax",
+    "restSeconds",
+    "notes",
+  ],
 };
 
 const daySchema: GeminiSchema = {
@@ -180,7 +196,15 @@ export const ROUTINE_OCR_SCHEMA: GeminiSchema = {
     name: { type: SchemaType.STRING },
     goal: {
       type: SchemaType.STRING,
-      enum: ["HYPERTROPHY", "STRENGTH", "ENDURANCE", "FAT_LOSS", "GENERAL"],
+      enum: [
+        "HYPERTROPHY",
+        "MUSCLE_GAIN",
+        "DEFINITION",
+        "STRENGTH",
+        "ENDURANCE",
+        "FAT_LOSS",
+        "GENERAL",
+      ],
       format: "enum",
     },
     splitDays: { type: SchemaType.INTEGER },

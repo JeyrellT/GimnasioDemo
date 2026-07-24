@@ -2,26 +2,68 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Loader2, UserCheck, CalendarDays, Dumbbell, Clock, Target } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  UserCheck,
+  CalendarDays,
+  Dumbbell,
+  Clock,
+  Target,
+  UsersRound,
+} from "lucide-react";
 import { getRoutine } from "@/app/actions/routines";
 import { searchExercises } from "@/app/actions/exercises";
 import { RoutineBuilderClient } from "./routine-builder-client";
 import { useRoutineBuilderStore } from "@/stores/routine-builder-store";
 import type { RoutineDetail } from "@/server/actions/routines.actions";
 import type { RoutineWithDays } from "@/types/domain";
+import { getRoutineAudienceLabel } from "@/lib/routines/metadata";
 // ── Goal config ───────────────────────────────────────────────────────────────
 
 const GOAL_META: Record<string, { label: string; color: string; bg: string }> = {
   // Bug #6: STRENGTH gets a distinct red — was identical to HYPERTROPHY (both brand-primary)
-  HYPERTROPHY: { label: "Hipertrofia",              color: "var(--brand-primary)", bg: "var(--brand-tint)" },
-  STRENGTH:    { label: "Fuerza",                   color: "#EF4444",              bg: "rgba(239,68,68,0.12)"  },
-  ENDURANCE:   { label: "Resistencia",              color: "#22C55E", bg: "rgba(34,197,94,0.12)"   },
-  FAT_LOSS:    { label: "Pérdida de grasa",         color: "#F59E0B", bg: "rgba(245,158,11,0.12)"  },
-  GENERAL:     { label: "General / Mantenimiento",  color: "#A855F7", bg: "rgba(168,85,247,0.12)"  },
+  HYPERTROPHY: {
+    label: "Hipertrofia",
+    color: "var(--brand-primary)",
+    bg: "var(--brand-tint)",
+  },
+  MUSCLE_GAIN: {
+    label: "Volumen / ganancia muscular",
+    color: "#EC4899",
+    bg: "rgba(236,72,153,0.12)",
+  },
+  DEFINITION: {
+    label: "Definición",
+    color: "#06B6D4",
+    bg: "rgba(6,182,212,0.12)",
+  },
+  STRENGTH: { label: "Fuerza", color: "#EF4444", bg: "rgba(239,68,68,0.12)" },
+  ENDURANCE: {
+    label: "Resistencia",
+    color: "#22C55E",
+    bg: "rgba(34,197,94,0.12)",
+  },
+  FAT_LOSS: {
+    label: "Pérdida de grasa",
+    color: "#F59E0B",
+    bg: "rgba(245,158,11,0.12)",
+  },
+  GENERAL: {
+    label: "General / Mantenimiento",
+    color: "#A855F7",
+    bg: "rgba(168,85,247,0.12)",
+  },
 };
 
 function getGoalMeta(goal: string) {
-  return GOAL_META[goal] ?? { label: goal, color: "#A1A1AA", bg: "rgba(161,161,170,0.12)" };
+  return (
+    GOAL_META[goal] ?? {
+      label: goal,
+      color: "#A1A1AA",
+      bg: "rgba(161,161,170,0.12)",
+    }
+  );
 }
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -77,9 +119,10 @@ export default function RoutineDetailClient({
   }
 
   const goal = getGoalMeta(routine.goal);
-  const totalExercises = storeDays.length > 0
-    ? storeDays.reduce((sum, d) => sum + d.exercises.length, 0)
-    : routine.days.reduce((sum, d) => sum + d.exercises.length, 0);
+  const totalExercises =
+    storeDays.length > 0
+      ? storeDays.reduce((sum, d) => sum + d.exercises.length, 0)
+      : routine.days.reduce((sum, d) => sum + d.exercises.length, 0);
 
   const summaryItems = [
     {
@@ -97,6 +140,10 @@ export default function RoutineDetailClient({
     {
       icon: Target,
       text: goal.label,
+    },
+    {
+      icon: UsersRound,
+      text: getRoutineAudienceLabel(routine.audience),
     },
   ];
 
@@ -127,17 +174,23 @@ export default function RoutineDetailClient({
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-2 min-w-0">
               {/* Goal badge */}
-              <span
-                className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
-                style={{ color: goal.color, backgroundColor: goal.bg }}
-              >
+              <div className="flex flex-wrap gap-2">
                 <span
-                  className="h-1.5 w-1.5 rounded-full"
-                  style={{ backgroundColor: goal.color }}
-                  aria-hidden="true"
-                />
-                {goal.label}
-              </span>
+                  className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
+                  style={{ color: goal.color, backgroundColor: goal.bg }}
+                >
+                  <span
+                    className="h-1.5 w-1.5 rounded-full"
+                    style={{ backgroundColor: goal.color }}
+                    aria-hidden="true"
+                  />
+                  {goal.label}
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#27272A] px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[#A1A1AA]">
+                  <UsersRound className="h-3 w-3" aria-hidden="true" />
+                  {getRoutineAudienceLabel(routine.audience)}
+                </span>
+              </div>
 
               {/* Routine name */}
               <h1 className="text-2xl font-bold tracking-tight text-[#FAFAFA] leading-tight truncate">
@@ -191,9 +244,7 @@ function NotFoundView() {
       <Dumbbell className="h-10 w-10 text-[#52525B]" strokeWidth={1.5} aria-hidden="true" />
       <div>
         <p className="text-sm font-semibold text-[#FAFAFA]">Rutina no encontrada</p>
-        <p className="mt-1 text-xs text-[#71717A]">
-          La rutina no existe o fue eliminada.
-        </p>
+        <p className="mt-1 text-xs text-[#71717A]">La rutina no existe o fue eliminada.</p>
       </div>
       <Link
         href="/trainer/rutinas"

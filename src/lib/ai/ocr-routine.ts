@@ -51,6 +51,8 @@ const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10MB
 
 const VALID_GOALS = [
   "HYPERTROPHY",
+  "MUSCLE_GAIN",
+  "DEFINITION",
   "STRENGTH",
   "ENDURANCE",
   "FAT_LOSS",
@@ -103,7 +105,9 @@ function isIntInRange(v: unknown, min: number, max: number): v is number {
 }
 
 function isValidGoal(v: unknown): v is RoutineGoal {
-  return typeof v === "string" && (VALID_GOALS as readonly string[]).includes(v);
+  return (
+    typeof v === "string" && (VALID_GOALS as readonly string[]).includes(v)
+  );
 }
 
 function validateExercise(
@@ -168,9 +172,7 @@ function validateExercise(
 
 function validateDay(raw: unknown, dayIndex: number): OcrRoutineDay {
   if (!raw || typeof raw !== "object") {
-    throw new TypeError(
-      `routine extraction: days[${dayIndex}] must be object`,
-    );
+    throw new TypeError(`routine extraction: days[${dayIndex}] must be object`);
   }
   const d = raw as Record<string, unknown>;
 
@@ -218,9 +220,7 @@ function isRoutineShape(data: unknown): OcrRoutineResult {
     );
   }
   if (!Array.isArray(d.days) || d.days.length < 1) {
-    throw new TypeError(
-      "routine extraction: days must be array with 1+ items",
-    );
+    throw new TypeError("routine extraction: days must be array with 1+ items");
   }
 
   const days = d.days.map((day, idx) => validateDay(day, idx));

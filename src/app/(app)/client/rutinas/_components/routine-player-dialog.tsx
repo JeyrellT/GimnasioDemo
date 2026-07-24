@@ -471,13 +471,11 @@ export function RoutinePlayerDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={handlePlayerOpenChange}>
-        {/* max-h + flex column makes the dialog fit any viewport:
-            - header stays anchored at top (shrink-0)
-            - body scrolls internally when the video + meta + rest controls
-              exceed the screen (typical on phone in portrait when the video
-              is 9:16). Without this, the bottom controls (Pausar / Saltar
-              descanso) get cut off on small viewports. */}
-        <DialogContent className="max-w-md p-0 overflow-hidden gap-0 sm:max-w-lg flex flex-col max-h-[100dvh] sm:max-h-[90dvh]">
+        {/* Mobile behaves like a dedicated full-screen page: the opaque
+            content covers the app topbar and bottom navigation completely.
+            Desktop keeps the centered dialog presentation. The body scrolls
+            internally so portrait videos never push controls off-screen. */}
+        <DialogContent className="left-0 top-0 h-[100dvh] max-h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 bg-[#09090B] p-0 overflow-hidden gap-0 flex flex-col duration-0 sm:left-[50%] sm:top-[50%] sm:h-auto sm:max-h-[90dvh] sm:w-full sm:max-w-lg sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-xl sm:border sm:bg-[#18181B] sm:duration-200">
           {/* Header — compact: solo título + día. El detalle "Ejercicio N /
               Set X" ya está representado visualmente en la SegmentedProgressBar
               de abajo y en el panel "SET N DE M" más abajo del contenido. */}

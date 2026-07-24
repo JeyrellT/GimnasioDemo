@@ -89,7 +89,15 @@ export interface DemoRoutineRow {
   trainerId: string;
   name: string;
   description: string | null;
-  goal: "HYPERTROPHY" | "STRENGTH" | "ENDURANCE" | "FAT_LOSS" | "GENERAL";
+  goal:
+    | "HYPERTROPHY"
+    | "MUSCLE_GAIN"
+    | "DEFINITION"
+    | "STRENGTH"
+    | "ENDURANCE"
+    | "FAT_LOSS"
+    | "GENERAL";
+  audience?: "UNISEX" | "MALE" | "FEMALE";
   splitDays: number;
   durationWeeks: number;
   isArchived: boolean;

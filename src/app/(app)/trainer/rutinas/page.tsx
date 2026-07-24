@@ -15,18 +15,27 @@ import {
   Trash2,
   Users,
   ImagePlus,
+  Target,
 } from "lucide-react";
 import { listMyRoutines, deleteRoutine } from "@/app/actions/routines";
 import { PageHeader } from "@/components/shared/page-header";
 import { formatDateCR } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 import type { RoutineSummary } from "@/types/domain";
+import { getRoutineAudienceLabel } from "@/lib/routines/metadata";
 
 // ---------------------------------------------------------------------------
 // Goal config — color tokens and icons per goal type
 // ---------------------------------------------------------------------------
 
-type GoalKey = "HYPERTROPHY" | "STRENGTH" | "FAT_LOSS" | "ENDURANCE" | "GENERAL";
+type GoalKey =
+  | "HYPERTROPHY"
+  | "MUSCLE_GAIN"
+  | "DEFINITION"
+  | "STRENGTH"
+  | "FAT_LOSS"
+  | "ENDURANCE"
+  | "GENERAL";
 
 interface GoalConfig {
   label: string;
@@ -52,6 +61,24 @@ const GOAL_CONFIG: Record<GoalKey, GoalConfig> = {
     iconColor: "text-brand-primary",
     gradientFrom: "from-brand-primary/8",
     labelColor: "text-brand-primary",
+  },
+  MUSCLE_GAIN: {
+    label: "Volumen / ganancia muscular",
+    icon: Dumbbell,
+    borderColor: "border-l-[#EC4899]",
+    iconBg: "bg-[#EC4899]/10",
+    iconColor: "text-[#EC4899]",
+    gradientFrom: "from-[#EC4899]/8",
+    labelColor: "text-[#EC4899]",
+  },
+  DEFINITION: {
+    label: "Definición",
+    icon: Target,
+    borderColor: "border-l-[#06B6D4]",
+    iconBg: "bg-[#06B6D4]/10",
+    iconColor: "text-[#06B6D4]",
+    gradientFrom: "from-[#06B6D4]/8",
+    labelColor: "text-[#06B6D4]",
   },
   STRENGTH: {
     label: "Fuerza",
@@ -138,11 +165,7 @@ function RutinasPageInner() {
   const searchParams = useSearchParams();
   const filterParam = searchParams.get("filter");
   const activeFilter: FilterValue =
-    filterParam === "archivadas"
-      ? "archivadas"
-      : filterParam === "activas"
-        ? "activas"
-        : "todas";
+    filterParam === "archivadas" ? "archivadas" : filterParam === "activas" ? "activas" : "todas";
 
   const [routines, setRoutines] = useState<RoutineSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -223,9 +246,7 @@ function RutinasPageInner() {
             <Link
               key={tab.value}
               href={
-                tab.value === "todas"
-                  ? "/trainer/rutinas"
-                  : `/trainer/rutinas?filter=${tab.value}`
+                tab.value === "todas" ? "/trainer/rutinas" : `/trainer/rutinas?filter=${tab.value}`
               }
               role="tab"
               aria-selected={isActive}
@@ -245,7 +266,10 @@ function RutinasPageInner() {
       {/* Loading state */}
       {loading ? (
         <div className="flex justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-brand-primary" aria-label="Cargando rutinas" />
+          <Loader2
+            className="h-6 w-6 animate-spin text-brand-primary"
+            aria-label="Cargando rutinas"
+          />
         </div>
       ) : filtered.length === 0 ? (
         /* Empty state */
@@ -346,6 +370,7 @@ function RutinasPageInner() {
                     </div>
 
                     <div className="flex items-center gap-2 flex-wrap">
+                      <MetaChip label={getRoutineAudienceLabel(r.audience)} />
                       <MetaChip label={`${r.splitDays} días/sem`} />
                       <MetaChip label={`${r.durationWeeks} sem`} />
                     </div>

@@ -23,6 +23,11 @@ import {
 export const createRoutineSchema = z.object({
   name: z.string().trim().min(2, "Mínimo 2 caracteres").max(100, "Máximo 100 caracteres"),
   description: z.string().trim().max(1000).optional(),
+  audience: z
+    .enum(["UNISEX", "MALE", "FEMALE"], {
+      message: "Seleccioná para quién está diseñada la rutina",
+    })
+    .default("UNISEX"),
   goal: z.string().min(1, "Seleccioná un objetivo para la rutina"),
   splitDays: z.coerce
     .number()
@@ -170,6 +175,8 @@ const snapshotDaySchema = z.object({
 export const assignedRoutineSnapshotSchema = z.object({
   templateId: z.string().min(1),
   templateName: z.string().min(1),
+  // Optional so assignments created before audience classification remain valid.
+  audience: z.enum(["UNISEX", "MALE", "FEMALE"]).optional(),
   goal: z.string().min(1),
   splitDays: z.number().int().min(1).max(6),
   durationWeeks: z.number().int().min(1),

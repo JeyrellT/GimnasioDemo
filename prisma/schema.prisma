@@ -151,6 +151,14 @@ enum AssignedRoutineStatus {
   CANCELLED
 }
 
+/// Intended audience for a routine template. UNISEX keeps existing routines
+/// and programs that are not gender-specific fully compatible.
+enum RoutineAudience {
+  UNISEX
+  MALE
+  FEMALE
+}
+
 enum WorkoutSessionStatus {
   IN_PROGRESS
   COMPLETED
@@ -876,6 +884,7 @@ model RoutineTemplate {
   name          String
   description   String?     @db.Text
   goal          String      @default("HYPERTROPHY")
+  audience      RoutineAudience @default(UNISEX)
   splitDays     Int
   durationWeeks Int         @default(8)
   isArchived    Boolean     @default(false)
@@ -890,6 +899,7 @@ model RoutineTemplate {
 
   @@index([trainerId, isArchived])
   @@index([goal])
+  @@index([audience])
 }
 
 /// One day inside a RoutineTemplate (e.g. "Empuje", "Tirón", "Pierna").
@@ -941,8 +951,8 @@ model RoutineExercise {
 }
 
 /// A snapshot of a RoutineTemplate assigned to a client.
-/// `snapshotJson` freezes the prescription so trainer edits to the template
-/// do not retroactively change what the client sees mid-mesocycle.
+/// `snapshotJson` stores the current prescription for ACTIVE assignments.
+/// Trainer edits refresh active copies; inactive assignments remain historical.
 model AssignedRoutine {
   id                String                @id @default(cuid())
   clientUserId      String

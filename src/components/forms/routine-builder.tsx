@@ -43,6 +43,7 @@ import {
   Check,
   Link2,
   Link2Off,
+  UsersRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,12 +84,17 @@ import {
 import { searchExercises } from "@/app/actions/exercises";
 import { useDebounce } from "@/hooks/use-debounce";
 import type { ExerciseSearchResult } from "@/types/api";
+import {
+  BUILT_IN_ROUTINE_GOALS,
+  ROUTINE_AUDIENCES,
+} from "@/lib/routines/metadata";
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
 const metaSchema = z.object({
   name: z.string().min(2, "Nombre muy corto").max(100),
   goal: z.string().min(1, "Seleccioná un objetivo"),
+  audience: z.enum(["UNISEX", "MALE", "FEMALE"]),
   splitDays: z.number().min(1).max(7),
   durationWeeks: z.number().min(1).max(52),
 });
@@ -97,13 +103,20 @@ type MetaValues = z.infer<typeof metaSchema>;
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const GOALS: Array<{ value: string; label: string; color: string }> = [
-  { value: "HYPERTROPHY", label: "Hipertrofia",        color: "var(--brand-primary)" },
-  { value: "STRENGTH",    label: "Fuerza",             color: "var(--brand-primary)" },
-  { value: "ENDURANCE",   label: "Resistencia",        color: "#22C55E" },
-  { value: "FAT_LOSS",    label: "Pérdida de grasa",   color: "#F59E0B" },
-  { value: "GENERAL",     label: "General / Mantenimiento", color: "#A855F7" },
-];
+const GOAL_COLORS: Record<string, string> = {
+  HYPERTROPHY: "var(--brand-primary)",
+  MUSCLE_GAIN: "#EC4899",
+  DEFINITION: "#06B6D4",
+  STRENGTH: "#EF4444",
+  ENDURANCE: "#22C55E",
+  FAT_LOSS: "#F59E0B",
+  GENERAL: "#A855F7",
+};
+
+const GOALS = BUILT_IN_ROUTINE_GOALS.map((goal) => ({
+  ...goal,
+  color: GOAL_COLORS[goal.value] ?? "#A1A1AA",
+}));
 
 const DAY_COLORS = [
   "var(--brand-primary)", // Day 1
@@ -1543,6 +1556,43 @@ function MetaForm({
             )}
           />
 
+          {/* Intended audience */}
+          <FormField
+            control={form.control}
+            name="audience"
+            render={({ field }) => (
+              <FormItem className="sm:col-span-2">
+                <FormLabel className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-[#A1A1AA]">
+                  <UsersRound
+                    className="h-3 w-3 text-brand-primary"
+                    aria-hidden="true"
+                  />
+                  Diseñada para
+                </FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="h-11 border-[#3F3F46] bg-[#09090B] text-sm">
+                      <SelectValue placeholder="Elegí el público de la rutina" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="border-[#3F3F46] bg-[#18181B]">
+                    {ROUTINE_AUDIENCES.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <div className="flex flex-col">
+                          <span>{option.label}</span>
+                          <span className="text-[11px] text-[#71717A]">
+                            {option.description}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           {/* Goal */}
           <FormField
             control={form.control}
@@ -1686,6 +1736,7 @@ export function RoutineBuilder({
   const routineId   = useRoutineBuilderStore((s) => s.routineId);
   const storeName   = useRoutineBuilderStore((s) => s.name);
   const storeGoal   = useRoutineBuilderStore((s) => s.goal);
+  const storeAudience = useRoutineBuilderStore((s) => s.audience);
   const splitDays   = useRoutineBuilderStore((s) => s.splitDays);
   const durationWeeks = useRoutineBuilderStore((s) => s.durationWeeks);
   const days        = useRoutineBuilderStore((s) => s.days);
@@ -1718,6 +1769,7 @@ export function RoutineBuilder({
     defaultValues: {
       name: storeName,
       goal: storeGoal,
+      audience: storeAudience,
       splitDays: splitDays,
       durationWeeks: durationWeeks,
     },
@@ -1732,6 +1784,7 @@ export function RoutineBuilder({
     form.reset({
       name: storeName,
       goal: storeGoal,
+      audience: storeAudience,
       splitDays: splitDays,
       durationWeeks: durationWeeks,
     });
@@ -1773,27 +1826,30 @@ export function RoutineBuilder({
       }
 
       // Persist prescription edits for each existing exercise
-      const updates: Promise<unknown>[] = [];
       for (const day of days) {
         for (const ex of day.exercises) {
           if (!ex.routineExerciseId) continue;
-          updates.push(
-            updateExerciseInDay({
-              routineExerciseId: ex.routineExerciseId,
-              targetSets: ex.targetSets,
-              targetRepsMin: ex.targetRepsMin,
-              targetRepsMax: ex.targetRepsMax,
-              restSeconds: ex.restSeconds,
-              targetRpe: ex.targetRpe,
-              tempo: ex.tempo,
-              supersetGroup: ex.supersetGroup,
-              notes: ex.notes,
-              mediaUrl: ex.mediaUrl,
-            }),
-          );
+          const exerciseResult = await updateExerciseInDay({
+            routineExerciseId: ex.routineExerciseId,
+            targetSets: ex.targetSets,
+            targetRepsMin: ex.targetRepsMin,
+            targetRepsMax: ex.targetRepsMax,
+            restSeconds: ex.restSeconds,
+            targetRpe: ex.targetRpe,
+            tempo: ex.tempo,
+            supersetGroup: ex.supersetGroup,
+            notes: ex.notes,
+            mediaUrl: ex.mediaUrl,
+          });
+          if (!exerciseResult.ok) {
+            toast.error(
+              exerciseResult.error.message ??
+                "No se pudieron guardar todos los ejercicios.",
+            );
+            return;
+          }
         }
       }
-      await Promise.all(updates);
       await handlePersistedChange();
 
       markSaved();

@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { createRoutineTemplate, createCustomGoal, listCustomGoals } from "@/app/actions/routines";
 import { createRoutineSchema, type CreateRoutineInput } from "@/lib/validation/routine.schema";
+import { BUILT_IN_ROUTINE_GOALS, ROUTINE_AUDIENCES } from "@/lib/routines/metadata";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/shared/page-header";
 import {
@@ -18,14 +19,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowRight, Loader2, Plus, X } from "lucide-react";
-
-const BUILT_IN_GOALS = [
-  { value: "HYPERTROPHY", label: "Hipertrofia" },
-  { value: "STRENGTH", label: "Fuerza" },
-  { value: "ENDURANCE", label: "Resistencia" },
-  { value: "FAT_LOSS", label: "Pérdida de grasa" },
-  { value: "GENERAL", label: "General" },
-] as const;
 
 const inputCls =
   "w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2.5 text-sm text-[#FAFAFA] placeholder-[#71717A] " +
@@ -146,7 +139,12 @@ export default function NuevaRutinaPage() {
     formState: { errors, isSubmitting },
   } = useForm<CreateRoutineInput>({
     resolver: zodResolver(createRoutineSchema),
-    defaultValues: { splitDays: 4, durationWeeks: 8, goal: "HYPERTROPHY" },
+    defaultValues: {
+      splitDays: 4,
+      durationWeeks: 8,
+      audience: "UNISEX",
+      goal: "HYPERTROPHY",
+    },
   });
 
   useEffect(() => {
@@ -203,6 +201,43 @@ export default function NuevaRutinaPage() {
             )}
           </div>
 
+          {/* Intended audience */}
+          <div className="space-y-1.5">
+            <label htmlFor="audience" className="block text-sm font-medium text-[#FAFAFA]">
+              Diseñada para
+            </label>
+            <Select
+              value={watch("audience")}
+              onValueChange={(value) =>
+                setValue("audience", value as CreateRoutineInput["audience"], {
+                  shouldValidate: true,
+                })
+              }
+            >
+              <SelectTrigger
+                id="audience"
+                className="h-[42px] border-[#3F3F46] bg-[#27272A] text-sm text-[#FAFAFA]"
+              >
+                <SelectValue placeholder="Elegí el público de la rutina" />
+              </SelectTrigger>
+              <SelectContent className="border-[#3F3F46] bg-[#18181B]">
+                {ROUTINE_AUDIENCES.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    <span className="flex flex-col">
+                      <span>{option.label}</span>
+                      <span className="text-[11px] text-[#71717A]">{option.description}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.audience && (
+              <p role="alert" className="text-xs text-[#EF4444]">
+                {errors.audience.message}
+              </p>
+            )}
+          </div>
+
           {/* Goal */}
           <div className="space-y-1.5">
             <label htmlFor="goal" className="block text-sm font-medium text-[#FAFAFA]">
@@ -213,13 +248,16 @@ export default function NuevaRutinaPage() {
                 value={watch("goal")}
                 onValueChange={(val) => setValue("goal", val, { shouldValidate: true })}
               >
-                <SelectTrigger id="goal" className="flex-1 bg-[#27272A] border-[#3F3F46] h-[42px] text-sm text-[#FAFAFA]">
+                <SelectTrigger
+                  id="goal"
+                  className="flex-1 bg-[#27272A] border-[#3F3F46] h-[42px] text-sm text-[#FAFAFA]"
+                >
                   <SelectValue placeholder="Elegí un objetivo" />
                 </SelectTrigger>
                 <SelectContent className="bg-[#18181B] border-[#3F3F46] max-h-[300px]">
                   <SelectGroup>
                     <SelectLabel>Objetivos</SelectLabel>
-                    {BUILT_IN_GOALS.map(({ value, label }) => (
+                    {BUILT_IN_ROUTINE_GOALS.map(({ value, label }) => (
                       <SelectItem key={value} value={value} className="text-sm">
                         {label}
                       </SelectItem>

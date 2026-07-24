@@ -41,7 +41,10 @@ export default function ClientWelcomeEmail({
 }: ClientWelcomeEmailProps) {
   return (
     <Html lang="es-CR">
-      <Head />
+      <Head>
+        <meta name="color-scheme" content="light" />
+        <meta name="supported-color-schemes" content="light" />
+      </Head>
       <Preview>
         {trainerName} creó tu cuenta en {APP_NAME} — ingresá ahora
       </Preview>
@@ -128,22 +131,25 @@ export default function ClientWelcomeEmail({
 
 const styles = {
   body: {
-    backgroundColor: "#09090B",
+    backgroundColor: "#F4F7FB",
+    color: "#111827",
     fontFamily:
       "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     margin: "0",
     padding: "0",
   },
   container: {
-    backgroundColor: "#18181B",
-    borderRadius: "12px",
-    margin: "40px auto",
+    backgroundColor: "#FFFFFF",
+    border: "1px solid #E5E7EB",
+    borderRadius: "14px",
+    boxShadow: "0 10px 30px rgba(15, 23, 42, 0.08)",
+    margin: "28px auto",
     maxWidth: "520px",
     overflow: "hidden",
   },
   header: {
-    backgroundColor: "#0F1A2E",
-    padding: "24px 40px 16px",
+    backgroundColor: "#EAF1FF",
+    padding: "24px 32px 18px",
     textAlign: "center" as const,
   },
   logo_img: {
@@ -153,28 +159,29 @@ const styles = {
     height: "auto",
   },
   tagline: {
-    color: "#A1A1AA",
+    color: "#475569",
     fontSize: "13px",
     margin: "0",
     textAlign: "center" as const,
   },
   content: {
-    padding: "32px 40px",
+    backgroundColor: "#FFFFFF",
+    padding: "30px 34px",
   },
   title: {
-    color: "#FAFAFA",
+    color: "#111827",
     fontSize: "22px",
     fontWeight: "700",
     margin: "0 0 20px",
   },
   body_text: {
-    color: "#A1A1AA",
+    color: "#4B5563",
     fontSize: "15px",
     lineHeight: "24px",
     margin: "0 0 16px",
   },
   highlight: {
-    color: "#FAFAFA",
+    color: "#111827",
   },
   button_container: {
     margin: "28px 0 16px",
@@ -183,7 +190,7 @@ const styles = {
   button: {
     backgroundColor: "#2563EB",
     borderRadius: "8px",
-    boxShadow: "0 4px 14px rgba(37, 99, 235, 0.4)",
+    boxShadow: "0 4px 12px rgba(37, 99, 235, 0.22)",
     color: "#FFFFFF",
     display: "inline-block",
     fontSize: "16px",
@@ -192,37 +199,38 @@ const styles = {
     textDecoration: "none",
   },
   notice: {
-    color: "#71717A",
+    color: "#64748B",
     fontSize: "13px",
     margin: "0",
     textAlign: "center" as const,
   },
   divider: {
-    borderColor: "#3F3F46",
+    borderColor: "#E5E7EB",
     margin: "24px 0",
   },
   fallback: {
-    color: "#52525B",
+    color: "#6B7280",
     fontSize: "13px",
     margin: "0 0 8px",
   },
   fallback_link: {
-    color: "#2563EB",
+    color: "#1D4ED8",
     fontSize: "12px",
     wordBreak: "break-all" as const,
   },
   footer: {
-    backgroundColor: "#0F0F10",
-    padding: "20px 40px",
+    backgroundColor: "#F8FAFC",
+    borderTop: "1px solid #E5E7EB",
+    padding: "20px 34px",
   },
   footer_text: {
-    color: "#52525B",
+    color: "#64748B",
     fontSize: "12px",
     lineHeight: "20px",
     margin: "0 0 8px",
   },
   footer_link: {
-    color: "#71717A",
+    color: "#334155",
     textDecoration: "underline",
   },
 } as const;

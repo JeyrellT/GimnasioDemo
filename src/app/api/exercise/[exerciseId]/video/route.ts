@@ -27,14 +27,13 @@ import {
 } from "@/server/lib/drive-video-proxy";
 import { isSupportedVideoUrl } from "@/lib/media/video-url";
 import { serveBundledExerciseVideo } from "@/server/lib/bundled-exercise-video";
+import { isSafeExerciseVideoId } from "@/server/lib/exercise-video-id";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Cuid2 pattern — Prisma's @default(cuid()) generates ~24-char alnum IDs.
 // Keep the pattern permissive but bounded to avoid wild SSRF-like inputs.
-const EXERCISE_ID_PATTERN = /^[A-Za-z0-9]{1,32}$/;
-
 async function resolveEffectiveMediaUrl(
   exerciseId: string,
   trainerUserId: string | null,
@@ -111,7 +110,7 @@ export async function GET(
   { params }: { params: Promise<{ exerciseId: string }> },
 ): Promise<Response> {
   const { exerciseId } = await params;
-  if (!EXERCISE_ID_PATTERN.test(exerciseId)) {
+  if (!isSafeExerciseVideoId(exerciseId)) {
     return new NextResponse("Invalid exerciseId", { status: 400 });
   }
 
