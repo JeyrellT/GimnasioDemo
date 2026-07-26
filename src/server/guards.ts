@@ -22,7 +22,7 @@ import type {
   TrainerSubscription,
   ConsentType,
   UserRole,
-  SubscriptionStatus,
+  SubscriptionTier,
 } from "@prisma/client";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -36,6 +36,10 @@ import {
   IMPERSONATION_COOKIE_NAME,
   verifyImpersonation,
 } from "@/lib/impersonation";
+import {
+  evaluateSubscriptionAccess,
+  type SubscriptionLockReason,
+} from "@/lib/subscription";
 
 // -----------------------------------------------------------------------------
 // TypeScript types
@@ -162,15 +166,6 @@ const fetchUserById = cache(async (id: string): Promise<UserWithProfile | null> 
     } as UserWithProfile;
   }
 });
-
-// -----------------------------------------------------------------------------
-// Active subscription statuses
-// -----------------------------------------------------------------------------
-
-const ACTIVE_SUBSCRIPTION_STATUSES: SubscriptionStatus[] = [
-  "TRIAL",
-  "ACTIVE",
-];
 
 // -----------------------------------------------------------------------------
 // Impersonation: internal helper
@@ -464,7 +459,11 @@ export async function assertOwnsClient(
 
 /**
  * Get the active TrainerSubscription for a trainer.
- * Returns null if the trainer has no active subscription (TRIAL or ACTIVE).
+ * Returns null when the trainer has no subscription OR the subscription window
+ * has lapsed. Access is decided by evaluateSubscriptionAccess, which now expires
+ * TRIAL / ACTIVE subscriptions by DATE (trialEndsAt / currentPeriodEnd) — not
+ * just by status. READ_ONLY / PAST_DUE / CANCELLED and elapsed windows all
+ * return null so callers gate writes.
  *
  * @param trainerId  Optional — defaults to the current session's user id.
  */
@@ -480,16 +479,56 @@ export async function getActiveTrainerSubscription(
 
   if (!resolvedId) return null;
 
-  // Look for any subscription in an "active-enough" state.
-  // READ_ONLY / PAST_DUE / CANCELLED are intentionally excluded.
-  const sub = await prisma.trainerSubscription.findFirst({
-    where: {
-      trainerUserId: resolvedId,
-      status: { in: ACTIVE_SUBSCRIPTION_STATUSES },
+  // trainerUserId is unique — fetch the single row and let the evaluator decide.
+  const sub = await prisma.trainerSubscription.findUnique({
+    where: { trainerUserId: resolvedId },
+  });
+
+  if (!sub) return null;
+
+  return evaluateSubscriptionAccess(sub, new Date()).active ? sub : null;
+}
+
+// -----------------------------------------------------------------------------
+// Renew wall (full-screen interface pause)
+// -----------------------------------------------------------------------------
+
+export interface TrainerRenewWall {
+  reason: SubscriptionLockReason;
+  planTier: SubscriptionTier;
+  trialEndsAt: Date | null;
+  currentPeriodEnd: Date | null;
+}
+
+/**
+ * If the trainer's subscription requires the full-screen renew wall (trial or
+ * paid window lapsed, past-due, or cancelled), return the data the wall needs
+ * to render. Returns null when the trainer may keep using the app — including
+ * the READ_ONLY soft-disable and the no-subscription edge case, which are NOT
+ * walled. Never throws (callers render the app on any unexpected failure).
+ */
+export async function getTrainerRenewWall(
+  userId: string,
+): Promise<TrainerRenewWall | null> {
+  const sub = await prisma.trainerSubscription.findUnique({
+    where: { trainerUserId: userId },
+    select: {
+      status: true,
+      trialEndsAt: true,
+      currentPeriodEnd: true,
+      planTier: true,
     },
   });
 
-  return sub;
+  const access = evaluateSubscriptionAccess(sub, new Date());
+  if (!access.locked || !sub) return null;
+
+  return {
+    reason: access.reason as SubscriptionLockReason,
+    planTier: sub.planTier,
+    trialEndsAt: sub.trialEndsAt,
+    currentPeriodEnd: sub.currentPeriodEnd,
+  };
 }
 
 /**

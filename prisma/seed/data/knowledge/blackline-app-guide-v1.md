@@ -40,7 +40,7 @@ Hechos que el asistente debe interiorizar (cada uno tiene su sección dedicada c
 
 | Rol | Path raíz | Cómo se obtiene |
 |---|---|---|
-| `TRAINER` | `/trainer/*` | Sign-up directo (con trial 30 días) |
+| `TRAINER` | `/trainer/*` | Sign-up directo (con trial 15 días) |
 | `CLIENT` | `/client/*` | Solo por invitación de un trainer (`quick_add_client` o onboarding wizard) |
 | `ADMIN` | `/admin/*` | Asignado manualmente; modera contenido y referrals |
 | `SUPER_ADMIN` | `/admin/*` (con tabs extra) | Asignación manual; puede suspender usuarios |
@@ -488,15 +488,15 @@ DB: `blackline-assistant` / store `state` / key `blackline-assistant-conv-v1`. S
 
 Precios incluyen IVA 13%.
 
-`requireActiveSubscription()` es un guard que corre antes de cualquier mutation (crear cliente, asignar rutina, registrar gasto). Si el trainer:
-- Está en `TRIAL` (primeros 30 días desde signup): pasa sin chequear plan.
-- Está en `ACTIVE`: pasa.
-- Está en `PAST_DUE` o `CANCELLED`: rechaza con `SUBSCRIPTION_NOT_ACTIVE`.
-- Está en `READ_ONLY` (grace de 14 días post-impago): rechaza writes, permite reads.
+`requireActiveSubscription()` es un guard que corre antes de cualquier mutation (crear cliente, asignar rutina, registrar gasto). El acceso se evalúa por FECHA (no solo por status) vía `evaluateSubscriptionAccess()` en `src/lib/subscription.ts`. Si el trainer:
+- Está en `TRIAL` y `trialEndsAt` no venció (primeros 15 días desde signup): pasa sin chequear plan.
+- Está en `ACTIVE` y `currentPeriodEnd` no venció: pasa.
+- Tiene el `TRIAL` vencido, el período `ACTIVE` vencido, `PAST_DUE` o `CANCELLED`: rechaza writes Y el layout `(app)` reemplaza toda la interfaz del trainer con el muro de renovación (`TrialLockedScreen`) hasta que pague vía ONVO.
+- Está en `READ_ONLY` (grace de 14 días post-impago): rechaza writes, permite reads (sin muro de pantalla completa).
 
 #### 10.2 Trial y grace period
 
-- `TRIAL_DAYS`: 30
+- `TRIAL_DAYS`: 15
 - `READ_ONLY_GRACE_DAYS`: 14
 - `INVITATION_EXPIRY_DAYS`: 7 (links de invitación que un trainer manda a clientes)
 - `MAGIC_LINK_EXPIRY_MIN`: 15
@@ -812,7 +812,7 @@ Reglas del modo agéntico (definidas en el system prompt):
 | `DEFAULT_TZ` | "America/Costa_Rica" | Timezone |
 | `DEFAULT_CURRENCY` | "CRC" | Moneda |
 | `IVA_PCT` | 0.13 | IVA Costa Rica |
-| `TRIAL_DAYS` | 30 | Trial de trainers |
+| `TRIAL_DAYS` | 15 | Trial de trainers |
 | `READ_ONLY_GRACE_DAYS` | 14 | Grace post-impago |
 | `INVITATION_EXPIRY_DAYS` | 7 | Links invitación |
 | `MAGIC_LINK_EXPIRY_MIN` | 15 | Auth magic links |

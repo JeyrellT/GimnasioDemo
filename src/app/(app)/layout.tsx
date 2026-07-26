@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { ClientLayout } from "./_client-layout";
 import { ImpersonationBanner } from "./admin/_components/impersonation-banner";
-import { getCurrentUser } from "@/server/guards";
+import { getCurrentUser, getTrainerRenewWall } from "@/server/guards";
+import { TrialLockedScreen } from "@/components/billing/trial-locked-screen";
 import {
   getAdminMirrorDirectory,
   getCurrentImpersonation,
@@ -47,6 +48,30 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const impersonation = impersonationResult.ok
     ? impersonationResult.value
     : null;
+
+  // ── Renew wall (interface pause) ───────────────────────────────────────────
+  // When a real trainer's subscription window has lapsed (trial ended, paid
+  // period expired, past-due, or cancelled) we replace the ENTIRE app shell
+  // with the renew wall — they can only pay to reactivate or sign out.
+  // Skipped while a SUPER_ADMIN is impersonating so admins can still investigate
+  // a locked account, and never applies to clients/admins (no subscription).
+  const isImpersonating = Boolean(impersonation?.isImpersonating);
+  if (currentUser?.role === "TRAINER" && !isImpersonating) {
+    const wall = await getTrainerRenewWall(currentUser.id);
+    if (wall) {
+      return (
+        <TrialLockedScreen
+          reason={wall.reason}
+          planTier={wall.planTier}
+          trialEndsAt={wall.trialEndsAt ? wall.trialEndsAt.toISOString() : null}
+          currentPeriodEnd={
+            wall.currentPeriodEnd ? wall.currentPeriodEnd.toISOString() : null
+          }
+        />
+      );
+    }
+  }
+
   const effectiveUser = currentUser
     ? {
         id: currentUser.id,
