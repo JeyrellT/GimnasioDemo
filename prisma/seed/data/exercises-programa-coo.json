@@ -1,0 +1,682 @@
+[
+  {
+    "pdfName": "Desplante búlgaro mancuerna",
+    "slug": "bulgarian-split-squat-dumbbell",
+    "nameEs": "Desplante búlgaro con mancuernas",
+    "nameEn": "Dumbbell Bulgarian Split Squat",
+    "instructionsEs": "1. Poné un banco detrás de vos, más o menos a la altura de las rodillas. Agarrá una mancuerna en cada mano con los brazos sueltos a los lados.\n2. Parate de espaldas al banco y subí el empeine de un pie sobre él. Con la otra pierna adelantá un paso largo.\n3. Bajá despacio doblando la rodilla de adelante, hasta que la rodilla de atrás casi toque el piso. Mantené el pecho arriba.\n4. Empujá con el pie de adelante para volver a subir. La pierna de atrás solo te da equilibrio, no empuja.\n5. Completá todas las repeticiones con una pierna y después cambiá de lado.\nTip: el error más común es dejar que la rodilla de adelante se caiga hacia adentro. Mantenela apuntando en la misma línea que los dedos del pie.",
+    "primaryMuscle": "QUADS",
+    "secondaryMuscles": [
+      "GLUTES",
+      "HAMSTRINGS",
+      "ABS"
+    ],
+    "equipment": "DUMBBELL",
+    "difficulty": "INTERMEDIATE",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": null
+  },
+  {
+    "pdfName": "Sentadilla goblet con cuña",
+    "slug": "heels-elevated-goblet-squat",
+    "nameEs": "Sentadilla goblet con cuña (talones elevados)",
+    "nameEn": "Heels-Elevated Goblet Squat",
+    "instructionsEs": "1. Poné una cuña o un disco bajo debajo de los talones. Solo la parte de atrás del pie va arriba; los dedos quedan tocando el piso.\n2. Agarrá una mancuerna o kettlebell con las dos manos y sostenela pegada al pecho, como si fuera una copa.\n3. Parate con los pies al ancho de los hombros y los dedos apenas hacia afuera. Sacá pecho y apretá el abdomen.\n4. Bajá derecho doblando las rodillas y dejá que viajen hacia adelante por encima de los dedos. Bajá todo lo que puedas sin encorvar la espalda.\n5. Empujá el piso con todo el pie para subir, sin trabar las rodillas al llegar arriba.\nTip: el error más común es encorvar la espalda alta al bajar. Mantené el pecho levantado y los codos apuntando al piso todo el movimiento.",
+    "primaryMuscle": "QUADS",
+    "secondaryMuscles": [
+      "GLUTES",
+      "ABS"
+    ],
+    "equipment": "DUMBBELL",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": null
+  },
+  {
+    "pdfName": "Sentadilla sumo con KTB",
+    "slug": "kettlebell-sumo-squat",
+    "nameEs": "Sentadilla sumo con kettlebell",
+    "nameEn": "Kettlebell Sumo Squat",
+    "instructionsEs": "1. Parate con los pies bastante más abiertos que los hombros y los dedos apuntando hacia afuera, más o menos 45 grados.\n2. Agarrá la kettlebell con las dos manos por el mango y dejala colgando entre las piernas, con los brazos rectos.\n3. Sacá pecho, apretá el abdomen y bajá doblando las rodillas mientras llevás la cadera hacia atrás, hasta que los muslos queden casi paralelos al piso.\n4. Cuidá que las rodillas se abran hacia afuera siguiendo la línea de los dedos de los pies, y que no se junten.\n5. Empujá con los talones para subir y apretá los glúteos al llegar arriba.\nTip: el error más común es tirar el pecho hacia adelante y redondear la espalda baja. Mantené el torso lo más derecho posible; si no lo lográs, usá menos peso.",
+    "primaryMuscle": "GLUTES",
+    "secondaryMuscles": [
+      "QUADS",
+      "HAMSTRINGS",
+      "ABS"
+    ],
+    "equipment": "KETTLEBELL",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": null
+  },
+  {
+    "pdfName": "Máquina abductor",
+    "slug": "seated-hip-abduction-machine",
+    "nameEs": "Máquina de abductores sentado",
+    "nameEn": "Seated Hip Abduction Machine",
+    "instructionsEs": "1. Sentate en la máquina con la espalda bien apoyada en el respaldo y las piernas por dentro de las almohadillas.\n2. Ajustá la máquina para arrancar con las piernas juntas, sin que la cadera te quede incómoda. Agarrá las manijas de los lados.\n3. Apretá los glúteos y abrí las piernas empujando las almohadillas hacia afuera, todo lo que la máquina te permita.\n4. Aguantá un segundo bien abierto, sintiendo el trabajo en la parte de afuera de la cadera.\n5. Volvé a juntar las piernas despacio, contando unos 2 segundos.\nTip: el error más común es soltar el peso de regreso de golpe. La mitad del trabajo está en cerrar las piernas lento y con control.",
+    "primaryMuscle": "GLUTES",
+    "secondaryMuscles": [
+      "ABS",
+      "OBLIQUES"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": null
+  },
+  {
+    "pdfName": "Extensión de rodilla",
+    "slug": "leg-extension",
+    "nameEs": "Extensión de piernas",
+    "nameEn": "Leg Extension",
+    "instructionsEs": "1. Sentate en la máquina con la espalda pegada al respaldo y el rodillo apoyado sobre la parte baja de las canillas, justo arriba de los tobillos.\n2. Ajustá el asiento para que la rodilla quede alineada con el eje donde gira la máquina.\n3. Agarrá las manijas de los lados para no despegarte del asiento.\n4. Estirá las piernas hasta dejarlas rectas y apretá el muslo fuerte un segundo arriba.\n5. Bajá el peso despacio hasta casi tocar la pila, sin dejar que las placas golpeen.\nTip: el error más común es tirar el peso con impulso y trabar la rodilla de golpe al estirar. Movete lento y controlado en las dos direcciones.",
+    "primaryMuscle": "QUADS",
+    "secondaryMuscles": [
+      "ABS"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": "leg-extension",
+    "note": null
+  },
+  {
+    "pdfName": "Máquina hip trust",
+    "slug": "machine-hip-thrust",
+    "nameEs": "Empuje de cadera en máquina",
+    "nameEn": "Machine Hip Thrust",
+    "instructionsEs": "1. Sentate en la máquina con la espalda apoyada en el respaldo acolchado y pasá la almohadilla o el cinturón sobre la cadera, nunca sobre la panza.\n2. Poné los pies en la plataforma al ancho de los hombros, con las rodillas dobladas y los talones bien apoyados.\n3. Apretá el abdomen y empujá con los talones para levantar la cadera, hasta que el cuerpo quede en línea recta de las rodillas a los hombros.\n4. Apretá los glúteos fuerte un segundo arriba, sin arquear la espalda baja.\n5. Bajá la cadera despacio hasta la posición inicial, sin soltar del todo la tensión.\nTip: el error más común es empujar de más y arquear la espalda arriba. Meté un poco la pelvis y pará cuando el cuerpo esté recto, no más allá.",
+    "primaryMuscle": "GLUTES",
+    "secondaryMuscles": [
+      "HAMSTRINGS",
+      "QUADS",
+      "ABS"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": null
+  },
+  {
+    "pdfName": "Prensa horizontal",
+    "slug": "horizontal-leg-press",
+    "nameEs": "Prensa horizontal",
+    "nameEn": "Horizontal Leg Press",
+    "instructionsEs": "1. Sentate en la prensa con la espalda y la cadera bien pegadas al respaldo. Ajustá el asiento para que las rodillas queden dobladas cerca de 90 grados.\n2. Poné los pies en la plataforma al ancho de los hombros, con los dedos apenas hacia afuera y toda la planta apoyada.\n3. Agarrá las manijas de los lados y soltá las trabas de seguridad si la máquina las tiene.\n4. Empujá la plataforma con los talones hasta casi estirar las piernas, sin trabar las rodillas.\n5. Volvé despacio doblando las rodillas, hasta donde puedas sin que la cadera se despegue del asiento.\nTip: el error más común es bajar tanto que la espalda baja se levanta del respaldo. Justo ahí es donde se lastima la lumbar: frená antes de llegar a ese punto.",
+    "primaryMuscle": "QUADS",
+    "secondaryMuscles": [
+      "GLUTES",
+      "HAMSTRINGS"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": "leg-press",
+    "note": null
+  },
+  {
+    "pdfName": "Jalón abierto",
+    "slug": "cable-lat-pulldown",
+    "nameEs": "Jalón dorsal agarre abierto",
+    "nameEn": "Wide-Grip Lat Pulldown",
+    "instructionsEs": "1. Sentate en la máquina y ajustá la almohadilla de los muslos para que las piernas queden bien trabadas y el cuerpo no se levante.\n2. Agarrá la barra por fuera del ancho de los hombros, con las palmas viendo hacia adelante y los brazos estirados arriba.\n3. Sacá pecho, bajá los hombros lejos de las orejas y mantené la espalda firme.\n4. Jalá la barra hasta la parte alta del pecho llevando los codos hacia abajo y hacia afuera. Botá el aire mientras jalás.\n5. Apretá un segundo la espalda y dejá subir la barra despacio hasta estirar los brazos por completo.\nTip: el error más común es tirarse hacia atrás y usar el envión del cuerpo para bajar la barra. Si tenés que columpiarte, bajale al peso: el que trabaja es la espalda, no el impulso.",
+    "primaryMuscle": "BACK",
+    "secondaryMuscles": [
+      "BICEPS",
+      "SHOULDERS",
+      "FOREARMS"
+    ],
+    "equipment": "CABLE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": "cable-lat-pulldown",
+    "note": null
+  },
+  {
+    "pdfName": "Jalón cerrado",
+    "slug": "close-grip-lat-pulldown",
+    "nameEs": "Jalón dorsal agarre cerrado",
+    "nameEn": "Close-Grip Lat Pulldown",
+    "instructionsEs": "1. Poné en la polea alta el triángulo o una barra corta y sentate trabando los muslos bajo la almohadilla.\n2. Agarrá el accesorio con las manos juntas, casi pegadas, y estirá los brazos hacia arriba.\n3. Sacá pecho, inclinate apenas hacia atrás (nada exagerado) y mantené la espalda derecha.\n4. Jalá hacia el pecho llevando los codos pegados a las costillas, hasta sentir que se juntan los omóplatos.\n5. Volvé despacio, contando dos segundos, hasta estirar los brazos del todo sin soltar la tensión de golpe.\nTip: el error más común es jalar solo con los brazos y encorvar la espalda. Pensá en 'bajar los codos hacia los bolsillos del pantalón' y dejá que las manos sean apenas un gancho.",
+    "primaryMuscle": "BACK",
+    "secondaryMuscles": [
+      "BICEPS",
+      "FOREARMS",
+      "SHOULDERS"
+    ],
+    "equipment": "CABLE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": null
+  },
+  {
+    "pdfName": "Elevación lateral mancuerna",
+    "slug": "dumbbell-lateral-raise",
+    "nameEs": "Elevación lateral con mancuernas",
+    "nameEn": "Dumbbell Lateral Raise",
+    "instructionsEs": "1. Parate con los pies al ancho de las caderas y una mancuerna en cada mano, a los lados del cuerpo.\n2. Doblá apenas los codos y dejalos así todo el ejercicio, como si llevaras dos baldes de agua.\n3. Subí los brazos hacia los lados hasta la altura de los hombros, no más arriba, con los codos un poquito adelante del cuerpo.\n4. Pará un instante arriba y bajá lento, contando dos segundos, sin dejar caer el peso.\nTip: si tenés que dar un envión con la cadera o se te suben los hombros hacia las orejas, el peso está muy pesado. Este es un ejercicio de poco peso y mucho control; no gires las muñecas con el pulgar hacia abajo porque le pega al hombro.",
+    "primaryMuscle": "SHOULDERS",
+    "secondaryMuscles": [
+      "BACK"
+    ],
+    "equipment": "DUMBBELL",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": "dumbbell-lateral-raise",
+    "note": null
+  },
+  {
+    "pdfName": "Pull over polea",
+    "slug": "cable-straight-arm-pullover",
+    "nameEs": "Pull over en polea",
+    "nameEn": "Cable Straight-Arm Pullover",
+    "instructionsEs": "1. Poné una barra recta o un mecate en la polea alta, más arriba de tu cabeza.\n2. Parate de frente a la máquina, como a un paso de distancia, con los pies al ancho de las caderas y las rodillas apenas dobladas.\n3. Agarrá el accesorio con los brazos estirados adelante, inclinate un poquito desde la cadera y mantené el pecho arriba y el abdomen apretado.\n4. Sin doblar los codos, bajá los brazos en arco hasta que las manos lleguen a los muslos. Apretá la espalda al final.\n5. Regresá despacio dejando que los brazos suban controlados hasta el punto de partida, sintiendo el estirón en los costados de la espalda.\nTip: el error más común es doblar los codos y convertirlo en una extensión de tríceps. Los brazos van casi rectos todo el rato; si no podés mantenerlos así, bajale al peso.",
+    "primaryMuscle": "BACK",
+    "secondaryMuscles": [
+      "TRICEPS",
+      "SHOULDERS",
+      "ABS"
+    ],
+    "equipment": "CABLE",
+    "difficulty": "INTERMEDIATE",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": null
+  },
+  {
+    "pdfName": "Extensión codo mecate",
+    "slug": "cable-tricep-pushdown",
+    "nameEs": "Extensión de tríceps con mecate",
+    "nameEn": "Triceps Rope Pushdown",
+    "instructionsEs": "1. Enganchá el mecate en la polea alta, un poco arriba de la altura de la cabeza.\n2. Agarrá las dos puntas del mecate con las palmas viendo una hacia la otra y pegá los codos a las costillas.\n3. Parate firme, con un pie apenas adelante y el cuerpo inclinado un poquito hacia adelante.\n4. Estirá los codos empujando el mecate hacia abajo y separá las manos al final del recorrido, como abriendo una V.\n5. Subí despacio hasta que las manos queden a la altura del pecho, sin despegar los codos del cuerpo.\nTip: el error más común es poner demasiado peso y ayudarse con el cuerpo. Los codos son la bisagra y no se mueven de lugar; si se te van hacia adelante o hacia los lados, estás usando hombro y espalda.",
+    "primaryMuscle": "TRICEPS",
+    "secondaryMuscles": [
+      "FOREARMS",
+      "SHOULDERS",
+      "ABS"
+    ],
+    "equipment": "CABLE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": "cable-tricep-pushdown",
+    "note": null
+  },
+  {
+    "pdfName": "Remo máquina individual",
+    "slug": "machine-single-arm-row",
+    "nameEs": "Remo en máquina a un brazo",
+    "nameEn": "Machine Single-Arm Row",
+    "instructionsEs": "1. Ajustá el asiento para que las manijas queden a la altura del pecho y sentate con el pecho apoyado en la almohadilla.\n2. Agarrá una sola manija y estirá ese brazo hacia adelante, dejando que el hombro se estire al final.\n3. Jalá la manija hacia la costilla llevando el codo pegado al cuerpo, hasta que la mano quede al lado del abdomen.\n4. Apretá un segundo el omóplato hacia atrás y hacia abajo, sin girar el tronco.\n5. Estirá el brazo de vuelta despacio y repetí. Al terminar las repeticiones, cambiá de lado con el mismo peso.\nTip: el error más común es girar el cuerpo para ayudarse a jalar. Mantené los hombros parejos y el pecho pegado a la almohadilla; el que jala es el brazo, no la cintura.",
+    "primaryMuscle": "BACK",
+    "secondaryMuscles": [
+      "BICEPS",
+      "SHOULDERS",
+      "FOREARMS",
+      "OBLIQUES"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": null
+  },
+  {
+    "pdfName": "Máquina jalón dorsal supino",
+    "slug": "reverse-grip-lat-pulldown",
+    "nameEs": "Jalón dorsal agarre supino",
+    "nameEn": "Reverse-Grip Lat Pulldown",
+    "instructionsEs": "1. Sentate en la máquina y trabá los muslos bajo la almohadilla para que el cuerpo no se levante al jalar.\n2. Agarrá la barra con las palmas viendo hacia vos (agarre invertido), a la anchura de los hombros o un poco menos.\n3. Estirá los brazos hacia arriba, sacá pecho y bajá los hombros lejos de las orejas.\n4. Jalá la barra hacia la parte alta del pecho llevando los codos hacia abajo y hacia atrás, siempre pegados al cuerpo.\n5. Apretá un segundo la espalda abajo y subí controlado hasta estirar los brazos por completo.\nTip: con este agarre los bíceps ayudan mucho, así que es fácil terminar jalando solo con los brazos. Pensá en llevar los codos hacia los bolsillos del pantalón para que el trabajo se lo lleve la espalda.",
+    "primaryMuscle": "BACK",
+    "secondaryMuscles": [
+      "BICEPS",
+      "FOREARMS",
+      "SHOULDERS"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": null
+  },
+  {
+    "pdfName": "Fondos asistidos",
+    "slug": "machine-assisted-dip",
+    "nameEs": "Fondos en máquina asistida",
+    "nameEn": "Machine-Assisted Dip",
+    "instructionsEs": "1. Ajustá el peso de la asistencia: entre más peso le pongás a la almohadilla, más fácil se vuelve el ejercicio.\n2. Subite a la máquina y apoyá las rodillas o los pies en la almohadilla. Agarrá las manijas con los brazos estirados.\n3. Mantené el pecho arriba, el abdomen apretado y los codos apuntando hacia atrás, cerca del cuerpo.\n4. Bajá despacio doblando los codos hasta que los brazos queden más o menos en ángulo recto. No bajés más de lo que aguanten cómodos los hombros.\n5. Empujá las manijas para subir hasta estirar los brazos, sin trabar los codos de golpe.\nTip: el error más común es dejarse caer y hundir los hombros hacia las orejas. Bajá controlado y, si sentís molestia en el frente del hombro, acortá el recorrido o subí la asistencia.",
+    "primaryMuscle": "TRICEPS",
+    "secondaryMuscles": [
+      "CHEST",
+      "SHOULDERS"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": null
+  },
+  {
+    "pdfName": "Peso muerto en Smith",
+    "slug": "smith-machine-deadlift",
+    "nameEs": "Peso muerto en máquina Smith",
+    "nameEn": "Smith Machine Deadlift",
+    "instructionsEs": "1. Poné la barra del Smith en el gancho más bajo y parate con los pies al ancho de las caderas, con la barra casi pegada a las canillas.\n2. Agachate doblando caderas y rodillas y agarrá la barra un poco más afuera de las piernas. Sacá el pecho y dejá la espalda recta.\n3. Girá las muñecas para destrabar la barra. Empujá el piso con los pies y subí estirando las piernas y las caderas al mismo tiempo.\n4. Arriba quedate firme y apretá los glúteos un segundo, sin echarte para atrás ni encorvar los hombros.\n5. Bajá despacio devolviendo las caderas hacia atrás, rozando las piernas con la barra, hasta el punto más bajo.\n6. Tip: el error más común es redondear la espalda baja al levantar. Si sentís que se te curva, bajale al peso — la espalda siempre va recta.",
+    "primaryMuscle": "HAMSTRINGS",
+    "secondaryMuscles": [
+      "GLUTES",
+      "BACK",
+      "QUADS"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "INTERMEDIATE",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "No se reusa conventional-deadlift: la barra del Smith va sobre un riel fijo, el equipo es MACHINE y no BARBELL, y la carga cae más sobre femoral y glúteo porque la máquina hace el trabajo de estabilización."
+  },
+  {
+    "pdfName": "Flexión de rodilla acostada",
+    "slug": "lying-leg-curl",
+    "nameEs": "Flexión de rodilla acostada (femoral)",
+    "nameEn": "Lying Leg Curl",
+    "instructionsEs": "1. Acostate boca abajo en la máquina con el rodillo apoyado justo arriba de los talones.\n2. Agarrate de las manijas y pegá las caderas al banco. Las rodillas quedan justo al borde del asiento.\n3. Doblá las rodillas y jalá los talones hacia los glúteos lo más que podás, sin despegar la cadera del banco.\n4. Apretá un segundo arriba y bajá despacio hasta estirar bien las piernas, sin dejar que el peso se caiga solo.\n5. Tip: el error más común es levantar la cadera del banco para ayudarse con impulso. Si te pasa, bajale al peso y mové solo de la rodilla para abajo.",
+    "primaryMuscle": "HAMSTRINGS",
+    "secondaryMuscles": [
+      "CALVES",
+      "GLUTES"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": "lying-leg-curl",
+    "note": "Ya existe en el catálogo. El gemelo (CALVES) entra como secundario real porque cruza la rodilla y ayuda a doblarla."
+  },
+  {
+    "pdfName": "Flexión de rodilla sentada",
+    "slug": "seated-leg-curl",
+    "nameEs": "Flexión de rodilla sentada (femoral)",
+    "nameEn": "Seated Leg Curl",
+    "instructionsEs": "1. Sentate en la máquina y acomodá el respaldo para que la espalda te quede bien apoyada.\n2. Ajustá el asiento para que las rodillas queden alineadas con el eje que gira a los lados de la máquina.\n3. Poné las piernas sobre el rodillo de abajo, justo arriba de los talones, y bajá la almohadilla del muslo para que no te levantés.\n4. Doblá las rodillas y llevá los talones hacia abajo y atrás, lo más lejos que podás.\n5. Apretá un segundo y volvé despacio, dejando que el femoral se estire completo antes de la siguiente repetición.\n6. Tip: el error más común es despegar la espalda del respaldo o subir la cadera para jalar más peso. Quedate pegado al asiento y mové solo de la rodilla para abajo.",
+    "primaryMuscle": "HAMSTRINGS",
+    "secondaryMuscles": [
+      "CALVES"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "Ejercicio distinto al lying-leg-curl: sentado la cadera queda flexionada y el femoral trabaja más estirado. No se listan GLUTES como secundario porque el glúteo no cruza la rodilla y aquí solo hay flexión de rodilla."
+  },
+  {
+    "pdfName": "Prensa",
+    "slug": "leg-press",
+    "nameEs": "Prensa de piernas",
+    "nameEn": "Leg Press",
+    "instructionsEs": "1. Sentate en la prensa con la espalda y la cadera bien pegadas al respaldo.\n2. Poné los pies sobre la plataforma al ancho de los hombros, con las puntas apenas hacia afuera.\n3. Estirá las piernas para soltar las trabas de seguridad y agarrate de las manijas.\n4. Bajá la plataforma despacio doblando las rodillas hasta unos 90 grados, sin que la cola se despegue del asiento.\n5. Empujá con toda la planta del pie hasta casi estirar las piernas, sin trabar las rodillas de golpe.\n6. Tip: el error más común es bajar demasiado y levantar la cola del asiento, lo que curva la espalda baja. Bajá solo hasta donde la cadera siga apoyada.",
+    "primaryMuscle": "QUADS",
+    "secondaryMuscles": [
+      "GLUTES",
+      "HAMSTRINGS",
+      "CALVES"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": "leg-press",
+    "note": "Ya existe en el catálogo. Aunque el coach lo puso en día de cadena posterior, el músculo primario real es el cuádriceps; glúteo, aductor mayor (mapeado a HAMSTRINGS) y sóleo entran como sinergistas."
+  },
+  {
+    "pdfName": "Máquina de pantorrillas",
+    "slug": "standing-calf-raise-machine",
+    "nameEs": "Elevación de pantorrillas en máquina",
+    "nameEn": "Standing Calf Raise Machine",
+    "instructionsEs": "1. Metete debajo de las almohadillas y apoyá los hombros. Poné la punta de los pies en el escalón, con los talones al aire.\n2. Estirá las piernas para levantar el peso y quedate parado con las rodillas derechas, pero sin trabarlas.\n3. Bajá los talones despacio todo lo que podás, hasta sentir el estirón en la pantorrilla.\n4. Subí empujando con la punta de los pies lo más alto que puedas, como si te pararas en puntillas.\n5. Apretá un segundo arriba y volvé a bajar controlado, sin rebotar.\n6. Tip: el error más común es hacer rebotes rápidos con medio recorrido. Hacelo lento y completo, arriba y abajo, aunque tengás que bajarle al peso.",
+    "primaryMuscle": "CALVES",
+    "secondaryMuscles": [
+      "QUADS",
+      "ABS"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "Descrito en versión de pie (rodilla estirada), que es la máquina de pantorrillas más común: ahí el gemelo es el objetivo y el sóleo el sinergista — ambos caen bajo CALVES. Los secundarios son estabilizadores: el cuádriceps mantiene la rodilla estirada y el core sostiene el tronco bajo la carga."
+  },
+  {
+    "pdfName": "Hip trust con una pierna",
+    "slug": "single-leg-hip-thrust",
+    "nameEs": "Hip thrust a una pierna",
+    "nameEn": "Single-Leg Hip Thrust",
+    "instructionsEs": "1. Sentate en el piso con la espalda apoyada en un banco, justo debajo de los omóplatos.\n2. Doblá una pierna y apoyá bien ese pie en el piso, más o menos a un paso de la cola. Levantá la otra pierna del suelo.\n3. Meté un poco la barbilla al pecho, apretá la panza y empujá con el talón de la pierna de apoyo para subir la cadera.\n4. Subí hasta que el cuerpo quede como una tabla desde los hombros hasta la rodilla, y apretá fuerte el glúteo un segundo.\n5. Bajá despacio sin dejar caer la cadera de golpe. Terminá todas las repeticiones y cambiá de pierna.\n6. Tip: el error más común es arquear la espalda baja para subir más alto. Si lo sentís en la espalda y no en el glúteo, subí menos y mantené las costillas hacia abajo.",
+    "primaryMuscle": "GLUTES",
+    "secondaryMuscles": [
+      "HAMSTRINGS",
+      "ABS",
+      "QUADS"
+    ],
+    "equipment": "BODYWEIGHT",
+    "difficulty": "INTERMEDIATE",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": null
+  },
+  {
+    "pdfName": "Máquina aductor",
+    "slug": "hip-adduction-machine",
+    "nameEs": "Máquina de aductores (parte interna del muslo)",
+    "nameEn": "Hip Adduction Machine",
+    "instructionsEs": "1. Sentate en la máquina con la espalda pegada al respaldo y las piernas por dentro de las almohadillas.\n2. Ajustá la abertura para que las piernas queden separadas pero sin que sientas jalón ni dolor en la parte interna del muslo.\n3. Agarrate de las manijas y cerrá las piernas juntando las rodillas, apretando la parte de adentro del muslo.\n4. Juntá hasta que las almohadillas casi se toquen y aguantá un segundo.\n5. Abrí las piernas despacio, controlando el peso, hasta volver al punto de partida sin que las placas choquen.\n6. Tip: el error más común es abrir demasiado desde el inicio o soltar el peso de golpe al abrir. Empezá con poca abertura y devolvete siempre lento.",
+    "primaryMuscle": "HAMSTRINGS",
+    "secondaryMuscles": [
+      "GLUTES",
+      "ABS"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "El músculo objetivo real son los aductores del muslo (aductor mayor, medio, menor y recto interno), y el enum no tiene ADDUCTORS. Se elige HAMSTRINGS porque el aductor mayor es el aductor más grande y su porción posterior (isquiocondílea) se conoce como el 'cuarto isquiotibial': nace en la tuberosidad isquiática igual que los femorales, se inserta en el fémur, la inerva la rama tibial del nervio ciático y se clasifica en el compartimento posterior del muslo. Además calza con el día de cadena posterior. GLUTES va como secundario porque el aductor mayor acompaña al glúteo mayor en la extensión de cadera, y ABS porque el core estabiliza la pelvis. Si algún día se agrega ADDUCTORS al enum, este ejercicio debe migrarse."
+  },
+  {
+    "pdfName": "Elevación frontal mancuerna",
+    "slug": "dumbbell-front-raise",
+    "nameEs": "Elevación frontal con mancuernas",
+    "nameEn": "Dumbbell Front Raise",
+    "instructionsEs": "1. Parate derecho, con los pies al ancho de las caderas y una mancuerna en cada mano al frente de los muslos, con las palmas viendo hacia las piernas.\n2. Apretá la panza y dejá los codos casi rectos, con una doblada leve que no cambia durante todo el movimiento.\n3. Subí las mancuernas al frente, despacio, hasta que queden a la altura de los hombros. No pasés de ahí.\n4. Pausá un segundo arriba y bajá contando dos o tres segundos, sin soltar el peso de golpe.\n5. Podés subir los dos brazos juntos o alternar uno a la vez.\n6. Tip: el error más común es tirar el cuerpo para atrás para ayudarse con impulso. Si necesitás mecerte para subir el peso, está muy pesado — bajale y mové solo los brazos.",
+    "primaryMuscle": "SHOULDERS",
+    "secondaryMuscles": [
+      "CHEST",
+      "ABS",
+      "BICEPS"
+    ],
+    "equipment": "DUMBBELL",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": "dumbbell-front-raise",
+    "note": null
+  },
+  {
+    "pdfName": "Press militar máquina",
+    "slug": "machine-shoulder-press",
+    "nameEs": "Press militar en máquina",
+    "nameEn": "Machine Shoulder Press",
+    "instructionsEs": "1. Sentate en la máquina con la espalda bien pegada al respaldo y los pies firmes en el piso.\n2. Ajustá el asiento hasta que las agarraderas te queden a la altura de los hombros, más o menos a la altura de las orejas.\n3. Agarrá los mangos con las palmas viendo hacia adelante, sacá pecho y apretá la panza para no arquear la cintura.\n4. Empujá hacia arriba hasta estirar los brazos, sin trancar los codos de golpe al final.\n5. Bajá despacio, contando dos segundos, hasta que los codos vuelvan a quedar a la altura de los hombros.\n6. Tip: el error más común es despegar la espalda del respaldo y arquear la cintura para poder empujar más peso. Si te pasa eso, bajale al peso y mantené la espalda apoyada todo el tiempo.",
+    "primaryMuscle": "SHOULDERS",
+    "secondaryMuscles": [
+      "TRICEPS",
+      "CHEST",
+      "BACK"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": null
+  },
+  {
+    "pdfName": "Elevación posterior mancuerna",
+    "slug": "dumbbell-rear-delt-raise",
+    "nameEs": "Elevación posterior con mancuernas",
+    "nameEn": "Bent-Over Dumbbell Rear Delt Raise",
+    "instructionsEs": "1. Parate con una mancuerna en cada mano y los pies al ancho de las caderas.\n2. Empujá la cola hacia atrás y bajá el pecho hasta que el tronco quede casi paralelo al piso. La espalda va recta, nunca redondeada.\n3. Dejá los brazos colgando debajo del pecho, con los codos apenas doblados y las palmas viendo una hacia la otra.\n4. Abrí los brazos hacia los lados como si fueran alas, llevando los codos hacia arriba, hasta que queden a la altura de los hombros.\n5. Apretá un segundo juntando los omóplatos y bajá despacio a la posición inicial.\n6. Tip: el error más común es agarrar mucho peso y terminar haciendo un remo con los codos pegados al cuerpo. Usá poco peso, guiá el movimiento con los codos y vas a sentirlo en la parte de atrás del hombro.",
+    "primaryMuscle": "SHOULDERS",
+    "secondaryMuscles": [
+      "BACK"
+    ],
+    "equipment": "DUMBBELL",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": null
+  },
+  {
+    "pdfName": "Bíceps hold",
+    "slug": "dumbbell-isometric-biceps-hold",
+    "nameEs": "Sostén isométrico de bíceps",
+    "nameEn": "Isometric Biceps Hold",
+    "instructionsEs": "1. Parate derecho con una mancuerna en cada mano, brazos estirados a los lados y las palmas viendo hacia adelante.\n2. Subí las mancuernas hasta que los codos queden doblados en 90 grados, o sea con el antebrazo paralelo al piso.\n3. Ahí te quedás quieto. Este ejercicio NO es de repeticiones: se SOSTIENE la posición sin moverse el tiempo que te indiquen (normalmente entre 20 y 45 segundos).\n4. Mantené los codos pegados a las costillas y no dejés que los brazos se vayan bajando poco a poco.\n5. Seguí respirando normal durante todo el sostén; no aguantés la respiración.\n6. Tip: el error más común es agarrar mucho peso y que los brazos se abran o se caigan. Si no podés mantener los 90 grados quietos, bajale al peso — cuando se rompe la posición, se termina la serie.",
+    "primaryMuscle": "BICEPS",
+    "secondaryMuscles": [
+      "FOREARMS",
+      "SHOULDERS"
+    ],
+    "equipment": "DUMBBELL",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": null
+  },
+  {
+    "pdfName": "Curl martillo",
+    "slug": "hammer-curl",
+    "nameEs": "Curl martillo",
+    "nameEn": "Dumbbell Hammer Curl",
+    "instructionsEs": "1. Parate derecho con una mancuerna en cada mano a los lados del cuerpo y las palmas viendo una hacia la otra, como si agarraras un martillo.\n2. Apretá la panza, sacá pecho y pegá los codos a las costillas.\n3. Subí la mancuerna hacia el hombro sin girar la muñeca: la palma siempre queda viendo hacia adentro.\n4. Apretá arriba un segundo y bajá despacio, contando dos o tres segundos, hasta estirar bien el brazo.\n5. Podés hacer los dos brazos juntos o uno a la vez.\n6. Tip: el error más común es adelantar los codos y mecer el cuerpo para subir el peso. Los codos se quedan quietos a los lados; si tenés que balancearte, agarrá una mancuerna más liviana.",
+    "primaryMuscle": "BICEPS",
+    "secondaryMuscles": [
+      "FOREARMS",
+      "SHOULDERS"
+    ],
+    "equipment": "DUMBBELL",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": "hammer-curl",
+    "note": null
+  },
+  {
+    "pdfName": "Face pull",
+    "slug": "cable-face-pull",
+    "nameEs": "Face pull en polea",
+    "nameEn": "Cable Face Pull",
+    "instructionsEs": "1. Ponele un mecate (cuerda) a la polea y ajustala a la altura de la cara o un poquito más arriba.\n2. Agarrá las dos puntas del mecate con las palmas viendo una hacia la otra y caminá para atrás hasta que el cable quede tenso y los brazos estirados.\n3. Parate firme, con un pie un poco adelante del otro, y apretá la panza.\n4. Jalá el mecate hacia la cara separando las manos, con los codos ARRIBA y abiertos hacia los lados, hasta que las manos te queden a los lados de las orejas.\n5. Apretá un segundo juntando los omóplatos y volvé despacio a la posición inicial, sin dejar que el peso te jale de golpe.\n6. Tip: el error más común es poner mucho peso y bajar los codos, y ahí deja de ser un face pull y se vuelve un remo. Usá peso liviano y mantené los codos a la altura de los hombros o más arriba.",
+    "primaryMuscle": "SHOULDERS",
+    "secondaryMuscles": [
+      "BACK",
+      "BICEPS",
+      "FOREARMS"
+    ],
+    "equipment": "CABLE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": null
+  },
+  {
+    "pdfName": "Plancha",
+    "slug": "plank",
+    "nameEs": "Plancha abdominal",
+    "nameEn": "Plank",
+    "instructionsEs": "1. Ponete boca abajo y apoyá los antebrazos en el piso, con los codos justo debajo de los hombros.\n2. Estirá las piernas para atrás y apoyate en la punta de los pies, con el cuerpo en línea recta desde la cabeza hasta los talones.\n3. Apretá la panza como si te fueran a dar un golpe, y apretá también los glúteos y los muslos. Meté un poquito la cola para no arquear la cintura.\n4. Este ejercicio NO es de repeticiones: se SOSTIENE la posición quieta el tiempo que te indiquen, sin subir ni bajar la cadera.\n5. Respirá normal durante todo el sostén y mirá hacia el piso para no forzar el cuello.\n6. Tip: el error más común es dejar caer la cadera o subirla como carpa. Si se te empieza a hundir la cintura, cortá la serie: vale más una plancha de 20 segundos bien hecha que una de un minuto mal hecha.",
+    "primaryMuscle": "ABS",
+    "secondaryMuscles": [
+      "OBLIQUES",
+      "SHOULDERS",
+      "GLUTES",
+      "BACK"
+    ],
+    "equipment": "BODYWEIGHT",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": "plank",
+    "note": null
+  },
+  {
+    "pdfName": "Thrusters",
+    "slug": "dumbbell-thruster",
+    "nameEs": "Thruster con mancuernas (sentadilla + press)",
+    "nameEn": "Dumbbell Thruster",
+    "instructionsEs": "1. Parate con los pies al ancho de los hombros y agarrá una mancuerna en cada mano. Subilas hasta los hombros, con las palmas viendo hacia adentro.\n2. Meté el ombligo, sacá pecho y bajá en sentadilla hasta que los muslos queden más o menos paralelos al piso. Mantené los talones pegados al suelo.\n3. Empujá el piso con fuerza para subir y aprovechá ese impulso de las piernas para lanzar las mancuernas por encima de la cabeza.\n4. Terminá con los brazos estirados arriba, las mancuernas alineadas con las orejas y el cuerpo derecho.\n5. Bajá las mancuernas de nuevo a los hombros y encadená la siguiente sentadilla sin parar.\nTip: el error más común es hacerlo en dos tiempos, primero la sentadilla y después el press. Es un solo movimiento continuo: la subida de las piernas es la que empuja el peso. Si tenés que frenar para poder empujar arriba, el peso está muy pesado.",
+    "primaryMuscle": "FULL_BODY",
+    "secondaryMuscles": [
+      "QUADS",
+      "SHOULDERS",
+      "GLUTES",
+      "TRICEPS"
+    ],
+    "equipment": "DUMBBELL",
+    "difficulty": "INTERMEDIATE",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "Movimiento compuesto de cuerpo completo (sentadilla frontal encadenada con press por encima de la cabeza). Las fuentes coinciden en que los motores principales son cuádriceps y hombros, por eso se marca FULL_BODY como primario y ambos como secundarios."
+  },
+  {
+    "pdfName": "Salto con sentadilla",
+    "slug": "squat-jump",
+    "nameEs": "Salto con sentadilla",
+    "nameEn": "Squat Jump",
+    "instructionsEs": "1. Parate con los pies al ancho de las caderas y los brazos a los lados. Apretá el abdomen.\n2. Bajá en sentadilla llevando la cola hacia atrás, hasta media altura. Llevá los brazos atrás para tomar impulso.\n3. Sin pausa, estirá tobillos, rodillas y caderas al mismo tiempo y saltá lo más alto que podás, tirando los brazos hacia arriba.\n4. Caé suave: primero con la parte de adelante del pie y después con el talón, con las rodillas dobladas para amortiguar.\n5. Encadená la siguiente repetición apenas caigas, sin rebotar de golpe.\nTip: el error más común es caer con las piernas duras o con las rodillas metidas hacia adentro. Caé siempre en silencio y con las rodillas viendo hacia los dedos de los pies; el ruido al aterrizar es señal de que estás golpeando las articulaciones.",
+    "primaryMuscle": "QUADS",
+    "secondaryMuscles": [
+      "GLUTES",
+      "HAMSTRINGS",
+      "CALVES"
+    ],
+    "equipment": "BODYWEIGHT",
+    "difficulty": "INTERMEDIATE",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": null
+  },
+  {
+    "pdfName": "Peso muerto mancuerna",
+    "slug": "dumbbell-deadlift",
+    "nameEs": "Peso muerto con mancuernas",
+    "nameEn": "Dumbbell Deadlift",
+    "instructionsEs": "1. Parate con los pies al ancho de las caderas y una mancuerna en cada mano por delante de los muslos, con las palmas viendo hacia vos.\n2. Sacá pecho, juntá un poco los omóplatos y dejá las rodillas apenas dobladas. La espalda va derecha todo el tiempo.\n3. Llevá la cola hacia atrás, como si quisieras cerrar una puerta con ella, y bajá las mancuernas pegadas a las piernas.\n4. Bajá hasta sentir un estirón en la parte de atrás de los muslos, más o menos a la altura de las rodillas o un poco más abajo.\n5. Empujá las caderas hacia adelante y apretá los glúteos para volver a pararte derecho, sin echarte hacia atrás al final.\nTip: el error más común es encorvar la espalda baja o bajar doblando las rodillas como si fuera sentadilla. Si sentís que la espalda se redondea, no bajés tanto: el movimiento nace de la cadera, no de la cintura.",
+    "primaryMuscle": "HAMSTRINGS",
+    "secondaryMuscles": [
+      "GLUTES",
+      "BACK",
+      "FOREARMS"
+    ],
+    "equipment": "DUMBBELL",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "No se reusa conventional-deadlift ni romanian-deadlift porque esos son con barra (equipment BARBELL) y acá el equipo es DUMBBELL. Las fuentes coinciden en que el peso muerto con mancuernas se ejecuta como bisagra de cadera estilo rumano, con énfasis en isquiotibiales y glúteos."
+  },
+  {
+    "pdfName": "Press pecho vertical máquina",
+    "slug": "machine-vertical-chest-press",
+    "nameEs": "Press de pecho vertical en máquina",
+    "nameEn": "Vertical Chest Press Machine",
+    "instructionsEs": "1. Ajustá el asiento para que los agarres te queden a la altura de la mitad del pecho, nunca del cuello.\n2. Sentate con toda la espalda pegada al respaldo y los pies firmes en el piso.\n3. Agarrá los mangos con las palmas hacia abajo y los codos un poco por debajo de la línea de los hombros.\n4. Empujá hacia adelante hasta estirar los brazos, sin trabar los codos de golpe. Botá el aire mientras empujás.\n5. Regresá despacio, contando dos segundos, hasta sentir el estirón en el pecho. No dejés que las placas se golpeen entre sí.\nTip: el error más común es dejar el asiento muy bajo, porque eso obliga a empujar hacia arriba y le carga todo al hombro. Si los codos te quedan más altos que los hombros, subí el asiento antes de empezar.",
+    "primaryMuscle": "CHEST",
+    "secondaryMuscles": [
+      "TRICEPS",
+      "SHOULDERS"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": null
+  },
+  {
+    "pdfName": "Curl barra Z",
+    "slug": "ez-bar-curl",
+    "nameEs": "Curl de bíceps con barra Z",
+    "nameEn": "EZ-Bar Curl",
+    "instructionsEs": "1. Parate derecho con los pies al ancho de las caderas y agarrá la barra Z por las partes inclinadas, con las palmas hacia arriba.\n2. Pegá los codos a los costados y dejá los brazos estirados, con la barra a la altura de los muslos.\n3. Subí la barra doblando solo los codos, hasta que quede cerca del pecho. Los codos no se despegan ni se mueven de su lugar.\n4. Apretá el bíceps un segundo arriba.\n5. Bajá despacio hasta estirar bien el brazo. Controlá la bajada, no soltés el peso.\nTip: el error más común es tirar la espalda hacia atrás para poder levantar. Si necesitás mecerte, bajale al peso: acá solo se doblan los codos y el resto del cuerpo queda quieto. La barra Z además le quita presión a la muñeca porque la deja en un ángulo más natural que la barra recta.",
+    "primaryMuscle": "BICEPS",
+    "secondaryMuscles": [
+      "FOREARMS"
+    ],
+    "equipment": "BARBELL",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "El catálogo ya tiene barbell-curl (barra recta), pero se deja entrada aparte porque el coach pide barra Z específicamente y el propio catálogo ya distingue implementos de barra Z (ez-bar-skull-crusher). El agarre semi-supinado de la barra Z reduce estrés de muñeca y codo."
+  },
+  {
+    "pdfName": "Máquina Remo T",
+    "slug": "t-bar-row-machine",
+    "nameEs": "Remo en T en máquina",
+    "nameEn": "Machine T-Bar Row",
+    "instructionsEs": "1. Acomodate en la máquina con el pecho apoyado en la almohadilla y los pies firmes en las plataformas.\n2. Agarrá los mangos con los brazos estirados y dejá que los hombros se estiren hacia adelante.\n3. Sacá pecho y arrancá el jalón juntando los omóplatos, como si quisieras apretar un lápiz entre ellos.\n4. Jalá llevando los codos hacia atrás y cerca de las costillas, hasta que los mangos lleguen cerca del tronco.\n5. Bajá el peso despacio hasta estirar bien los brazos, sin despegar el pecho de la almohadilla.\nTip: el error más común es jalar solo con los brazos y despegar el pecho del apoyo para ayudarse con la espalda baja. Pensá que las manos son solo ganchos y que quien jala es la espalda.",
+    "primaryMuscle": "BACK",
+    "secondaryMuscles": [
+      "BICEPS",
+      "SHOULDERS",
+      "FOREARMS"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "INTERMEDIATE",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": null
+  },
+  {
+    "pdfName": "Four ways",
+    "slug": "four-way-dumbbell-delt-raise",
+    "nameEs": "Four ways: elevaciones de hombro en cuatro direcciones",
+    "nameEn": "4-Way Dumbbell Shoulder Raise",
+    "instructionsEs": "1. Parate derecho con una mancuerna liviana en cada mano, a los lados del cuerpo. Apretá el abdomen y no muevás el tronco.\n2. Levantá las mancuernas al frente hasta la altura de los hombros y bajalas.\n3. Levantalas hacia los lados hasta la altura de los hombros y bajalas.\n4. Levantalas en diagonal, a medio camino entre el frente y el lado, y bajalas.\n5. Inclinate hacia adelante desde la cadera con la espalda derecha y abrí los brazos hacia atrás como alas; volvé a bajar.\n6. Esas cuatro subidas son UNA sola repetición: van encadenadas, sin descanso entre una y otra.\nTip: usá menos peso del que creés que aguantás. El error más común es cargar mucho y terminar meciendo el cuerpo; con cuatro movimientos seguidos el hombro se cansa rapidísimo y ahí es cuando se lastima.",
+    "primaryMuscle": "SHOULDERS",
+    "secondaryMuscles": [
+      "BACK",
+      "FOREARMS"
+    ],
+    "equipment": "DUMBBELL",
+    "difficulty": "INTERMEDIATE",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "Investigado y confirmado: 'Four ways' es un complejo de deltoides conocido en inglés como 4-way shoulder raise o 4-way delt raise. Se encadenan cuatro elevaciones (frontal, lateral, diagonal en el plano escapular y posterior inclinado) que cuentan como una sola repetición, trabajando las tres cabezas del deltoide en un mismo ejercicio. Las fuentes varían levemente en el orden y en si la cuarta es de pie o inclinado, pero coinciden en que son 4 mini-repeticiones encadenadas de deltoides. No se reusa dumbbell-lateral-raise ni dumbbell-front-raise porque acá el estímulo y la ejecución son del complejo completo, no de una elevación aislada. Se recomienda peso liviano."
+  },
+  {
+    "pdfName": "Twister russian",
+    "slug": "russian-twist",
+    "nameEs": "Giro ruso (russian twist)",
+    "nameEn": "Russian Twist",
+    "instructionsEs": "1. Sentate en el piso con las rodillas dobladas y los pies apoyados o apenas levantados.\n2. Echá el tronco hacia atrás hasta formar una V con los muslos, más o menos a 45 grados. La espalda va derecha, nunca encorvada.\n3. Juntá las manos al frente del pecho, o agarrá un disco o una mancuerna liviana.\n4. Girá el tronco hacia un lado hasta que las manos queden al costado de la cadera, y llevá la mirada con el giro.\n5. Volvé al centro y girá hacia el otro lado. Ese ida y vuelta es una repetición.\nTip: el error más común es mover solo los brazos mientras el pecho sigue viendo al frente. Lo que tiene que girar son los hombros y las costillas junto con las manos. Si sentís que la espalda baja se redondea, sentate un poco más derecho y bajale al peso.",
+    "primaryMuscle": "OBLIQUES",
+    "secondaryMuscles": [
+      "ABS"
+    ],
+    "equipment": "BODYWEIGHT",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": null
+  },
+  {
+    "pdfName": "Abdominal básico pie arriba",
+    "slug": "crunch-feet-elevated",
+    "nameEs": "Abdominal básico con pies arriba",
+    "nameEn": "Crunch with Feet Elevated",
+    "instructionsEs": "1. Acostate boca arriba en el piso frente a una banca y subí los pies encima de ella, con las rodillas dobladas más o menos a 90 grados.\n2. Poné las manos suaves detrás de la cabeza o cruzadas en el pecho. No entrelacés los dedos para jalarte la nuca.\n3. Botá el aire y despegá del piso solo la cabeza y los hombros, enrollando el abdomen hacia las rodillas.\n4. Apretá el abdomen un segundo arriba. La espalda baja se queda pegada al piso todo el tiempo.\n5. Bajá despacio tomando aire, hasta apoyar los hombros otra vez.\nTip: el error más común es jalarse la cabeza con las manos. Dejá un espacio del tamaño de un puño entre la barbilla y el pecho, y pensá en subir con el abdomen, no con el cuello.",
+    "primaryMuscle": "ABS",
+    "secondaryMuscles": [
+      "OBLIQUES"
+    ],
+    "equipment": "BODYWEIGHT",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": null
+  },
+  {
+    "pdfName": "Plancha dinámica",
+    "slug": "plank-up-down",
+    "nameEs": "Plancha dinámica (sube y baja de codos)",
+    "nameEn": "Up-Down Plank",
+    "instructionsEs": "1. Empezá en plancha con las manos apoyadas debajo de los hombros, los brazos estirados y el cuerpo en línea recta de la cabeza a los talones.\n2. Abrí los pies un poco más que el ancho de las caderas para tener más estabilidad.\n3. Bajá un brazo apoyando el antebrazo en el piso y después el otro, hasta quedar en plancha de codos.\n4. Volvé a subir apoyando una mano y después la otra, hasta quedar otra vez con los brazos estirados.\n5. Alterná el brazo con el que arrancás en cada repetición para trabajar parejo los dos lados.\nTip: el error más común es mecer la cadera de lado a lado al cambiar de apoyo. Apretá glúteos y abdomen e imaginá que llevás un vaso de agua en la espalda baja: entre menos se mueva la cadera, más trabaja el abdomen.",
+    "primaryMuscle": "ABS",
+    "secondaryMuscles": [
+      "SHOULDERS",
+      "TRICEPS",
+      "OBLIQUES"
+    ],
+    "equipment": "BODYWEIGHT",
+    "difficulty": "INTERMEDIATE",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "No se reusa plank: la plancha estática es un sostén isométrico, mientras que la dinámica agrega el cambio repetido entre apoyo de manos y de codos, lo que suma trabajo real de hombro y tríceps y exige antirrotación de cadera. Difficulty sube a INTERMEDIATE por eso."
+  }
+]

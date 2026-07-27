@@ -1,0 +1,395 @@
+[
+  {
+    "pdfName": "Press inclinado smith",
+    "slug": "smith-machine-incline-bench-press",
+    "nameEs": "Press inclinado en máquina Smith",
+    "nameEn": "Smith Machine Incline Bench Press",
+    "instructionsEs": "1. Poné un banco inclinado (más o menos 30 grados) dentro de la máquina Smith, justo debajo de la barra. Acostate y revisá que la barra te quede a la altura de la parte de arriba del pecho.\n2. Apoyá bien la cabeza, la espalda y la cola en el banco, con los pies firmes en el piso. Juntá los omóplatos hacia atrás y abajo para sacar pecho.\n3. Agarrá la barra un poco más abierto que el ancho de los hombros, con las palmas viendo hacia adelante. Girá las muñecas hacia adelante para soltarla de los ganchos.\n4. Bajá la barra despacio hasta rozar la parte de arriba del pecho, con los codos abiertos como a 45 grados del cuerpo.\n5. Empujá la barra hacia arriba botando el aire, hasta estirar los brazos sin trabar los codos.\n6. Al terminar la serie, girá las muñecas al revés para volver a enganchar la barra antes de soltarla.\nTip: el error más común es rebotar la barra contra el pecho para subir más peso. Bajá controlado, tocá suave y ahí sí empujá.",
+    "primaryMuscle": "CHEST",
+    "secondaryMuscles": [
+      "SHOULDERS",
+      "TRICEPS"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "No se reusa incline-barbell-bench-press: esa es la versión con barra libre. La Smith tiene recorrido guiado, ganchos de seguridad y un setup distinto (alinear el banco, girar las muñecas para desenganchar), así que las instrucciones para un principiante serían incorrectas si se le entrega la ficha de barra. Se clasifica como BEGINNER porque el riel fijo la vuelve autoasegurada, a diferencia de la barra libre."
+  },
+  {
+    "pdfName": "Press plano smith o barra",
+    "slug": "smith-machine-bench-press",
+    "nameEs": "Press plano de pecho en máquina Smith",
+    "nameEn": "Smith Machine Flat Bench Press",
+    "instructionsEs": "1. Colocá un banco plano en el centro de la máquina Smith. Acostate y revisá que la barra te quede justo encima de la mitad del pecho, nunca del cuello ni de la cara.\n2. Apoyá la cabeza, la espalda y la cola en el banco, y los pies bien firmes en el piso. Juntá los omóplatos hacia atrás para sacar pecho.\n3. Agarrá la barra un poco más abierto que el ancho de los hombros. Girá las muñecas hacia adelante para sacarla de los ganchos.\n4. Bajá la barra despacio hasta tocar suave la mitad del pecho, con los codos medio metidos, no abiertos del todo.\n5. Empujá hacia arriba botando el aire hasta estirar los brazos, sin trabar los codos.\n6. Al terminar, girá las muñecas al revés para volver a enganchar la barra antes de soltarla.\nTip: el error más común es abrir los codos en línea recta con los hombros. Mantenelos a unos 45 grados del cuerpo para no forzar la articulación del hombro.",
+    "primaryMuscle": "CHEST",
+    "secondaryMuscles": [
+      "TRICEPS",
+      "SHOULDERS"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "El coach acepta Smith o barra. Se creó la variante en Smith en vez de reusar barbell-bench-press por dos razones: (1) el coach nombra 'smith' primero, así que esa es la opción principal; (2) el setup y la ejecución son distintos de verdad (alinear el banco al centro del riel, desenganchar y reenganchar girando las muñecas, recorrido fijo sin arco), y un principiante que reciba la ficha de barra libre haría el montaje mal. La opción con barra ya está cubierta por el slug existente barbell-bench-press, así que el coach puede asignar cualquiera de los dos sin duplicar contenido."
+  },
+  {
+    "pdfName": "Aperturas con mancuerna",
+    "slug": "dumbbell-chest-fly",
+    "nameEs": "Aperturas con mancuernas",
+    "nameEn": "Dumbbell Chest Fly",
+    "instructionsEs": "1. Sentate en la punta de un banco plano con una mancuerna en cada mano apoyada sobre los muslos.\n2. Acostate hacia atrás usando el empuje de las piernas para subir las mancuernas. Quedate con los brazos estirados arriba del pecho y las palmas viéndose una a la otra.\n3. Doblá los codos apenas, como si estuvieras abrazando un barril, y dejá ese mismo doblez fijo todo el ejercicio.\n4. Abrí los brazos despacio hacia los lados haciendo un arco, hasta sentir el estirón en el pecho. No dejés que los codos bajen más abajo de la línea de los hombros.\n5. Juntá las mancuernas de vuelta arriba por el mismo arco, apretando el pecho, hasta casi tocarlas.\nTip: el error más común es agarrar mucho peso y terminar doblando y estirando los codos, que convierte la apertura en un press. Usá peso liviano, brazos casi rectos, y pará de bajar apenas sentís tensión fuerte en el hombro.",
+    "primaryMuscle": "CHEST",
+    "secondaryMuscles": [
+      "SHOULDERS",
+      "BICEPS"
+    ],
+    "equipment": "DUMBBELL",
+    "difficulty": "INTERMEDIATE",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": null
+  },
+  {
+    "pdfName": "Máquina dominadas abiertas",
+    "slug": "machine-assisted-wide-grip-pull-up",
+    "nameEs": "Dominadas asistidas en máquina (agarre abierto)",
+    "nameEn": "Machine-Assisted Wide-Grip Pull-Up",
+    "instructionsEs": "1. Ajustá el peso de la asistencia: entre más peso le pongás a la almohadilla, más liviano se siente el cuerpo y más fácil es subir.\n2. Subite a la máquina y apoyá las rodillas (o los pies) en la almohadilla. Agarrá la barra por fuera del ancho de los hombros, con las palmas viendo hacia adelante.\n3. Dejate colgar con los brazos bien estirados. Ese estirón de abajo va completo, hasta sentir que se abren los costados de la espalda.\n4. Sacá pecho, bajá los hombros lejos de las orejas y subí llevando los codos hacia abajo y hacia afuera, hasta que la barbilla pase la altura de las manos.\n5. Bajá despacio, contando dos o tres segundos, hasta volver a estirar los brazos por completo.\nTip: el error más común es quedarse a medio camino abajo y dejarse caer de golpe. Estirá siempre completo y controlá la bajada; si no lográs subir con el pecho afuera, subile al peso de la asistencia. Ojo con abrir demasiado las manos: si el agarre queda exagerado, perdés recorrido.",
+    "primaryMuscle": "BACK",
+    "secondaryMuscles": [
+      "BICEPS",
+      "FOREARMS",
+      "SHOULDERS"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "Entrada propia. No es duplicado de machine-assisted-dip (fondos asistidos, que es empuje de tríceps y pecho) ni de pull-up / close-grip-pull-up (dominada libre con peso corporal completo). Acá la máquina descarga parte del peso corporal y el agarre abierto carga el dorsal ancho. Se incorporó la nota del coach: sacar pecho y estirar abajo completo."
+  },
+  {
+    "pdfName": "Curl predicador barra Z de pie",
+    "slug": "standing-ez-bar-preacher-curl",
+    "nameEs": "Curl predicador de pie con barra Z",
+    "nameEn": "Standing EZ-Bar Preacher Curl",
+    "instructionsEs": "1. Parate detrás del banco predicador y apoyá el pecho contra la parte alta de la almohadilla inclinada.\n2. Agarrá la barra Z por las partes inclinadas, con las palmas hacia arriba y las manos más o menos al ancho de los hombros.\n3. Acomodá los brazos sobre el acolchado: las axilas cerca del borde de arriba y la parte de atrás del brazo bien pegada a la almohadilla, con los codos apuntando al frente y no abiertos hacia los lados.\n4. Subí la barra doblando solo los codos, hasta que quede cerca de la barbilla. Apretá el bíceps un segundo arriba.\n5. Bajá lento, contando dos o tres segundos, hasta casi estirar el brazo. No trabés el codo ni sueltes el peso de golpe.\nTip: el error más común es despegar los codos de la almohadilla para ayudarse con el hombro. Si el brazo se levanta del acolchado, el ejercicio dejó de aislar el bíceps: bajale al peso. Ojo también abajo, porque soltar la barra de repente con el brazo estirado le pega al codo.",
+    "primaryMuscle": "BICEPS",
+    "secondaryMuscles": [
+      "FOREARMS"
+    ],
+    "equipment": "BARBELL",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "Entrada propia. Ya existe ez-bar-curl, pero es el curl de pie libre: ahí el codo queda suelto al lado del cuerpo. Acá los brazos van apoyados sobre la almohadilla del banco predicador, lo que traba el hombro, elimina el envión y carga el bíceps en el estirón de abajo. Mecánica y curva de fuerza distintas, así que no se debe fusionar con ez-bar-curl."
+  },
+  {
+    "pdfName": "Curl martillo hold",
+    "slug": "hammer-curl-isometric-hold",
+    "nameEs": "Curl martillo con sostén isométrico",
+    "nameEn": "Hammer Curl with Isometric Hold",
+    "instructionsEs": "1. Parate derecho con una mancuerna en cada mano a los lados del cuerpo y las palmas viendo una hacia la otra, como si agarraras un martillo.\n2. Pegá los codos a las costillas y apretá la panza. Los codos no se mueven de ahí en todo el ejercicio.\n3. Subí las mancuernas hacia los hombros sin girar la muñeca y bajá despacio hasta estirar el brazo. Esas son las repeticiones normales.\n4. Al terminar las repeticiones viene el sostén: subí hasta que los codos queden doblados en 90 grados, con el antebrazo paralelo al piso, y ahí te quedás quieto aguantando el peso los segundos que te indiquen.\n5. Durante el sostén no subís ni bajás nada, y seguí respirando normal. Nunca aguantés la respiración.\nTip: cuando el entreno dice \"10 y 10\", son 10 repeticiones y de una vez 10 segundos de sostén, sin soltar el peso en el medio. El error más común es agarrar mancuernas muy pesadas: apenas los brazos se empiezan a caer o los codos se abren, la serie ya terminó. Mejor liviano y aguantar quieto.",
+    "primaryMuscle": "BICEPS",
+    "secondaryMuscles": [
+      "FOREARMS",
+      "SHOULDERS"
+    ],
+    "equipment": "DUMBBELL",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "Merece entrada propia. hammer-curl es solo repeticiones dinámicas y dumbbell-isometric-biceps-hold es un sostén puro con palmas hacia arriba y sin repeticiones. Este junta las dos cosas con agarre neutro (martillo): repeticiones más un sostén isométrico a 90 grados, que es justo lo que el coach prescribe como \"10 y 10\". El agarre neutro además carga más braquial y braquiorradial que la versión supinada. Se interpretó \"10 y 10\" como 10 repeticiones + 10 segundos de sostén al final; vale confirmarlo con el coach por si él lo usa como 10 segundos por repetición."
+  },
+  {
+    "pdfName": "Desplante búlgaro Smith",
+    "slug": "smith-machine-bulgarian-split-squat",
+    "nameEs": "Desplante búlgaro en máquina Smith",
+    "nameEn": "Smith Machine Bulgarian Split Squat",
+    "instructionsEs": "1. Poné la barra del Smith a la altura del pecho y colocá un banco detrás de vos, más o menos a la altura de las rodillas, justo debajo del riel.\n2. Pasá debajo de la barra y apoyala sobre los trapecios superiores, nunca sobre el cuello. Girá las muñecas para destrabarla.\n3. Subí el empeine de un pie sobre el banco y con la otra pierna adelantá un paso largo, de manera que la rodilla de adelante quede sobre el tobillo.\n4. Bajá despacio doblando la rodilla de adelante hasta que la rodilla de atrás casi toque el piso. Mantené el pecho arriba.\n5. Empujá con el pie de adelante para volver a subir. La pierna de atrás solo te da equilibrio, no empuja.\n6. Tip: el error más común es quedar mal parado debajo de la barra. Antes de cargar peso hacé una repetición en vacío y ajustá el pie de adelante hasta que bajés derecho, sin que la barra te jale hacia adelante o hacia atrás.",
+    "primaryMuscle": "QUADS",
+    "secondaryMuscles": [
+      "GLUTES",
+      "HAMSTRINGS",
+      "ABS"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "INTERMEDIATE",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "No se reusa bulgarian-split-squat-dumbbell: el equipo es MACHINE y no DUMBBELL, la carga va sobre los trapecios en vez de en las manos y la barra corre sobre un riel fijo, así que la máquina hace la estabilización y se puede cargar más peso. Además el setup es distinto (hay que alinear el banco debajo del riel). Cuádriceps es el primario y glúteo el sinergista principal; el aductor y el core entran como estabilizadores por ser un ejercicio a una pierna."
+  },
+  {
+    "pdfName": "Sentadilla Smith",
+    "slug": "smith-machine-squat",
+    "nameEs": "Sentadilla en máquina Smith",
+    "nameEn": "Smith Machine Squat",
+    "instructionsEs": "1. Ajustá la barra del Smith a la altura de los hombros. Pasá debajo y apoyala sobre los trapecios superiores, nunca sobre el cuello.\n2. Poné los pies al ancho de los hombros y un poco adelantados respecto a la barra, con las puntas apenas hacia afuera.\n3. Girá las muñecas para destrabar la barra, apretá el abdomen y sacá el pecho.\n4. Bajá despacio doblando rodillas y caderas hasta que los muslos queden paralelos al piso, o hasta donde lo controlés bien.\n5. Empujá con toda la planta de los pies para subir, sin trabar las rodillas arriba.\n6. Tip: el error más común es dejar los pies justo debajo de la barra. Como el riel es fijo, así se te cargan las rodillas; adelantá los pies unos 10 a 15 cm y vas a bajar mucho más cómodo.",
+    "primaryMuscle": "QUADS",
+    "secondaryMuscles": [
+      "GLUTES",
+      "HAMSTRINGS",
+      "ABS"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "No se reusa barbell-back-squat: el equipo es MACHINE y no BARBELL, la barra va sobre un riel fijo y los pies se colocan adelantados respecto a la barra (en la sentadilla libre van debajo). La máquina elimina el trabajo de equilibrio y de estabilizadores, por eso se cataloga BEGINNER frente a la versión con barra libre."
+  },
+  {
+    "pdfName": "Hip trust barra olímpica o máquina",
+    "slug": "barbell-hip-thrust",
+    "nameEs": "Empuje de cadera con barra olímpica",
+    "nameEn": "Barbell Hip Thrust",
+    "instructionsEs": "1. Sentate en el piso con la espalda apoyada a lo largo de un banco, de manera que el borde del banco te quede a la altura de la parte baja de los omóplatos.\n2. Rodá la barra olímpica sobre las caderas y ponele una almohadilla o una toalla doblada para que no te lastime el hueso.\n3. Poné los pies al ancho de las caderas y bien apoyados, lo suficientemente cerca para que arriba las canillas queden verticales.\n4. Meté la barbilla hacia el pecho, apretá el abdomen y empujá con los talones hasta que el cuerpo quede en línea recta de las rodillas a los hombros.\n5. Apretá los glúteos fuerte un segundo arriba y bajá despacio hasta casi tocar el piso, sin soltar del todo la tensión.\n6. Tip: el error más común es subir de más y arquear la espalda baja. Parás cuando el cuerpo está recto: el movimiento lo hace la cadera, no la columna. Si se te arquea sola, bajale al peso.",
+    "primaryMuscle": "GLUTES",
+    "secondaryMuscles": [
+      "HAMSTRINGS",
+      "QUADS",
+      "ABS"
+    ],
+    "equipment": "BARBELL",
+    "difficulty": "INTERMEDIATE",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "El coach acepta barra olímpica o máquina. La versión de máquina ya está cubierta por machine-hip-thrust, así que esta ficha describe solo la de barra libre: equipo BARBELL, montaje con banco, almohadilla y barra rodada sobre la cadera, con mucha más exigencia de setup y de estabilización del tronco (por eso INTERMEDIATE frente a BEGINNER de la máquina). Glúteo mayor es el motor principal, con isquios como sinergista, cuádriceps ayudando al final del recorrido y core sosteniendo la pelvis neutra."
+  },
+  {
+    "pdfName": "Pantorrillas en prensa horizontal",
+    "slug": "leg-press-calf-raise",
+    "nameEs": "Elevación de pantorrillas en prensa",
+    "nameEn": "Leg Press Calf Raise",
+    "instructionsEs": "1. Sentate en la prensa con la espalda y la cadera bien pegadas al respaldo, sin despegar la baja espalda.\n2. Apoyá solo la parte de adelante de los pies (donde nacen los dedos) en el borde de abajo de la plataforma, al ancho de las caderas, con los talones al aire.\n3. Empujá la plataforma y estirá las piernas hasta dejarlas casi derechas, pero NO trabés las rodillas: dejales siempre un poquito de doblez y ahí se quedan todo el ejercicio.\n4. Dejá que los talones bajen despacio hacia vos hasta sentir el estirón en la pantorrilla.\n5. Empujá la plataforma con la punta de los pies lo más lejos que puedas, apretá un segundo arriba y volvé a bajar controlado, sin rebotar.\n6. Tip: el error más común es doblar y estirar las rodillas para mover el peso. Lo único que se mueve es el tobillo; si ves que las rodillas se abren y se cierran, bajale al peso.",
+    "primaryMuscle": "CALVES",
+    "secondaryMuscles": [
+      "QUADS",
+      "ABS"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "No se reusa standing-calf-raise-machine: aquí no hay carga sobre los hombros ni sobre la columna, se trabaja sentado empujando la plataforma de la prensa y el rango se controla con el tobillo contra el peso del carro. Gemelo y sóleo son el objetivo (ambos caen bajo CALVES); con la rodilla casi extendida el gemelo lleva la mayor parte. Los secundarios son estabilizadores: el cuádriceps sostiene la rodilla casi estirada de forma isométrica y el core mantiene la cadera pegada al respaldo. Advertencia crítica incluida en los pasos 3 y 6: rodillas casi estiradas pero NUNCA bloqueadas, y movimiento solo del tobillo."
+  },
+  {
+    "pdfName": "Press inclinado mancuernas",
+    "slug": "incline-dumbbell-press",
+    "nameEs": "Press inclinado con mancuernas (agarre neutro)",
+    "nameEn": "Incline Dumbbell Press (Neutral Grip)",
+    "instructionsEs": "1. Poné el respaldo del banco inclinado a unos 30 grados. Si lo subís mucho más, el trabajo se le va al hombro y no al pecho.\n2. Sentate con una mancuerna apoyada sobre cada muslo. Recostate y, con un empujoncito de las piernas, subilas hasta la altura de los hombros.\n3. Girá las manos hasta que las palmas queden viéndose entre ellas (agarre neutro) y acomodá los codos apuntando hacia adelante, cerca de las costillas.\n4. Bajá despacio, contando dos segundos, hasta que las mancuernas queden al lado de la parte alta del pecho. Bajá completo, hasta sentir el estirón.\n5. Empujá hacia arriba y un poquito hacia adentro, sin trancar los codos de golpe y sin golpear las mancuernas entre sí.\nTip: el error más común es abrir los codos en cruz, a 90 grados del cuerpo. Mantenelos a unos 45 grados y las muñecas derechas, así el hombro no sufre y el pecho hace el trabajo.",
+    "primaryMuscle": "CHEST",
+    "secondaryMuscles": [
+      "SHOULDERS",
+      "TRICEPS"
+    ],
+    "equipment": "DUMBBELL",
+    "difficulty": "INTERMEDIATE",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "Merece entrada propia: los existentes son incline-barbell-bench-press (barra, no permite agarre neutro ni el rango completo) y dumbbell-bench-press (plano, no trabaja pecho alto). El agarre neutro que pide el coach reduce estrés de hombro y suma tríceps."
+  },
+  {
+    "pdfName": "Press inclinado máquina",
+    "slug": "machine-incline-chest-press",
+    "nameEs": "Press inclinado de pecho en máquina",
+    "nameEn": "Incline Chest Press Machine",
+    "instructionsEs": "1. Ajustá el asiento hasta que los agarres te queden a la altura de la parte alta del pecho, más o menos entre la mitad del pecho y las clavículas. Nunca a la altura del cuello.\n2. Sentate con toda la espalda pegada al respaldo, los pies firmes en el piso y el pecho sacado.\n3. Agarrá los mangos con las palmas hacia abajo. Los codos quedan apenas por debajo de la línea de los hombros, no levantados en cruz.\n4. Empujá hacia arriba y adelante hasta casi estirar los brazos, sin trancar los codos. Botá el aire mientras empujás.\n5. Regresá despacio, contando dos segundos, hasta sentir que el pecho se estira. No dejés que las placas se golpeen entre sí.\nTip: el error más común es encoger los hombros y despegar la espalda del respaldo para sacar el peso. Si tenés que arquear la cintura para completar la repetición, bajale al peso.",
+    "primaryMuscle": "CHEST",
+    "secondaryMuscles": [
+      "SHOULDERS",
+      "TRICEPS"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "Distinto de machine-vertical-chest-press (que es empuje horizontal a la mitad del pecho). Acá el ángulo de 30-45 grados corre el énfasis al pecho alto (porción clavicular), que es justo lo que busca el día 4."
+  },
+  {
+    "pdfName": "Peck deck",
+    "slug": "pec-deck-machine",
+    "nameEs": "Peck deck (contractora de pecho)",
+    "nameEn": "Pec Deck Machine",
+    "instructionsEs": "1. Ajustá el asiento hasta que los agarres o las almohadillas te queden a la altura de la mitad del pecho, con los codos a la altura de los hombros.\n2. Sentate con la espalda bien pegada al respaldo, los pies firmes en el piso y el pecho sacado.\n3. Apoyá los antebrazos en las almohadillas (o agarrá los mangos) con los codos apenas doblados. Mantenelos así de doblados todo el ejercicio.\n4. Juntá los brazos al frente apretando el pecho, como si abrazaras un barril. Aguantá un segundo cuando las manos casi se tocan.\n5. Abrí despacio, contando dos segundos, hasta sentir el estirón en el pecho, pero sin llevar los codos más atrás de la línea de los hombros.\nTip: el error más común es abrir de más buscando estirar más; eso le carga todo al hombro. Pará justo cuando los codos queden a la par del pecho y nunca soltés el peso de golpe.",
+    "primaryMuscle": "CHEST",
+    "secondaryMuscles": [
+      "SHOULDERS"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "No existe en el catálogo. Es aislamiento puro de pecho (porción esternal); a diferencia de los press, casi no mete tríceps."
+  },
+  {
+    "pdfName": "Elevación lateral sentado",
+    "slug": "seated-dumbbell-lateral-raise",
+    "nameEs": "Elevación lateral sentado con mancuernas",
+    "nameEn": "Seated Dumbbell Lateral Raise",
+    "instructionsEs": "1. Sentate en la orilla de un banco con la espalda derecha y los pies firmes en el piso, al ancho de los hombros.\n2. Agarrá una mancuerna en cada mano y dejalas colgando a los lados, con las palmas viendo hacia el cuerpo y los codos apenas doblados.\n3. Sacá pecho y apretá la panza. De acá en adelante el cuerpo no se mueve: solo suben los brazos.\n4. Subí los brazos hacia los lados guiando con el codo, no con la mano, hasta que queden a la altura de los hombros. El codo siempre un poquito más alto que la mano.\n5. Aguantá un segundo arriba y bajá despacio, contando dos segundos, sin dejar caer el peso.\nTip: el error más común es dar un tirón con el cuerpo para levantar la mancuerna. Sentado no podés empujar con las piernas, así que si tenés que sacudirte, el peso está muy pesado: usá menos.",
+    "primaryMuscle": "SHOULDERS",
+    "secondaryMuscles": [
+      "BACK"
+    ],
+    "equipment": "DUMBBELL",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "Merece entrada propia aunque exista dumbbell-lateral-raise (de pie): sentado se elimina el impulso de piernas y cadera, así que la técnica, la carga sugerida y el tip de seguridad son distintos. El coach lo programó explícitamente sentado."
+  },
+  {
+    "pdfName": "Push ups cerrados",
+    "slug": "close-grip-push-up",
+    "nameEs": "Flexiones con manos juntas (push ups cerrados)",
+    "nameEn": "Close-Grip Push-Up",
+    "instructionsEs": "1. Poné las manos en el piso justo debajo del pecho, más juntas que el ancho de los hombros, casi tocándose los pulgares.\n2. Estirá las piernas hacia atrás y apoyate en la punta de los pies. El cuerpo queda como una tabla: cabeza, cadera y talones en una sola línea.\n3. Apretá la panza y los glúteos para que la cintura no se hunda ni la cola se levante.\n4. Bajá despacio doblando los codos hacia atrás, rozando las costillas, hasta que el pecho quede cerca de las manos.\n5. Empujá el piso para subir hasta estirar los brazos, sin trancar los codos de golpe.\nTip: el error más común es abrir los codos en cruz hacia los lados. Mantenelos pegados al cuerpo: así el trabajo se lo lleva el tríceps y el hombro no sufre. Si no llegás abajo, apoyá las manos en un banco.",
+    "primaryMuscle": "TRICEPS",
+    "secondaryMuscles": [
+      "CHEST",
+      "SHOULDERS",
+      "ABS"
+    ],
+    "equipment": "BODYWEIGHT",
+    "difficulty": "INTERMEDIATE",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "No es push-up: al juntar las manos el brazo de palanca cambia y el músculo primario pasa a ser el tríceps (ExRx lo clasifica bajo tríceps), con el pecho de secundario. Merece entrada propia porque el coach lo usa como ejercicio de tríceps."
+  },
+  {
+    "pdfName": "Extensión codo sobre cabeza",
+    "slug": "overhead-dumbbell-triceps-extension",
+    "nameEs": "Extensión de tríceps sobre la cabeza con mancuerna",
+    "nameEn": "Overhead Dumbbell Triceps Extension",
+    "instructionsEs": "1. Sentate en un banco con respaldo (o parate con los pies al ancho de las caderas) y apretá la panza para no arquear la cintura.\n2. Agarrá una mancuerna con las dos manos, sosteniéndola por el disco de arriba, y subila hasta estirar los brazos por encima de la cabeza.\n3. Acomodá los codos apuntando hacia adelante y cerca de la cabeza. De acá en adelante solo se mueve del codo para abajo; el brazo de arriba queda quieto.\n4. Bajá la mancuerna despacio por detrás de la cabeza, hasta donde puedas sin que se te muevan los codos. Ahí vas a sentir el estirón atrás del brazo.\n5. Estirá los codos para volver arriba y apretá el tríceps un segundo, sin trancar los codos de golpe.\nTip: el error más común es abrir los codos hacia los lados y arquear la espalda para levantar más peso. Si te pasa, bajale al peso y hacelo sentado con la espalda apoyada en el respaldo.",
+    "primaryMuscle": "TRICEPS",
+    "secondaryMuscles": [
+      "SHOULDERS",
+      "ABS"
+    ],
+    "equipment": "DUMBBELL",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "No existe en el catálogo. Es el único movimiento de tríceps con el hombro en flexión, así que estira y trabaja la porción larga, que no se cubre con cable-tricep-pushdown ni ez-bar-skull-crusher."
+  },
+  {
+    "pdfName": "Remo máquina triángulo",
+    "slug": "seated-cable-row",
+    "nameEs": "Remo en polea sentado",
+    "nameEn": "Seated Cable Row",
+    "instructionsEs": "1. Sentate en la estación de polea baja con los pies apoyados en la plataforma y las rodillas un poco dobladas.\n2. Agarrá la manija triángulo con las dos manos, con las palmas viendo una hacia la otra, y estirá los brazos hacia adelante.\n3. Sentate derecho y sacá pecho. Dejá que los hombros se estiren hacia adelante, pero sin encorvar la espalda baja.\n4. Jalá el triángulo hacia el ombligo llevando los codos pegados a las costillas y apretando los omóplatos hacia atrás.\n5. Apretá un segundo y estirá los brazos despacio hasta sentir el estirón, sin soltar el peso de golpe.\n6. Tip: el error más común es tirarse hacia atrás con todo el cuerpo para mover más peso. El tronco casi no se mueve; lo que jala es la espalda, no la cintura.",
+    "primaryMuscle": "BACK",
+    "secondaryMuscles": [
+      "BICEPS",
+      "SHOULDERS",
+      "FOREARMS"
+    ],
+    "equipment": "CABLE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": "seated-cable-row",
+    "note": "Se reutiliza el slug existente. La entrada actual de seated-cable-row ya describe el 'maneral de agarre cerrado', que es exactamente la manija triángulo (V-bar) que anota el coach: es el accesorio estándar de esa polea, no una variante distinta. Crear una entrada aparte solo por el nombre del agarre duplicaría el ejercicio. Los sinergistas son bíceps y braquial (BICEPS/FOREARMS) más el deltoides posterior (SHOULDERS), que asiste en la extensión del hombro."
+  },
+  {
+    "pdfName": "Remo máquina amarilla",
+    "slug": "chest-supported-row-machine",
+    "nameEs": "Remo en máquina con apoyo de pecho",
+    "nameEn": "Chest-Supported Machine Row",
+    "instructionsEs": "1. Ajustá el asiento para que las manijas te queden a la altura del pecho. Sentate y pegá el pecho a la almohadilla.\n2. Poné los pies firmes en el piso o en los estribos, sacá pecho y bajá los hombros lejos de las orejas.\n3. Para trabajar un brazo a la vez: agarrá una sola manija, estirá el brazo hacia adelante y jalá el codo hacia atrás hasta que la mano llegue a la costilla.\n4. Para trabajar con los dos juntos: agarrá las dos manijas y jalá parejo, llevando los dos codos hacia atrás al mismo tiempo.\n5. Apretá un segundo los omóplatos y volvé despacio hasta estirar los brazos por completo.\n6. Tip: el error más común es despegar el pecho de la almohadilla para ayudarse con el cuerpo. Si tenés que despegarte, bajale al peso. El pecho no se despega ni cuando jalás con un solo brazo.",
+    "primaryMuscle": "BACK",
+    "secondaryMuscles": [
+      "BICEPS",
+      "SHOULDERS",
+      "FOREARMS"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "Descrito de forma genérica: 'la amarilla' es solo el color de esa máquina en ese gimnasio. Merece entrada propia y no reutiliza machine-single-arm-row porque esa entrada es estrictamente unilateral, y el coach prescribe la serie mixta (8 con cada brazo y 5 con los dos juntos); el cliente necesita ver explicadas las dos formas en la misma ficha. El apoyo de pecho es lo que define el ejercicio: elimina el impulso del tronco y quita carga de la espalda baja. Primario BACK (dorsal ancho, romboides y trapecio medio); el deltoides posterior entra como sinergista bajo SHOULDERS."
+  },
+  {
+    "pdfName": "Curl Bayesian polea individual",
+    "slug": "bayesian-cable-curl",
+    "nameEs": "Curl bayesiano en polea a un brazo",
+    "nameEn": "Bayesian Cable Curl",
+    "instructionsEs": "1. Poné la polea en el punto más bajo y ponele una manija de una sola mano.\n2. Agarrá la manija, date la vuelta para quedar de espaldas a la polea y caminá uno o dos pasos hacia adelante, con un pie adelantado.\n3. Dejá el brazo colgando atrás del cuerpo, con la palma viendo hacia adelante. Ahí es donde el bíceps queda bien estirado.\n4. Sin mover el codo de su lugar, doblá el brazo y subí la manija hacia el hombro.\n5. Bajá despacio hasta estirar el brazo completo y aguantá un segundo el estirón antes de la siguiente repetición. Terminá ese lado y cambiá de brazo.\n6. Tip: el error más común es dejar que el codo se venga hacia adelante al subir, porque eso le quita el estirón al bíceps. Imaginate el codo clavado un poco atrás de las costillas y que solo se mueve el antebrazo; si no lo lográs, es que el peso está muy pesado.",
+    "primaryMuscle": "BICEPS",
+    "secondaryMuscles": [
+      "FOREARMS"
+    ],
+    "equipment": "CABLE",
+    "difficulty": "INTERMEDIATE",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "Entrada propia: no hay ningún curl en polea en el catálogo y este no es un curl común. Al quedar el brazo por detrás del tronco (hombro en extensión), la cabeza larga del bíceps —que cruza el hombro— queda estirada, y la polea mantiene tensión justo en esa posición estirada, que es lo que ningún curl con mancuerna da. Secundario FOREARMS por el braquiorradial y el braquial, que asisten en toda flexión de codo. Se marca INTERMEDIATE porque el montaje (distancia a la polea y posición del codo) es lo que hace o arruina el ejercicio."
+  },
+  {
+    "pdfName": "Curl spider mancuerna",
+    "slug": "dumbbell-spider-curl",
+    "nameEs": "Curl spider con mancuernas",
+    "nameEn": "Dumbbell Spider Curl",
+    "instructionsEs": "1. Poné el respaldo de un banco inclinado más o menos a 45 grados y agarrá una mancuerna en cada mano.\n2. Recostate boca abajo sobre el banco, con el pecho apoyado en el respaldo y los pies firmes en el piso.\n3. Dejá los brazos colgando derechos hacia el piso, con las palmas viendo hacia adelante y los hombros relajados.\n4. Sin mover los hombros ni los codos de su lugar, doblá los brazos y subí las mancuernas hasta la altura de los hombros.\n5. Apretá el bíceps un segundo arriba y bajá despacio hasta estirar los brazos por completo.\n6. Tip: el error más común es despegar el pecho del banco y balancearse para subir el peso. Si el pecho se despega, bajale a la mancuerna. La gracia del spider es justamente que no se puede hacer trampa.",
+    "primaryMuscle": "BICEPS",
+    "secondaryMuscles": [
+      "FOREARMS"
+    ],
+    "equipment": "DUMBBELL",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "Entrada propia: es distinto de barbell-curl y hammer-curl porque el pecho apoyado deja el brazo por delante del tronco (hombro en flexión). En esa posición la cabeza larga del bíceps queda acortada y la carga se reparte más hacia la cabeza corta y el braquial — el caso contrario al curl bayesiano, que estira la cabeza larga. Por eso los dos se complementan dentro del mismo día. Secundario FOREARMS por braquial y braquiorradial."
+  },
+  {
+    "pdfName": "Sentadilla Hack",
+    "slug": "hack-squat-machine",
+    "nameEs": "Sentadilla hack en máquina",
+    "nameEn": "Hack Squat Machine",
+    "instructionsEs": "1. Metete en la máquina con la espalda y la cola bien pegadas al respaldo y los hombros debajo de las almohadillas.\n2. Poné los pies sobre la plataforma al ancho de los hombros, con las puntas apenas hacia afuera y toda la planta apoyada.\n3. Estirá las piernas para soltar los seguros, agarrate de las manijas y apretá el abdomen.\n4. Bajá despacio doblando las rodillas hasta que los muslos queden paralelos a la plataforma, dejando que las rodillas viajen hacia adelante en línea con las puntas de los pies.\n5. Empujá con toda la planta del pie hasta casi estirar las piernas, sin trabar las rodillas de golpe.\n6. Tip: el error más común es despegar los talones o dejar que las rodillas se metan hacia adentro al subir. Si eso pasa, adelantá un poquito los pies en la plataforma y bajale al peso.",
+    "primaryMuscle": "QUADS",
+    "secondaryMuscles": [
+      "GLUTES",
+      "HAMSTRINGS",
+      "CALVES"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "INTERMEDIATE",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "Entrada propia: no está en el catálogo y no es lo mismo que leg-press ni que barbell-back-squat. El respaldo fija el tronco y guía el recorrido, así que la espalda baja casi no recibe carga y el cuádriceps se lleva el trabajo. Sinergistas según ExRx: glúteo mayor (GLUTES), aductor mayor (mapeado a HAMSTRINGS siguiendo el criterio ya usado en leg-press) y sóleo (CALVES). Pies más abajo en la plataforma cargan más cuádriceps; más arriba, más glúteo."
+  },
+  {
+    "pdfName": "Soleos máquina",
+    "slug": "seated-calf-raise-machine",
+    "nameEs": "Elevación de talones sentado (sóleo)",
+    "nameEn": "Seated Calf Raise Machine",
+    "instructionsEs": "1. Sentate en la máquina y poné la punta de los pies en el escalón, con los talones al aire. Se hace sentado a propósito: con la rodilla doblada el gemelo (el músculo grande de arriba) queda flojo y no puede ayudar, así que casi todo el trabajo se lo lleva el sóleo, que está justo debajo.\n2. Bajá la almohadilla sobre los muslos, cerca de las rodillas, y soltá el seguro.\n3. Bajá los talones despacio todo lo que podás, hasta sentir el estirón en la pantorrilla.\n4. Empujá con la punta de los pies y subí lo más alto que puedas, apretando un segundo arriba.\n5. Repetí sin rebotar. En la última repetición quedate arriba aguantando 20 segundos, como pide el entrenador.\n6. Tip: el error más común es hacer rebotes cortos y rápidos con mucho peso. Hacé el recorrido completo, bien abajo y bien arriba, aunque tengás que quitarle discos.",
+    "primaryMuscle": "CALVES",
+    "secondaryMuscles": [
+      "QUADS"
+    ],
+    "equipment": "MACHINE",
+    "difficulty": "BEGINNER",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "Merece entrada propia y NO reutiliza standing-calf-raise-machine: es el mismo grupo pero otro músculo objetivo. De pie (rodilla estirada) manda el gemelo; sentado (rodilla doblada) el gemelo entra en insuficiencia activa y el sóleo pasa a ser el flexor plantar principal — por eso el coach lo llama 'soleos'. El enum no separa gemelo de sóleo, así que el primario queda como CALVES. Es prácticamente un aislamiento: no hay sinergista real dentro de los valores permitidos (los ayudantes reales son tibial posterior, peroneos y flexores de los dedos), así que se lista solo QUADS como estabilizador isométrico del muslo contra la almohadilla."
+  },
+  {
+    "pdfName": "Máquina abs declinado",
+    "slug": "weighted-decline-sit-up",
+    "nameEs": "Abdominal en banco declinado con peso",
+    "nameEn": "Weighted Decline Sit-Up",
+    "instructionsEs": "1. Ajustá la inclinación del banco y trabá los pies bajo los rodillos, con las rodillas dobladas.\n2. Acostate y sostené el peso (el saco o un disco) pegado al pecho, abrazado con las dos manos.\n3. Subí enrollando la espalda de a poco: primero la cabeza, después los hombros y al final la espalda baja, llevando el pecho hacia las rodillas.\n4. Subí hasta quedar casi sentado y apretá el abdomen un segundo arriba.\n5. Bajá despacio desenrollando la espalda hasta apoyarte de nuevo, sin dejarte caer de golpe.\n6. Tip: el error más común es subir con la espalda derecha como una tabla, jalando desde la cadera. Así trabajan los flexores de la cadera y no el abdomen. Enrollá la espalda; si sentís tirón en la espalda baja, quitá peso o acostá un poco el banco.",
+    "primaryMuscle": "ABS",
+    "secondaryMuscles": [
+      "OBLIQUES",
+      "QUADS"
+    ],
+    "equipment": "OTHER",
+    "difficulty": "INTERMEDIATE",
+    "category": "STRENGTH",
+    "reuseExistingSlug": null,
+    "note": "Entrada propia, distinta de crunch-feet-elevated: ahí no hay carga externa ni banco, y el recorrido es un crunch corto. Acá hay declinación, pies trabados y peso en el pecho. Dato importante que se refleja en el tip: con los pies anclados en declinado, los flexores de cadera se llevan buena parte del trabajo (ExRx clasifica este ejercicio bajo flexores de cadera) y el recto abdominal solo trabaja de verdad si hay flexión real de la columna. Por eso el paso 3 insiste en enrollar la espalda. El recto femoral y el sartorio, sinergistas reales, se mapean a QUADS porque iliopsoas y TFL no existen en el enum. Equipo OTHER: el banco es solo soporte (no tiene torre de pesas, así que no es MACHINE) y sí hay carga externa (así que no es BODYWEIGHT)."
+  }
+]

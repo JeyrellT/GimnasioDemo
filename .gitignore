@@ -59,3 +59,8 @@ uploads/
 gen-test-*.py
 test-*.png
 test-scale-image.html
+scratch/
+
+# Programas de entrenamiento de clientes en PDF — datos personales, nunca al repo.
+# El contenido ya vive normalizado en prisma/seed/data/exercises-programa-*.json.
+/*.pdf
