@@ -14,8 +14,8 @@
  *      contenga "jorge"). Falla si hay 0 o más de 1 candidato.
  *   2. Upsert por `slug` de los ejercicios NUEVOS de ambos programas
  *      (prisma/seed/data/exercises-programa-{coo,leyner}.json) como ejercicios
- *      PRIVADOS del coach: isPublic=false, createdById=<coach>. Solo él los ve
- *      en su biblioteca y los puede editar (los públicos son read-only).
+ *      PÚBLICOS con autoría del coach: isPublic=true, createdById=<coach>.
+ *      Los ve cualquier coach en el catálogo y queda registrado de quién son.
  *   3. Verifica que existan los ejercicios que los programas REUSAN del catálogo
  *      público (leg-press, plank, dips, etc.). Si falta alguno, aborta antes de
  *      tocar las rutinas — no se crea una rutina a medias.
@@ -447,14 +447,13 @@ async function main(): Promise<void> {
         equipment: e.equipment as Prisma.ExerciseCreateInput["equipment"],
         difficulty: e.difficulty as Prisma.ExerciseCreateInput["difficulty"],
         category: e.category as Prisma.ExerciseCreateInput["category"],
-        // Privados del coach: la visibilidad es `isPublic = true OR
-        // createdById = usuario`, así que solo él los ve en su biblioteca — y,
-        // por ser privados, SÍ los puede editar desde la UI (los públicos del
-        // catálogo son read-only para cualquier trainer).
-        // Si algún día se decide publicarlos para todos los coaches, cambiar a
-        // { isPublic: true, createdById: null } y re-correr: el upsert por slug
-        // actualiza las filas existentes sin duplicar.
-        isPublic: false,
+        // Públicos PERO con autoría de Jorge: `isPublic` los muestra a todo
+        // coach en el catálogo, y `createdById` conserva de quién son.
+        // OJO: hoy `updateExercise` rechaza editar cualquier ejercicio público
+        // ANTES de mirar la autoría, así que ni el propio autor puede tocarlos
+        // desde la UI. Si se quiere que el autor sí pueda, hay que ajustar esa
+        // guarda en src/server/actions/exercises.actions.ts.
+        isPublic: true,
         createdById: coach.id,
       };
       await prisma.exercise.upsert({
@@ -463,7 +462,7 @@ async function main(): Promise<void> {
         update: data,
       });
     }
-    console.log(`  -> ${nuevos.length} ejercicios upserted como privados del coach.`);
+    console.log(`  -> ${nuevos.length} ejercicios upserted (públicos, autoría del coach).`);
   } else {
     for (const e of nuevos) {
       console.log(`  [dry] ${e.slug.padEnd(38)} ${e.primaryMuscle.padEnd(11)} ${e.nameEs}`);
