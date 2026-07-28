@@ -18,7 +18,7 @@ export default function EditarEjercicioClient({ exerciseId, basePath = "/trainer
   const { user } = useAuth();
   const [exercise, setExercise] = useState<Exercise | null>(null);
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState<"ok" | "not-found" | "public" | "not-owner">("ok");
+  const [status, setStatus] = useState<"ok" | "not-found" | "not-owner">("ok");
 
   useEffect(() => {
     if (!user) return;
@@ -32,15 +32,10 @@ export default function EditarEjercicioClient({ exerciseId, basePath = "/trainer
 
       const ex = result.value;
 
-      // Public exercises cannot be edited
-      if (ex.isPublic || ex.createdById === null) {
-        setStatus("public");
-        setLoading(false);
-        return;
-      }
-
-      // Only the owner trainer can edit
-      if (ex.createdById !== user.id) {
+      // Los ejercicios públicos son catálogo compartido: los edita cualquier
+      // coach, para que quien detecte una discrepancia pueda corregirla.
+      // Los privados, solo su dueño.
+      if (!ex.isPublic && ex.createdById !== user.id) {
         setStatus("not-owner");
         setLoading(false);
         return;
@@ -76,29 +71,6 @@ export default function EditarEjercicioClient({ exerciseId, basePath = "/trainer
           className="text-xs text-brand-primary hover:text-brand-primary-hover transition-colors"
         >
           Volver a la biblioteca
-        </Link>
-      </div>
-    );
-  }
-
-  if (status === "public") {
-    return (
-      <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-[#3F3F46] px-6 py-16 text-center">
-        <Lock className="h-10 w-10 text-[#52525B]" strokeWidth={1.5} />
-        <div>
-          <p className="text-sm font-semibold text-[#FAFAFA]">
-            No podés editar este ejercicio
-          </p>
-          <p className="mt-1 text-xs text-[#71717A]">
-            Los ejercicios de la biblioteca pública no se pueden modificar. Podés
-            crear una copia privada desde la vista de detalle.
-          </p>
-        </div>
-        <Link
-          href={`${basePath}/${exerciseId}`}
-          className="text-xs text-brand-primary hover:text-brand-primary-hover transition-colors"
-        >
-          Ver ejercicio
         </Link>
       </div>
     );

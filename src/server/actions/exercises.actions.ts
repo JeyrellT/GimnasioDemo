@@ -714,8 +714,14 @@ export interface UpdateExerciseInput {
 }
 
 /**
- * Update a private exercise. Only the creator can edit.
- * Public (seeded) exercises are read-only.
+ * Update an exercise.
+ *
+ * Permisos (espeja la regla de visibilidad de `getExercise`):
+ *   - Público: lo edita CUALQUIER coach. Es catálogo compartido y se quiere que
+ *     quien detecte una discrepancia (músculo mal asignado, typo, instrucción
+ *     confusa) pueda corregirla en el momento. El cambio afecta a todos los
+ *     coaches, así que la edición queda registrada en el log.
+ *   - Privado: solo su creador.
  */
 export async function updateExercise(
   idOrInput: string | UpdateExerciseInput,
@@ -737,13 +743,9 @@ export async function updateExercise(
     if (!exercise) {
       throw new NotFoundError("EXERCISE_NOT_FOUND", "Ejercicio no encontrado.");
     }
-    if (exercise.isPublic) {
-      throw new ForbiddenError(
-        "EXERCISE_PUBLIC_READONLY",
-        "Los ejercicios públicos no se pueden editar.",
-      );
-    }
-    if (exercise.createdById !== user.id) {
+    // Los públicos son editables por cualquier coach (catálogo compartido).
+    // Los privados, solo por su dueño.
+    if (!exercise.isPublic && exercise.createdById !== user.id) {
       throw new ForbiddenError(
         "EXERCISE_NOT_OWNED",
         "Este ejercicio no te pertenece.",
@@ -804,7 +806,14 @@ export async function updateExercise(
 
     await prisma.exercise.update({ where: { id }, data: patch });
 
-    logInfo("exercises.updateExercise", { userId: user.id, exerciseId: id });
+    logInfo("exercises.updateExercise", {
+      userId: user.id,
+      exerciseId: id,
+      // Un ejercicio público es catálogo compartido: el cambio lo ven todos los
+      // coaches. Se marca aparte para poder rastrearlo si algo se corrompe.
+      sharedCatalog: exercise.isPublic,
+      editedFields: Object.keys(patch),
+    });
 
     return { updated: true as const, exerciseId: id };
   });
