@@ -9,7 +9,8 @@
     "secondaryMuscles": [
       "GLUTES",
       "HAMSTRINGS",
-      "ABS"
+      "ABS",
+      "CALVES"
     ],
     "equipment": "DUMBBELL",
     "difficulty": "INTERMEDIATE",
@@ -39,7 +40,7 @@
     "slug": "kettlebell-sumo-squat",
     "nameEs": "Sentadilla sumo con kettlebell",
     "nameEn": "Kettlebell Sumo Squat",
-    "instructionsEs": "1. Parate con los pies bastante más abiertos que los hombros y los dedos apuntando hacia afuera, más o menos 45 grados.\n2. Agarrá la kettlebell con las dos manos por el mango y dejala colgando entre las piernas, con los brazos rectos.\n3. Sacá pecho, apretá el abdomen y bajá doblando las rodillas mientras llevás la cadera hacia atrás, hasta que los muslos queden casi paralelos al piso.\n4. Cuidá que las rodillas se abran hacia afuera siguiendo la línea de los dedos de los pies, y que no se junten.\n5. Empujá con los talones para subir y apretá los glúteos al llegar arriba.\nTip: el error más común es tirar el pecho hacia adelante y redondear la espalda baja. Mantené el torso lo más derecho posible; si no lo lográs, usá menos peso.",
+    "instructionsEs": "1. Parate con los pies bastante más abiertos que los hombros y los dedos apuntando hacia afuera, más o menos 45 grados.\n2. Agarrá la kettlebell con las dos manos por el mango y dejala colgando entre las piernas, con los brazos rectos.\n3. Sacá pecho, apretá el abdomen y bajá la cadera derecho hacia abajo, entre los pies, manteniendo el torso vertical, hasta que los muslos queden casi paralelos al piso.\n4. Cuidá que las rodillas se abran hacia afuera siguiendo la línea de los dedos de los pies, y que no se junten.\n5. Empujá con toda la planta de los pies para subir y apretá los glúteos al llegar arriba.\nTip: el error más común es tirar el pecho hacia adelante y redondear la espalda baja. Mantené el torso lo más derecho posible; si no lo lográs, usá menos peso. Si la kettlebell toca el piso antes de que llegués abajo, parate sobre dos discos o steps.",
     "primaryMuscle": "GLUTES",
     "secondaryMuscles": [
       "QUADS",
@@ -59,10 +60,7 @@
     "nameEn": "Seated Hip Abduction Machine",
     "instructionsEs": "1. Sentate en la máquina con la espalda bien apoyada en el respaldo y las piernas por dentro de las almohadillas.\n2. Ajustá la máquina para arrancar con las piernas juntas, sin que la cadera te quede incómoda. Agarrá las manijas de los lados.\n3. Apretá los glúteos y abrí las piernas empujando las almohadillas hacia afuera, todo lo que la máquina te permita.\n4. Aguantá un segundo bien abierto, sintiendo el trabajo en la parte de afuera de la cadera.\n5. Volvé a juntar las piernas despacio, contando unos 2 segundos.\nTip: el error más común es soltar el peso de regreso de golpe. La mitad del trabajo está en cerrar las piernas lento y con control.",
     "primaryMuscle": "GLUTES",
-    "secondaryMuscles": [
-      "ABS",
-      "OBLIQUES"
-    ],
+    "secondaryMuscles": [],
     "equipment": "MACHINE",
     "difficulty": "BEGINNER",
     "category": "STRENGTH",
@@ -268,11 +266,12 @@
     "nameEs": "Peso muerto en máquina Smith",
     "nameEn": "Smith Machine Deadlift",
     "instructionsEs": "1. Poné la barra del Smith en el gancho más bajo y parate con los pies al ancho de las caderas, con la barra casi pegada a las canillas.\n2. Agachate doblando caderas y rodillas y agarrá la barra un poco más afuera de las piernas. Sacá el pecho y dejá la espalda recta.\n3. Girá las muñecas para destrabar la barra. Empujá el piso con los pies y subí estirando las piernas y las caderas al mismo tiempo.\n4. Arriba quedate firme y apretá los glúteos un segundo, sin echarte para atrás ni encorvar los hombros.\n5. Bajá despacio devolviendo las caderas hacia atrás, rozando las piernas con la barra, hasta el punto más bajo.\n6. Tip: el error más común es redondear la espalda baja al levantar. Si sentís que se te curva, bajale al peso — la espalda siempre va recta.",
-    "primaryMuscle": "HAMSTRINGS",
+    "primaryMuscle": "GLUTES",
     "secondaryMuscles": [
-      "GLUTES",
+      "HAMSTRINGS",
+      "QUADS",
       "BACK",
-      "QUADS"
+      "CALVES"
     ],
     "equipment": "MACHINE",
     "difficulty": "INTERMEDIATE",
@@ -339,8 +338,7 @@
     "instructionsEs": "1. Metete debajo de las almohadillas y apoyá los hombros. Poné la punta de los pies en el escalón, con los talones al aire.\n2. Estirá las piernas para levantar el peso y quedate parado con las rodillas derechas, pero sin trabarlas.\n3. Bajá los talones despacio todo lo que podás, hasta sentir el estirón en la pantorrilla.\n4. Subí empujando con la punta de los pies lo más alto que puedas, como si te pararas en puntillas.\n5. Apretá un segundo arriba y volvé a bajar controlado, sin rebotar.\n6. Tip: el error más común es hacer rebotes rápidos con medio recorrido. Hacelo lento y completo, arriba y abajo, aunque tengás que bajarle al peso.",
     "primaryMuscle": "CALVES",
     "secondaryMuscles": [
-      "QUADS",
-      "ABS"
+      "BACK"
     ],
     "equipment": "MACHINE",
     "difficulty": "BEGINNER",
@@ -358,6 +356,7 @@
     "secondaryMuscles": [
       "HAMSTRINGS",
       "ABS",
+      "OBLIQUES",
       "QUADS"
     ],
     "equipment": "BODYWEIGHT",
@@ -371,11 +370,10 @@
     "slug": "hip-adduction-machine",
     "nameEs": "Máquina de aductores (parte interna del muslo)",
     "nameEn": "Hip Adduction Machine",
-    "instructionsEs": "1. Sentate en la máquina con la espalda pegada al respaldo y las piernas por dentro de las almohadillas.\n2. Ajustá la abertura para que las piernas queden separadas pero sin que sientas jalón ni dolor en la parte interna del muslo.\n3. Agarrate de las manijas y cerrá las piernas juntando las rodillas, apretando la parte de adentro del muslo.\n4. Juntá hasta que las almohadillas casi se toquen y aguantá un segundo.\n5. Abrí las piernas despacio, controlando el peso, hasta volver al punto de partida sin que las placas choquen.\n6. Tip: el error más común es abrir demasiado desde el inicio o soltar el peso de golpe al abrir. Empezá con poca abertura y devolvete siempre lento.",
+    "instructionsEs": "1. Sentate en la máquina con la espalda pegada al respaldo y las almohadillas entre las piernas, apoyadas contra la cara interna de los muslos.\n2. Ajustá la abertura para que las piernas queden separadas pero sin que sientas jalón ni dolor en la parte interna del muslo.\n3. Agarrate de las manijas y cerrá las piernas juntando las rodillas, apretando la parte de adentro del muslo.\n4. Juntá hasta que las almohadillas casi se toquen y aguantá un segundo.\n5. Abrí las piernas despacio, controlando el peso, hasta volver al punto de partida sin que las placas choquen.\n6. Tip: el error más común es abrir demasiado desde el inicio o soltar el peso de golpe al abrir. Empezá con poca abertura y devolvete siempre lento.",
     "primaryMuscle": "HAMSTRINGS",
     "secondaryMuscles": [
-      "GLUTES",
-      "ABS"
+      "GLUTES"
     ],
     "equipment": "MACHINE",
     "difficulty": "BEGINNER",
@@ -406,7 +404,7 @@
     "slug": "machine-shoulder-press",
     "nameEs": "Press militar en máquina",
     "nameEn": "Machine Shoulder Press",
-    "instructionsEs": "1. Sentate en la máquina con la espalda bien pegada al respaldo y los pies firmes en el piso.\n2. Ajustá el asiento hasta que las agarraderas te queden a la altura de los hombros, más o menos a la altura de las orejas.\n3. Agarrá los mangos con las palmas viendo hacia adelante, sacá pecho y apretá la panza para no arquear la cintura.\n4. Empujá hacia arriba hasta estirar los brazos, sin trancar los codos de golpe al final.\n5. Bajá despacio, contando dos segundos, hasta que los codos vuelvan a quedar a la altura de los hombros.\n6. Tip: el error más común es despegar la espalda del respaldo y arquear la cintura para poder empujar más peso. Si te pasa eso, bajale al peso y mantené la espalda apoyada todo el tiempo.",
+    "instructionsEs": "1. Sentate en la máquina con la espalda bien pegada al respaldo y los pies firmes en el piso.\n2. Ajustá el asiento hasta que las agarraderas te queden a la altura de los hombros.\n3. Agarrá los mangos con las palmas viendo hacia adelante, sacá pecho y apretá la panza para no arquear la cintura.\n4. Empujá hacia arriba hasta estirar los brazos, sin trancar los codos de golpe al final.\n5. Bajá despacio, contando dos segundos, hasta que los codos vuelvan a quedar a la altura de los hombros.\n6. Tip: el error más común es despegar la espalda del respaldo y arquear la cintura para poder empujar más peso. Si te pasa eso, bajale al peso y mantené la espalda apoyada todo el tiempo.",
     "primaryMuscle": "SHOULDERS",
     "secondaryMuscles": [
       "TRICEPS",
@@ -517,7 +515,8 @@
       "QUADS",
       "SHOULDERS",
       "GLUTES",
-      "TRICEPS"
+      "TRICEPS",
+      "ABS"
     ],
     "equipment": "DUMBBELL",
     "difficulty": "INTERMEDIATE",
@@ -546,8 +545,8 @@
   {
     "pdfName": "Peso muerto mancuerna",
     "slug": "dumbbell-deadlift",
-    "nameEs": "Peso muerto con mancuernas",
-    "nameEn": "Dumbbell Deadlift",
+    "nameEs": "Peso muerto rumano con mancuernas",
+    "nameEn": "Dumbbell Romanian Deadlift",
     "instructionsEs": "1. Parate con los pies al ancho de las caderas y una mancuerna en cada mano por delante de los muslos, con las palmas viendo hacia vos.\n2. Sacá pecho, juntá un poco los omóplatos y dejá las rodillas apenas dobladas. La espalda va derecha todo el tiempo.\n3. Llevá la cola hacia atrás, como si quisieras cerrar una puerta con ella, y bajá las mancuernas pegadas a las piernas.\n4. Bajá hasta sentir un estirón en la parte de atrás de los muslos, más o menos a la altura de las rodillas o un poco más abajo.\n5. Empujá las caderas hacia adelante y apretá los glúteos para volver a pararte derecho, sin echarte hacia atrás al final.\nTip: el error más común es encorvar la espalda baja o bajar doblando las rodillas como si fuera sentadilla. Si sentís que la espalda se redondea, no bajés tanto: el movimiento nace de la cadera, no de la cintura.",
     "primaryMuscle": "HAMSTRINGS",
     "secondaryMuscles": [
