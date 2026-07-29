@@ -19,9 +19,12 @@
  *   - `ExerciseThumbnail` (listas) y `ExerciseVideoModal` (detalle) leen
  *     `thumbnailUrl` cuando no hay gif, así que la foto llena el espacio.
  *
- * Alcance: SOLO ejercicios con `mediaUrl` nulo. Si un ejercicio ya tiene video,
- * no se toca. Al cargar los videos reales, `--clear` deja los thumbnails en
- * null de una sola pasada.
+ * Alcance: los ejercicios que la UI muestra con el ícono gris, que NO es lo
+ * mismo que "sin video". Entran tres casos: sin nada, con una ruta local
+ * muerta (`/exercises/*.jpg` — esa carpeta no existe y da 404), y con un video
+ * del que no se puede derivar poster. Si un ejercicio ya muestra una foto, no
+ * se toca. Al cargar los videos reales, `--clear` deja los thumbnails en null
+ * de una sola pasada.
  *
  * El emparejamiento es manual (abajo), no automático: probamos con matching por
  * nombre y asignaba cosas como "Dumbbell Squat" a las aperturas de pecho.
@@ -114,12 +117,61 @@ const MAP: Record<string, string> = {
 	"fondos-en-banco": "Bench Dips",
 	"press-banco-plano-con-barra": "Barbell Bench Press - Medium Grip",
 	"press-de-banca-plano-con-mancuernas": "Dumbbell Bench Press",
-	"press-de-pecho-cerrado-con-mancuernas": "Dumbbell Bench Press with Neutral Grip",
+	"press-de-pecho-cerrado-con-mancuernas":
+		"Dumbbell Bench Press with Neutral Grip",
 	"press-militar-con-banda": "Shoulder Press - With Bands",
 	"press-militar-con-mancuernas": "Dumbbell Shoulder Press",
 	"pull-apart-con-o-sin-banda": "Band Pull Apart",
-	// "wall-slides" no tiene equivalente en el dataset — se queda con el ícono.
+
+	// --- calentamiento y movilidad ---
+	// Estos apuntaban a rutas locales muertas (/exercises/*.jpg): la carpeta
+	// public/exercises no existe y en producción daban 404, por eso salían con
+	// el ícono gris.
+	"circulos-de-hombros": "Shoulder Circles",
+	"circulos-de-brazos": "Arm Circles",
+	"circulos-de-cadera": "Standing Hip Circles",
+	"circulos-de-tobillos": "Ankle Circles",
+	"puente-de-gluteo": "Butt Lift (Bridge)",
+	"bird-dog": "Superman",
+	"push-ups-lentos": "Pushups",
+	"saltos-de-tijera": "Rope Jumping",
+	"rodillas-altas": "Fast Skipping",
+	"talones-a-gluteos": "Double Leg Butt Kick",
+	"saltar-la-cuerda": "Rope Jumping",
+	"mountain-climbers": "Mountain Climbers",
+	"gato-camello": "Cat Stretch",
+	"worlds-greatest-stretch": "World's Greatest Stretch",
+	inchworm: "Inchworm",
+	"sentadilla-con-peso-corporal": "Bodyweight Squat",
+	"band-pull-aparts": "Band Pull Apart",
+	"face-pulls-con-banda": "Face Pull",
+	"monster-walks-con-banda": "Monster Walk",
+	"wall-slides": "Shoulder Stretch",
+	// --- estiramientos ---
+	"estiramiento-cuadriceps-de-pie": "Quad Stretch",
+	"estiramiento-isquiotibiales-sentado": "Seated Floor Hamstring Stretch",
+	"estiramiento-gemelos-en-pared": "Calf Stretch Hands Against Wall",
+	"estiramiento-flexor-de-cadera": "Kneeling Hip Flexor",
+	"estiramiento-pecho-en-puerta": "Chest And Front Of Shoulder Stretch",
+	"estiramiento-triceps-sobre-cabeza": "Triceps Stretch",
+	"figura-4-supino": "IT Band and Glute Stretch",
+	"postura-del-nino": "Child's Pose",
 };
+
+/** Una URL de imagen sirve solo si es http(s); las rutas locales están muertas. */
+function thumbUsable(t: string | null): boolean {
+	return Boolean(t && (t.startsWith("http://") || t.startsWith("https://")));
+}
+
+/** El thumbnail se puede derivar del video solo en Drive / YouTube / Vimeo. */
+function videoDerivable(v: string | null): boolean {
+	return Boolean(
+		v &&
+			/drive\.google\.com|googleusercontent\.com|youtube\.com|youtu\.be|vimeo\.com/.test(
+				v,
+			),
+	);
+}
 
 interface FeEntry {
 	id: string;
@@ -169,15 +221,29 @@ async function main(): Promise<void> {
 		);
 	}
 
-	// -- Ejercicios objetivo: los que NO tienen video ---------------------------
-	const sinVideo = await prisma.exercise.findMany({
-		where: { mediaUrl: null, deletedAt: null },
-		select: { id: true, slug: true, nameEs: true, thumbnailUrl: true },
+	// -- Ejercicios objetivo -----------------------------------------------------
+	// Los que la UI muestra con el ícono gris de mancuerna, que NO es lo mismo
+	// que "sin video": también entran los que tienen una ruta local muerta
+	// (/exercises/*.jpg — esa carpeta no existe) o un video del que no se puede
+	// derivar poster. El criterio replica resolveUrl() de ExerciseThumbnail.
+	const todos = await prisma.exercise.findMany({
+		where: { deletedAt: null },
+		select: {
+			id: true,
+			slug: true,
+			nameEs: true,
+			thumbnailUrl: true,
+			mediaUrl: true,
+		},
 		orderBy: { nameEs: "asc" },
 	});
-	console.log(`Ejercicios sin video en la base: ${sinVideo.length}`);
+	const sinFoto = todos.filter(
+		(e) => !thumbUsable(e.thumbnailUrl) && !videoDerivable(e.mediaUrl),
+	);
+	console.log(`Ejercicios en el catálogo: ${todos.length}`);
+	console.log(`Se ven con el ícono gris (sin foto): ${sinFoto.length}`);
 
-	const sinMapear = sinVideo.filter((e) => !MAP[e.slug]);
+	const sinMapear = sinFoto.filter((e) => !MAP[e.slug]);
 	if (sinMapear.length > 0) {
 		console.log(
 			`\nSin imagen asignada en el MAP (${sinMapear.length}) — se dejan como están:`,
@@ -185,7 +251,7 @@ async function main(): Promise<void> {
 		for (const e of sinMapear) console.log(`   - ${e.slug} (${e.nameEs})`);
 	}
 
-	const objetivo = sinVideo.filter((e) => MAP[e.slug]);
+	const objetivo = sinFoto.filter((e) => MAP[e.slug]);
 	console.log(`\nA rellenar: ${objetivo.length}`);
 
 	// -- Verificar que cada imagen exista de verdad antes de escribirla ---------
