@@ -144,23 +144,52 @@ export function ExerciseLibraryPage({
     ownerRaw === "mine" || ownerRaw === "public" ? ownerRaw : undefined;
 
   const [exercises, setExercises] = useState<ExerciseSearchResult[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [searchInput, setSearchInput] = useState(q ?? "");
 
   const hasFilters = !!(q || muscle || equipment || owner);
   const clearHref = basePath;
 
+  // El servidor tope el tamaño de página en 50 (searchExercisesSchema).
+  const PAGE_SIZE = 50;
+
+  // Primera página: reemplaza la lista. Se re-dispara al cambiar los filtros.
   const loadExercises = useCallback(async () => {
     setLoading(true);
     const result = await searchExercises(
       q ?? "",
       { muscle, equipment, ...(category ? { category } : {}), owner },
       1,
-      40,
+      PAGE_SIZE,
     );
     setExercises(result.ok ? result.value.exercises : []);
+    // `total` es el conteo COMPLETO que hace el servidor, no el de esta página.
+    setTotal(result.ok ? result.value.total : 0);
     setLoading(false);
   }, [q, muscle, equipment, category, owner]);
+
+  // "Ver más": trae la siguiente página y la agrega al final.
+  const loadMore = useCallback(async () => {
+    setLoadingMore(true);
+    const nextPage = Math.floor(exercises.length / PAGE_SIZE) + 1;
+    const result = await searchExercises(
+      q ?? "",
+      { muscle, equipment, ...(category ? { category } : {}), owner },
+      nextPage,
+      PAGE_SIZE,
+    );
+    if (result.ok) {
+      // Deduplica por id: si algo cambió entre páginas, no se repite una tarjeta.
+      setExercises((prev) => {
+        const vistos = new Set(prev.map((e) => e.id));
+        return [...prev, ...result.value.exercises.filter((e) => !vistos.has(e.id))];
+      });
+      setTotal(result.value.total);
+    }
+    setLoadingMore(false);
+  }, [q, muscle, equipment, category, owner, exercises.length]);
 
   useEffect(() => {
     loadExercises();
@@ -296,7 +325,12 @@ export function ExerciseLibraryPage({
       ) : (
         <>
           <p className="text-xs text-[#71717A]">
-            {exercises.length} resultado{exercises.length !== 1 ? "s" : ""}
+            {/* `total` es el conteo completo del servidor. Antes se mostraba
+                exercises.length, que era el tamaño de página y hacía parecer
+                que la biblioteca tenía muchos menos ejercicios de los que hay. */}
+            {exercises.length < total
+              ? `${exercises.length} de ${total} ejercicios`
+              : `${total} resultado${total !== 1 ? "s" : ""}`}
           </p>
           <ul className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
             {exercises.map((ex) => {
@@ -384,6 +418,26 @@ export function ExerciseLibraryPage({
               );
             })}
           </ul>
+
+          {exercises.length < total && (
+            <div className="flex justify-center pt-2">
+              <button
+                type="button"
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="inline-flex items-center gap-2 rounded-lg border border-[#3F3F46] px-4 py-2 text-sm font-medium text-[#FAFAFA] transition-colors hover:bg-[#27272A] disabled:opacity-50"
+              >
+                {loadingMore ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    Cargando…
+                  </>
+                ) : (
+                  `Ver más (${total - exercises.length} restantes)`
+                )}
+              </button>
+            </div>
+          )}
         </>
       )}
     </div>
