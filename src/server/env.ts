@@ -15,8 +15,26 @@ import { z } from "zod";
 // Helpers
 // -----------------------------------------------------------------------------
 
-/** Parse "true" / "1" / "yes" as true, everything else as false. */
-const boolFlag = z.coerce.boolean().default(false);
+/**
+ * Parse "true" / "1" / "yes" (sin importar mayúsculas) como true; cualquier
+ * otro valor es false.
+ *
+ * NO usar `z.coerce.boolean()`: coerce aplica `Boolean(valor)`, y en JavaScript
+ * cualquier string no vacío es truthy — o sea `PAYMENT_PROVIDER_LIVE="false"`
+ * se leía como TRUE y todos los flags quedaban encendidos en producción.
+ */
+function parseBoolFlag(porDefecto: boolean) {
+	return z
+		.union([z.boolean(), z.string()])
+		.optional()
+		.transform((v) => {
+			if (typeof v === "boolean") return v;
+			if (v === undefined || v.trim() === "") return porDefecto;
+			return ["true", "1", "yes"].includes(v.trim().toLowerCase());
+		});
+}
+
+const boolFlag = parseBoolFlag(false);
 
 // -----------------------------------------------------------------------------
 // Schema
@@ -122,7 +140,7 @@ const envSchema = z.object({
 	 */
 	PAYMENT_PROVIDER_LIVE: boolFlag,
 	BILLING_LIVE: boolFlag,
-	AI_ASSIST_LIVE: z.coerce.boolean().default(true),
+	AI_ASSIST_LIVE: parseBoolFlag(true),
 	MEDIAPIPE_POSTURE_BETA: boolFlag,
 });
 

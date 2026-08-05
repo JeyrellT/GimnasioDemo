@@ -4,6 +4,7 @@ import { formatCRC, formatDateCR } from "@/lib/utils";
 import { Receipt } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { SubscriptionCard } from "@/components/billing/subscription-card";
+import { isFlagOn } from "@/lib/flags";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Facturación" };
@@ -20,8 +21,12 @@ export default async function FacturacionPage() {
 		<div className="space-y-6">
 			<h1 className="text-2xl font-bold text-[#FAFAFA]">Facturación</h1>
 
-			{/* Mi suscripción Blackline — pagar/renovar con tarjeta vía ONVO */}
-			<SubscriptionCard subscription={subscription} />
+			{/* Mi suscripción Blackline. Con la pasarela apagada muestra el pago
+			    por SINPE Móvil; al activarla vuelve al cobro con tarjeta. */}
+			<SubscriptionCard
+				subscription={subscription}
+				paymentsLive={isFlagOn("PAYMENT")}
+			/>
 
 			<div className="rounded-xl border border-[#F59E0B]/30 bg-[#451A03] px-4 py-3">
 				<p className="text-sm text-[#FDE68A]">

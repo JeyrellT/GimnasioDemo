@@ -112,6 +112,18 @@ export const HACIENDA_CONDICION_CONTADO = "01" as const;
 /** Payment method code: Transferencia. */
 export const HACIENDA_MEDIO_PAGO_TRANSFERENCIA = "02" as const;
 
+// ── Pago por SINPE Móvil ─────────────────────────────────────────────────────
+
+/**
+ * Número de SINPE Móvil al que los trainers pagan la suscripción mientras la
+ * pasarela (ONVO) no esté en vivo. Se muestra cuando el flag PAYMENT está en
+ * false; al activarlo, la UI vuelve sola al cobro con tarjeta.
+ */
+export const SINPE_PHONE = "72681035" as const;
+
+/** El mismo número formateado para mostrar: 7268-1035. */
+export const SINPE_PHONE_DISPLAY = "7268-1035" as const;
+
 // ── Emails ───────────────────────────────────────────────────────────────────
 
 export const EMAIL_SUPPORT = "soporte@blacklinefitness.app" as const;

@@ -5,7 +5,12 @@
 // trainer's subscription window has lapsed (trial ended, paid period expired,
 // past-due, or cancelled). This is the "pausar la interfaz y funcionalidades"
 // gate: the trainer cannot reach any page — they can only pay to reactivate or
-// sign out. The ONVO payment widget is embedded so they can renew in place.
+// sign out.
+//
+// El medio de pago depende del flag PAYMENT (env PAYMENT_PROVIDER_LIVE):
+//   - en vivo  -> widget de tarjeta de ONVO, que reactiva la cuenta sola vía
+//                 webhook.
+//   - apagado  -> instrucciones de SINPE Móvil. La activación ahí es manual.
 // =============================================================================
 
 import { useState } from "react";
@@ -17,6 +22,7 @@ import type { SubscriptionTier } from "@prisma/client";
 import { formatCRC, formatDateCR } from "@/lib/format";
 import { PLAN_PRICE_CRC, APP_NAME, TRIAL_DAYS } from "@/lib/consts";
 import { OnvoSubscriptionPayment } from "./onvo-subscription-payment";
+import { SinpePayment } from "./sinpe-payment";
 
 export type RenewWallReason =
   | "TRIAL_EXPIRED"
@@ -30,6 +36,8 @@ interface TrialLockedScreenProps {
   /** ISO strings — Dates aren't serializable across the server→client boundary. */
   trialEndsAt: string | null;
   currentPeriodEnd: string | null;
+  /** Flag PAYMENT: con la pasarela apagada se cobra por SINPE Móvil. */
+  paymentsLive: boolean;
 }
 
 function copyFor(
@@ -65,6 +73,7 @@ export function TrialLockedScreen({
   planTier,
   trialEndsAt,
   currentPeriodEnd,
+  paymentsLive,
 }: TrialLockedScreenProps) {
   const router = useRouter();
   const [paying, setPaying] = useState(false);
@@ -105,7 +114,13 @@ export function TrialLockedScreen({
           </div>
         </div>
 
-        {paying ? (
+        {/* Sin pasarela en vivo el único medio es SINPE, así que se muestra de
+            una — esconderlo detrás de un botón solo agrega un clic de más. */}
+        {!paymentsLive ? (
+          <div className="mt-6">
+            <SinpePayment amountCRC={PLAN_PRICE_CRC[planTier]} />
+          </div>
+        ) : paying ? (
           <div className="mt-6">
             <OnvoSubscriptionPayment onPaid={() => router.refresh()} />
             <button

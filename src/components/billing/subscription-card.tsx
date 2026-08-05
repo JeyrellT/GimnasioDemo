@@ -10,7 +10,9 @@ import { CreditCard, ShieldCheck } from "lucide-react";
 import type { SubscriptionStatus, SubscriptionTier } from "@prisma/client";
 
 import { formatDateCR } from "@/lib/utils";
+import { PLAN_PRICE_CRC } from "@/lib/consts";
 import { OnvoSubscriptionPayment } from "./onvo-subscription-payment";
+import { SinpePayment } from "./sinpe-payment";
 
 export interface SubscriptionCardData {
 	planTier: SubscriptionTier;
@@ -37,7 +39,12 @@ const STATUS_COLOR: Record<SubscriptionStatus, string> = {
 
 export function SubscriptionCard({
 	subscription,
-}: { subscription: SubscriptionCardData | null }) {
+	paymentsLive = false,
+}: {
+	subscription: SubscriptionCardData | null;
+	/** Flag PAYMENT: con la pasarela apagada se cobra por SINPE Móvil. */
+	paymentsLive?: boolean;
+}) {
 	const [paying, setPaying] = useState(false);
 
 	if (!subscription) return null;
@@ -66,7 +73,7 @@ export function SubscriptionCard({
 					</div>
 				</div>
 
-				{!paying && (
+				{!paying && paymentsLive && (
 					<button
 						type="button"
 						onClick={() => setPaying(true)}
@@ -82,7 +89,14 @@ export function SubscriptionCard({
 				)}
 			</div>
 
-			{paying && (
+			{/* Sin pasarela en vivo, el pago va por SINPE y se muestra siempre. */}
+			{!paymentsLive && (
+				<div className="mt-4">
+					<SinpePayment amountCRC={PLAN_PRICE_CRC[planTier]} />
+				</div>
+			)}
+
+			{paymentsLive && paying && (
 				<div className="mt-4">
 					<OnvoSubscriptionPayment onPaid={() => setPaying(false)} />
 					<button

@@ -3,6 +3,7 @@ import { ClientLayout } from "./_client-layout";
 import { ImpersonationBanner } from "./admin/_components/impersonation-banner";
 import { getCurrentUser, getTrainerRenewWall } from "@/server/guards";
 import { TrialLockedScreen } from "@/components/billing/trial-locked-screen";
+import { isFlagOn } from "@/lib/flags";
 import {
   getAdminMirrorDirectory,
   getCurrentImpersonation,
@@ -67,6 +68,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           currentPeriodEnd={
             wall.currentPeriodEnd ? wall.currentPeriodEnd.toISOString() : null
           }
+          // Con la pasarela apagada el muro cobra por SINPE Móvil; al poner
+          // PAYMENT_PROVIDER_LIVE=true vuelve solo al widget de tarjeta.
+          paymentsLive={isFlagOn("PAYMENT")}
         />
       );
     }
