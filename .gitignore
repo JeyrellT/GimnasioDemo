@@ -64,3 +64,9 @@ scratch/
 # Programas de entrenamiento de clientes en PDF — datos personales, nunca al repo.
 # El contenido ya vive normalizado en prisma/seed/data/exercises-programa-*.json.
 /*.pdf
+
+# Capturas de pantalla para marketing (scripts/capturar-pantallas.mjs).
+# Se generan contra producción y pueden traer datos de clientes reales aunque
+# el script anonimice los nombres — nunca al repo.
+capturas/
+blackline-capturas*.zip
