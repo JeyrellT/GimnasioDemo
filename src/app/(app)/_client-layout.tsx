@@ -71,7 +71,10 @@ function AppShell({
       : ClientBottomNav;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-canvas">
+    // `w-full overflow-x-hidden` en la raíz: en celular nada puede empujar la
+    // página hacia los lados. Sin esto la pantalla se corría y el contenido
+    // aparecía cortado en ambos bordes.
+    <div className="flex min-h-dvh w-full flex-col overflow-x-hidden bg-canvas">
       <div className="sticky top-0 z-40 bg-canvas">
         <OfflineBanner />
         <Topbar
@@ -80,14 +83,19 @@ function AppShell({
         />
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex min-w-0 flex-1 overflow-hidden">
         <Sidebar />
 
         <main
           id="main-content"
-          className="flex-1 overflow-y-auto scrollbar-thin pb-20 sm:pb-6 px-4 pt-6 sm:pl-56"
+          // `min-w-0` es la clave: un ítem flex arranca con `min-width: auto`,
+          // así que NO se encoge por debajo del ancho natural de su contenido.
+          // Bastaba un elemento ancho adentro (una tabla, un texto largo sin
+          // cortes) para estirar el main más allá de la pantalla y desplazar
+          // toda la interfaz. Con min-w-0 el contenido se adapta en su lugar.
+          className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin px-4 pb-20 pt-6 sm:pb-6 sm:pl-56"
         >
-          <div className="mx-auto max-w-5xl">{children}</div>
+          <div className="mx-auto w-full max-w-5xl">{children}</div>
         </main>
       </div>
 
