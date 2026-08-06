@@ -221,12 +221,25 @@ async function login(page, email, password) {
 		waitUntil: "domcontentloaded",
 		timeout: 45_000,
 	});
-	await page.waitForTimeout(1500);
+	await page.waitForTimeout(2000);
 
-	// El formulario usa inputs estándar de email + password.
-	await page.fill('input[type="email"], input[name="email"]', email);
-	await page.fill('input[type="password"], input[name="password"]', password);
-	await page.click('button[type="submit"]');
+	// El formulario NO está a la vista: /ingresar es un hub con dos botones y el
+	// login vive dentro de un diálogo que abre el botón "Ingresá".
+	const abrir = page.getByRole("button", { name: /^Ingresá$/ });
+	if ((await abrir.count()) > 0) {
+		await abrir.first().click();
+		await page.waitForTimeout(1500);
+	}
+
+	// Se usa `autocomplete` y no `type`: el campo de contraseña alterna entre
+	// type=password y type=text con el botón de mostrar/ocultar, así que el
+	// selector por tipo es inestable.
+	await page.locator('input[autocomplete="email"]').first().fill(email);
+	await page
+		.locator('input[autocomplete="current-password"]')
+		.first()
+		.fill(password);
+	await page.getByRole("button", { name: /^Ingresar$/ }).first().click();
 
 	// Espera a salir de /ingresar.
 	try {
