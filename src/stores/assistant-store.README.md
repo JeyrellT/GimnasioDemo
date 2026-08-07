@@ -14,10 +14,29 @@ El store del asistente IA usa el middleware `persist` de Zustand con un adapter 
 Solo los campos que sobreviven a un refresh (`partialize`):
 - `messages` — historial completo, incluidos los attachments comprimidos como base64.
 - `stickyClient` — { clientId, name } del cliente activo.
+- `ownerUserId` — userId del perfil dueño de la conversación (ver "Aislamiento por perfil" abajo).
 
 **No** se persiste:
 - `pendingAttachments` (transient — pre-envío).
 - `isThinking`, `pendingConfirmation`, `lastError` (estado de vida de un turn).
+
+### Aislamiento por perfil
+
+El object store de IndexedDB es único por navegador — no por cuenta. Sin nada
+más, un super admin espejando distintos coaches desde `/admin/users`, o dos
+coaches en el mismo equipo, verían el historial (con nombres y fotos de
+clientes) de la sesión anterior al abrir el asistente.
+
+`onRehydrateStorage` compara `ownerUserId` contra el perfil activo
+(`getActiveProfile()` en `src/lib/demo/settings-store.ts`, fijado por
+`AuthProvider` en cada render — ver el comentario en `auth-provider.tsx`). Si
+no coincide (o `ownerUserId` es `null`, dato de antes de que este campo
+existiera), la conversación se descarta en vez de heredarse: `messages`,
+`stickyClient` y `lastUserInput` quedan vacíos y `ownerUserId` se reasigna al
+perfil activo. Como todo cambio de perfil en la app implica un hard reload
+(`window.location.assign` en el mirror switcher, navegación completa en
+login/logout), este chequeo alcanza — no hace falta limpiar el store a mano al
+cambiar de cuenta.
 
 ### Cómo borrar la conversación persistida
 

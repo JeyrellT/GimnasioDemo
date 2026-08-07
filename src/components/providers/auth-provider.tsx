@@ -7,6 +7,8 @@ import {
 } from "react";
 import { SessionProvider, useSession } from "next-auth/react";
 
+import { setActiveProfile } from "@/lib/demo/settings-store";
+
 // ---------------------------------------------------------------------------
 // Shared types
 // ---------------------------------------------------------------------------
@@ -60,6 +62,15 @@ function ProdAuthBridge({
   // the server supplies the effective target so client-side navigation,
   // branding and role gates match the account being observed.
   const user = effectiveUser ?? sessionUser;
+
+  // Fija el perfil activo para el storage de la API key de Gemini (por
+  // perfil, ver settings-store.ts). A propósito NO es un useEffect: se llama
+  // acá mismo, durante el render de este provider — que está montado cerca de
+  // la raíz — para que quede fijado ANTES de que cualquier componente hijo
+  // más abajo en el árbol lea getGeminiKey()/hasGeminiKey() en su propio
+  // efecto de montaje. Es una asignación idempotente a una variable de
+  // módulo; no afecta lo que se renderiza.
+  setActiveProfile(user?.id ?? null);
 
   const value: AuthContextValue = {
     user,

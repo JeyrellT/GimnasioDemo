@@ -104,7 +104,10 @@ export default function PerfilPage() {
   const [uploading, setUploading] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
 
-  // ── Gemini key state (demo only — prod uses server-side env) ─────────────
+  // ── Gemini key state — solo bajo NEXT_PUBLIC_DEMO_MODE (build de export
+  // estático separado). Duplica la sección de /trainer/ajustes; delega en el
+  // mismo settings-store.ts, así que ya queda scopeada por perfil (userId)
+  // igual que la de Ajustes — no requiere lógica propia. ─────────────────────
   const [apiKey, setApiKeyState] = useState("");
   const [showKey, setShowKey] = useState(false);
 
@@ -317,7 +320,9 @@ export default function PerfilPage() {
         </div>
       </div>
 
-      {/* Gemini API key — demo only (production uses server-side GEMINI_API_KEY) */}
+      {/* Gemini API key — solo bajo NEXT_PUBLIC_DEMO_MODE. La app en vivo usa
+          la sección equivalente en /trainer/ajustes; ambas están scopeadas
+          por perfil vía settings-store.ts. */}
       {IS_DEMO && (
         <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-4 space-y-3">
           <div className="flex items-center gap-2">

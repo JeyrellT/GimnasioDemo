@@ -18,6 +18,7 @@ import { AdminSuperNav } from "@/app/(app)/admin/_components/admin-super-nav";
 import { AdminBottomNav } from "@/components/layout/admin-bottom-nav";
 import { OfflineBanner } from "@/components/shared/offline-banner";
 import { CoachAssistant } from "@/components/chat/coach-assistant";
+import { useAssistantStore } from "@/stores/assistant-store";
 import type { MirrorViewSwitcherState } from "@/app/(app)/admin/_components/mirror-view-switcher";
 
 function AppShell({
@@ -42,6 +43,19 @@ function AppShell({
       router.replace("/ingresar");
     }
   }, [isLoading, isAuthenticated, router]);
+
+  // Segunda señal de reconcileOwnership() (ver assistant-store.ts): en cuanto
+  // el perfil activo se resuelve, intenta reconciliar el historial del chat
+  // de IA con ese perfil. Es no-op si la rehidratación de IndexedDB todavía
+  // no terminó — en ese caso la propia rehidratación dispara la reconciliación
+  // cuando termine. Corre para todo rol (no solo trainer): el store se carga
+  // igual por el import estático de CoachAssistant más abajo, así que vale la
+  // pena aislarlo aunque este usuario no sea coach.
+  useEffect(() => {
+    if (!isLoading && user) {
+      useAssistantStore.getState().reconcileOwnership();
+    }
+  }, [isLoading, user]);
 
   if (!isLoading && !isAuthenticated) {
     return (

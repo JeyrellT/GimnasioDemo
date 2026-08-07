@@ -36,6 +36,7 @@ import type {
   PendingConfirmation,
   ToolCallRecord,
 } from "@/lib/ai/agent/types";
+import { getActiveProfile } from "@/lib/demo/settings-store";
 import { compressImage } from "@/lib/storage/compress-image";
 import { idbStorage } from "@/lib/storage/idb-storage";
 
@@ -68,6 +69,17 @@ interface AssistantState {
   /** Marcado true cuando IDB terminó de rehydratear. Útil para mostrar skeleton. */
   hasHydrated: boolean;
   /**
+   * userId del perfil dueño de esta conversación persistida. La conversación
+   * (con PII de clientes: nombres, ids, fotos adjuntas) vive en un único
+   * object store de IndexedDB compartido por todo el navegador — este campo
+   * es lo único que la ata a un perfil. onRehydrateStorage la compara contra
+   * el perfil activo (settings-store.ts) y descarta el historial si no
+   * coincide, para que un mirror de super admin o dos coaches en el mismo
+   * equipo no hereden la conversación de otro. null = todavía sin dueño
+   * asignado (primer uso, o dato de antes de este campo existir).
+   */
+  ownerUserId: string | null;
+  /**
    * Último input del coach (texto + adjuntos ya comprimidos). Persiste en IDB
    * para que el botón "Reintentar" funcione incluso después de un refresh.
    * Es null cuando no hay nada que reintentar (inicio, o luego de reset).
@@ -94,6 +106,15 @@ interface AssistantState {
    * y onRehydrateStorage no dispara (ej.: primera visita, IDB limpia).
    */
   forceHydrated: () => void;
+  /**
+   * Aislamiento por perfil: descarta messages/stickyClient/lastUserInput si
+   * no pertenecen al perfil activo (ver comentario junto a la suscripción al
+   * final del archivo para el porqué de este diseño de "doble disparador").
+   * Idempotente y segura de llamar más de una vez o antes de tiempo — no-op
+   * mientras falte cualquiera de las dos señales (hidratación de IDB
+   * terminada, perfil activo resuelto).
+   */
+  reconcileOwnership: () => void;
 }
 
 function newId(prefix: string): string {
@@ -208,6 +229,7 @@ export const useAssistantStore = create<AssistantState>()(
       stickyClient: null,
       hasHydrated: false,
       lastUserInput: null,
+      ownerUserId: null,
 
       reset: () => {
         set({
@@ -223,6 +245,25 @@ export const useAssistantStore = create<AssistantState>()(
       },
       dismissError: () => set({ lastError: null }),
       forceHydrated: () => set({ hasHydrated: true }),
+
+      reconcileOwnership: () => {
+        const state = get();
+        // Sin datos de disco confiables todavía, no hay nada contra qué
+        // comparar — decidir acá arriesgaría borrar la conversación real del
+        // coach si este chequeo corre antes de que termine la rehidratación.
+        if (!state.hasHydrated) return;
+        const activeProfile = getActiveProfile();
+        // Perfil aún no resuelto (raro, pero posible si esto corre muy
+        // temprano) — esperar a que se resuelva en vez de asumir.
+        if (activeProfile === null) return;
+        if (state.ownerUserId === activeProfile) return; // ya es del perfil correcto
+        set({
+          messages: [],
+          stickyClient: null,
+          lastUserInput: null,
+          ownerUserId: activeProfile,
+        });
+      },
 
       setStickyClient: (client) => set({ stickyClient: client }),
 
@@ -406,12 +447,24 @@ export const useAssistantStore = create<AssistantState>()(
         messages: state.messages,
         stickyClient: state.stickyClient,
         lastUserInput: state.lastUserInput,
+        ownerUserId: state.ownerUserId,
       }),
       onRehydrateStorage: () => (state) => {
         if (!state) return;
         // Cerrar tool calls "running" que quedaron zombies en IDB de un turno
         // previo que se cortó (refresh, cierre de tab). Sin esto, Gemini
         // rechaza la siguiente llamada con history malformed.
+        //
+        // El aislamiento por perfil (¿esta conversación es del perfil activo
+        // o hay que descartarla?) NO se decide acá — ver reconcileOwnership()
+        // y la suscripción debajo de este objeto. Decidirlo en este callback
+        // asumiría que el perfil activo ya está resuelto para cuando la
+        // lectura async de IndexedDB termina, y esa relación de orden no está
+        // garantizada estructuralmente (depende de cómo React programe el
+        // primer render vs. cuándo el navegador resuelve el request de IDB).
+        // Total, hasta que reconcileOwnership corra, este estado igual no se
+        // muestra: el consumidor de la UI espera hasHydrated Y perfil
+        // resuelto antes de confiar en messages/stickyClient.
         state.messages = sanitizeMessages(state.messages);
         state.hasHydrated = true;
       },
@@ -419,3 +472,34 @@ export const useAssistantStore = create<AssistantState>()(
     },
   ),
 );
+
+// -----------------------------------------------------------------------------
+// Aislamiento por perfil — disparador "el que llegue último"
+// -----------------------------------------------------------------------------
+//
+// reconcileOwnership() necesita DOS señales para poder decidir con confianza:
+// que la rehidratación desde IndexedDB terminó (hasHydrated) y que el perfil
+// activo ya está resuelto (getActiveProfile() no-null, fijado por AuthProvider
+// — ver settings-store.ts). Cuál de las dos llega primero no está garantizado,
+// así que se dispara desde AMBOS lados y la función es idempotente (no-op si
+// falta cualquiera de las dos, o si ya coincide):
+//   - acá: cuando hasHydrated pasa a true.
+//   - en src/app/(app)/_client-layout.tsx: cuando el perfil se resuelve
+//     (!isLoading && user), en un useEffect de AppShell.
+// El orden que sea, la reconciliación corre en cuanto la señal que faltaba
+// llega — nunca se toma una decisión con datos a medias.
+//
+// Por qué esta suscripción no puede "llegar tarde" y perderse la transición:
+// se registra en la siguiente línea de código después de create(persist(...)),
+// dentro del MISMO tick síncrono de evaluación del módulo — no hay ningún
+// await ni yield entre medio. onRehydrateStorage, en cambio, solo puede
+// dispararse cuando el IDBRequest de IndexedDB completa, y por spec eso pasa
+// SIEMPRE en una macrotarea posterior (nunca en línea, ni siquiera con datos
+// ya en caché) — o sea que no puede ejecutarse antes de que el script actual
+// termine. Como esta suscripción es parte de ese mismo script, queda
+// registrada antes de que la hidratación pueda completar, en cualquier caso.
+useAssistantStore.subscribe((state, prevState) => {
+  if (state.hasHydrated && !prevState.hasHydrated) {
+    useAssistantStore.getState().reconcileOwnership();
+  }
+});
