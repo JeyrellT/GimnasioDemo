@@ -22,7 +22,14 @@ export const IVA_PCT = 0.13 as const;
 
 // ── Subscription tiers — max active clients per plan ────────────────────────
 
+// El catálogo completo (nombres, qué incluye cada plan, si trae IA) vive en
+// `src/lib/plans.ts`. Acá quedan solo los dos mapas que ya consumía media app,
+// para no romper sus imports.
+
 export const MAX_CLIENTS_BY_TIER: Record<SubscriptionTier, number> = {
+  COACH: 60,
+  COACH_IA: 60,
+  // Retirados — se conservan por las cuentas viejas que los referencian.
   SOLO: 5,
   PRO: 25,
   STUDIO: 60,
@@ -30,6 +37,9 @@ export const MAX_CLIENTS_BY_TIER: Record<SubscriptionTier, number> = {
 
 /** Monthly prices in CRC with IVA included (as shown in public pricing page). */
 export const PLAN_PRICE_CRC: Record<SubscriptionTier, number> = {
+  COACH: 15_000,
+  COACH_IA: 20_000,
+  // Retirados.
   SOLO: 8_900,
   PRO: 22_900,
   STUDIO: 44_900,

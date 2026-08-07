@@ -1,9 +1,14 @@
 import type { ReactNode } from "react";
 import { ClientLayout } from "./_client-layout";
 import { ImpersonationBanner } from "./admin/_components/impersonation-banner";
-import { getCurrentUser, getTrainerRenewWall } from "@/server/guards";
+import {
+  getCurrentUser,
+  getTrainerRenewWall,
+  getTrainerPlanTier,
+} from "@/server/guards";
 import { TrialLockedScreen } from "@/components/billing/trial-locked-screen";
 import { isFlagOn } from "@/lib/flags";
+import { planIncluyeIA } from "@/lib/plans";
 import {
   getAdminMirrorDirectory,
   getCurrentImpersonation,
@@ -86,6 +91,14 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       }
     : undefined;
 
+  // El asistente con IA solo viene en el plan Blackline Coach IA. Se resuelve
+  // acá para no montar el chat flotante en cuentas que no lo tienen — la
+  // sección /trainer/asistente tiene su propia puerta con la invitación.
+  const tieneIA =
+    currentUser?.role === "TRAINER"
+      ? planIncluyeIA(await getTrainerPlanTier(currentUser.id))
+      : false;
+
   const hasMirrorAccess =
     currentUser?.role === "SUPER_ADMIN" ||
     Boolean(impersonation?.isImpersonating && impersonation.actor);
@@ -126,6 +139,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       <ClientLayout
         effectiveUser={effectiveUser}
         mirrorSwitcher={mirrorSwitcher}
+        tieneIA={tieneIA}
       >
         {children}
       </ClientLayout>

@@ -4,6 +4,7 @@ import { formatCRC, formatDateCR } from "@/lib/utils";
 import { Receipt } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { SubscriptionCard } from "@/components/billing/subscription-card";
+import { PlanPicker } from "@/components/billing/plan-picker";
 import { isFlagOn } from "@/lib/flags";
 import type { Metadata } from "next";
 
@@ -27,6 +28,20 @@ export default async function FacturacionPage() {
 				subscription={subscription}
 				paymentsLive={isFlagOn("PAYMENT")}
 			/>
+
+			{/* Cambiar de plan. El cambio queda registrado de una; el cobro del
+			    nuevo precio aplica desde el siguiente pago. */}
+			<div className="rounded-xl border border-[#3F3F46] bg-[#18181B] p-4 sm:p-5">
+				<h2 className="text-sm font-semibold text-[#FAFAFA]">Tu plan</h2>
+				<p className="mt-0.5 mb-4 text-xs text-[#71717A]">
+					Podés cambiarlo cuando querás. El nuevo precio aplica desde tu
+					siguiente pago.
+				</p>
+				<PlanPicker
+					actual={subscription?.planTier ?? null}
+					textoBoton="Guardar plan"
+				/>
+			</div>
 
 			<div className="rounded-xl border border-[#F59E0B]/30 bg-[#451A03] px-4 py-3">
 				<p className="text-sm text-[#FDE68A]">

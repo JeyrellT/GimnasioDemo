@@ -166,6 +166,13 @@ enum WorkoutSessionStatus {
 }
 
 enum SubscriptionTier {
+  // Oferta vigente: el coach elige uno al terminar los 15 días de prueba.
+  // La diferencia entre ambos es el acceso al asistente con IA.
+  COACH // ₡15.000 — sin IA
+  COACH_IA // ₡20.000 — con IA
+
+  // Retirados. Se conservan porque hay cuentas viejas que los referencian;
+  // quitarlos del enum rompería esas filas. Ver src/lib/plans.ts.
   SOLO
   PRO
   STUDIO

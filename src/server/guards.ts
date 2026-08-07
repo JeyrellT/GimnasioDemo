@@ -493,6 +493,23 @@ export async function getActiveTrainerSubscription(
 // Renew wall (full-screen interface pause)
 // -----------------------------------------------------------------------------
 
+/**
+ * Plan actual del coach, o null si no tiene suscripción.
+ *
+ * Se usa para decidir el acceso a funciones por plan — hoy, el asistente con
+ * IA. La regla de qué incluye cada plan vive en `src/lib/plans.ts`; acá solo se
+ * lee el tier. Nunca throw: si algo falla, devuelve null y el llamador decide.
+ */
+export async function getTrainerPlanTier(
+  userId: string,
+): Promise<SubscriptionTier | null> {
+  const sub = await prisma.trainerSubscription.findUnique({
+    where: { trainerUserId: userId },
+    select: { planTier: true },
+  });
+  return sub?.planTier ?? null;
+}
+
 export interface TrainerRenewWall {
   reason: SubscriptionLockReason;
   planTier: SubscriptionTier;

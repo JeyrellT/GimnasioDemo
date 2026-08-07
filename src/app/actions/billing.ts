@@ -27,6 +27,7 @@ import {
 	cancelCharge as _cancelCharge,
 	listCharges as _listCharges,
 	getMySubscription as _getMySubscription,
+	elegirMiPlan as _elegirMiPlan,
 	listInvoices as _listInvoices,
 } from "@/server/actions/billing.actions";
 import { createSubscriptionPaymentIntent as _createSubscriptionPaymentIntent } from "@/server/actions/onvo.actions";
@@ -51,6 +52,10 @@ export async function getMySubscription(
 	...args: Parameters<typeof _getMySubscription>
 ) {
 	return _getMySubscription(...args);
+}
+// El coach elige su propio plan al terminar la prueba (o lo cambia después).
+export async function elegirMiPlan(...args: Parameters<typeof _elegirMiPlan>) {
+	return _elegirMiPlan(...args);
 }
 export async function listInvoices(...args: Parameters<typeof _listInvoices>) {
 	return _listInvoices(...args);

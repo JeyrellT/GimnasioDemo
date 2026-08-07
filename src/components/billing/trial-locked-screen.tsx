@@ -19,10 +19,12 @@ import { signOut } from "next-auth/react";
 import { Lock, CreditCard, RefreshCw, LogOut } from "lucide-react";
 import type { SubscriptionTier } from "@prisma/client";
 
-import { formatCRC, formatDateCR } from "@/lib/format";
+import { formatDateCR } from "@/lib/format";
 import { PLAN_PRICE_CRC, APP_NAME, TRIAL_DAYS } from "@/lib/consts";
+import { nombreDePlan } from "@/lib/plans";
 import { OnvoSubscriptionPayment } from "./onvo-subscription-payment";
 import { SinpePayment } from "./sinpe-payment";
+import { PlanPicker } from "./plan-picker";
 
 export type RenewWallReason =
   | "TRIAL_EXPIRED"
@@ -44,26 +46,27 @@ function copyFor(
   reason: RenewWallReason,
   planTier: SubscriptionTier,
 ): { title: string; body: string } {
+  const plan = nombreDePlan(planTier);
   switch (reason) {
     case "TRIAL_EXPIRED":
       return {
         title: "Tu prueba gratuita terminó",
-        body: `Se acabaron tus ${TRIAL_DAYS} días de prueba. Renová tu plan ${planTier} para reactivar ${APP_NAME} y seguir gestionando tu gimnasio.`,
+        body: `Se acabaron tus ${TRIAL_DAYS} días de prueba. Renová tu plan ${plan} para reactivar ${APP_NAME} y seguir gestionando tu gimnasio.`,
       };
     case "PERIOD_EXPIRED":
       return {
         title: "Tu suscripción venció",
-        body: `Tu período pagado terminó. Renová tu plan ${planTier} para reactivar el acceso a ${APP_NAME}.`,
+        body: `Tu período pagado terminó. Renová tu plan ${plan} para reactivar el acceso a ${APP_NAME}.`,
       };
     case "PAST_DUE":
       return {
         title: "Tu pago está pendiente",
-        body: `No pudimos confirmar tu último pago. Renová tu plan ${planTier} para reactivar el acceso a ${APP_NAME}.`,
+        body: `No pudimos confirmar tu último pago. Renová tu plan ${plan} para reactivar el acceso a ${APP_NAME}.`,
       };
     case "CANCELLED":
       return {
         title: "Tu suscripción fue cancelada",
-        body: `Reactivá tu plan ${planTier} para volver a usar ${APP_NAME}.`,
+        body: `Reactivá tu plan ${plan} para volver a usar ${APP_NAME}.`,
       };
   }
 }
@@ -79,7 +82,6 @@ export function TrialLockedScreen({
   const [paying, setPaying] = useState(false);
 
   const { title, body } = copyFor(reason, planTier);
-  const price = formatCRC(PLAN_PRICE_CRC[planTier]);
 
   // Which date to surface: the trial end for a lapsed trial, otherwise the paid
   // period end. Rendered only when present.
@@ -88,7 +90,7 @@ export function TrialLockedScreen({
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-[#0A0A0A] px-4 py-10">
-      <div className="w-full max-w-md rounded-2xl border border-[#3F3F46] bg-[#18181B] p-6 sm:p-8">
+      <div className="w-full max-w-2xl rounded-2xl border border-[#3F3F46] bg-[#18181B] p-6 sm:p-8">
         <div className="flex flex-col items-center text-center">
           <div className="grid h-14 w-14 place-items-center rounded-full bg-[#F59E0B]/10 ring-1 ring-[#F59E0B]/30">
             <Lock className="h-7 w-7 text-[#F59E0B]" />
@@ -103,15 +105,15 @@ export function TrialLockedScreen({
             </p>
           )}
 
-          <div className="mt-5 w-full rounded-xl border border-[#F59E0B]/25 bg-[#F59E0B]/5 px-4 py-3">
-            <p className="text-xs uppercase tracking-wide text-[#A1A1AA]">
-              Plan {planTier}
-            </p>
-            <p className="mt-0.5 text-lg font-bold text-[#FAFAFA]">
-              {price}
-              <span className="text-sm font-normal text-[#71717A]"> / mes</span>
-            </p>
-          </div>
+        </div>
+
+        {/* El coach elige su plan acá mismo. Guardar solo cambia el plan
+            registrado: la cuenta se reactiva cuando entra el pago. */}
+        <div className="mt-6">
+          <p className="mb-3 text-center text-sm font-semibold text-[#FAFAFA]">
+            Elegí tu plan para continuar
+          </p>
+          <PlanPicker actual={planTier} textoBoton="Elegir este plan" />
         </div>
 
         {/* Sin pasarela en vivo el único medio es SINPE, así que se muestra de

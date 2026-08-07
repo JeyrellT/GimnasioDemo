@@ -23,6 +23,7 @@ import {
   ConflictError,
 } from "@/lib/errors";
 import { logInfo, logError } from "@/lib/logger";
+import { PLANES } from "@/lib/plans";
 import type { ActionResult } from "@/types/api";
 import type {
   GenerateMonthlyChargesResult,
@@ -536,6 +537,70 @@ export async function getMySubscription(): Promise<
       currentPeriodEnd: sub.currentPeriodEnd,
       trialEndsAt: sub.trialEndsAt,
     };
+  });
+}
+
+// =============================================================================
+// elegirMiPlan
+// El coach elige su propio plan al terminar la prueba (o lo cambia después).
+// =============================================================================
+
+/**
+ * Cambia el plan del coach que llama.
+ *
+ * Solo acepta planes VIGENTES (`PLANES` en src/lib/plans.ts): los retirados
+ * siguen existiendo para las cuentas viejas, pero nadie se puede pasar a ellos.
+ *
+ * No cobra ni activa nada — solo deja registrado qué plan eligió. La activación
+ * ocurre cuando entra el pago: automática por el webhook de ONVO, o a mano
+ * desde /admin mientras el cobro sea por SINPE.
+ */
+export async function elegirMiPlan(
+  tier: SubscriptionTier,
+): Promise<ActionResult<{ planTier: SubscriptionTier }>> {
+  return tryCatch(async () => {
+    const trainer = await requireTrainer();
+
+    if (!PLANES.some((p) => p.tier === tier)) {
+      throw new ValidationError(
+        "PLAN_NO_DISPONIBLE",
+        "Ese plan ya no está disponible. Elegí uno de los planes vigentes.",
+      );
+    }
+
+    const sub = await prisma.trainerSubscription.findUnique({
+      where: { trainerUserId: trainer.id },
+      select: { id: true, planTier: true },
+    });
+    if (!sub) {
+      throw new NotFoundError(
+        "NO_SUBSCRIPTION",
+        "No tenés una suscripción registrada.",
+      );
+    }
+
+    if (sub.planTier === tier) {
+      return { planTier: tier };
+    }
+
+    await prisma.trainerSubscription.update({
+      where: { id: sub.id },
+      data: { planTier: tier },
+    });
+
+    await writeAuditLog(trainer.id, "TrainerSubscription", sub.id, {
+      action: "ELEGIR_PLAN",
+      anterior: sub.planTier,
+      nuevo: tier,
+    });
+
+    logInfo("billing.elegirMiPlan", {
+      trainerId: trainer.id,
+      anterior: sub.planTier,
+      nuevo: tier,
+    });
+
+    return { planTier: tier };
   });
 }
 

@@ -56,10 +56,17 @@ type ModalType =
   | null;
 
 const PLAN_LABELS: Record<SubscriptionTier, string> = {
-  SOLO: "Solo",
-  PRO: "Pro",
-  STUDIO: "Studio",
+  COACH: "Coach",
+  COACH_IA: "Coach IA",
+  // Retirados: siguen acá porque hay cuentas viejas con estos planes y el
+  // admin necesita poder leerlos.
+  SOLO: "Solo (retirado)",
+  PRO: "Pro (retirado)",
+  STUDIO: "Studio (retirado)",
 };
+
+/** Solo los planes vigentes se ofrecen al cambiar de plan desde el admin. */
+const PLANES_ASIGNABLES: SubscriptionTier[] = ["COACH", "COACH_IA"];
 
 const STATUS_LABELS: Record<SubscriptionStatus, string> = {
   ACTIVE: "Activa",
@@ -83,7 +90,7 @@ export function LicenseControl({
 
   // Activate form state
   const [activatePlan, setActivatePlan] = useState<SubscriptionTier>(
-    planTier ?? "SOLO",
+    planTier ?? "COACH_IA",
   );
   const [activateMonths, setActivateMonths] = useState(1);
   const [activateReason, setActivateReason] = useState("");
@@ -95,8 +102,10 @@ export function LicenseControl({
   const [deactivateReason, setDeactivateReason] = useState("");
 
   // Change plan form state
+  // Propone el otro plan vigente, para que el cambio más común (subir o bajar
+  // de IA) quede preseleccionado.
   const [changeTier, setChangeTier] = useState<SubscriptionTier>(
-    planTier === "PRO" ? "STUDIO" : "PRO",
+    planTier === "COACH_IA" ? "COACH" : "COACH_IA",
   );
   const [changeReason, setChangeReason] = useState("");
 
@@ -389,9 +398,11 @@ export function LicenseControl({
                 }
                 className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
               >
-                <option value="SOLO">Solo</option>
-                <option value="PRO">Pro</option>
-                <option value="STUDIO">Studio</option>
+                {PLANES_ASIGNABLES.map((t) => (
+                  <option key={t} value={t}>
+                    {PLAN_LABELS[t]}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -579,9 +590,11 @@ export function LicenseControl({
                 }
                 className="w-full rounded-lg border border-[#3F3F46] bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
               >
-                <option value="SOLO">Solo</option>
-                <option value="PRO">Pro</option>
-                <option value="STUDIO">Studio</option>
+                {PLANES_ASIGNABLES.map((t) => (
+                  <option key={t} value={t}>
+                    {PLAN_LABELS[t]}
+                  </option>
+                ))}
               </select>
             </div>
 

@@ -1,61 +1,28 @@
 import Link from "next/link";
 import { Check, HelpCircle } from "lucide-react";
 import type { Metadata } from "next";
+import { PLANES } from "@/lib/plans";
+import { formatCRC } from "@/lib/format";
+import { TRIAL_DAYS } from "@/lib/consts";
 import { BrandingShell } from "@/branding/components/branding-shell";
 
 export const metadata: Metadata = {
   title: "Precios",
   description:
-    "Planes Blackline Fitness para entrenadores en Costa Rica. Solo ₡8,900, Pro ₡22,900 y Studio ₡44,900 mensuales con IVA incluido.",
+    "Planes Blackline Fitness para entrenadores en Costa Rica: Coach ₡15.000 y Coach IA ₡20.000 mensuales, con IVA incluido.",
 };
 
-const plans = [
-  {
-    tier: "Solo",
-    price: "₡8,900",
-    description: "Para entrenadores que están empezando.",
-    clients: "Hasta 5 clientes",
-    highlight: false,
-    features: [
-      "Biblioteca completa de ejercicios",
-      "Constructor de rutinas",
-      "Ejecución de sesiones offline",
-      "Métricas de progreso",
-      "Facturación básica",
-    ],
-    notIncluded: ["Analytics avanzado", "Exports PDF", "Soporte prioritario"],
-  },
-  {
-    tier: "Pro",
-    price: "₡22,900",
-    description: "El plan para entrenadores que crecen.",
-    clients: "Hasta 25 clientes",
-    highlight: true,
-    features: [
-      "Todo de Solo",
-      "Analytics avanzado por cliente",
-      "Exports PDF (rutinas impresas)",
-      "Soporte prioritario",
-      "Historial completo de sesiones",
-    ],
-    notIncluded: ["Co-administración", "IA asistente (próximamente)"],
-  },
-  {
-    tier: "Studio",
-    price: "₡44,900",
-    description: "Para estudio o entrenadores senior.",
-    clients: "Hasta 60 clientes",
-    highlight: false,
-    features: [
-      "Todo de Pro",
-      "Co-administración (asistente)",
-      "Branding personalizado",
-      "IA asistente para entrenador (próximamente)",
-      "Cuenta dedicada",
-    ],
-    notIncluded: [],
-  },
-] as const;
+// Los planes se derivan del catálogo canónico (src/lib/plans.ts) para que la
+// página pública nunca quede desfasada del precio que se cobra de verdad.
+const plans = PLANES.map((plan) => ({
+  tier: plan.label.replace("Blackline ", ""),
+  price: formatCRC(plan.priceCRC),
+  description: plan.tagline,
+  clients: `Hasta ${plan.maxClients} clientes`,
+  highlight: Boolean(plan.destacado),
+  features: plan.features,
+  notIncluded: plan.incluyeIA ? [] : ["Asistente con inteligencia artificial"],
+}));
 
 const faqs = [
   {
@@ -90,7 +57,7 @@ export default function PricingPage() {
           Precios
         </h1>
         <p className="mt-3 text-[#A1A1AA]">
-          30 días gratis en cualquier plan. Sin tarjeta requerida.
+          {TRIAL_DAYS} días gratis en cualquier plan. Sin tarjeta requerida.
           <br />
           Precios con IVA incluido.
         </p>

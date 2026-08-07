@@ -43,55 +43,60 @@ interface PlanSeed {
   features: string[];
 }
 
+/**
+ * Planes VIGENTES. El coach elige uno al terminar los 15 días de prueba; la
+ * única diferencia entre ambos es el acceso al asistente con IA.
+ * El catálogo comercial (nombres, bullets, cuál se destaca) vive en
+ * `src/lib/plans.ts` — acá va solo lo que necesita la base.
+ */
 const SUBSCRIPTION_PLANS: PlanSeed[] = [
   {
-    tier: SubscriptionTier.SOLO,
-    name: "Blackline Solo",
-    priceCRC: "8900.00",
-    maxClients: 5,
-    features: [
-      "biblioteca_ejercicios",
-      "rutinas",
-      "ejecucion_sesion",
-      "metricas_basicas",
-      "factura_basica",
-    ],
-  },
-  {
-    tier: SubscriptionTier.PRO,
-    name: "Blackline Pro",
-    priceCRC: "22900.00",
-    maxClients: 25,
-    features: [
-      "biblioteca_ejercicios",
-      "rutinas",
-      "ejecucion_sesion",
-      "metricas_basicas",
-      "factura_basica",
-      "analytics_avanzado",
-      "exports_pdf",
-      "soporte_prioritario",
-    ],
-  },
-  {
-    tier: SubscriptionTier.STUDIO,
-    name: "Blackline Studio",
-    priceCRC: "44900.00",
+    tier: SubscriptionTier.COACH,
+    name: "Blackline Coach",
+    priceCRC: "15000.00",
     maxClients: 60,
     features: [
       "biblioteca_ejercicios",
       "rutinas",
+      "importar_rutina_foto",
       "ejecucion_sesion",
       "metricas_basicas",
+      "progreso_fotos",
+      "finanzas",
       "factura_basica",
-      "analytics_avanzado",
-      "exports_pdf",
-      "soporte_prioritario",
-      "co_administracion",
-      "branding_personalizado",
-      "ia_asistente_v1_1",
+      "offline",
     ],
   },
+  {
+    tier: SubscriptionTier.COACH_IA,
+    name: "Blackline Coach IA",
+    priceCRC: "20000.00",
+    maxClients: 60,
+    features: [
+      "biblioteca_ejercicios",
+      "rutinas",
+      "importar_rutina_foto",
+      "ejecucion_sesion",
+      "metricas_basicas",
+      "progreso_fotos",
+      "finanzas",
+      "factura_basica",
+      "offline",
+      "ia_asistente",
+      "ia_base_cientifica",
+    ],
+  },
+];
+
+/**
+ * Planes retirados de la oferta. Se les hace soft-delete en el catálogo para
+ * que dejen de aparecer, pero NO se borran del enum ni de la base: hay cuentas
+ * viejas cuyo `planTier` los referencia.
+ */
+const TIERS_RETIRADOS: SubscriptionTier[] = [
+  SubscriptionTier.SOLO,
+  SubscriptionTier.PRO,
+  SubscriptionTier.STUDIO,
 ];
 
 async function seedSubscriptionPlans(): Promise<void> {
@@ -113,7 +118,18 @@ async function seedSubscriptionPlans(): Promise<void> {
         features: plan.features,
       },
     });
-    console.log(`  ok  ${plan.tier.padEnd(7)} ${plan.name}  ₡${plan.priceCRC}`);
+    console.log(`  ok  ${plan.tier.padEnd(8)} ${plan.name}  ₡${plan.priceCRC}`);
+  }
+
+  // Retira los planes viejos del catálogo (soft-delete). Las suscripciones que
+  // aún los referencian siguen funcionando: `src/lib/plans.ts` conserva su
+  // nombre y precio para poder mostrarlos.
+  const retirados = await prisma.subscriptionPlan.updateMany({
+    where: { tier: { in: TIERS_RETIRADOS }, deletedAt: null },
+    data: { deletedAt: new Date() },
+  });
+  if (retirados.count > 0) {
+    console.log(`  --  ${retirados.count} plan(es) viejo(s) retirados del catálogo`);
   }
 }
 

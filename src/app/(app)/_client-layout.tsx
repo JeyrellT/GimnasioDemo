@@ -23,9 +23,12 @@ import type { MirrorViewSwitcherState } from "@/app/(app)/admin/_components/mirr
 function AppShell({
   children,
   mirrorSwitcher,
+  tieneIA,
 }: {
   children: ReactNode;
   mirrorSwitcher?: MirrorViewSwitcherState;
+  /** El plan del coach incluye el asistente con IA. */
+  tieneIA: boolean;
 }) {
   const { user, avatarUrl, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
@@ -101,8 +104,10 @@ function AppShell({
 
       <BottomNav />
 
-      {/* Coach AI assistant — only for trainers */}
-      {isTrainer && <CoachAssistant />}
+      {/* Chat flotante del asistente: solo para coaches cuyo plan incluye IA.
+          La sección /trainer/asistente tiene su propia puerta con la
+          invitación a cambiar de plan. */}
+      {isTrainer && tieneIA && <CoachAssistant />}
     </div>
   );
 }
@@ -111,15 +116,19 @@ export function ClientLayout({
   children,
   effectiveUser,
   mirrorSwitcher,
+  tieneIA = false,
 }: {
   children: ReactNode;
   effectiveUser?: AuthUser;
   mirrorSwitcher?: MirrorViewSwitcherState;
+  tieneIA?: boolean;
 }) {
   return (
     <AuthProvider effectiveUser={effectiveUser}>
       <BrandingProvider>
-        <AppShell mirrorSwitcher={mirrorSwitcher}>{children}</AppShell>
+        <AppShell mirrorSwitcher={mirrorSwitcher} tieneIA={tieneIA}>
+          {children}
+        </AppShell>
       </BrandingProvider>
     </AuthProvider>
   );
